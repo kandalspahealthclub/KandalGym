@@ -1,0 +1,24 @@
+{
+    "name": "KandalGym",
+    "short_name": "KandalGym",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#911B2B",
+    "theme_color": "#911B2B",
+    "description": "Plataforma de Personal Training e Nutrição KandalGym",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "logo.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "logo.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        }
+    ]
+}
