@@ -1,0 +1,911 @@
+[
+  {
+    "id": 1770304915344,
+    "name": "Peru",
+    "kcal": 110,
+    "protein": 24,
+    "carbs": 0,
+    "fat": 2,
+    "category": "Carne"
+  },
+  {
+    "id": 1770304940286,
+    "name": "Carne de vaca",
+    "kcal": 137,
+    "protein": 21,
+    "carbs": 0,
+    "fat": 5,
+    "category": "Carne"
+  },
+  {
+    "id": 1770304961780,
+    "name": "Salmão",
+    "kcal": 208,
+    "protein": 20,
+    "carbs": 0,
+    "fat": 13,
+    "category": "Peixe"
+  },
+  {
+    "id": 1770304981830,
+    "name": "Atum fresco",
+    "kcal": 132,
+    "protein": 29,
+    "carbs": 0,
+    "fat": 1,
+    "category": "Peixe"
+  },
+  {
+    "id": 1770305005469,
+    "name": "Pescada",
+    "kcal": 82,
+    "protein": 18,
+    "carbs": 0,
+    "fat": 1,
+    "category": "Peixe"
+  },
+  {
+    "id": 1770305027368,
+    "name": "Ovo inteiro",
+    "kcal": 155,
+    "protein": 13,
+    "carbs": 1,
+    "fat": 11,
+    "category": "Laticínios"
+  },
+  {
+    "id": 1770305046279,
+    "name": "Clara de ovo",
+    "kcal": 52,
+    "protein": 11,
+    "carbs": 1,
+    "fat": 0,
+    "category": "Laticínios"
+  },
+  {
+    "id": 1770305081237,
+    "name": "Iogurte natural",
+    "kcal": 61,
+    "protein": 3.5,
+    "carbs": 4.5,
+    "fat": 3.3,
+    "category": "Laticínios"
+  },
+  {
+    "id": 1770305104519,
+    "name": "Queijo fresco magro",
+    "kcal": 72,
+    "protein": 11,
+    "carbs": 2,
+    "fat": 1,
+    "category": "Laticínios"
+  },
+  {
+    "id": 1770309661042,
+    "name": "Arroz branco cozido",
+    "kcal": 130,
+    "protein": 2.7,
+    "carbs": 28,
+    "fat": 0.3,
+    "category": "Cereais"
+  },
+  {
+    "id": 1770309683662,
+    "name": "Massa cozida",
+    "kcal": 131,
+    "protein": 5,
+    "carbs": 25,
+    "fat": 1,
+    "category": "Cereais"
+  },
+  {
+    "id": 1770309702345,
+    "name": "Aveia",
+    "kcal": 389,
+    "protein": 17,
+    "carbs": 66,
+    "fat": 7,
+    "category": "Cereais"
+  },
+  {
+    "id": 1770309726154,
+    "name": "Feijão cozido",
+    "kcal": 127,
+    "protein": 9,
+    "carbs": 22,
+    "fat": 0.5,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770309748913,
+    "name": "Grão de bico cozido",
+    "kcal": 164,
+    "protein": 9,
+    "carbs": 27,
+    "fat": 2.6,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770309778567,
+    "name": "Lentilhas cozidas",
+    "kcal": 116,
+    "protein": 9,
+    "carbs": 20,
+    "fat": 0.4,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770311656857,
+    "name": "Brócolos",
+    "kcal": 34,
+    "protein": 3,
+    "carbs": 0.4,
+    "fat": 7,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770311677496,
+    "name": "Espinafres",
+    "kcal": 23,
+    "protein": 3,
+    "carbs": 4,
+    "fat": 0.4,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770311735133,
+    "name": "Courgette",
+    "kcal": 17,
+    "protein": 1,
+    "carbs": 3,
+    "fat": 0.3,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770311799352,
+    "name": "Cenoura",
+    "kcal": 41,
+    "protein": 1,
+    "carbs": 10,
+    "fat": 0.2,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770311839972,
+    "name": "Tomate",
+    "kcal": 18,
+    "protein": 1,
+    "carbs": 4,
+    "fat": 0.2,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770313976215,
+    "name": "Maçã",
+    "kcal": 52,
+    "protein": 0.3,
+    "carbs": 14,
+    "fat": 0.2,
+    "category": "Fruta"
+  },
+  {
+    "id": 1770314468289,
+    "name": "Banana",
+    "kcal": 89,
+    "protein": 1,
+    "carbs": 23,
+    "fat": 0.3,
+    "category": "Fruta"
+  },
+  {
+    "id": 1770314693355,
+    "name": "Laranja",
+    "kcal": 47,
+    "protein": 0.9,
+    "carbs": 12,
+    "fat": 0.1,
+    "category": "Fruta"
+  },
+  {
+    "id": 1770314716050,
+    "name": "Morangos",
+    "kcal": 32,
+    "protein": 0.7,
+    "carbs": 8,
+    "fat": 0.3,
+    "category": "Fruta"
+  },
+  {
+    "id": 1770314731638,
+    "name": "Abacate",
+    "kcal": 160,
+    "protein": 2,
+    "carbs": 9,
+    "fat": 15,
+    "category": "Fruta"
+  },
+  {
+    "id": 1770314750247,
+    "name": "Azeite",
+    "kcal": 884,
+    "protein": 0,
+    "carbs": 0,
+    "fat": 100,
+    "category": "Gorduras/Óleos"
+  },
+  {
+    "id": 1770314894750,
+    "name": "Amêndoas",
+    "kcal": 579,
+    "protein": 21,
+    "carbs": 22,
+    "fat": 50,
+    "category": "Frutos Secos"
+  },
+  {
+    "id": 1770314912742,
+    "name": "Nozes",
+    "kcal": 654,
+    "protein": 15,
+    "carbs": 14,
+    "fat": 65,
+    "category": "Frutos Secos"
+  },
+  {
+    "id": 1770315042390,
+    "name": "Bacalhau fresco",
+    "kcal": 82,
+    "protein": 18,
+    "carbs": 0,
+    "fat": 0.7,
+    "category": "Peixe"
+  },
+  {
+    "id": 1770315072661,
+    "name": "Bacalhau demolhado",
+    "kcal": 105,
+    "protein": 23,
+    "carbs": 0,
+    "fat": 1,
+    "category": "Peixe"
+  },
+  {
+    "id": 1770315092431,
+    "name": "Pescada",
+    "kcal": 82,
+    "protein": 18,
+    "carbs": 0,
+    "fat": 1,
+    "category": "Peixe"
+  },
+  {
+    "id": 1770315111446,
+    "name": "Dourada",
+    "kcal": 96,
+    "protein": 20,
+    "carbs": 0,
+    "fat": 2,
+    "category": "Peixe"
+  },
+  {
+    "id": 1770315133458,
+    "name": "Robalo",
+    "kcal": 97,
+    "protein": 19,
+    "carbs": 0,
+    "fat": 2,
+    "category": "Peixe"
+  },
+  {
+    "id": 1770315159973,
+    "name": "Camarão",
+    "kcal": 99,
+    "protein": 24,
+    "carbs": 0,
+    "fat": 0.3,
+    "category": "Peixe"
+  },
+  {
+    "id": 1770315177724,
+    "name": "Mexilhão",
+    "kcal": 172,
+    "protein": 24,
+    "carbs": 7,
+    "fat": 4,
+    "category": "Peixe"
+  },
+  {
+    "id": 1770315341810,
+    "name": "Leite magro",
+    "kcal": 34,
+    "protein": 3.4,
+    "carbs": 5,
+    "fat": 0.1,
+    "category": "Laticínios"
+  },
+  {
+    "id": 1770315620104,
+    "name": "Queijo quark magro",
+    "kcal": 68,
+    "protein": 12,
+    "carbs": 4,
+    "fat": 0.2,
+    "category": "Laticínios"
+  },
+  {
+    "id": 1770315923092,
+    "name": "Skyr natural",
+    "kcal": 60,
+    "protein": 11,
+    "carbs": 3,
+    "fat": 0.2,
+    "category": "Laticínios"
+  },
+  {
+    "id": 1770316313642,
+    "name": "Queijo flamengo light",
+    "kcal": 170,
+    "protein": 28,
+    "carbs": 1,
+    "fat": 7,
+    "category": "Laticínios"
+  },
+  {
+    "id": 1770316350997,
+    "name": "Arroz basmati cozido",
+    "kcal": 121,
+    "protein": 3,
+    "carbs": 25,
+    "fat": 0.4,
+    "category": "Cereais"
+  },
+  {
+    "id": 1770316401163,
+    "name": "Batata branca cozida",
+    "kcal": 87,
+    "protein": 2,
+    "carbs": 20,
+    "fat": 0.1,
+    "category": "Tubérculos"
+  },
+  {
+    "id": 1770316532872,
+    "name": "Batata doce cozida",
+    "kcal": 90,
+    "protein": 2,
+    "carbs": 21,
+    "fat": 0.2,
+    "category": "Tubérculos"
+  },
+  {
+    "id": 1770316552314,
+    "name": "Cuscuz",
+    "kcal": 112,
+    "protein": 3.8,
+    "carbs": 23,
+    "fat": 0.2,
+    "category": "Massas"
+  },
+  {
+    "id": 1770316654242,
+    "name": "Quinoa cozida",
+    "kcal": 120,
+    "protein": 4,
+    "carbs": 21,
+    "fat": 2,
+    "category": "Cereais"
+  },
+  {
+    "id": 1770316671670,
+    "name": "Milho cozido",
+    "kcal": 96,
+    "protein": 3,
+    "carbs": 19,
+    "fat": 1.5,
+    "category": "Cereais"
+  },
+  {
+    "id": 1770316789543,
+    "name": "Feijão preto cozido",
+    "kcal": 132,
+    "protein": 9,
+    "carbs": 24,
+    "fat": 0.5,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770316918474,
+    "name": "Feijão vermelho cozido",
+    "kcal": 127,
+    "protein": 9,
+    "carbs": 22,
+    "fat": 0.5,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770316942651,
+    "name": "Ervilhas",
+    "kcal": 81,
+    "protein": 5,
+    "carbs": 14,
+    "fat": 0.4,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770316960422,
+    "name": "Favas cozidas",
+    "kcal": 110,
+    "protein": 8,
+    "carbs": 19,
+    "fat": 0.4,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770316989877,
+    "name": "Alface",
+    "kcal": 15,
+    "protein": 1,
+    "carbs": 3,
+    "fat": 0.2,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770317005704,
+    "name": "Pepino",
+    "kcal": 16,
+    "protein": 0.7,
+    "carbs": 4,
+    "fat": 0.1,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770317022092,
+    "name": "Cebola",
+    "kcal": 40,
+    "protein": 1,
+    "carbs": 9,
+    "fat": 0.1,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770317049852,
+    "name": "Pimento",
+    "kcal": 31,
+    "protein": 1,
+    "carbs": 6,
+    "fat": 0.3,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770317070378,
+    "name": "Cogumelos frescos",
+    "kcal": 22,
+    "protein": 3,
+    "carbs": 3,
+    "fat": 0.3,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770317086257,
+    "name": "Couve flor",
+    "kcal": 25,
+    "protein": 2,
+    "carbs": 5,
+    "fat": 0.3,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770317104837,
+    "name": "Couve galega",
+    "kcal": 49,
+    "protein": 4,
+    "carbs": 9,
+    "fat": 1,
+    "category": "Leguminosas"
+  },
+  {
+    "id": 1770317124625,
+    "name": "Pêra",
+    "kcal": 57,
+    "protein": 0.4,
+    "carbs": 15,
+    "fat": 0.1,
+    "category": "Fruta"
+  },
+  {
+    "id": 1770317141821,
+    "name": "Kiwi",
+    "kcal": 61,
+    "protein": 1,
+    "carbs": 15,
+    "fat": 0.5,
+    "category": "Fruta"
+  },
+  {
+    "id": 1770317171659,
+    "name": "Ananás",
+    "kcal": 50,
+    "protein": 0.5,
+    "carbs": 13,
+    "fat": 0.1,
+    "category": "Fruta"
+  },
+  {
+    "id": 1770317224014,
+    "name": "Manga",
+    "kcal": 60,
+    "protein": 0.8,
+    "carbs": 15,
+    "fat": 0.4,
+    "category": "Fruta"
+  },
+  {
+    "id": 1770317416430,
+    "name": "Uvas",
+    "kcal": 69,
+    "protein": 0.7,
+    "carbs": 18,
+    "fat": 0.2,
+    "category": "Fruta"
+  },
+  {
+    "id": 1770317453679,
+    "name": "Amendoins",
+    "kcal": 567,
+    "protein": 26,
+    "carbs": 16,
+    "fat": 49,
+    "category": "Frutos Secos"
+  },
+  {
+    "id": 1770317669188,
+    "name": "Caju",
+    "kcal": 553,
+    "protein": 18,
+    "carbs": 30,
+    "fat": 44,
+    "category": "Frutos Secos"
+  },
+  {
+    "id": 1770317692523,
+    "name": "Avelãs",
+    "kcal": 628,
+    "protein": 15,
+    "carbs": 17,
+    "fat": 61,
+    "category": "Frutos Secos"
+  },
+  {
+    "id": 1770317716592,
+    "name": "Sementes de chia",
+    "kcal": 486,
+    "protein": 17,
+    "carbs": 41,
+    "fat": 31,
+    "category": "Sementes"
+  },
+  {
+    "id": 1770317748605,
+    "name": "Linhaça",
+    "kcal": 534,
+    "protein": 18,
+    "carbs": 29,
+    "fat": 42,
+    "category": "Sementes"
+  },
+  {
+    "id": 1770649715560,
+    "name": "Coelho",
+    "category": "Carne",
+    "kcal": 173,
+    "protein": 33,
+    "carbs": 0,
+    "fat": 4
+  },
+  {
+    "id": 1770649741915,
+    "name": "Vitelão",
+    "category": "Carne",
+    "kcal": 172,
+    "protein": 26,
+    "carbs": 0,
+    "fat": 6
+  },
+  {
+    "id": 1770649766146,
+    "name": "Cavala",
+    "category": "Peixe",
+    "kcal": 205,
+    "protein": 19,
+    "carbs": 0,
+    "fat": 11
+  },
+  {
+    "id": 1770649786594,
+    "name": "Sardinha fresca",
+    "category": "Peixe",
+    "kcal": 208,
+    "protein": 25,
+    "carbs": 0,
+    "fat": 11
+  },
+  {
+    "id": 1770649814812,
+    "name": "Polvo",
+    "category": "Peixe",
+    "kcal": 82,
+    "protein": 15,
+    "carbs": 2,
+    "fat": 1
+  },
+  {
+    "id": 1770649858503,
+    "name": "Ovo de codorniz",
+    "category": "Laticínios",
+    "kcal": 158,
+    "protein": 13,
+    "carbs": 0,
+    "fat": 11
+  },
+  {
+    "id": 1770649899646,
+    "name": "Kefir",
+    "category": "Laticínios",
+    "kcal": 55,
+    "protein": 3.5,
+    "carbs": 4,
+    "fat": 3
+  },
+  {
+    "id": 1770649925334,
+    "name": "Ricota",
+    "category": "Laticínios",
+    "kcal": 174,
+    "protein": 11,
+    "carbs": 3,
+    "fat": 13
+  },
+  {
+    "id": 1770649942998,
+    "name": "Queijo feta",
+    "category": "Laticínios",
+    "kcal": 264,
+    "protein": 14,
+    "carbs": 4,
+    "fat": 21
+  },
+  {
+    "id": 1770650385221,
+    "name": "Óleo de coco",
+    "category": "Gorduras/Óleos",
+    "kcal": 862,
+    "protein": 0,
+    "carbs": 0,
+    "fat": 100
+  },
+  {
+    "id": 1770650606912,
+    "name": "Presunto cru (magro)",
+    "category": "Carne",
+    "kcal": 241,
+    "protein": 28,
+    "carbs": 0,
+    "fat": 14
+  },
+  {
+    "id": 1770651181622,
+    "name": "Tapioca",
+    "category": "Carboidratos",
+    "kcal": 358,
+    "protein": 0,
+    "carbs": 88,
+    "fat": 0
+  },
+  {
+    "id": 1770651213550,
+    "name": "Pistácios",
+    "category": "Frutos Secos",
+    "kcal": 562,
+    "protein": 20,
+    "carbs": 28,
+    "fat": 45
+  },
+  {
+    "id": 1770651246052,
+    "name": "Sementes de abóbora",
+    "category": "Sementes",
+    "kcal": 559,
+    "protein": 30,
+    "carbs": 11,
+    "fat": 49
+  },
+  {
+    "id": 1770651277596,
+    "name": "Sementes de girassol",
+    "category": "Sementes",
+    "kcal": 584,
+    "protein": 21,
+    "carbs": 20,
+    "fat": 51
+  },
+  {
+    "id": 1770651321874,
+    "name": "Papaia",
+    "category": "Fruta",
+    "kcal": 43,
+    "protein": 0.5,
+    "carbs": 11,
+    "fat": 0
+  },
+  {
+    "id": 1770651358278,
+    "name": "Romã",
+    "category": "Fruta",
+    "kcal": 83,
+    "protein": 1.7,
+    "carbs": 19,
+    "fat": 0.3
+  },
+  {
+    "id": 1770651381645,
+    "name": "Figo",
+    "category": "Fruta",
+    "kcal": 74,
+    "protein": 0.8,
+    "carbs": 19,
+    "fat": 0.3
+  },
+  {
+    "id": 1770651415231,
+    "name": "Agrião",
+    "category": "Leguminosas",
+    "kcal": 11,
+    "protein": 2,
+    "carbs": 1,
+    "fat": 0
+  },
+  {
+    "id": 1770651439954,
+    "name": "Beterraba",
+    "category": "Leguminosas",
+    "kcal": 43,
+    "protein": 2,
+    "carbs": 10,
+    "fat": 0
+  },
+  {
+    "id": 1770652675652,
+    "name": "Gelatina",
+    "category": "Extra",
+    "kcal": 335,
+    "protein": 85,
+    "carbs": 0,
+    "fat": 0
+  },
+  {
+    "id": 1770652973902,
+    "name": "Requeijão",
+    "category": "Laticínios",
+    "kcal": 98,
+    "protein": 11,
+    "carbs": 3,
+    "fat": 4
+  },
+  {
+    "id": 1770653003236,
+    "name": "Queijo mozzarella light",
+    "category": "Laticínios",
+    "kcal": 149,
+    "protein": 22,
+    "carbs": 3,
+    "fat": 6
+  },
+  {
+    "id": 1770653031042,
+    "name": "Bebida de amêndoa s/ açúcar",
+    "category": "Laticínios",
+    "kcal": 13,
+    "protein": 0.5,
+    "carbs": 0,
+    "fat": 1.1
+  },
+  {
+    "id": 1770653054934,
+    "name": "Beringela",
+    "category": "Leguminosas",
+    "kcal": 25,
+    "protein": 1,
+    "carbs": 6,
+    "fat": 0
+  },
+  {
+    "id": 1770653076702,
+    "name": "Nabo",
+    "category": "Leguminosas",
+    "kcal": 28,
+    "protein": 1,
+    "carbs": 7,
+    "fat": 0
+  },
+  {
+    "id": 1770653094759,
+    "name": "Rúcula",
+    "category": "Leguminosas",
+    "kcal": 25,
+    "protein": 3,
+    "carbs": 4,
+    "fat": 0.7
+  },
+  {
+    "id": 1770653180457,
+    "name": "Cogumelos shiitake",
+    "category": "Fungos Comestiveis",
+    "kcal": 34,
+    "protein": 2,
+    "carbs": 7,
+    "fat": 0.5
+  },
+  {
+    "id": 1770653197000,
+    "name": "Cogumelos portobello",
+    "category": "Fungos Comestiveis",
+    "kcal": 22,
+    "protein": 3,
+    "carbs": 3,
+    "fat": 0
+  },
+  {
+    "id": 1770653243191,
+    "name": "Batata doce roxa",
+    "category": "Tubérculos",
+    "kcal": 90,
+    "protein": 2,
+    "carbs": 21,
+    "fat": 0
+  },
+  {
+    "id": 1770653292758,
+    "name": "Maracujá",
+    "category": "Fruta",
+    "kcal": 97,
+    "protein": 2,
+    "carbs": 23,
+    "fat": 0.7
+  },
+  {
+    "id": 1770653315743,
+    "name": "Ameixa",
+    "category": "Fruta",
+    "kcal": 46,
+    "protein": 0.7,
+    "carbs": 11,
+    "fat": 0.3
+  },
+  {
+    "id": 1770653344295,
+    "name": "Dióspiro",
+    "category": "Fruta",
+    "kcal": 70,
+    "protein": 0.6,
+    "carbs": 18,
+    "fat": 0.2
+  },
+  {
+    "id": 1770653365077,
+    "name": "Melancia",
+    "category": "Fruta",
+    "kcal": 30,
+    "protein": 0.6,
+    "carbs": 8,
+    "fat": 0.2
+  },
+  {
+    "id": 1770653383053,
+    "name": "Meloa",
+    "category": "Fruta",
+    "kcal": 34,
+    "protein": 0.8,
+    "carbs": 8,
+    "fat": 0.2
+  }
+]

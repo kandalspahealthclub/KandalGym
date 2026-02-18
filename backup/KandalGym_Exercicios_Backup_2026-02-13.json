@@ -1,0 +1,1135 @@
+[
+  {
+    "id": 1,
+    "name": "Squats (Agachamento)",
+    "videoUrl": "https://www.youtube.com/embed/gcNh17Ckjgg",
+    "category": "Perna",
+    "muscle": "Quadríceps"
+  },
+  {
+    "id": 2,
+    "name": "Deadlift (Peso Morto)",
+    "videoUrl": "https://www.youtube.com/embed/r4MzxtBKyNE",
+    "category": "Costas",
+    "muscle": "Isquiotibiais"
+  },
+  {
+    "id": 4,
+    "name": "Shoulder Press (Press de Ombros)",
+    "videoUrl": "https://www.youtube.com/embed/qEwK6jnzpxk",
+    "category": "Ombros",
+    "muscle": "Deltoides"
+  },
+  {
+    "id": 5,
+    "name": "Bicep Curls (Rosca Direta)",
+    "videoUrl": "https://www.youtube.com/embed/ykJmrZ5v0Oo",
+    "category": "Braços",
+    "muscle": "Bíceps"
+  },
+  {
+    "id": 6,
+    "name": "Lat Pulldown (Puxada)",
+    "videoUrl": "https://www.youtube.com/embed/CAwf7n6Luuc",
+    "category": "Costas",
+    "muscle": "Dorsal"
+  },
+  {
+    "id": 1770818387292,
+    "name": "Elítica",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818057571,
+    "name": "Passadeira",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818090105,
+    "name": "Escada",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818245371,
+    "name": "Abdominais oblíquos em máquina de lombares",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818930077,
+    "name": "Abdominal inferior no banco",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818056275,
+    "name": "Abdominal no banco com Haltere",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818004925,
+    "name": "Abdominal oblíquo com Bola",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818142752,
+    "name": "Crunch com pernas elevadas",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818407867,
+    "name": "Crunch na polia",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818937199,
+    "name": "Flexão da anca",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818696353,
+    "name": "Flexão do joelho ao peito alternado",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818055471,
+    "name": "Flexão do tronco com pernas em abertura",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818223207,
+    "name": "Flexão do tronco e dos membros inferiores",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818616807,
+    "name": "Flexão do tronco e dos membros inferiores alternado",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818716834,
+    "name": "Flexão do tronco pés no solo",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818509555,
+    "name": "Flexão do tronco, mãos no joelho",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818275355,
+    "name": "Flexão lateral do tronco",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818842902,
+    "name": "Flexão lateral do tronco e membros inferiores",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818856085,
+    "name": "Flexão lateral do tronco, antebraço apoiado",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818036516,
+    "name": "Lateralizações do tronco",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818825363,
+    "name": "Lumberjack Chop",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818342759,
+    "name": "Lumberjack ascendente",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818131603,
+    "name": "Lumberjack descendente",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818912788,
+    "name": "Prancha horizontal",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818033605,
+    "name": "Prancha lateral",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818742860,
+    "name": "Abdutores no solo",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818414064,
+    "name": "Abdução na máquina",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818942405,
+    "name": "Abdução no puxador",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818597933,
+    "name": "Adutores no solo",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818705391,
+    "name": "Adução na máquina",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818583493,
+    "name": "Adução no puxador",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818669185,
+    "name": "Bíceps Scott com Barra Livre",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818467459,
+    "name": "Bíceps com Cabo Cristo",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818853317,
+    "name": "Bíceps curl no puxador – pega pronada",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818326016,
+    "name": "Bíceps curl no puxador – pega supinada",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818437593,
+    "name": "Bíceps no puxador com Corda",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818189253,
+    "name": "Bíceps no puxador unilateral",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818255907,
+    "name": "Bíceps sentado com Halteres inclinado",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818827908,
+    "name": "Flexão bíceps sentado na vertical - simultâneo",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818391989,
+    "name": "Flexão bíceps sentado na vertical - unilateral",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818563365,
+    "name": "Flexão concentrado",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818035537,
+    "name": "Flexão para martelo sentado",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818190427,
+    "name": "Afundos em dois bancos",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818575769,
+    "name": "Extensões de antebraço no puxador, costas para máq.",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818181167,
+    "name": "Extensões de antebraço sentado na vertical",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818771224,
+    "name": "Extensões de antebraço unilateral deitado",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818671179,
+    "name": "Flexão de braços - tríceps",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818150982,
+    "name": "Fundos assistidos na máquina",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818242191,
+    "name": "Fundos na máquina livres",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818930698,
+    "name": "Kick-back com Halteres",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818013610,
+    "name": "Kick-back no puxador",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818777168,
+    "name": "Press francês unilateral com Cabo",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818690860,
+    "name": "Tríceps no puxador com Corda",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818735802,
+    "name": "Tríceps no puxador com pega curva",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818242671,
+    "name": "Tríceps no puxador com pega supinada",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818365239,
+    "name": "Tríceps no supino plano mãos próximas",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818031891,
+    "name": "Tríceps à testa com Barra Livre",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818573597,
+    "name": "Elevações assistidas em máquina",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818787805,
+    "name": "Elevações livres com pega",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818203064,
+    "name": "Hiperextensão braços e pernas",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818419726,
+    "name": "Hiperextensão do tronco com Barra 1",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818585240,
+    "name": "Hiperextensão do tronco com Barra 2",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818733538,
+    "name": "Hiperextensão do tronco com Disco",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818217383,
+    "name": "Hiperextensão do tronco com Halterees",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818617475,
+    "name": "Hiperextensão do tronco em máquina lombares",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818122039,
+    "name": "Lower Back",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818160579,
+    "name": "Lat Pulldown",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818720832,
+    "name": "Pecfly",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818794425,
+    "name": "Peso morto com Barra Livre",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818884449,
+    "name": "Puxada à coxa",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818683994,
+    "name": "Puxador à frente com pega unilateral",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818923886,
+    "name": "Puxador à frente pega fechada em máq. 5 estações",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818358131,
+    "name": "Puxador à frente pega larga em máq. 5 estações",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818964220,
+    "name": "Puxador à frente simultâneo, pegas individuais",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818352921,
+    "name": "Puxador à nuca em máq. 5 estações",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818288200,
+    "name": "Remada baixa",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818658443,
+    "name": "Remada baixa máquina cavalinho",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818691203,
+    "name": "Remada horizontal máquina cavalinho",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818699453,
+    "name": "Remo com Halteres",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818012416,
+    "name": "Remo na máquina de polia",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818134516,
+    "name": "Remo puxador pega fechada em máq. 5 estações",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818996095,
+    "name": "Remo puxador pega larga em máq. 5 estações",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818736593,
+    "name": "Remo puxador pega fechada em máq. 5 estações, pega aberta",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818517535,
+    "name": "Hip Trust",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818629184,
+    "name": "Glúteos com Caneleiras, membros inferiores a 90º",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818200736,
+    "name": "Glúteos no puxador unilateral",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818899168,
+    "name": "Gémeos na multi-power",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818011739,
+    "name": "Gémeos na prensa",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818043329,
+    "name": "Gémeos no Step",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818253715,
+    "name": "Gémeos máquina",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818352848,
+    "name": "Agachamento com Barra Livre",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818801233,
+    "name": "Agachamento com Barra acima da cabeça",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818699226,
+    "name": "Agachamento com Barra à frente",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818691353,
+    "name": "Agachamento com Halteres",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818133745,
+    "name": "Agachamento na máquina de polia",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818329599,
+    "name": "Agachamento no Rack",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818970165,
+    "name": "Agachamento no multi-power",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818814100,
+    "name": "Agachamento tipo sumo",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818881703,
+    "name": "Extensões na máquina",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818832309,
+    "name": "Leg Extension",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818674684,
+    "name": "Leg Press",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818800222,
+    "name": "Lunge com Barra Livre",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818311845,
+    "name": "Lunge com Halteres",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818884360,
+    "name": "Lunge no Rack",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818353018,
+    "name": "Lunge no multi-power",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818961286,
+    "name": "Prensa de Discos",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818775167,
+    "name": "Prensa em máquina",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818005452,
+    "name": "Flexão na máquina deitado",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818359539,
+    "name": "Leg Curl sentado",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818479437,
+    "name": "Levantamento Terra",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818568319,
+    "name": "Peso morto com Halteres um apoio",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818159387,
+    "name": "Peso Morto no Rack",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818439644,
+    "name": "Abdução horizontal do ombro na polia",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818934105,
+    "name": "Aberturas posterior na máquina",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818148138,
+    "name": "Adução horizontal do ombro na polia",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818848286,
+    "name": "Clean and Press",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818770955,
+    "name": "Coifa dos rotadores com Halteres",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818653668,
+    "name": "Elevações frontais com Halteres",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818538277,
+    "name": "Elevações frontais no puxador",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818273951,
+    "name": "Elevações frontal no banco inclinado com Halteres",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818520344,
+    "name": "Elevações laterais com Halteres",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818150726,
+    "name": "Elevações laterais com Halteres - unilateral",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818678669,
+    "name": "Press de ombros com Halteres",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818756020,
+    "name": "Press de ombros em máq. de discos",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818166622,
+    "name": "Press militar com Barra Livre atrás",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818909426,
+    "name": "Press militar com Barra Livre à frente",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818227872,
+    "name": "Press militar com Haltere unilateral",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818527513,
+    "name": "Press militar à nuca",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818818300,
+    "name": "Press rotativo com Halteres",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818026334,
+    "name": "Remada alta na máquina de polia",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818560755,
+    "name": "Voos com Halteres",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818707319,
+    "name": "Voos em polia baixa",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770819000651,
+    "name": "Aberturas com Halteres declinado",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818273998,
+    "name": "Aberturas horizontal com Halteres",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818520010,
+    "name": "Aberturas em máq. 5 estações banco horizontal",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818411304,
+    "name": "Aberturas em máq. 5 estações banco inclinado",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818527627,
+    "name": "Aberturas inclinado com Halteres",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818481551,
+    "name": "Butterfly",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818582163,
+    "name": "Chest Press",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818918402,
+    "name": "Cross-over alto",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818301971,
+    "name": "Cross-over baixo",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818436542,
+    "name": "Flexão de braços - peitoral",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818972364,
+    "name": "Flexão de braços com joelhos no solo",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818887765,
+    "name": "Pull-over horizontal com Halteres",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818326511,
+    "name": "Supino com Halteres declinado",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818209182,
+    "name": "Supino declinado no Rack",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818101166,
+    "name": "Supino horizontal com Barra",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818415761,
+    "name": "Supino horizontal com Halteres",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818007870,
+    "name": "Supino horizontal com Halteres - supinação",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818016161,
+    "name": "Supino horizontal no Rack",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818574398,
+    "name": "Supino inc. em máq. de discos",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818283807,
+    "name": "Supino inclinado com Barra",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818351252,
+    "name": "Supino inclinado com Halteres",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818844368,
+    "name": "Supino inclinado no Rack",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818481906,
+    "name": "Supino na máquina de polia",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818543740,
+    "name": "Supino vertical em máquina",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818714545,
+    "name": "Elevações com Barra Livre",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818330511,
+    "name": "Elevações com Haltere",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818880572,
+    "name": "Elevações com Haltere lateral",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818204383,
+    "name": "Remo vertical com Barra Livre",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818858988,
+    "name": "Alongamento abdominal",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818559419,
+    "name": "Alongamento abdutor",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818184595,
+    "name": "Alongamento abdutor em agachamento",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818513293,
+    "name": "Alongamento abdutor no solo",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818185623,
+    "name": "Alongamento adutor",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818644272,
+    "name": "Alongamento adutor no solo",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818463915,
+    "name": "Alongamento bíceps",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818858541,
+    "name": "Alongamento deltoide",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818848258,
+    "name": "Alongamento dorsal",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818367359,
+    "name": "Alongamento dorsal e oblíquos",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818036618,
+    "name": "Alongamento glúteos no solo",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818135058,
+    "name": "Alongamento glúteos simultâneo",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818332926,
+    "name": "Alongamento glúteos unilateral",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818452455,
+    "name": "Alongamento gémeo",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818034424,
+    "name": "Alongamento isquiotibiais",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818481057,
+    "name": "Alongamento isquiotibiais no solo unilateral",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818612451,
+    "name": "Alongamento isquiotibiais, pernas afastadas",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818989569,
+    "name": "Alongamento lombares",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818162771,
+    "name": "Alongamento peitoral",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818639944,
+    "name": "Alongamento peitoral 2",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818541721,
+    "name": "Alongamento peitoral 3",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818140866,
+    "name": "Alongamento quadríceps",
+    "videoUrl": "",
+    "category": "Geral"
+  },
+  {
+    "id": 1770818565800,
+    "name": "Alongamento tríceps",
+    "videoUrl": "",
+    "category": "Geral"
+  }
+]

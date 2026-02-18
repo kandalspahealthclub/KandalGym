@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1770304915344,
+    "name": "Peru",
+    "kcal": 110,
+    "protein": 24,
+    "carbs": 0,
+    "fat": 2
+  },
+  {
+    "id": 1770304940286,
+    "name": "Carne de vaca",
+    "kcal": 137,
+    "protein": 21,
+    "carbs": 0,
+    "fat": 5
+  },
+  {
+    "id": 1770304961780,
+    "name": "Salmão",
+    "kcal": 208,
+    "protein": 20,
+    "carbs": 0,
+    "fat": 13
+  },
+  {
+    "id": 1770304981830,
+    "name": "Atum fresco",
+    "kcal": 132,
+    "protein": 29,
+    "carbs": 0,
+    "fat": 1
+  },
+  {
+    "id": 1770305005469,
+    "name": "Pescada",
+    "kcal": 82,
+    "protein": 18,
+    "carbs": 0,
+    "fat": 1
+  },
+  {
+    "id": 1770305027368,
+    "name": "Ovo inteiro",
+    "kcal": 155,
+    "protein": 13,
+    "carbs": 1,
+    "fat": 11
+  },
+  {
+    "id": 1770305046279,
+    "name": "Clara de ovo",
+    "kcal": 52,
+    "protein": 11,
+    "carbs": 1,
+    "fat": 0
+  },
+  {
+    "id": 1770305081237,
+    "name": "Iogurte natural",
+    "kcal": 61,
+    "protein": 3.5,
+    "carbs": 4.5,
+    "fat": 3.3
+  },
+  {
+    "id": 1770305104519,
+    "name": "Queijo fresco magro",
+    "kcal": 72,
+    "protein": 11,
+    "carbs": 2,
+    "fat": 1
+  },
+  {
+    "id": 1770309661042,
+    "name": "Arroz branco cozido",
+    "kcal": 130,
+    "protein": 2.7,
+    "carbs": 28,
+    "fat": 0.3
+  },
+  {
+    "id": 1770309683662,
+    "name": "Massa cozida",
+    "kcal": 131,
+    "protein": 5,
+    "carbs": 25,
+    "fat": 1
+  },
+  {
+    "id": 1770309702345,
+    "name": "Aveia",
+    "kcal": 389,
+    "protein": 17,
+    "carbs": 66,
+    "fat": 7
+  },
+  {
+    "id": 1770309726154,
+    "name": "Feijão cozido",
+    "kcal": 127,
+    "protein": 9,
+    "carbs": 22,
+    "fat": 0.5
+  },
+  {
+    "id": 1770309748913,
+    "name": "Grão de bico cozido",
+    "kcal": 164,
+    "protein": 9,
+    "carbs": 27,
+    "fat": 2.6
+  },
+  {
+    "id": 1770309778567,
+    "name": "Lentilhas cozidas",
+    "kcal": 116,
+    "protein": 9,
+    "carbs": 20,
+    "fat": 0.4
+  }
+]
