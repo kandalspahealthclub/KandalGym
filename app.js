@@ -5540,6 +5540,28 @@ Bons treinos!`;
         input.value = ''; // Limpar após processar
     }
 
+    enableQRForClient(clientId) {
+        if (!this.state.qrClients) this.state.qrClients = [];
+        const client = (this.state.clients || []).find(c => c.id === Number(clientId));
+        if (!client) return;
+
+        const exists = this.state.qrClients.find(qc => qc.clientId === Number(clientId));
+        if (exists) return;
+
+        this.state.qrClients.push({
+            id: "K" + (this.state.qrClients.length + 1),
+            clientId: Number(clientId),
+            nome: client.name,
+            ativo: true,
+            ent: 30,
+            validade: "2026-12-31",
+            historico: []
+        });
+
+        this.shortenExistingQRIds();
+        this.saveState();
+    }
+
     shortenExistingQRIds() {
         if (!this.state.qrClients || this.state.qrClients.length === 0) return;
         let changed = false;
