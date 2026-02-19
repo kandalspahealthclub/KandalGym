@@ -2058,20 +2058,7 @@ Bons treinos!`;
             return;
         }
 
-        // O plano pode ser guardado como { days: [...], author, updatedAt } ou diretamente como Array
-        const rawPlan = this.state.trainingPlans[clientId];
-        let plans = [];
-        if (rawPlan) {
-            if (Array.isArray(rawPlan)) {
-                plans = rawPlan;
-            } else if (rawPlan.days && Array.isArray(rawPlan.days)) {
-                // Formato correto: { days: [...], author, updatedAt }
-                plans = rawPlan.days;
-            } else if (typeof rawPlan === 'object') {
-                // Objeto corrompido do Firebase (keys numéricas) → converter para array
-                plans = Object.values(rawPlan).filter(v => v && typeof v === 'object' && v.exercises);
-            }
-        }
+        const plans = this.getTrainingDays(clientId);
 
         const isTeacher = this.role === 'teacher' || this.role === 'admin';
         const isClient = this.role === 'client';
@@ -2172,9 +2159,20 @@ Bons treinos!`;
         `;
     }
 
+    // Helper central: extrai sempre um array de dias independentemente do formato gravado
+    getTrainingDays(clientId) {
+        const raw = this.state.trainingPlans ? this.state.trainingPlans[clientId] : null;
+        if (!raw) return [];
+        if (Array.isArray(raw)) return raw;
+        if (raw.days && Array.isArray(raw.days)) return raw.days;
+        if (typeof raw === 'object') return Object.values(raw).filter(v => v && typeof v === 'object' && v.exercises);
+        return [];
+    }
+
     finishWorkout(clientId, dayIdx) {
-        const plans = this.state.trainingPlans[clientId];
-        const day = plans[dayIdx];
+        const days = this.getTrainingDays(clientId);
+        const day = days[dayIdx];
+        if (!day) return alert('Dia de treino n\u00e3o encontrado.');
 
         // Verificar se há algo para gravar
         const hasWeights = day.exercises.some(ex => ex.weightLog && ex.weightLog.some(w => w !== '' && w !== null));
@@ -2217,26 +2215,22 @@ Bons treinos!`;
     }
 
     logWeight(clientId, dayIdx, exIdx, setIdx, value) {
-        const plans = this.state.trainingPlans[clientId];
-        if (!plans || !plans[dayIdx] || !plans[dayIdx].exercises[exIdx]) return;
+        const days = this.getTrainingDays(clientId);
+        if (!days[dayIdx] || !days[dayIdx].exercises[exIdx]) return;
 
-        const ex = plans[dayIdx].exercises[exIdx];
+        const ex = days[dayIdx].exercises[exIdx];
         if (!ex.weightLog) ex.weightLog = [];
-
         ex.weightLog[setIdx] = value;
         this.saveState();
-        // Não fazemos render() aqui para não perder o foco do input seguinte, 
-        // mas os dados ficam guardados no estado e no servidor.
     }
 
     saveExerciseNote(clientId, dayIdx, exIdx, note) {
-        const plans = this.state.trainingPlans[clientId];
-        if (!plans || !plans[dayIdx] || !plans[dayIdx].exercises[exIdx]) return;
+        const days = this.getTrainingDays(clientId);
+        if (!days[dayIdx] || !days[dayIdx].exercises[exIdx]) return;
 
-        const ex = plans[dayIdx].exercises[exIdx];
+        const ex = days[dayIdx].exercises[exIdx];
         ex.clientNotes = note;
         this.saveState();
-        // Não fazemos render() para não perder o foco
     }
 
     viewExerciseVideo(url, name) {
@@ -4212,8 +4206,11 @@ Bons treinos!`;
     spyClient(id) {
         this.currentClientId = Number(id);
 
-        // Self-healing: Ensure structures exist
-        if (!this.state.trainingPlans[this.currentClientId]) this.state.trainingPlans[this.currentClientId] = [];
+        // Self-healing: Garantir estruturas base (sem apagar planos existentes)
+        if (!this.state.trainingPlans) this.state.trainingPlans = {};
+        if (!this.state.mealPlans) this.state.mealPlans = {};
+        if (!this.state.evaluations) this.state.evaluations = {};
+        if (!this.state.trainingHistory) this.state.trainingHistory = {};
         if (!this.state.mealPlans[this.currentClientId]) this.state.mealPlans[this.currentClientId] = { title: 'Plano Alimentar', meals: [] };
         if (!this.state.evaluations[this.currentClientId]) this.state.evaluations[this.currentClientId] = [];
         if (!this.state.trainingHistory[this.currentClientId]) this.state.trainingHistory[this.currentClientId] = [];
@@ -4678,7 +4675,7 @@ Bons treinos!`;
 
     downloadTrainingPDF(clientId) {
         const client = this.state.clients.find(c => c.id == clientId);
-        const plans = this.state.trainingPlans[clientId];
+        const plans = this.getTrainingDays(clientId);
 
         if (!client || !plans || !plans.length) return alert('Sem dados para exportar.');
 
