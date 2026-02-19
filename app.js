@@ -95,15 +95,17 @@ class FitnessApp {
     }
 
     async init() {
+        if (this.isInitialized) return;
+        this.isInitialized = true;
+
         // Escutar alterações em tempo real do Firebase
         this.dbRef.on('value', (snapshot) => {
-            if (this.isSaving) return; // Não atualizar o estado local se estivermos a meio de uma gravação
+            if (this.isSaving) return;
 
             const data = snapshot.val();
             let stateChanged = false;
 
             if (data) {
-                // Sincronizar estado local apenas se houver mudanças reais
                 if (JSON.stringify(data) !== JSON.stringify(this.state)) {
                     this.state = data;
                     if (this.isLoggedIn) {
@@ -112,59 +114,45 @@ class FitnessApp {
                     }
                 }
             } else {
-                // Se o Firebase estiver vazio (primeira vez), envia o estado local atual
                 console.log("Firebase vazio, inicializando com dados locais...");
                 this.saveState();
                 return;
             }
 
-            // Garantir que a lista de administradores existe e tem a conta mestre
-            if (!this.state.admins) {
-                this.state.admins = [];
-                stateChanged = true;
-            }
+            // Garantir integridade das coleções vitais
+            const collections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories'];
+            collections.forEach(coll => {
+                if (!this.state[coll]) {
+                    this.state[coll] = [];
+                    stateChanged = true;
+                }
+            });
 
-            const masterAdminExists = this.state.admins.some(a => a.email === 'admin@kandalgym.com');
+            const dictCollections = ['trainingPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis'];
+            dictCollections.forEach(coll => {
+                if (!this.state[coll]) {
+                    this.state[coll] = {};
+                    stateChanged = true;
+                }
+            });
+
+            // Garantir conta mestre
+            const masterAdminExists = (this.state.admins || []).some(a => a.email === 'admin@kandalgym.com');
             if (!masterAdminExists) {
+                if (!this.state.admins) this.state.admins = [];
                 this.state.admins.push({
                     id: 1,
                     name: 'KandalGym Master',
                     email: 'admin@kandalgym.com',
                     password: 'admin',
-                    role: 'admin',
-                    photoUrl: ''
+                    role: 'admin'
                 });
                 stateChanged = true;
             }
 
-            // Categorias e QR Clients
-            if (!this.state.qrClients || !Array.isArray(this.state.qrClients)) {
-                this.state.qrClients = [];
-                stateChanged = true;
-            }
-            if (!this.state.foodCategories || this.state.foodCategories.length === 0) {
-                this.state.foodCategories = ["Carne", "Peixe", "Leguminosas", "Laticínios", "Cereais", "Hortícolas", "Fruta", "Gorduras/Óleos", "Bebidas Energéticas", "Outros"];
-                stateChanged = true;
-            }
-            if (!this.state.exerciseCategories || this.state.exerciseCategories.length === 0) {
-                this.state.exerciseCategories = ["Perna", "Costas", "Peito", "Ombros", "Braços", "Cárdio", "Abdominais", "Alongamentos", "Dorsal", "Geral"];
-                stateChanged = true;
-            }
-
-            // Garantir que todas as outras coleções vitais existem
-            const collections = ['clients', 'teachers', 'trainingPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'foods', 'anamnesis'];
-            collections.forEach(coll => {
-                if (!this.state[coll]) {
-                    this.state[coll] = coll.includes('Plans') || coll.includes('History') || coll === 'evaluations' || coll === 'anamnesis' ? {} : [];
-                    stateChanged = true;
-                }
-            });
-
             if (stateChanged) {
                 this.saveState();
             }
-
-            this.shortenExistingQRIds();
         });
     }
 
@@ -455,18 +443,27 @@ class FitnessApp {
     }
 
     handleLogin() {
-        const email = document.getElementById('login-email').value.trim().toLowerCase();
-        const pass = document.getElementById('login-pass').value;
+        const emailInput = document.getElementById('login-email');
+        const passInput = document.getElementById('login-pass');
+
+        if (!emailInput || !passInput) return;
+
+        const email = emailInput.value.trim().toLowerCase();
+        const pass = passInput.value;
 
         if (email && pass) {
-            // 1. Verificar na lista de Administradores (vários Super-Users)
+            // Garantir que as listas existem para busca
+            if (!this.state.admins) this.state.admins = [];
+            if (!this.state.teachers) this.state.teachers = [];
+            if (!this.state.clients) this.state.clients = [];
+
             const admin = this.state.admins.find(a => a.email.toLowerCase() === email && a.password === pass);
             if (admin) {
                 this.role = 'admin';
                 this.currentUser = admin;
                 this.isLoggedIn = true;
                 this.persistLogin();
-                this.init();
+                this.renderAppInterface();
                 return;
             }
 
@@ -476,7 +473,7 @@ class FitnessApp {
                 this.currentUser = teacher;
                 this.isLoggedIn = true;
                 this.persistLogin();
-                this.init();
+                this.renderAppInterface();
                 return;
             }
 
@@ -487,7 +484,7 @@ class FitnessApp {
                 this.currentClientId = client.id;
                 this.isLoggedIn = true;
                 this.persistLogin();
-                this.init();
+                this.renderAppInterface();
             } else {
                 alert('Credenciais incorretas.');
             }
@@ -524,7 +521,7 @@ class FitnessApp {
         this.currentUser = null;
         this.activeView = 'dashboard';
         localStorage.removeItem('kandalgym_session');
-        this.init();
+        this.renderLogin();
     }
 
     renderFAB() {
