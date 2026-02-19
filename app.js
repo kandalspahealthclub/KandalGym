@@ -663,13 +663,13 @@ class FitnessApp {
 
 A sua conta de ${label} na KandalGym foi criada com sucesso!
 
-Poderá aceder à plataforma através do seguinte endereço: http://192.168.1.65:3000
+Poderá aceder à plataforma através do seguinte endereço: https://kandalspahealthclub.github.io/KandalGym/
 
 As suas credenciais de acesso são:
 - Email: ${email}
 - Password: ${pass}
 
-Recomendamos que altere a sua password após o primeiro login.
+Recomendamos que guarde este link nos seus favoritos ou instale a App no seu telemóvel.
 
 Bons treinos!
 Equipa KandalGym`;
@@ -678,7 +678,7 @@ Equipa KandalGym`;
 
 Olá ${name}, a sua conta de ${label} foi criada!
 
-🌐 Aceda aqui: http://192.168.1.65:3000
+🌐 Aceda aqui: https://kandalspahealthclub.github.io/KandalGym/
 
 🔑 *Credenciais:*
 📧 Email: ${email}
