@@ -44,7 +44,7 @@ class FitnessApp {
         firebase.initializeApp(firebaseConfig);
         this.db = firebase.database();
         this.dbRef = this.db.ref('kandalGymState');
-        this.isSaving = false; // Flag para evitar conflitos durante a gravação
+        this.isSaving = false;
 
         this.deferredPrompt = null;
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -54,7 +54,31 @@ class FitnessApp {
             this.renderNavbar();
         });
 
+        // 1. Restaurar login e renderizar interface IMEDIATAMENTE
+        this.restoreLogin();
+        if (!this.isLoggedIn) {
+            this.renderLogin();
+        } else {
+            this.renderAppInterface(); // Método auxiliar para mostrar o layout principal
+        }
+
+        // 2. Iniciar escuta do Firebase em segundo plano
         this.init();
+    }
+
+    renderAppInterface() {
+        const loginScreen = document.getElementById('login-screen');
+        const appScreen = document.getElementById('app');
+        if (loginScreen) loginScreen.style.display = 'none';
+        if (appScreen) {
+            appScreen.style.display = 'flex';
+            appScreen.style.opacity = '1';
+        }
+        this.renderNavbar();
+        this.renderSidebar();
+        this.renderUserProfile();
+        this.renderContent();
+        this.renderFAB();
     }
 
     async saveState() {
@@ -132,25 +156,6 @@ class FitnessApp {
             }
 
             this.shortenExistingQRIds();
-            this.restoreLogin();
-
-            if (!this.isLoggedIn) {
-                this.renderLogin();
-            } else {
-                const loginScreen = document.getElementById('login-screen');
-                const appScreen = document.getElementById('app');
-                if (loginScreen) loginScreen.style.display = 'none';
-                if (appScreen) {
-                    appScreen.style.display = 'flex';
-                    appScreen.style.opacity = '1';
-                }
-
-                this.renderNavbar();
-                this.renderSidebar();
-                this.renderUserProfile();
-                this.renderContent();
-                this.renderFAB();
-            }
         });
     }
 

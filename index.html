@@ -16,54 +16,40 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="KandalGym">
     <link rel="apple-touch-icon" href="logo.png">
+    <!-- Firebase SDKs (Versão Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <!-- QR Code & Scanner Dependencies -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 </head>
 
 <body>
-    <div id="login-screen" class="login-overlay">
-        <!-- Login content injected by JS -->
-    </div>
+    <div id="login-screen" class="login-overlay"></div>
 
-    <div id="app" style="display: none;">
+    <div id="app" style="display: none; opacity: 0; transition: opacity 0.5s ease;">
         <header class="glass-panel">
             <div class="logo">
                 <img src="logo.png" alt="KandalGym Logo">
             </div>
-            <!-- Removed unused top-nav -->
-            <div class="user-profile" id="user-profile-header">
-                <!-- User initials or profile will be injected by JS if needed -->
-            </div>
+            <div class="user-profile" id="user-profile-header"></div>
         </header>
 
         <main>
-            <aside class="sidebar glass-panel" id="sidebar">
-                <!-- Sidebar injected by JS -->
-            </aside>
+            <aside class="sidebar glass-panel" id="sidebar"></aside>
 
             <section class="content-area" id="main-content">
-                <!-- Dynamic content injected here -->
                 <div class="loader">Carregando...</div>
             </section>
         </main>
     </div>
 
-
     <script src="data.js"></script>
-    <script src="app.js?v=29"></script>
+    <script src="app.js?v=30"></script>
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js').then(reg => {
-                console.log('SW registered');
-                reg.onupdatefound = () => {
-                    const installingWorker = reg.installing;
-                    installingWorker.onstatechange = () => {
-                        if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            window.location.reload();
-                        }
-                    };
-                };
+                console.log('Service Worker Registado');
             });
         }
     </script>
