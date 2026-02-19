@@ -140,7 +140,10 @@ class FitnessApp {
                 const loginScreen = document.getElementById('login-screen');
                 const appScreen = document.getElementById('app');
                 if (loginScreen) loginScreen.style.display = 'none';
-                if (appScreen) appScreen.style.display = 'flex';
+                if (appScreen) {
+                    appScreen.style.display = 'flex';
+                    appScreen.style.opacity = '1';
+                }
 
                 this.renderNavbar();
                 this.renderSidebar();
