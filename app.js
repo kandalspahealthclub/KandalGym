@@ -2171,21 +2171,48 @@ Bons treinos!`;
     }
 
     finishWorkout(clientId, dayIdx) {
+        const cid = String(clientId);
+        const days = this.getTrainingDays(cid);
+        const day = days ? days[dayIdx] : null;
+        if (!day) { alert('Dia de treino não encontrado. Tente recarregar a página.'); return; }
+
+        const hasWeights = day.exercises.some(ex => ex.weightLog && ex.weightLog.some(w => w !== '' && w !== null && w !== undefined));
+
+        if (!hasWeights) {
+            // Usar modal customizado — confirm() é bloqueado em PWA/standalone iOS
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width:380px; text-align:center; padding:2rem;">
+                    <div style="font-size:3rem; margin-bottom:1rem;">⚠️</div>
+                    <h3 style="margin:0 0 0.75rem;">Sem cargas registadas</h3>
+                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Não registou nenhuma carga neste treino. Deseja concluí-lo na mesma?</p>
+                    <div style="display:flex; gap:1rem;">
+                        <button class="btn btn-secondary" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button class="btn btn-primary" style="flex:1;" id="confirm-finish-btn">
+                            <i class="fas fa-check"></i> Concluir
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            document.getElementById('confirm-finish-btn').onclick = () => {
+                modal.remove();
+                this.doFinishWorkout(cid, dayIdx, day);
+            };
+        } else {
+            this.doFinishWorkout(cid, dayIdx, day);
+        }
+    }
+
+    doFinishWorkout(cid, dayIdx, day) {
         try {
-            const cid = String(clientId); // Firebase guarda chaves como string
-            const days = this.getTrainingDays(cid);
-            const day = days[dayIdx];
-            if (!day) return alert('Dia de treino não encontrado. Tente recarregar a página.');
-
-            // Verificar se há algo para gravar
-            const hasWeights = day.exercises.some(ex => ex.weightLog && ex.weightLog.some(w => w !== '' && w !== null));
-
-            if (!hasWeights) {
-                if (!confirm('Não registou nenhuma carga. Deseja concluir o treino na mesma?')) return;
-            }
-
             if (!this.state.trainingHistory) this.state.trainingHistory = {};
-            if (!this.state.trainingHistory[cid]) this.state.trainingHistory[cid] = [];
+            if (!this.state.trainingHistory[cid] || !Array.isArray(this.state.trainingHistory[cid])) {
+                this.state.trainingHistory[cid] = [];
+            }
 
             const session = {
                 date: new Date().toLocaleDateString('pt-PT'),
@@ -2202,11 +2229,11 @@ Bons treinos!`;
             this.state.trainingHistory[cid].unshift(session);
             this.saveState();
 
-            alert('Treino concluído com sucesso! 🎉 As suas cargas foram gravadas no histórico.');
-            this.setView('dashboard');
+            this.showToast('Treino concluído! 🎉 As suas cargas foram gravadas no histórico.');
+            setTimeout(() => this.setView('dashboard'), 1200);
         } catch (err) {
             console.error('Erro ao concluir treino:', err);
-            alert('Ocorreu um erro ao guardar o treino. Por favor, tente novamente.');
+            alert('Ocorreu um erro ao guardar. Por favor tente novamente.');
         }
     }
 
