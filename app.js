@@ -151,6 +151,15 @@ class FitnessApp {
                 stateChanged = true;
             }
 
+            // Garantir que todas as outras coleções vitais existem
+            const collections = ['clients', 'teachers', 'trainingPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'foods', 'anamnesis'];
+            collections.forEach(coll => {
+                if (!this.state[coll]) {
+                    this.state[coll] = coll.includes('Plans') || coll.includes('History') || coll === 'evaluations' || coll === 'anamnesis' ? {} : [];
+                    stateChanged = true;
+                }
+            });
+
             if (stateChanged) {
                 this.saveState();
             }
@@ -189,7 +198,7 @@ class FitnessApp {
         this.addAppNotification(this.currentUser.id, 'Teste KandalGym 🚀', 'Se está a ver isto, as suas notificações estão ativas!');
     }
 
-    addAppNotification(targetUserId, title, body, senderId = null, type = 'notification') {
+    addAppNotification(targetUserId, title, body, senderId = null, type = 'notification', shouldSave = true) {
         if (!this.state.notifications) this.state.notifications = [];
         if (this.state.notifications.length > 200) {
             this.state.notifications = this.state.notifications.slice(-200);
@@ -204,7 +213,7 @@ class FitnessApp {
             body,
             createdAt: new Date().toISOString()
         });
-        this.saveState();
+        if (shouldSave) this.saveState();
     }
 
     showManualNotificationModal(clientId) {
@@ -606,74 +615,92 @@ class FitnessApp {
     }
 
     addUser() {
-        const type = document.getElementById('new-user-type').value;
-        const name = document.getElementById('new-user-name').value.trim();
-        const email = document.getElementById('new-user-email').value.trim().toLowerCase();
-        const pass = document.getElementById('new-user-pass').value.trim();
-        const phone = document.getElementById('new-user-phone').value.trim();
+        try {
+            const type = document.getElementById('new-user-type').value;
+            const name = document.getElementById('new-user-name').value.trim();
+            const email = document.getElementById('new-user-email').value.trim().toLowerCase();
+            const pass = document.getElementById('new-user-pass').value.trim();
+            const phone = document.getElementById('new-user-phone').value.trim();
 
-        if (!name || !email || !pass || !phone) return alert('Preencha tudo, incluindo o contacto.');
+            if (!name || !email || !pass || !phone) return alert('Por favor, preencha todos os campos obrigatórios.');
 
-        // Verificar se já existe email
-        const existsEmail = this.state.clients.some(c => c.email.toLowerCase() === email) ||
-            this.state.teachers.some(t => t.email.toLowerCase() === email) ||
-            this.state.admins.some(a => a.email.toLowerCase() === email); // Check admins too for safety
+            // Garantir que as listas existem antes de verificar duplicados
+            if (!this.state.clients) this.state.clients = [];
+            if (!this.state.teachers) this.state.teachers = [];
+            if (!this.state.admins) this.state.admins = [];
 
-        if (existsEmail) {
-            alert('Este email já está registado.');
-            return;
-        }
+            // Verificar se já existe email
+            const existsEmail = this.state.clients.some(c => c.email.toLowerCase() === email) ||
+                this.state.teachers.some(t => t.email.toLowerCase() === email) ||
+                this.state.admins.some(a => a.email.toLowerCase() === email);
 
-        // Verificar se já existe contacto telefónico (normalizando espaços)
-        const cleanPhone = phone.replace(/\s+/g, '');
-        const existsPhone = this.state.clients.some(c => (c.phone || '').replace(/\s+/g, '') === cleanPhone) ||
-            this.state.teachers.some(t => (t.phone || '').replace(/\s+/g, '') === cleanPhone) ||
-            this.state.admins.some(a => (a.phone || '').replace(/\s+/g, '') === cleanPhone);
+            if (existsEmail) {
+                alert('Este email já está registado no sistema.');
+                return;
+            }
 
-        if (existsPhone) {
-            alert('Este contacto telefónico já está registado na base de dados (Professor, Aluno ou Admin).');
-            return;
-        }
+            // Verificar se já existe contacto telefónico (normalizando espaços)
+            const cleanPhone = phone.replace(/\s+/g, '');
+            const existsPhone = this.state.clients.some(c => (c.phone || '').replace(/\s+/g, '') === cleanPhone) ||
+                this.state.teachers.some(t => (t.phone || '').replace(/\s+/g, '') === cleanPhone) ||
+                this.state.admins.some(a => (a.phone || '').replace(/\s+/g, '') === cleanPhone);
 
-        const newId = Date.now();
-        if (type === 'admin') {
-            this.state.admins.push({ id: newId, name, email, phone, password: pass });
-        } else if (type === 'teacher') {
-            this.state.teachers.push({ id: newId, name, email, phone, password: pass });
-        } else {
-            const teacherId = document.getElementById('new-user-teacher').value;
-            const newClient = {
-                id: newId,
-                name,
-                email,
-                phone,
-                password: pass,
-                status: 'Ativo',
-                lastEvaluation: '-',
-                goal: 'Novo Aluno',
-                teacherId: Number(teacherId),
-                birthDate: document.getElementById('new-user-dob').value
-            };
-            this.state.clients.push(newClient);
-            this.state.trainingPlans[newId] = [];
-            this.state.mealPlans[newId] = { title: 'Plano Alimentar', meals: [] };
-            this.state.evaluations[newId] = [];
-            this.state.trainingHistory[newId] = [];
+            if (existsPhone) {
+                alert('Este contacto telefónico já está registado na base de dados (Professor, Aluno ou Admin).');
+                return;
+            }
 
-            // Notificar o professor da nova inscrição
-            this.addAppNotification(teacherId, 'Novo Aluno Incrito!', `O aluno ${name} foi registado no sistema.`);
+            const newId = Date.now();
+            if (type === 'admin') {
+                this.state.admins.push({ id: newId, name, email, phone, password: pass });
+            } else if (type === 'teacher') {
+                this.state.teachers.push({ id: newId, name, email, phone, password: pass });
+            } else {
+                const teacherId = document.getElementById('new-user-teacher').value;
+                const newClient = {
+                    id: newId,
+                    name,
+                    email,
+                    phone,
+                    password: pass,
+                    status: 'Ativo',
+                    lastEvaluation: '-',
+                    goal: 'Novo Aluno',
+                    teacherId: teacherId ? Number(teacherId) : null,
+                    birthDate: document.getElementById('new-user-dob').value
+                };
+                this.state.clients.push(newClient);
 
-            // Ativar QR automaticamente para o novo aluno
-            this.enableQRForClient(newId);
-        }
+                // Initialize empty data structures for the new client
+                if (!this.state.trainingPlans) this.state.trainingPlans = {};
+                if (!this.state.mealPlans) this.state.mealPlans = {};
+                if (!this.state.evaluations) this.state.evaluations = {};
+                if (!this.state.trainingHistory) this.state.trainingHistory = {};
 
-        this.saveState();
-        document.querySelector('.modal-overlay').remove();
-        this.showInviteModal(name, email, pass, type, phone);
+                this.state.trainingPlans[newId] = [];
+                this.state.mealPlans[newId] = { title: 'Plano Alimentar', meals: [] };
+                this.state.evaluations[newId] = [];
+                this.state.trainingHistory[newId] = [];
 
-        // Se estiver na vista de utilizadores, atualizar a lista logo
-        if (this.activeView === 'users') {
-            this.switchAdminTab(type === 'client' ? 'clients' : (type === 'admin' ? 'admins' : 'teachers'));
+                // Notificar o professor da nova inscrição (sem gravar ainda)
+                if (teacherId) {
+                    this.addAppNotification(teacherId, 'Novo Aluno Inscrito!', `O aluno ${name} foi registado no sistema.`, null, 'notification', false);
+                }
+
+                // Ativar QR automaticamente para o novo aluno (sem gravar ainda)
+                this.enableQRForClient(newId, false);
+            }
+
+            this.saveState();
+            document.querySelector('.modal-overlay').remove();
+            this.showInviteModal(name, email, pass, type, phone);
+
+            if (this.activeView === 'users') {
+                this.switchAdminTab(type === 'client' ? 'clients' : (type === 'admin' ? 'admins' : 'teachers'));
+            }
+        } catch (error) {
+            console.error('Erro ao adicionar utilizador:', error);
+            alert('Erro ao guardar utilizador. Por favor, tente novamente ou contacte o suporte.');
         }
     }
 
@@ -3325,10 +3352,18 @@ Bons treinos!`;
 
     renderClientContent(container) {
         const c = this.state.clients.find(x => x.id === this.currentClientId);
+        if (!c) {
+            container.innerHTML = `<div style="padding:2rem; text-align:center;">
+                <h3>Utilizador não encontrado.</h3>
+                <p>Por favor, tente fazer login novamente.</p>
+                <button class="btn btn-primary" onclick="app.handleLogout()">Sair</button>
+            </div>`;
+            return;
+        }
         switch (this.activeView) {
             case 'dashboard':
                 container.innerHTML = `
-            <h2 class="animate-fade-in">Bem-vindo, ${c.name} 👋</h2>
+                    <h2 class="animate-fade-in">Bem-vindo, ${c.name} 👋</h2>
                     <p style="color:var(--text-muted); margin-bottom:1rem;">Este é o seu painel de acompanhamento KandalGym.</p>
                     
                     ${(() => {
@@ -5110,13 +5145,23 @@ Bons treinos!`;
         if (body) body.innerHTML = this.renderQRClientCards(val);
     }
 
-    enableQRForClient(clientId) {
-        const client = (this.state.clients || []).find(c => c.id === clientId);
-        if (!client) return;
-
+    enableQRForClient(clientId, autoRedirect = true) {
         if (!this.state.qrClients) this.state.qrClients = [];
 
-        // Generate a new short sequential ID
+        const client = (this.state.clients || []).find(c => c.id === Number(clientId));
+        if (!client) return;
+
+        // Verificar se já tem ID curto para este cliente
+        const exists = this.state.qrClients.find(qc => qc.clientId === Number(clientId));
+        if (exists) {
+            if (autoRedirect) {
+                this.setView('qr_manager');
+                this.showToast('Este cliente já tem acesso QR ativo.');
+            }
+            return;
+        }
+
+        // Encontrar próximo ID curto sequencial
         const usedIds = this.state.qrClients.map(c => {
             const m = c.id.match(/^K(\d+)$/);
             return m ? parseInt(m[1]) : 0;
@@ -5124,34 +5169,26 @@ Bons treinos!`;
         const maxId = usedIds.length > 0 ? Math.max(...usedIds) : 0;
         const qrId = "K" + (maxId + 1);
 
-        const existing = this.state.qrClients.find(c => c.clientId === clientId || c.id === qrId);
+        const validDate = new Date();
+        validDate.setDate(validDate.getDate() + 30);
 
-        if (existing) {
-            // If already exists, just switch to QR view and show a toast
-            this.setView('qr_manager');
-            this.showToast('Este cliente já tem acesso QR ativo.');
-            return;
-        }
-
-        // Create new QR entry linked to this client
-        let d = new Date(); d.setDate(d.getDate() + 30);
-
-        this.state.qrClients.unshift({
+        this.state.qrClients.push({
             id: qrId,
-            clientId: clientId,
+            clientId: Number(clientId),
             nome: client.name,
             tel: client.phone || "Sem contacto",
-            ent: 10, // Default credits
-            validade: d.toISOString().split('T')[0],
             ativo: true,
+            ent: 30,
+            validade: validDate.toISOString().split('T')[0],
             historico: []
         });
 
-        this.saveState();
-        this.showToast(`Acesso QR ativado para ${client.name}!`);
-        // Only redirect if explicitly activated from the UI, not in background sync
-        if (this.activeView !== 'qr_manager' && this.activeView !== 'dashboard') {
-            this.setView('qr_manager');
+        if (autoRedirect) {
+            this.saveState();
+            this.showToast(`Acesso QR ativado para ${client.name}!`);
+            if (this.activeView !== 'qr_manager' && this.activeView !== 'dashboard') {
+                this.setView('qr_manager');
+            }
         }
     }
 
@@ -5540,27 +5577,6 @@ Bons treinos!`;
         input.value = ''; // Limpar após processar
     }
 
-    enableQRForClient(clientId) {
-        if (!this.state.qrClients) this.state.qrClients = [];
-        const client = (this.state.clients || []).find(c => c.id === Number(clientId));
-        if (!client) return;
-
-        const exists = this.state.qrClients.find(qc => qc.clientId === Number(clientId));
-        if (exists) return;
-
-        this.state.qrClients.push({
-            id: "K" + (this.state.qrClients.length + 1),
-            clientId: Number(clientId),
-            nome: client.name,
-            ativo: true,
-            ent: 30,
-            validade: "2026-12-31",
-            historico: []
-        });
-
-        this.shortenExistingQRIds();
-        this.saveState();
-    }
 
     shortenExistingQRIds() {
         if (!this.state.qrClients || this.state.qrClients.length === 0) return;
