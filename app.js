@@ -44,6 +44,7 @@ class FitnessApp {
         firebase.initializeApp(firebaseConfig);
         this.db = firebase.database();
         this.dbRef = this.db.ref('kandalGymState');
+        this.isSaving = false; // Flag para evitar conflitos durante a gravação
 
         this.deferredPrompt = null;
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -57,16 +58,26 @@ class FitnessApp {
     }
 
     async saveState() {
+        this.isSaving = true;
         localStorage.setItem('kandalgym_state', JSON.stringify(this.state));
         try {
             await this.dbRef.set(this.state);
-        } catch (e) { console.error('Firebase Sync error:', e); }
+        } catch (e) {
+            console.error('Firebase Sync error:', e);
+        } finally {
+            // Pequeno delay para garantir que o evento 'value' do Firebase seja processado ou ignorado
+            setTimeout(() => { this.isSaving = false; }, 800);
+        }
     }
 
     async init() {
         // Escutar alterações em tempo real do Firebase
         this.dbRef.on('value', (snapshot) => {
+            if (this.isSaving) return; // Não atualizar o estado local se estivermos a meio de uma gravação
+
             const data = snapshot.val();
+            let stateChanged = false;
+
             if (data) {
                 // Sincronizar estado local apenas se houver mudanças reais
                 if (JSON.stringify(data) !== JSON.stringify(this.state)) {
@@ -77,12 +88,17 @@ class FitnessApp {
                     }
                 }
             } else {
-                // Se o Firebase estiver vazio, inicializa com o mockState
+                // Se o Firebase estiver vazio (primeira vez), envia o estado local atual
+                console.log("Firebase vazio, inicializando com dados locais...");
                 this.saveState();
+                return;
             }
 
             // Garantir que a lista de administradores existe e tem a conta mestre
-            if (!this.state.admins) this.state.admins = [];
+            if (!this.state.admins) {
+                this.state.admins = [];
+                stateChanged = true;
+            }
 
             const masterAdminExists = this.state.admins.some(a => a.email === 'admin@kandalgym.com');
             if (!masterAdminExists) {
@@ -94,26 +110,24 @@ class FitnessApp {
                     role: 'admin',
                     photoUrl: ''
                 });
-                this.saveState();
+                stateChanged = true;
             }
 
-            // Ensure qrClients exists for the new QR Manager feature
+            // Categorias e QR Clients
             if (!this.state.qrClients || !Array.isArray(this.state.qrClients)) {
                 this.state.qrClients = [];
+                stateChanged = true;
             }
-            // Garantir categorias de alimentos
             if (!this.state.foodCategories || this.state.foodCategories.length === 0) {
-                this.state.foodCategories = [
-                    "Carne", "Peixe", "Leguminosas", "Laticínios", "Cereais",
-                    "Hortícolas", "Fruta", "Gorduras/Óleos", "Bebidas Energéticas", "Outros"
-                ];
-                this.saveState();
+                this.state.foodCategories = ["Carne", "Peixe", "Leguminosas", "Laticínios", "Cereais", "Hortícolas", "Fruta", "Gorduras/Óleos", "Bebidas Energéticas", "Outros"];
+                stateChanged = true;
+            }
+            if (!this.state.exerciseCategories || this.state.exerciseCategories.length === 0) {
+                this.state.exerciseCategories = ["Perna", "Costas", "Peito", "Ombros", "Braços", "Cárdio", "Abdominais", "Alongamentos", "Dorsal", "Geral"];
+                stateChanged = true;
             }
 
-            if (!this.state.exerciseCategories || this.state.exerciseCategories.length === 0) {
-                this.state.exerciseCategories = [
-                    "Perna", "Costas", "Peito", "Ombros", "Braços", "Cárdio", "Abdominais", "Alongamentos", "Dorsal", "Geral"
-                ];
+            if (stateChanged) {
                 this.saveState();
             }
 
