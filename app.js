@@ -29,10 +29,21 @@ class FitnessApp {
         if (!this.state) this.state = mockState || {};
         if (!this.state.qrClients) this.state.qrClients = [];
 
-        // Se estiver num IP local ou localhost, usa a porta 3000. 
-        // Em produção (ex: PythonAnywhere), usa o host padrão.
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname.startsWith('192.168.');
-        this.apiUrl = isLocal ? `http://${window.location.hostname}:3000/api/state` : '/api/state';
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7cf3sfJBm0YsLOagu6or2hCTd-xcjO1E",
+            authDomain: "kandalgym.firebaseapp.com",
+            databaseURL: "https://kandalgym-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "kandalgym",
+            storageBucket: "kandalgym.firebasestorage.app",
+            messagingSenderId: "367817039949",
+            appId: "1:367817039949:web:5c72215819b9bb1eb07c04",
+            measurementId: "G-WY0QSKYVCR"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        this.db = firebase.database();
+        this.dbRef = this.db.ref('kandalGymState');
 
         this.deferredPrompt = null;
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -48,97 +59,88 @@ class FitnessApp {
     async saveState() {
         localStorage.setItem('kandalgym_state', JSON.stringify(this.state));
         try {
-            await fetch(this.apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(this.state)
-            });
-        } catch (e) { console.error('Sync error:', e); }
+            await this.dbRef.set(this.state);
+        } catch (e) { console.error('Firebase Sync error:', e); }
     }
 
     async init() {
-        try {
-            const res = await fetch(this.apiUrl);
-            if (res.ok) this.state = await res.json();
-            else await this.saveState();
-        } catch (e) {
-            const saved = localStorage.getItem('kandalgym_state');
-            if (saved) this.state = JSON.parse(saved);
-        }
-
-        // Garantir que a lista de administradores existe e tem a conta mestre
-        if (!this.state.admins) this.state.admins = [];
-
-        const masterAdminExists = this.state.admins.some(a => a.email === 'admin@kandalgym.com');
-        if (!masterAdminExists) {
-            this.state.admins.push({
-                id: 1,
-                name: 'KandalGym Master',
-                email: 'admin@kandalgym.com',
-                password: 'admin',
-                role: 'admin',
-                photoUrl: ''
-            });
-            this.saveState();
-        }
-
-        // Ensure qrClients exists for the new QR Manager feature
-        if (!this.state.qrClients || !Array.isArray(this.state.qrClients)) {
-            this.state.qrClients = [];
-        }
-        // Garantir categorias de alimentos
-        if (!this.state.foodCategories || this.state.foodCategories.length === 0) {
-            this.state.foodCategories = [
-                "Carne", "Peixe", "Leguminosas", "Laticínios", "Cereais",
-                "Hortícolas", "Fruta", "Gorduras/Óleos", "Bebidas Energéticas", "Outros"
-            ];
-            this.saveState();
-        }
-
-        if (!this.state.exerciseCategories || this.state.exerciseCategories.length === 0) {
-            this.state.exerciseCategories = [
-                "Perna", "Costas", "Peito", "Ombros", "Braços", "Cárdio", "Abdominais", "Alongamentos", "Dorsal", "Geral"
-            ];
-            this.saveState();
-        }
-
-        this.shortenExistingQRIds();
-        this.restoreLogin();
-
-        if (!this.isLoggedIn) {
-            this.renderLogin();
-        } else {
-            const loginScreen = document.getElementById('login-screen');
-            const appScreen = document.getElementById('app');
-            if (loginScreen) loginScreen.style.display = 'none';
-            if (appScreen) appScreen.style.display = 'flex';
-
-            this.renderNavbar();
-            this.renderSidebar();
-            this.renderUserProfile();
-            this.renderContent();
-            this.renderFAB();
-
-            // Iniciar sincronização periódica (cada 5 segundos) se logado
-            if (!this.syncInterval) {
-                this.syncInterval = setInterval(() => this.backgroundSync(), 5000);
+        // Escutar alterações em tempo real do Firebase
+        this.dbRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                // Sincronizar estado local apenas se houver mudanças reais
+                if (JSON.stringify(data) !== JSON.stringify(this.state)) {
+                    this.state = data;
+                    if (this.isLoggedIn) {
+                        this.checkAppNotifications();
+                        this.renderContent();
+                    }
+                }
+            } else {
+                // Se o Firebase estiver vazio, inicializa com o mockState
+                this.saveState();
             }
-        }
+
+            // Garantir que a lista de administradores existe e tem a conta mestre
+            if (!this.state.admins) this.state.admins = [];
+
+            const masterAdminExists = this.state.admins.some(a => a.email === 'admin@kandalgym.com');
+            if (!masterAdminExists) {
+                this.state.admins.push({
+                    id: 1,
+                    name: 'KandalGym Master',
+                    email: 'admin@kandalgym.com',
+                    password: 'admin',
+                    role: 'admin',
+                    photoUrl: ''
+                });
+                this.saveState();
+            }
+
+            // Ensure qrClients exists for the new QR Manager feature
+            if (!this.state.qrClients || !Array.isArray(this.state.qrClients)) {
+                this.state.qrClients = [];
+            }
+            // Garantir categorias de alimentos
+            if (!this.state.foodCategories || this.state.foodCategories.length === 0) {
+                this.state.foodCategories = [
+                    "Carne", "Peixe", "Leguminosas", "Laticínios", "Cereais",
+                    "Hortícolas", "Fruta", "Gorduras/Óleos", "Bebidas Energéticas", "Outros"
+                ];
+                this.saveState();
+            }
+
+            if (!this.state.exerciseCategories || this.state.exerciseCategories.length === 0) {
+                this.state.exerciseCategories = [
+                    "Perna", "Costas", "Peito", "Ombros", "Braços", "Cárdio", "Abdominais", "Alongamentos", "Dorsal", "Geral"
+                ];
+                this.saveState();
+            }
+
+            this.shortenExistingQRIds();
+            this.restoreLogin();
+
+            if (!this.isLoggedIn) {
+                this.renderLogin();
+            } else {
+                const loginScreen = document.getElementById('login-screen');
+                const appScreen = document.getElementById('app');
+                if (loginScreen) loginScreen.style.display = 'none';
+                if (appScreen) appScreen.style.display = 'flex';
+
+                this.renderNavbar();
+                this.renderSidebar();
+                this.renderUserProfile();
+                this.renderContent();
+                this.renderFAB();
+            }
+        });
     }
 
     async backgroundSync() {
-        if (!this.isLoggedIn || this.activeView === 'edit_training') return;
-        try {
-            const res = await fetch(this.apiUrl);
-            if (res.ok) {
-                const newState = await res.json();
-                if (JSON.stringify(newState) !== JSON.stringify(this.state)) {
-                    this.state = newState;
-                    this.checkAppNotifications();
-                    this.renderContent();
-                }
-            }
-        } catch (e) { console.warn('Background sync failed'); }
+        // Agora o 'init' com dbRef.on('value') já faz a sincronização automática em tempo real.
+        // Não precisamos mais de intervalo.
+        return;
     }
 
     // --- Notification System ---
