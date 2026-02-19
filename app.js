@@ -443,16 +443,21 @@ class FitnessApp {
     }
 
     handleLogin() {
-        const emailInput = document.getElementById('login-email');
-        const passInput = document.getElementById('login-pass');
+        try {
+            const emailInput = document.getElementById('login-email');
+            const passInput = document.getElementById('login-pass');
 
-        if (!emailInput || !passInput) return;
+            if (!emailInput || !passInput) return;
 
-        const email = emailInput.value.trim().toLowerCase();
-        const pass = passInput.value;
+            const email = emailInput.value.trim().toLowerCase();
+            const pass = passInput.value;
 
-        if (email && pass) {
-            // Garantir que as listas existem para busca
+            if (!email || !pass) {
+                return alert('Por favor, preencha todos os campos.');
+            }
+
+            // Garantir que o estado e listas básicas existem
+            if (!this.state) this.state = {};
             if (!this.state.admins) this.state.admins = [];
             if (!this.state.teachers) this.state.teachers = [];
             if (!this.state.clients) this.state.clients = [];
@@ -486,10 +491,11 @@ class FitnessApp {
                 this.persistLogin();
                 this.renderAppInterface();
             } else {
-                alert('Credenciais incorretas.');
+                alert('Email ou palavra-passe incorretos.');
             }
-        } else {
-            alert('Preencha os campos.');
+        } catch (error) {
+            console.error('Erro no login:', error);
+            alert('Ocorreu um erro ao entrar. Tente refrescar a página.');
         }
     }
 
@@ -519,9 +525,10 @@ class FitnessApp {
     handleLogout() {
         this.isLoggedIn = false;
         this.currentUser = null;
-        this.activeView = 'dashboard';
         localStorage.removeItem('kandalgym_session');
-        this.renderLogin();
+
+        // Force refresh to clear all state and re-initialize purely on the login screen
+        window.location.reload();
     }
 
     renderFAB() {
@@ -2045,18 +2052,25 @@ Bons treinos!`;
     }
 
     renderTrainingView(container, clientId) {
-        // Usar comparação loosa (==) para garantir
         const c = this.state.clients.find(x => x.id == clientId);
         if (!c) {
             container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
             return;
         }
-        let plans = this.state.trainingPlans[clientId] || [];
 
-        // Auto-migração: Se for um objeto único, converter para Array de 1 dia
-        if (plans && !Array.isArray(plans) && typeof plans === 'object') {
-            plans = [plans];
-            this.state.trainingPlans[clientId] = plans;
+        // O plano pode ser guardado como { days: [...], author, updatedAt } ou diretamente como Array
+        const rawPlan = this.state.trainingPlans[clientId];
+        let plans = [];
+        if (rawPlan) {
+            if (Array.isArray(rawPlan)) {
+                plans = rawPlan;
+            } else if (rawPlan.days && Array.isArray(rawPlan.days)) {
+                // Formato correto: { days: [...], author, updatedAt }
+                plans = rawPlan.days;
+            } else if (typeof rawPlan === 'object') {
+                // Objeto corrompido do Firebase (keys numéricas) → converter para array
+                plans = Object.values(rawPlan).filter(v => v && typeof v === 'object' && v.exercises);
+            }
         }
 
         const isTeacher = this.role === 'teacher' || this.role === 'admin';
@@ -2267,15 +2281,20 @@ Bons treinos!`;
             }
         }
 
-        const c = this.state.clients.find(x => x.id === clientId);
-        let existing = this.state.trainingPlans[clientId] || [];
+        const rawPlan = this.state.trainingPlans[clientId];
+        let existingDays = [];
 
-        // Garantir formato Array
-        if (existing && !Array.isArray(existing) && typeof existing === 'object') {
-            existing = [existing];
+        if (rawPlan) {
+            if (Array.isArray(rawPlan)) {
+                existingDays = rawPlan;
+            } else if (rawPlan.days && Array.isArray(rawPlan.days)) {
+                existingDays = rawPlan.days;
+            } else if (typeof rawPlan === 'object') {
+                existingDays = Object.values(rawPlan).filter(v => v && typeof v === 'object' && v.exercises);
+            }
         }
 
-        this.editingPlan = JSON.parse(JSON.stringify(existing));
+        this.editingPlan = JSON.parse(JSON.stringify(existingDays));
 
         if (!Array.isArray(this.editingPlan) || this.editingPlan.length === 0) {
             this.editingPlan = [{ title: 'Dia 1', exercises: [] }];
@@ -2426,24 +2445,26 @@ Bons treinos!`;
     }
 
     saveTrainingPlan() {
-        this.editingPlan.forEach(day => {
-            day.exercises = day.exercises.filter(ex => ex.id);
-        });
+        // Filtrar exercícios sem ID (linhas em branco que o utilizador não preencheu)
+        const cleanDays = this.editingPlan
+            .map(day => ({
+                ...day,
+                exercises: day.exercises.filter(ex => ex.id)
+            }))
+            .filter(day => day.exercises.length > 0 || this.editingPlan.length === 1);
 
-        this.editingPlan.forEach(day => {
-            day.exercises = day.exercises.filter(ex => ex.id);
-        });
+        // Guardar como objeto estruturado para evitar corrompimento no Firebase
+        const planObject = {
+            days: cleanDays,
+            author: this.currentUser.name,
+            updatedAt: new Date().toLocaleDateString('pt-PT')
+        };
 
-        // Add attribution only if not present or update it? User said "identified by who made them".
-        // If I edit, I become the author of the latest version.
-        this.editingPlan.author = this.currentUser.name;
-        this.editingPlan.updatedAt = new Date().toLocaleDateString('pt-PT');
-
-        this.state.trainingPlans[this.editingClientId] = this.editingPlan;
+        this.state.trainingPlans[this.editingClientId] = planObject;
         this.saveState();
 
-        // Notificar o aluno do novo plano de treino
-        this.addAppNotification(this.editingClientId, 'Novo Plano de Treino!', 'O seu professor atualizou o seu plano de treino.');
+        // Notificar o aluno do novo plano de treino (sem gravar novamente)
+        this.addAppNotification(this.editingClientId, 'Novo Plano de Treino!', 'O seu professor atualizou o seu plano de treino.', null, 'notification', false);
 
         this.clearTrainingDraft();
         alert('Plano de treino guardado com sucesso!');
