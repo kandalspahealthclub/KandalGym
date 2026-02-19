@@ -2161,7 +2161,8 @@ Bons treinos!`;
 
     // Helper central: extrai sempre um array de dias independentemente do formato gravado
     getTrainingDays(clientId) {
-        const raw = this.state.trainingPlans ? this.state.trainingPlans[clientId] : null;
+        const cid = String(clientId); // Firebase usa sempre chaves de string
+        const raw = this.state.trainingPlans ? this.state.trainingPlans[cid] : null;
         if (!raw) return [];
         if (Array.isArray(raw)) return raw;
         if (raw.days && Array.isArray(raw.days)) return raw.days;
@@ -2170,37 +2171,43 @@ Bons treinos!`;
     }
 
     finishWorkout(clientId, dayIdx) {
-        const days = this.getTrainingDays(clientId);
-        const day = days[dayIdx];
-        if (!day) return alert('Dia de treino n\u00e3o encontrado.');
+        try {
+            const cid = String(clientId); // Firebase guarda chaves como string
+            const days = this.getTrainingDays(cid);
+            const day = days[dayIdx];
+            if (!day) return alert('Dia de treino não encontrado. Tente recarregar a página.');
 
-        // Verificar se há algo para gravar
-        const hasWeights = day.exercises.some(ex => ex.weightLog && ex.weightLog.some(w => w !== '' && w !== null));
+            // Verificar se há algo para gravar
+            const hasWeights = day.exercises.some(ex => ex.weightLog && ex.weightLog.some(w => w !== '' && w !== null));
 
-        if (!hasWeights) {
-            if (!confirm('Não registou nenhuma carga. Deseja concluir o treino na mesma?')) return;
+            if (!hasWeights) {
+                if (!confirm('Não registou nenhuma carga. Deseja concluir o treino na mesma?')) return;
+            }
+
+            if (!this.state.trainingHistory) this.state.trainingHistory = {};
+            if (!this.state.trainingHistory[cid]) this.state.trainingHistory[cid] = [];
+
+            const session = {
+                date: new Date().toLocaleDateString('pt-PT'),
+                time: new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }),
+                title: day.title,
+                exercises: day.exercises.map(ex => ({
+                    name: ex.name,
+                    sets: ex.sets,
+                    reps: ex.reps,
+                    weights: [...(ex.weightLog || [])]
+                }))
+            };
+
+            this.state.trainingHistory[cid].unshift(session);
+            this.saveState();
+
+            alert('Treino concluído com sucesso! 🎉 As suas cargas foram gravadas no histórico.');
+            this.setView('dashboard');
+        } catch (err) {
+            console.error('Erro ao concluir treino:', err);
+            alert('Ocorreu um erro ao guardar o treino. Por favor, tente novamente.');
         }
-
-        if (!this.state.trainingHistory) this.state.trainingHistory = {};
-        if (!this.state.trainingHistory[clientId]) this.state.trainingHistory[clientId] = [];
-
-        const session = {
-            date: new Date().toLocaleDateString('pt-PT'),
-            time: new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }),
-            title: day.title,
-            exercises: day.exercises.map(ex => ({
-                name: ex.name,
-                sets: ex.sets,
-                reps: ex.reps,
-                weights: [...(ex.weightLog || [])]
-            }))
-        };
-
-        this.state.trainingHistory[clientId].unshift(session); // Mais recente primeiro
-        this.saveState();
-
-        alert('Treino concluído com sucesso! 🎉 As suas cargas foram gravadas no histórico.');
-        this.setView('dashboard');
     }
 
     deleteTrainingSession(index) {
@@ -2221,6 +2228,10 @@ Bons treinos!`;
         const ex = days[dayIdx].exercises[exIdx];
         if (!ex.weightLog) ex.weightLog = [];
         ex.weightLog[setIdx] = value;
+        // Guardar diretamente na estrutura de estado para persistir
+        const cid = String(clientId);
+        const raw = this.state.trainingPlans[cid];
+        if (raw && raw.days) raw.days[dayIdx].exercises[exIdx] = ex;
         this.saveState();
     }
 
@@ -2230,6 +2241,9 @@ Bons treinos!`;
 
         const ex = days[dayIdx].exercises[exIdx];
         ex.clientNotes = note;
+        const cid = String(clientId);
+        const raw = this.state.trainingPlans[cid];
+        if (raw && raw.days) raw.days[dayIdx].exercises[exIdx] = ex;
         this.saveState();
     }
 
@@ -2482,7 +2496,8 @@ Bons treinos!`;
             container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
             return;
         }
-        const meal = this.state.mealPlans[clientId];
+        const cid = String(clientId); // Firebase normaliza chaves para string
+        const meal = this.state.mealPlans[cid];
         const canEdit = (this.role === 'admin' || this.role === 'teacher');
 
         container.innerHTML = `
@@ -2552,13 +2567,13 @@ Bons treinos!`;
     }
 
     openMealEditor(clientId) {
-        clientId = Number(clientId);
-        let existing = this.state.mealPlans[clientId];
+        const cid = String(clientId);
+        let existing = this.state.mealPlans[cid];
         if (!existing || Array.isArray(existing)) {
             existing = { title: 'Plano Alimentar', meals: [] };
         }
         this.editingMeal = JSON.parse(JSON.stringify(existing));
-        this.editingClientId = clientId;
+        this.editingClientId = cid;
         this.setView('edit_meal');
     }
 
@@ -2878,9 +2893,8 @@ Bons treinos!`;
 
     deleteMealPlan(clientId) {
         if (confirm('Tem a certeza que deseja eliminar toda a dieta deste aluno?')) {
-            this.state.mealPlans[clientId] = { title: 'Plano Alimentar', meals: [] };
-            this.state.mealPlans[clientId].author = this.currentUser.name;
-            this.state.mealPlans[clientId].updatedAt = new Date().toLocaleDateString('pt-PT');
+            const cid = String(clientId);
+            this.state.mealPlans[cid] = { title: 'Plano Alimentar', meals: [], author: this.currentUser.name, updatedAt: new Date().toLocaleDateString('pt-PT') };
             this.saveState();
             this.renderContent();
             alert('Dieta eliminada com sucesso! 🗑️');
@@ -2959,7 +2973,8 @@ Bons treinos!`;
             container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
             return;
         }
-        const evals = this.state.evaluations[clientId] || [];
+        const cid = String(clientId); // Firebase usa chaves de string
+        const evals = this.state.evaluations[cid] || [];
         const isTeacher = this.role === 'teacher' || this.role === 'admin';
 
         container.innerHTML = `
@@ -3090,7 +3105,7 @@ Bons treinos!`;
     showEvaluationModal(clientId, index = null) {
         let ev = { date: new Date().toISOString().split('T')[0] };
         if (index !== null) {
-            const entry = this.state.evaluations[clientId][index];
+            const entry = this.state.evaluations[String(clientId)][index];
             // Converter data DD/MM/YYYY para YYYY-MM-DD para o input type="date"
             let dateVal = entry.date;
             if (dateVal.includes('/')) {
@@ -3233,12 +3248,13 @@ Bons treinos!`;
             return;
         }
 
-        if (!this.state.evaluations[clientId]) this.state.evaluations[clientId] = [];
+        const cid = String(clientId);
+        if (!this.state.evaluations[cid]) this.state.evaluations[cid] = [];
 
         if (index === null) {
-            this.state.evaluations[clientId].unshift(entry);
+            this.state.evaluations[cid].unshift(entry);
         } else {
-            this.state.evaluations[clientId][index] = entry;
+            this.state.evaluations[cid][index] = entry;
         }
 
         // Atualizar o último peso/data no perfil do cliente se necessário
@@ -3255,7 +3271,7 @@ Bons treinos!`;
 
     deleteEvaluation(clientId, index) {
         if (confirm('Tem a certeza que deseja eliminar este registo de avaliação?')) {
-            this.state.evaluations[clientId].splice(index, 1);
+            this.state.evaluations[String(clientId)].splice(index, 1);
             this.saveState();
             this.renderContent();
             alert('Avaliação removida.');
@@ -4351,9 +4367,10 @@ Bons treinos!`;
     }
 
     renderAnamnesisView(container, clientId) {
+        const cid = String(clientId);
         if (!this.state.anamnesis) this.state.anamnesis = {};
-        if (!this.state.anamnesis[clientId]) this.state.anamnesis[clientId] = [];
-        const entries = this.state.anamnesis[clientId];
+        if (!this.state.anamnesis[cid]) this.state.anamnesis[cid] = [];
+        const entries = this.state.anamnesis[cid];
         const isTeacher = this.role === 'teacher';
 
         container.innerHTML = `
@@ -4428,7 +4445,7 @@ Bons treinos!`;
         };
 
         if (index !== null) {
-            const entry = this.state.anamnesis[clientId][index];
+            const entry = this.state.anamnesis[String(clientId)][index];
             let dateVal = entry.date;
             if (dateVal.includes('/')) {
                 const [d, m, y] = dateVal.split('/');
@@ -4589,13 +4606,14 @@ Bons treinos!`;
                 updatedAt: new Date().toLocaleDateString('pt-PT')
             };
 
+            const cid = String(clientId);
             if (!this.state.anamnesis) this.state.anamnesis = {};
-            if (!this.state.anamnesis[clientId]) this.state.anamnesis[clientId] = [];
+            if (!this.state.anamnesis[cid]) this.state.anamnesis[cid] = [];
 
             if (index !== null) {
-                this.state.anamnesis[clientId][index] = entry;
+                this.state.anamnesis[cid][index] = entry;
             } else {
-                this.state.anamnesis[clientId].push(entry);
+                this.state.anamnesis[cid].push(entry);
             }
 
             this.saveState();
@@ -4610,7 +4628,7 @@ Bons treinos!`;
 
     deleteAnamnesis(clientId, index) {
         if (!confirm('Tem a certeza que deseja remover este registo de anamnese?')) return;
-        this.state.anamnesis[clientId].splice(index, 1);
+        this.state.anamnesis[String(clientId)].splice(index, 1);
         this.saveState();
         this.renderContent();
     }
