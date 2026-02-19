@@ -2356,7 +2356,7 @@ Bons treinos!`;
     renderTrainingEditor() {
         const container = document.getElementById('main-content');
         if (!container) return;
-        const c = this.state.clients.find(x => x.id === this.editingClientId);
+        const c = this.state.clients.find(x => x.id == this.editingClientId); // == intencional (string vs number)
 
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
@@ -2372,7 +2372,7 @@ Bons treinos!`;
                 <div>
                     <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase;">Objetivo do Plano</label>
                     <input type="text" id="edit-training-goal" value="${c.goal || ''}" placeholder="Ex: Hipertrofia, Redução de Massa Gorda..."
-                        onchange="app.state.clients.find(x => x.id === app.editingClientId).goal = this.value; app.saveState();"
+                        onchange="app.state.clients.find(x => x.id == app.editingClientId).goal = this.value; app.saveState();"
                         style="width:300px; height:40px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 12px; font-size:0.95rem;">
                 </div>
                 <div style="display:flex; align-items:center; gap:0.5rem; align-self: flex-end;">
@@ -2607,7 +2607,7 @@ Bons treinos!`;
     renderMealEditor() {
         const container = document.getElementById('main-content');
         if (!container) return;
-        const c = this.state.clients.find(x => x.id === this.editingClientId);
+        const c = this.state.clients.find(x => x.id == this.editingClientId); // == intencional (string vs number)
 
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
@@ -3311,7 +3311,7 @@ Bons treinos!`;
     }
 
     renderSpyView(container) {
-        const c = this.state.clients.find(x => x.id === this.currentClientId);
+        const c = this.state.clients.find(x => x.id == this.currentClientId);
         if (!c) return;
 
         container.innerHTML = `
@@ -3406,7 +3406,7 @@ Bons treinos!`;
     }
 
     renderClientContent(container) {
-        const c = this.state.clients.find(x => x.id === this.currentClientId);
+        const c = this.state.clients.find(x => x.id == this.currentClientId);
         if (!c) {
             container.innerHTML = `<div style="padding:2rem; text-align:center;">
                 <h3>Utilizador não encontrado.</h3>
