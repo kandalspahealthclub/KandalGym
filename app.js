@@ -66,20 +66,21 @@ class FitnessApp {
             if (saved) this.state = JSON.parse(saved);
         }
 
-        // Garantir que a lista de administradores existe
-        if (!this.state.admins || this.state.admins.length === 0) {
-            this.state.admins = [{
+        // Garantir que a lista de administradores existe e tem a conta mestre
+        if (!this.state.admins) this.state.admins = [];
+
+        const masterAdminExists = this.state.admins.some(a => a.email === 'admin@kandalgym.com');
+        if (!masterAdminExists) {
+            this.state.admins.push({
                 id: 1,
-                name: 'Administrador',
+                name: 'KandalGym Master',
                 email: 'admin@kandalgym.com',
                 password: 'admin',
                 role: 'admin',
                 photoUrl: ''
-            }];
+            });
+            this.saveState();
         }
-
-        // Ensure admins array exists even if not empty (e.g. from older state)
-        if (!this.state.admins) this.state.admins = [];
 
         // Ensure qrClients exists for the new QR Manager feature
         if (!this.state.qrClients || !Array.isArray(this.state.qrClients)) {
