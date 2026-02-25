@@ -51,7 +51,7 @@ body {
     overflow-x: hidden;
     background-image:
         linear-gradient(rgba(10, 12, 16, 0.94), rgba(10, 12, 16, 0.94)),
-        url('hero.png');
+        url('hero1.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -483,7 +483,7 @@ option {
     background: var(--background);
     background-image:
         linear-gradient(rgba(10, 12, 16, 0.85), rgba(10, 12, 16, 0.85)),
-        url('hero.png');
+        url('hero1.png');
     background-size: cover;
     background-position: center;
     z-index: 5000;

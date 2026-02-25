@@ -29,10 +29,22 @@ class FitnessApp {
         if (!this.state) this.state = mockState || {};
         if (!this.state.qrClients) this.state.qrClients = [];
 
-        // Se estiver num IP local ou localhost, usa a porta 3000. 
-        // Em produção (ex: PythonAnywhere), usa o host padrão.
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname.startsWith('192.168.');
-        this.apiUrl = isLocal ? `http://${window.location.hostname}:3000/api/state` : '/api/state';
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7cf3sfJBm0YsLOagu6or2hCTd-xcjO1E",
+            authDomain: "kandalgym.firebaseapp.com",
+            databaseURL: "https://kandalgym-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "kandalgym",
+            storageBucket: "kandalgym.firebasestorage.app",
+            messagingSenderId: "367817039949",
+            appId: "1:367817039949:web:5c72215819b9bb1eb07c04",
+            measurementId: "G-WY0QSKYVCR"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        this.db = firebase.database();
+        this.dbRef = this.db.ref('kandalGymState');
+        this.isSaving = false;
 
         this.deferredPrompt = null;
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -42,102 +54,112 @@ class FitnessApp {
             this.renderNavbar();
         });
 
-        this.init();
-    }
-
-    async saveState() {
-        localStorage.setItem('kandalgym_state', JSON.stringify(this.state));
-        try {
-            await fetch(this.apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(this.state)
-            });
-        } catch (e) { console.error('Sync error:', e); }
-    }
-
-    async init() {
-        try {
-            const res = await fetch(this.apiUrl);
-            if (res.ok) this.state = await res.json();
-            else await this.saveState();
-        } catch (e) {
-            const saved = localStorage.getItem('kandalgym_state');
-            if (saved) this.state = JSON.parse(saved);
-        }
-
-        // Garantir que a lista de administradores existe
-        if (!this.state.admins || this.state.admins.length === 0) {
-            this.state.admins = [{
-                id: 1,
-                name: 'Administrador',
-                email: 'admin@kandalgym.com',
-                password: 'admin',
-                role: 'admin',
-                photoUrl: ''
-            }];
-        }
-
-        // Ensure admins array exists even if not empty (e.g. from older state)
-        if (!this.state.admins) this.state.admins = [];
-
-        // Ensure qrClients exists for the new QR Manager feature
-        if (!this.state.qrClients || !Array.isArray(this.state.qrClients)) {
-            this.state.qrClients = [];
-        }
-        // Garantir categorias de alimentos
-        if (!this.state.foodCategories || this.state.foodCategories.length === 0) {
-            this.state.foodCategories = [
-                "Carne", "Peixe", "Leguminosas", "Laticínios", "Cereais",
-                "Hortícolas", "Fruta", "Gorduras/Óleos", "Bebidas Energéticas", "Outros"
-            ];
-            this.saveState();
-        }
-
-        if (!this.state.exerciseCategories || this.state.exerciseCategories.length === 0) {
-            this.state.exerciseCategories = [
-                "Perna", "Costas", "Peito", "Ombros", "Braços", "Cárdio", "Abdominais", "Alongamentos", "Dorsal", "Geral"
-            ];
-            this.saveState();
-        }
-
-        this.shortenExistingQRIds();
+        // 1. Restaurar login e renderizar interface IMEDIATAMENTE
         this.restoreLogin();
-
         if (!this.isLoggedIn) {
             this.renderLogin();
         } else {
-            const loginScreen = document.getElementById('login-screen');
-            const appScreen = document.getElementById('app');
-            if (loginScreen) loginScreen.style.display = 'none';
-            if (appScreen) appScreen.style.display = 'flex';
+            this.renderAppInterface(); // Método auxiliar para mostrar o layout principal
+        }
 
-            this.renderNavbar();
-            this.renderSidebar();
-            this.renderUserProfile();
-            this.renderContent();
-            this.renderFAB();
+        // 2. Iniciar escuta do Firebase em segundo plano
+        this.init();
+    }
 
-            // Iniciar sincronização periódica (cada 5 segundos) se logado
-            if (!this.syncInterval) {
-                this.syncInterval = setInterval(() => this.backgroundSync(), 5000);
-            }
+    renderAppInterface() {
+        const loginScreen = document.getElementById('login-screen');
+        const appScreen = document.getElementById('app');
+        if (loginScreen) loginScreen.style.display = 'none';
+        if (appScreen) {
+            appScreen.style.display = 'flex';
+            appScreen.style.opacity = '1';
+        }
+        this.renderNavbar();
+        this.renderSidebar();
+        this.renderUserProfile();
+        this.renderContent();
+        this.renderFAB();
+    }
+
+    async saveState() {
+        this.isSaving = true;
+        localStorage.setItem('kandalgym_state', JSON.stringify(this.state));
+        try {
+            await this.dbRef.set(this.state);
+        } catch (e) {
+            console.error('Firebase Sync error:', e);
+        } finally {
+            // Pequeno delay para garantir que o evento 'value' do Firebase seja processado ou ignorado
+            setTimeout(() => { this.isSaving = false; }, 800);
         }
     }
 
-    async backgroundSync() {
-        if (!this.isLoggedIn || this.activeView === 'edit_training') return;
-        try {
-            const res = await fetch(this.apiUrl);
-            if (res.ok) {
-                const newState = await res.json();
-                if (JSON.stringify(newState) !== JSON.stringify(this.state)) {
-                    this.state = newState;
-                    this.checkAppNotifications();
-                    this.renderContent();
+    async init() {
+        if (this.isInitialized) return;
+        this.isInitialized = true;
+
+        // Escutar alterações em tempo real do Firebase
+        this.dbRef.on('value', (snapshot) => {
+            if (this.isSaving) return;
+
+            const data = snapshot.val();
+            let stateChanged = false;
+
+            if (data) {
+                if (JSON.stringify(data) !== JSON.stringify(this.state)) {
+                    this.state = data;
+                    if (this.isLoggedIn) {
+                        this.checkAppNotifications();
+                        this.renderContent();
+                    }
                 }
+            } else {
+                console.log("Firebase vazio, inicializando com dados locais...");
+                this.saveState();
+                return;
             }
-        } catch (e) { console.warn('Background sync failed'); }
+
+            // Garantir integridade das coleções vitais
+            const collections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories'];
+            collections.forEach(coll => {
+                if (!this.state[coll]) {
+                    this.state[coll] = [];
+                    stateChanged = true;
+                }
+            });
+
+            const dictCollections = ['trainingPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis'];
+            dictCollections.forEach(coll => {
+                if (!this.state[coll]) {
+                    this.state[coll] = {};
+                    stateChanged = true;
+                }
+            });
+
+            // Garantir conta mestre
+            const masterAdminExists = (this.state.admins || []).some(a => a.email === 'admin@kandalgym.com');
+            if (!masterAdminExists) {
+                if (!this.state.admins) this.state.admins = [];
+                this.state.admins.push({
+                    id: 1,
+                    name: 'KandalGym Master',
+                    email: 'admin@kandalgym.com',
+                    password: 'admin',
+                    role: 'admin'
+                });
+                stateChanged = true;
+            }
+
+            if (stateChanged) {
+                this.saveState();
+            }
+        });
+    }
+
+    async backgroundSync() {
+        // Agora o 'init' com dbRef.on('value') já faz a sincronização automática em tempo real.
+        // Não precisamos mais de intervalo.
+        return;
     }
 
     // --- Notification System ---
@@ -164,7 +186,7 @@ class FitnessApp {
         this.addAppNotification(this.currentUser.id, 'Teste KandalGym 🚀', 'Se está a ver isto, as suas notificações estão ativas!');
     }
 
-    addAppNotification(targetUserId, title, body, senderId = null, type = 'notification') {
+    addAppNotification(targetUserId, title, body, senderId = null, type = 'notification', shouldSave = true) {
         if (!this.state.notifications) this.state.notifications = [];
         if (this.state.notifications.length > 200) {
             this.state.notifications = this.state.notifications.slice(-200);
@@ -179,7 +201,7 @@ class FitnessApp {
             body,
             createdAt: new Date().toISOString()
         });
-        this.saveState();
+        if (shouldSave) this.saveState();
     }
 
     showManualNotificationModal(clientId) {
@@ -421,18 +443,32 @@ class FitnessApp {
     }
 
     handleLogin() {
-        const email = document.getElementById('login-email').value.trim().toLowerCase();
-        const pass = document.getElementById('login-pass').value;
+        try {
+            const emailInput = document.getElementById('login-email');
+            const passInput = document.getElementById('login-pass');
 
-        if (email && pass) {
-            // 1. Verificar na lista de Administradores (vários Super-Users)
+            if (!emailInput || !passInput) return;
+
+            const email = emailInput.value.trim().toLowerCase();
+            const pass = passInput.value;
+
+            if (!email || !pass) {
+                return alert('Por favor, preencha todos os campos.');
+            }
+
+            // Garantir que o estado e listas básicas existem
+            if (!this.state) this.state = {};
+            if (!this.state.admins) this.state.admins = [];
+            if (!this.state.teachers) this.state.teachers = [];
+            if (!this.state.clients) this.state.clients = [];
+
             const admin = this.state.admins.find(a => a.email.toLowerCase() === email && a.password === pass);
             if (admin) {
                 this.role = 'admin';
                 this.currentUser = admin;
                 this.isLoggedIn = true;
                 this.persistLogin();
-                this.init();
+                this.renderAppInterface();
                 return;
             }
 
@@ -442,7 +478,7 @@ class FitnessApp {
                 this.currentUser = teacher;
                 this.isLoggedIn = true;
                 this.persistLogin();
-                this.init();
+                this.renderAppInterface();
                 return;
             }
 
@@ -453,12 +489,13 @@ class FitnessApp {
                 this.currentClientId = client.id;
                 this.isLoggedIn = true;
                 this.persistLogin();
-                this.init();
+                this.renderAppInterface();
             } else {
-                alert('Credenciais incorretas.');
+                alert('Email ou palavra-passe incorretos.');
             }
-        } else {
-            alert('Preencha os campos.');
+        } catch (error) {
+            console.error('Erro no login:', error);
+            alert('Ocorreu um erro ao entrar. Tente refrescar a página.');
         }
     }
 
@@ -488,9 +525,10 @@ class FitnessApp {
     handleLogout() {
         this.isLoggedIn = false;
         this.currentUser = null;
-        this.activeView = 'dashboard';
         localStorage.removeItem('kandalgym_session');
-        this.init();
+
+        // Force refresh to clear all state and re-initialize purely on the login screen
+        window.location.reload();
     }
 
     renderFAB() {
@@ -581,74 +619,92 @@ class FitnessApp {
     }
 
     addUser() {
-        const type = document.getElementById('new-user-type').value;
-        const name = document.getElementById('new-user-name').value.trim();
-        const email = document.getElementById('new-user-email').value.trim().toLowerCase();
-        const pass = document.getElementById('new-user-pass').value.trim();
-        const phone = document.getElementById('new-user-phone').value.trim();
+        try {
+            const type = document.getElementById('new-user-type').value;
+            const name = document.getElementById('new-user-name').value.trim();
+            const email = document.getElementById('new-user-email').value.trim().toLowerCase();
+            const pass = document.getElementById('new-user-pass').value.trim();
+            const phone = document.getElementById('new-user-phone').value.trim();
 
-        if (!name || !email || !pass || !phone) return alert('Preencha tudo, incluindo o contacto.');
+            if (!name || !email || !pass || !phone) return alert('Por favor, preencha todos os campos obrigatórios.');
 
-        // Verificar se já existe email
-        const existsEmail = this.state.clients.some(c => c.email.toLowerCase() === email) ||
-            this.state.teachers.some(t => t.email.toLowerCase() === email) ||
-            this.state.admins.some(a => a.email.toLowerCase() === email); // Check admins too for safety
+            // Garantir que as listas existem antes de verificar duplicados
+            if (!this.state.clients) this.state.clients = [];
+            if (!this.state.teachers) this.state.teachers = [];
+            if (!this.state.admins) this.state.admins = [];
 
-        if (existsEmail) {
-            alert('Este email já está registado.');
-            return;
-        }
+            // Verificar se já existe email
+            const existsEmail = this.state.clients.some(c => c.email.toLowerCase() === email) ||
+                this.state.teachers.some(t => t.email.toLowerCase() === email) ||
+                this.state.admins.some(a => a.email.toLowerCase() === email);
 
-        // Verificar se já existe contacto telefónico (normalizando espaços)
-        const cleanPhone = phone.replace(/\s+/g, '');
-        const existsPhone = this.state.clients.some(c => (c.phone || '').replace(/\s+/g, '') === cleanPhone) ||
-            this.state.teachers.some(t => (t.phone || '').replace(/\s+/g, '') === cleanPhone) ||
-            this.state.admins.some(a => (a.phone || '').replace(/\s+/g, '') === cleanPhone);
+            if (existsEmail) {
+                alert('Este email já está registado no sistema.');
+                return;
+            }
 
-        if (existsPhone) {
-            alert('Este contacto telefónico já está registado na base de dados (Professor, Aluno ou Admin).');
-            return;
-        }
+            // Verificar se já existe contacto telefónico (normalizando espaços)
+            const cleanPhone = phone.replace(/\s+/g, '');
+            const existsPhone = this.state.clients.some(c => (c.phone || '').replace(/\s+/g, '') === cleanPhone) ||
+                this.state.teachers.some(t => (t.phone || '').replace(/\s+/g, '') === cleanPhone) ||
+                this.state.admins.some(a => (a.phone || '').replace(/\s+/g, '') === cleanPhone);
 
-        const newId = Date.now();
-        if (type === 'admin') {
-            this.state.admins.push({ id: newId, name, email, phone, password: pass });
-        } else if (type === 'teacher') {
-            this.state.teachers.push({ id: newId, name, email, phone, password: pass });
-        } else {
-            const teacherId = document.getElementById('new-user-teacher').value;
-            const newClient = {
-                id: newId,
-                name,
-                email,
-                phone,
-                password: pass,
-                status: 'Ativo',
-                lastEvaluation: '-',
-                goal: 'Novo Aluno',
-                teacherId: Number(teacherId),
-                birthDate: document.getElementById('new-user-dob').value
-            };
-            this.state.clients.push(newClient);
-            this.state.trainingPlans[newId] = [];
-            this.state.mealPlans[newId] = { title: 'Plano Alimentar', meals: [] };
-            this.state.evaluations[newId] = [];
-            this.state.trainingHistory[newId] = [];
+            if (existsPhone) {
+                alert('Este contacto telefónico já está registado na base de dados (Professor, Aluno ou Admin).');
+                return;
+            }
 
-            // Notificar o professor da nova inscrição
-            this.addAppNotification(teacherId, 'Novo Aluno Incrito!', `O aluno ${name} foi registado no sistema.`);
+            const newId = Date.now();
+            if (type === 'admin') {
+                this.state.admins.push({ id: newId, name, email, phone, password: pass });
+            } else if (type === 'teacher') {
+                this.state.teachers.push({ id: newId, name, email, phone, password: pass });
+            } else {
+                const teacherId = document.getElementById('new-user-teacher').value;
+                const newClient = {
+                    id: newId,
+                    name,
+                    email,
+                    phone,
+                    password: pass,
+                    status: 'Ativo',
+                    lastEvaluation: '-',
+                    goal: 'Novo Aluno',
+                    teacherId: teacherId ? Number(teacherId) : null,
+                    birthDate: document.getElementById('new-user-dob').value
+                };
+                this.state.clients.push(newClient);
 
-            // Ativar QR automaticamente para o novo aluno
-            this.enableQRForClient(newId);
-        }
+                // Initialize empty data structures for the new client
+                if (!this.state.trainingPlans) this.state.trainingPlans = {};
+                if (!this.state.mealPlans) this.state.mealPlans = {};
+                if (!this.state.evaluations) this.state.evaluations = {};
+                if (!this.state.trainingHistory) this.state.trainingHistory = {};
 
-        this.saveState();
-        document.querySelector('.modal-overlay').remove();
-        this.showInviteModal(name, email, pass, type, phone);
+                this.state.trainingPlans[newId] = [];
+                this.state.mealPlans[newId] = { title: 'Plano Alimentar', meals: [] };
+                this.state.evaluations[newId] = [];
+                this.state.trainingHistory[newId] = [];
 
-        // Se estiver na vista de utilizadores, atualizar a lista logo
-        if (this.activeView === 'users') {
-            this.switchAdminTab(type === 'client' ? 'clients' : (type === 'admin' ? 'admins' : 'teachers'));
+                // Notificar o professor da nova inscrição (sem gravar ainda)
+                if (teacherId) {
+                    this.addAppNotification(teacherId, 'Novo Aluno Inscrito!', `O aluno ${name} foi registado no sistema.`, null, 'notification', false);
+                }
+
+                // Ativar QR automaticamente para o novo aluno (sem gravar ainda)
+                this.enableQRForClient(newId, false);
+            }
+
+            this.saveState();
+            document.querySelector('.modal-overlay').remove();
+            this.showInviteModal(name, email, pass, type, phone);
+
+            if (this.activeView === 'users') {
+                this.switchAdminTab(type === 'client' ? 'clients' : (type === 'admin' ? 'admins' : 'teachers'));
+            }
+        } catch (error) {
+            console.error('Erro ao adicionar utilizador:', error);
+            alert('Erro ao guardar utilizador. Por favor, tente novamente ou contacte o suporte.');
         }
     }
 
@@ -662,13 +718,13 @@ class FitnessApp {
 
 A sua conta de ${label} na KandalGym foi criada com sucesso!
 
-Poderá aceder à plataforma através do seguinte endereço: http://192.168.1.65:3000
+Poderá aceder à plataforma através do seguinte endereço: https://kandalspahealthclub.github.io/KandalGym/
 
 As suas credenciais de acesso são:
 - Email: ${email}
 - Password: ${pass}
 
-Recomendamos que altere a sua password após o primeiro login.
+Recomendamos que guarde este link nos seus favoritos ou instale a App no seu telemóvel.
 
 Bons treinos!
 Equipa KandalGym`;
@@ -677,7 +733,7 @@ Equipa KandalGym`;
 
 Olá ${name}, a sua conta de ${label} foi criada!
 
-🌐 Aceda aqui: http://192.168.1.65:3000
+🌐 Aceda aqui: https://kandalspahealthclub.github.io/KandalGym/
 
 🔑 *Credenciais:*
 📧 Email: ${email}
@@ -1996,19 +2052,13 @@ Bons treinos!`;
     }
 
     renderTrainingView(container, clientId) {
-        // Usar comparação loosa (==) para garantir
         const c = this.state.clients.find(x => x.id == clientId);
         if (!c) {
             container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
             return;
         }
-        let plans = this.state.trainingPlans[clientId] || [];
 
-        // Auto-migração: Se for um objeto único, converter para Array de 1 dia
-        if (plans && !Array.isArray(plans) && typeof plans === 'object') {
-            plans = [plans];
-            this.state.trainingPlans[clientId] = plans;
-        }
+        const plans = this.getTrainingDays(clientId);
 
         const isTeacher = this.role === 'teacher' || this.role === 'admin';
         const isClient = this.role === 'client';
@@ -2109,37 +2159,82 @@ Bons treinos!`;
         `;
     }
 
-    finishWorkout(clientId, dayIdx) {
-        const plans = this.state.trainingPlans[clientId];
-        const day = plans[dayIdx];
+    // Helper central: extrai sempre um array de dias independentemente do formato gravado
+    getTrainingDays(clientId) {
+        const cid = String(clientId); // Firebase usa sempre chaves de string
+        const raw = this.state.trainingPlans ? this.state.trainingPlans[cid] : null;
+        if (!raw) return [];
+        if (Array.isArray(raw)) return raw;
+        if (raw.days && Array.isArray(raw.days)) return raw.days;
+        if (typeof raw === 'object') return Object.values(raw).filter(v => v && typeof v === 'object' && v.exercises);
+        return [];
+    }
 
-        // Verificar se há algo para gravar
-        const hasWeights = day.exercises.some(ex => ex.weightLog && ex.weightLog.some(w => w !== '' && w !== null));
+    finishWorkout(clientId, dayIdx) {
+        const cid = String(clientId);
+        const days = this.getTrainingDays(cid);
+        const day = days ? days[dayIdx] : null;
+        if (!day) { alert('Dia de treino não encontrado. Tente recarregar a página.'); return; }
+
+        const hasWeights = day.exercises.some(ex => ex.weightLog && ex.weightLog.some(w => w !== '' && w !== null && w !== undefined));
 
         if (!hasWeights) {
-            if (!confirm('Não registou nenhuma carga. Deseja concluir o treino na mesma?')) return;
+            // Usar modal customizado — confirm() é bloqueado em PWA/standalone iOS
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width:380px; text-align:center; padding:2rem;">
+                    <div style="font-size:3rem; margin-bottom:1rem;">⚠️</div>
+                    <h3 style="margin:0 0 0.75rem;">Sem cargas registadas</h3>
+                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Não registou nenhuma carga neste treino. Deseja concluí-lo na mesma?</p>
+                    <div style="display:flex; gap:1rem;">
+                        <button class="btn btn-secondary" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button class="btn btn-primary" style="flex:1;" id="confirm-finish-btn">
+                            <i class="fas fa-check"></i> Concluir
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            document.getElementById('confirm-finish-btn').onclick = () => {
+                modal.remove();
+                this.doFinishWorkout(cid, dayIdx, day);
+            };
+        } else {
+            this.doFinishWorkout(cid, dayIdx, day);
         }
+    }
 
-        if (!this.state.trainingHistory) this.state.trainingHistory = {};
-        if (!this.state.trainingHistory[clientId]) this.state.trainingHistory[clientId] = [];
+    doFinishWorkout(cid, dayIdx, day) {
+        try {
+            if (!this.state.trainingHistory) this.state.trainingHistory = {};
+            if (!this.state.trainingHistory[cid] || !Array.isArray(this.state.trainingHistory[cid])) {
+                this.state.trainingHistory[cid] = [];
+            }
 
-        const session = {
-            date: new Date().toLocaleDateString('pt-PT'),
-            time: new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }),
-            title: day.title,
-            exercises: day.exercises.map(ex => ({
-                name: ex.name,
-                sets: ex.sets,
-                reps: ex.reps,
-                weights: [...(ex.weightLog || [])]
-            }))
-        };
+            const session = {
+                date: new Date().toLocaleDateString('pt-PT'),
+                time: new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }),
+                title: day.title,
+                exercises: day.exercises.map(ex => ({
+                    name: ex.name,
+                    sets: ex.sets,
+                    reps: ex.reps,
+                    weights: [...(ex.weightLog || [])]
+                }))
+            };
 
-        this.state.trainingHistory[clientId].unshift(session); // Mais recente primeiro
-        this.saveState();
+            this.state.trainingHistory[cid].unshift(session);
+            this.saveState();
 
-        alert('Treino concluído com sucesso! 🎉 As suas cargas foram gravadas no histórico.');
-        this.setView('dashboard');
+            this.showToast('Treino concluído! 🎉 As suas cargas foram gravadas no histórico.');
+            setTimeout(() => this.setView('dashboard'), 1200);
+        } catch (err) {
+            console.error('Erro ao concluir treino:', err);
+            alert('Ocorreu um erro ao guardar. Por favor tente novamente.');
+        }
     }
 
     deleteTrainingSession(index) {
@@ -2154,26 +2249,29 @@ Bons treinos!`;
     }
 
     logWeight(clientId, dayIdx, exIdx, setIdx, value) {
-        const plans = this.state.trainingPlans[clientId];
-        if (!plans || !plans[dayIdx] || !plans[dayIdx].exercises[exIdx]) return;
+        const days = this.getTrainingDays(clientId);
+        if (!days[dayIdx] || !days[dayIdx].exercises[exIdx]) return;
 
-        const ex = plans[dayIdx].exercises[exIdx];
+        const ex = days[dayIdx].exercises[exIdx];
         if (!ex.weightLog) ex.weightLog = [];
-
         ex.weightLog[setIdx] = value;
+        // Guardar diretamente na estrutura de estado para persistir
+        const cid = String(clientId);
+        const raw = this.state.trainingPlans[cid];
+        if (raw && raw.days) raw.days[dayIdx].exercises[exIdx] = ex;
         this.saveState();
-        // Não fazemos render() aqui para não perder o foco do input seguinte, 
-        // mas os dados ficam guardados no estado e no servidor.
     }
 
     saveExerciseNote(clientId, dayIdx, exIdx, note) {
-        const plans = this.state.trainingPlans[clientId];
-        if (!plans || !plans[dayIdx] || !plans[dayIdx].exercises[exIdx]) return;
+        const days = this.getTrainingDays(clientId);
+        if (!days[dayIdx] || !days[dayIdx].exercises[exIdx]) return;
 
-        const ex = plans[dayIdx].exercises[exIdx];
+        const ex = days[dayIdx].exercises[exIdx];
         ex.clientNotes = note;
+        const cid = String(clientId);
+        const raw = this.state.trainingPlans[cid];
+        if (raw && raw.days) raw.days[dayIdx].exercises[exIdx] = ex;
         this.saveState();
-        // Não fazemos render() para não perder o foco
     }
 
     viewExerciseVideo(url, name) {
@@ -2218,15 +2316,20 @@ Bons treinos!`;
             }
         }
 
-        const c = this.state.clients.find(x => x.id === clientId);
-        let existing = this.state.trainingPlans[clientId] || [];
+        const rawPlan = this.state.trainingPlans[clientId];
+        let existingDays = [];
 
-        // Garantir formato Array
-        if (existing && !Array.isArray(existing) && typeof existing === 'object') {
-            existing = [existing];
+        if (rawPlan) {
+            if (Array.isArray(rawPlan)) {
+                existingDays = rawPlan;
+            } else if (rawPlan.days && Array.isArray(rawPlan.days)) {
+                existingDays = rawPlan.days;
+            } else if (typeof rawPlan === 'object') {
+                existingDays = Object.values(rawPlan).filter(v => v && typeof v === 'object' && v.exercises);
+            }
         }
 
-        this.editingPlan = JSON.parse(JSON.stringify(existing));
+        this.editingPlan = JSON.parse(JSON.stringify(existingDays));
 
         if (!Array.isArray(this.editingPlan) || this.editingPlan.length === 0) {
             this.editingPlan = [{ title: 'Dia 1', exercises: [] }];
@@ -2377,24 +2480,26 @@ Bons treinos!`;
     }
 
     saveTrainingPlan() {
-        this.editingPlan.forEach(day => {
-            day.exercises = day.exercises.filter(ex => ex.id);
-        });
+        // Filtrar exercícios sem ID (linhas em branco que o utilizador não preencheu)
+        const cleanDays = this.editingPlan
+            .map(day => ({
+                ...day,
+                exercises: day.exercises.filter(ex => ex.id)
+            }))
+            .filter(day => day.exercises.length > 0 || this.editingPlan.length === 1);
 
-        this.editingPlan.forEach(day => {
-            day.exercises = day.exercises.filter(ex => ex.id);
-        });
+        // Guardar como objeto estruturado para evitar corrompimento no Firebase
+        const planObject = {
+            days: cleanDays,
+            author: this.currentUser.name,
+            updatedAt: new Date().toLocaleDateString('pt-PT')
+        };
 
-        // Add attribution only if not present or update it? User said "identified by who made them".
-        // If I edit, I become the author of the latest version.
-        this.editingPlan.author = this.currentUser.name;
-        this.editingPlan.updatedAt = new Date().toLocaleDateString('pt-PT');
-
-        this.state.trainingPlans[this.editingClientId] = this.editingPlan;
+        this.state.trainingPlans[this.editingClientId] = planObject;
         this.saveState();
 
-        // Notificar o aluno do novo plano de treino
-        this.addAppNotification(this.editingClientId, 'Novo Plano de Treino!', 'O seu professor atualizou o seu plano de treino.');
+        // Notificar o aluno do novo plano de treino (sem gravar novamente)
+        this.addAppNotification(this.editingClientId, 'Novo Plano de Treino!', 'O seu professor atualizou o seu plano de treino.', null, 'notification', false);
 
         this.clearTrainingDraft();
         alert('Plano de treino guardado com sucesso!');
@@ -2418,7 +2523,8 @@ Bons treinos!`;
             container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
             return;
         }
-        const meal = this.state.mealPlans[clientId];
+        const cid = String(clientId); // Firebase normaliza chaves para string
+        const meal = this.state.mealPlans[cid];
         const canEdit = (this.role === 'admin' || this.role === 'teacher');
 
         container.innerHTML = `
@@ -2488,13 +2594,13 @@ Bons treinos!`;
     }
 
     openMealEditor(clientId) {
-        clientId = Number(clientId);
-        let existing = this.state.mealPlans[clientId];
+        const cid = String(clientId);
+        let existing = this.state.mealPlans[cid];
         if (!existing || Array.isArray(existing)) {
             existing = { title: 'Plano Alimentar', meals: [] };
         }
         this.editingMeal = JSON.parse(JSON.stringify(existing));
-        this.editingClientId = clientId;
+        this.editingClientId = cid;
         this.setView('edit_meal');
     }
 
@@ -2814,9 +2920,8 @@ Bons treinos!`;
 
     deleteMealPlan(clientId) {
         if (confirm('Tem a certeza que deseja eliminar toda a dieta deste aluno?')) {
-            this.state.mealPlans[clientId] = { title: 'Plano Alimentar', meals: [] };
-            this.state.mealPlans[clientId].author = this.currentUser.name;
-            this.state.mealPlans[clientId].updatedAt = new Date().toLocaleDateString('pt-PT');
+            const cid = String(clientId);
+            this.state.mealPlans[cid] = { title: 'Plano Alimentar', meals: [], author: this.currentUser.name, updatedAt: new Date().toLocaleDateString('pt-PT') };
             this.saveState();
             this.renderContent();
             alert('Dieta eliminada com sucesso! 🗑️');
@@ -2895,7 +3000,8 @@ Bons treinos!`;
             container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
             return;
         }
-        const evals = this.state.evaluations[clientId] || [];
+        const cid = String(clientId); // Firebase usa chaves de string
+        const evals = this.state.evaluations[cid] || [];
         const isTeacher = this.role === 'teacher' || this.role === 'admin';
 
         container.innerHTML = `
@@ -3026,7 +3132,7 @@ Bons treinos!`;
     showEvaluationModal(clientId, index = null) {
         let ev = { date: new Date().toISOString().split('T')[0] };
         if (index !== null) {
-            const entry = this.state.evaluations[clientId][index];
+            const entry = this.state.evaluations[String(clientId)][index];
             // Converter data DD/MM/YYYY para YYYY-MM-DD para o input type="date"
             let dateVal = entry.date;
             if (dateVal.includes('/')) {
@@ -3169,12 +3275,13 @@ Bons treinos!`;
             return;
         }
 
-        if (!this.state.evaluations[clientId]) this.state.evaluations[clientId] = [];
+        const cid = String(clientId);
+        if (!this.state.evaluations[cid]) this.state.evaluations[cid] = [];
 
         if (index === null) {
-            this.state.evaluations[clientId].unshift(entry);
+            this.state.evaluations[cid].unshift(entry);
         } else {
-            this.state.evaluations[clientId][index] = entry;
+            this.state.evaluations[cid][index] = entry;
         }
 
         // Atualizar o último peso/data no perfil do cliente se necessário
@@ -3191,7 +3298,7 @@ Bons treinos!`;
 
     deleteEvaluation(clientId, index) {
         if (confirm('Tem a certeza que deseja eliminar este registo de avaliação?')) {
-            this.state.evaluations[clientId].splice(index, 1);
+            this.state.evaluations[String(clientId)].splice(index, 1);
             this.saveState();
             this.renderContent();
             alert('Avaliação removida.');
@@ -3300,10 +3407,18 @@ Bons treinos!`;
 
     renderClientContent(container) {
         const c = this.state.clients.find(x => x.id === this.currentClientId);
+        if (!c) {
+            container.innerHTML = `<div style="padding:2rem; text-align:center;">
+                <h3>Utilizador não encontrado.</h3>
+                <p>Por favor, tente fazer login novamente.</p>
+                <button class="btn btn-primary" onclick="app.handleLogout()">Sair</button>
+            </div>`;
+            return;
+        }
         switch (this.activeView) {
             case 'dashboard':
                 container.innerHTML = `
-            <h2 class="animate-fade-in">Bem-vindo, ${c.name} 👋</h2>
+                    <h2 class="animate-fade-in">Bem-vindo, ${c.name} 👋</h2>
                     <p style="color:var(--text-muted); margin-bottom:1rem;">Este é o seu painel de acompanhamento KandalGym.</p>
                     
                     ${(() => {
@@ -4134,8 +4249,11 @@ Bons treinos!`;
     spyClient(id) {
         this.currentClientId = Number(id);
 
-        // Self-healing: Ensure structures exist
-        if (!this.state.trainingPlans[this.currentClientId]) this.state.trainingPlans[this.currentClientId] = [];
+        // Self-healing: Garantir estruturas base (sem apagar planos existentes)
+        if (!this.state.trainingPlans) this.state.trainingPlans = {};
+        if (!this.state.mealPlans) this.state.mealPlans = {};
+        if (!this.state.evaluations) this.state.evaluations = {};
+        if (!this.state.trainingHistory) this.state.trainingHistory = {};
         if (!this.state.mealPlans[this.currentClientId]) this.state.mealPlans[this.currentClientId] = { title: 'Plano Alimentar', meals: [] };
         if (!this.state.evaluations[this.currentClientId]) this.state.evaluations[this.currentClientId] = [];
         if (!this.state.trainingHistory[this.currentClientId]) this.state.trainingHistory[this.currentClientId] = [];
@@ -4276,9 +4394,10 @@ Bons treinos!`;
     }
 
     renderAnamnesisView(container, clientId) {
+        const cid = String(clientId);
         if (!this.state.anamnesis) this.state.anamnesis = {};
-        if (!this.state.anamnesis[clientId]) this.state.anamnesis[clientId] = [];
-        const entries = this.state.anamnesis[clientId];
+        if (!this.state.anamnesis[cid]) this.state.anamnesis[cid] = [];
+        const entries = this.state.anamnesis[cid];
         const isTeacher = this.role === 'teacher';
 
         container.innerHTML = `
@@ -4353,7 +4472,7 @@ Bons treinos!`;
         };
 
         if (index !== null) {
-            const entry = this.state.anamnesis[clientId][index];
+            const entry = this.state.anamnesis[String(clientId)][index];
             let dateVal = entry.date;
             if (dateVal.includes('/')) {
                 const [d, m, y] = dateVal.split('/');
@@ -4514,13 +4633,14 @@ Bons treinos!`;
                 updatedAt: new Date().toLocaleDateString('pt-PT')
             };
 
+            const cid = String(clientId);
             if (!this.state.anamnesis) this.state.anamnesis = {};
-            if (!this.state.anamnesis[clientId]) this.state.anamnesis[clientId] = [];
+            if (!this.state.anamnesis[cid]) this.state.anamnesis[cid] = [];
 
             if (index !== null) {
-                this.state.anamnesis[clientId][index] = entry;
+                this.state.anamnesis[cid][index] = entry;
             } else {
-                this.state.anamnesis[clientId].push(entry);
+                this.state.anamnesis[cid].push(entry);
             }
 
             this.saveState();
@@ -4535,7 +4655,7 @@ Bons treinos!`;
 
     deleteAnamnesis(clientId, index) {
         if (!confirm('Tem a certeza que deseja remover este registo de anamnese?')) return;
-        this.state.anamnesis[clientId].splice(index, 1);
+        this.state.anamnesis[String(clientId)].splice(index, 1);
         this.saveState();
         this.renderContent();
     }
@@ -4600,7 +4720,7 @@ Bons treinos!`;
 
     downloadTrainingPDF(clientId) {
         const client = this.state.clients.find(c => c.id == clientId);
-        const plans = this.state.trainingPlans[clientId];
+        const plans = this.getTrainingDays(clientId);
 
         if (!client || !plans || !plans.length) return alert('Sem dados para exportar.');
 
@@ -5085,13 +5205,23 @@ Bons treinos!`;
         if (body) body.innerHTML = this.renderQRClientCards(val);
     }
 
-    enableQRForClient(clientId) {
-        const client = (this.state.clients || []).find(c => c.id === clientId);
-        if (!client) return;
-
+    enableQRForClient(clientId, autoRedirect = true) {
         if (!this.state.qrClients) this.state.qrClients = [];
 
-        // Generate a new short sequential ID
+        const client = (this.state.clients || []).find(c => c.id === Number(clientId));
+        if (!client) return;
+
+        // Verificar se já tem ID curto para este cliente
+        const exists = this.state.qrClients.find(qc => qc.clientId === Number(clientId));
+        if (exists) {
+            if (autoRedirect) {
+                this.setView('qr_manager');
+                this.showToast('Este cliente já tem acesso QR ativo.');
+            }
+            return;
+        }
+
+        // Encontrar próximo ID curto sequencial
         const usedIds = this.state.qrClients.map(c => {
             const m = c.id.match(/^K(\d+)$/);
             return m ? parseInt(m[1]) : 0;
@@ -5099,34 +5229,26 @@ Bons treinos!`;
         const maxId = usedIds.length > 0 ? Math.max(...usedIds) : 0;
         const qrId = "K" + (maxId + 1);
 
-        const existing = this.state.qrClients.find(c => c.clientId === clientId || c.id === qrId);
+        const validDate = new Date();
+        validDate.setDate(validDate.getDate() + 30);
 
-        if (existing) {
-            // If already exists, just switch to QR view and show a toast
-            this.setView('qr_manager');
-            this.showToast('Este cliente já tem acesso QR ativo.');
-            return;
-        }
-
-        // Create new QR entry linked to this client
-        let d = new Date(); d.setDate(d.getDate() + 30);
-
-        this.state.qrClients.unshift({
+        this.state.qrClients.push({
             id: qrId,
-            clientId: clientId,
+            clientId: Number(clientId),
             nome: client.name,
             tel: client.phone || "Sem contacto",
-            ent: 10, // Default credits
-            validade: d.toISOString().split('T')[0],
             ativo: true,
+            ent: 30,
+            validade: validDate.toISOString().split('T')[0],
             historico: []
         });
 
-        this.saveState();
-        this.showToast(`Acesso QR ativado para ${client.name}!`);
-        // Only redirect if explicitly activated from the UI, not in background sync
-        if (this.activeView !== 'qr_manager' && this.activeView !== 'dashboard') {
-            this.setView('qr_manager');
+        if (autoRedirect) {
+            this.saveState();
+            this.showToast(`Acesso QR ativado para ${client.name}!`);
+            if (this.activeView !== 'qr_manager' && this.activeView !== 'dashboard') {
+                this.setView('qr_manager');
+            }
         }
     }
 
@@ -5514,6 +5636,7 @@ Bons treinos!`;
         this.processarLeituraQR(id);
         input.value = ''; // Limpar após processar
     }
+
 
     shortenExistingQRIds() {
         if (!this.state.qrClients || this.state.qrClients.length === 0) return;
