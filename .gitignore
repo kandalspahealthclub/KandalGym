@@ -1,0 +1,15 @@
+# Backups
+backup/
+*.bak
+
+# State / Data (Contém dados locais sensíveis)
+database.json
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS Files
+.DS_Store
+Thumbs.db

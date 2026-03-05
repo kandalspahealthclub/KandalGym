@@ -1,0 +1,734 @@
+[
+  {
+    "id": 1,
+    "nome": "Elítica"
+  },
+  {
+    "id": 2,
+    "nome": "Passadeira"
+  },
+  {
+    "id": 3,
+    "nome": "Escada"
+  },
+  {
+    "id": 4,
+    "nome": "Abdominais oblíquos em máquina de lombares"
+  },
+  {
+    "id": 5,
+    "nome": "Abdominal inferior no banco"
+  },
+  {
+    "id": 6,
+    "nome": "Abdominal no banco com Haltere"
+  },
+  {
+    "id": 7,
+    "nome": "Abdominal oblíquo com Bola"
+  },
+  {
+    "id": 8,
+    "nome": "Crunch com pernas elevadas"
+  },
+  {
+    "id": 9,
+    "nome": "Crunch na polia"
+  },
+  {
+    "id": 10,
+    "nome": "Flexão da anca"
+  },
+  {
+    "id": 11,
+    "nome": "Flexão do joelho ao peito alternado"
+  },
+  {
+    "id": 12,
+    "nome": "Flexão do tronco com pernas em abertura"
+  },
+  {
+    "id": 13,
+    "nome": "Flexão do tronco e dos membros inferiores"
+  },
+  {
+    "id": 14,
+    "nome": "Flexão do tronco e dos membros inferiores alternado"
+  },
+  {
+    "id": 15,
+    "nome": "Flexão do tronco pés no solo"
+  },
+  {
+    "id": 16,
+    "nome": "Flexão do tronco, mãos no joelho"
+  },
+  {
+    "id": 17,
+    "nome": "Flexão lateral do tronco"
+  },
+  {
+    "id": 18,
+    "nome": "Flexão lateral do tronco e membros inferiores"
+  },
+  {
+    "id": 19,
+    "nome": "Flexão lateral do tronco, antebraço apoiado"
+  },
+  {
+    "id": 20,
+    "nome": "Lateralizações do tronco"
+  },
+  {
+    "id": 21,
+    "nome": "Lumberjack Chop"
+  },
+  {
+    "id": 22,
+    "nome": "Lumberjack ascendente"
+  },
+  {
+    "id": 23,
+    "nome": "Lumberjack descendente"
+  },
+  {
+    "id": 24,
+    "nome": "Prancha horizontal"
+  },
+  {
+    "id": 25,
+    "nome": "Prancha lateral"
+  },
+  {
+    "id": 26,
+    "nome": "Abdutores no solo"
+  },
+  {
+    "id": 27,
+    "nome": "Abdução na máquina"
+  },
+  {
+    "id": 28,
+    "nome": "Abdução no puxador"
+  },
+  {
+    "id": 29,
+    "nome": "Adutores no solo"
+  },
+  {
+    "id": 30,
+    "nome": "Adução na máquina"
+  },
+  {
+    "id": 31,
+    "nome": "Adução no puxador"
+  },
+  {
+    "id": 32,
+    "nome": "Bíceps Scott com Barra Livre"
+  },
+  {
+    "id": 33,
+    "nome": "Bíceps com Cabo Cristo"
+  },
+  {
+    "id": 34,
+    "nome": "Bíceps curl no puxador – pega pronada"
+  },
+  {
+    "id": 35,
+    "nome": "Bíceps curl no puxador – pega supinada"
+  },
+  {
+    "id": 36,
+    "nome": "Bíceps no puxador com Corda"
+  },
+  {
+    "id": 37,
+    "nome": "Bíceps no puxador unilateral"
+  },
+  {
+    "id": 38,
+    "nome": "Bíceps sentado com Halteres inclinado"
+  },
+  {
+    "id": 39,
+    "nome": "Flexão bíceps sentado na vertical - simultâneo"
+  },
+  {
+    "id": 40,
+    "nome": "Flexão bíceps sentado na vertical - unilateral"
+  },
+  {
+    "id": 41,
+    "nome": "Flexão concentrado"
+  },
+  {
+    "id": 42,
+    "nome": "Flexão para martelo sentado"
+  },
+  {
+    "id": 43,
+    "nome": "Afundos em dois bancos"
+  },
+  {
+    "id": 44,
+    "nome": "Extensões de antebraço no puxador, costas para máq."
+  },
+  {
+    "id": 45,
+    "nome": "Extensões de antebraço sentado na vertical"
+  },
+  {
+    "id": 46,
+    "nome": "Extensões de antebraço unilateral deitado"
+  },
+  {
+    "id": 47,
+    "nome": "Flexão de braços - tríceps"
+  },
+  {
+    "id": 48,
+    "nome": "Fundos assistidos na máquina"
+  },
+  {
+    "id": 49,
+    "nome": "Fundos na máquina livres"
+  },
+  {
+    "id": 50,
+    "nome": "Kick-back com Halteres"
+  },
+  {
+    "id": 51,
+    "nome": "Kick-back no puxador"
+  },
+  {
+    "id": 52,
+    "nome": "Press francês unilateral com Cabo"
+  },
+  {
+    "id": 53,
+    "nome": "Tríceps no puxador com Corda"
+  },
+  {
+    "id": 54,
+    "nome": "Tríceps no puxador com pega curva"
+  },
+  {
+    "id": 55,
+    "nome": "Tríceps no puxador com pega supinada"
+  },
+  {
+    "id": 56,
+    "nome": "Tríceps no supino plano mãos próximas"
+  },
+  {
+    "id": 57,
+    "nome": "Tríceps à testa com Barra Livre"
+  },
+  {
+    "id": 58,
+    "nome": "Elevações assistidas em máquina"
+  },
+  {
+    "id": 59,
+    "nome": "Elevações livres com pega"
+  },
+  {
+    "id": 60,
+    "nome": "Hiperextensão braços e pernas"
+  },
+  {
+    "id": 61,
+    "nome": "Hiperextensão do tronco com Barra 1"
+  },
+  {
+    "id": 62,
+    "nome": "Hiperextensão do tronco com Barra 2"
+  },
+  {
+    "id": 63,
+    "nome": "Hiperextensão do tronco com Disco"
+  },
+  {
+    "id": 64,
+    "nome": "Hiperextensão do tronco com Halterees"
+  },
+  {
+    "id": 65,
+    "nome": "Hiperextensão do tronco em máquina lombares"
+  },
+  {
+    "id": 66,
+    "nome": "Lower Back"
+  },
+  {
+    "id": 67,
+    "nome": "Lat Pulldown"
+  },
+  {
+    "id": 68,
+    "nome": "Pecfly"
+  },
+  {
+    "id": 69,
+    "nome": "Peso morto com Barra Livre"
+  },
+  {
+    "id": 70,
+    "nome": "Puxada à coxa"
+  },
+  {
+    "id": 71,
+    "nome": "Puxador à frente com pega unilateral"
+  },
+  {
+    "id": 72,
+    "nome": "Puxador à frente pega fechada em máq. 5 estações"
+  },
+  {
+    "id": 73,
+    "nome": "Puxador à frente pega larga em máq. 5 estações"
+  },
+  {
+    "id": 74,
+    "nome": "Puxador à frente simultâneo, pegas individuais"
+  },
+  {
+    "id": 75,
+    "nome": "Puxador à nuca em máq. 5 estações"
+  },
+  {
+    "id": 76,
+    "nome": "Remada baixa"
+  },
+  {
+    "id": 77,
+    "nome": "Remada baixa máquina cavalinho"
+  },
+  {
+    "id": 78,
+    "nome": "Remada horizontal máquina cavalinho"
+  },
+  {
+    "id": 79,
+    "nome": "Remo com Halteres"
+  },
+  {
+    "id": 80,
+    "nome": "Remo na máquina de polia"
+  },
+  {
+    "id": 81,
+    "nome": "Remo puxador pega fechada em máq. 5 estações"
+  },
+  {
+    "id": 82,
+    "nome": "Remo puxador pega larga em máq. 5 estações"
+  },
+  {
+    "id": 83,
+    "nome": "Remo puxador pega fechada em máq. 5 estações, pega aberta"
+  },
+  {
+    "id": 84,
+    "nome": "Hip Trust"
+  },
+  {
+    "id": 85,
+    "nome": "Glúteos com Caneleiras, membros inferiores a 90º"
+  },
+  {
+    "id": 86,
+    "nome": "Glúteos no puxador unilateral"
+  },
+  {
+    "id": 87,
+    "nome": "Gémeos na multi-power"
+  },
+  {
+    "id": 88,
+    "nome": "Gémeos na prensa"
+  },
+  {
+    "id": 89,
+    "nome": "Gémeos no Step"
+  },
+  {
+    "id": 90,
+    "nome": "Gémeos máquina"
+  },
+  {
+    "id": 91,
+    "nome": "Agachamento com Barra Livre"
+  },
+  {
+    "id": 92,
+    "nome": "Agachamento com Barra acima da cabeça"
+  },
+  {
+    "id": 93,
+    "nome": "Agachamento com Barra à frente"
+  },
+  {
+    "id": 94,
+    "nome": "Agachamento com Halteres"
+  },
+  {
+    "id": 95,
+    "nome": "Agachamento na máquina de polia"
+  },
+  {
+    "id": 96,
+    "nome": "Agachamento no Rack"
+  },
+  {
+    "id": 97,
+    "nome": "Agachamento no multi-power"
+  },
+  {
+    "id": 98,
+    "nome": "Agachamento tipo sumo"
+  },
+  {
+    "id": 99,
+    "nome": "Extensões na máquina"
+  },
+  {
+    "id": 100,
+    "nome": "Leg Extension"
+  },
+  {
+    "id": 101,
+    "nome": "Leg Press"
+  },
+  {
+    "id": 102,
+    "nome": "Lunge com Barra Livre"
+  },
+  {
+    "id": 103,
+    "nome": "Lunge com Halteres"
+  },
+  {
+    "id": 104,
+    "nome": "Lunge no Rack"
+  },
+  {
+    "id": 105,
+    "nome": "Lunge no multi-power"
+  },
+  {
+    "id": 106,
+    "nome": "Prensa de Discos"
+  },
+  {
+    "id": 107,
+    "nome": "Prensa em máquina"
+  },
+  {
+    "id": 108,
+    "nome": "Flexão na máquina deitado"
+  },
+  {
+    "id": 109,
+    "nome": "Leg Curl sentado"
+  },
+  {
+    "id": 110,
+    "nome": "Levantamento Terra"
+  },
+  {
+    "id": 111,
+    "nome": "Peso morto com Halteres um apoio"
+  },
+  {
+    "id": 112,
+    "nome": "Peso Morto no Rack"
+  },
+  {
+    "id": 113,
+    "nome": "Abdução horizontal do ombro na polia"
+  },
+  {
+    "id": 114,
+    "nome": "Aberturas posterior na máquina"
+  },
+  {
+    "id": 115,
+    "nome": "Adução horizontal do ombro na polia"
+  },
+  {
+    "id": 116,
+    "nome": "Clean and Press"
+  },
+  {
+    "id": 117,
+    "nome": "Coifa dos rotadores com Halteres"
+  },
+  {
+    "id": 118,
+    "nome": "Elevações frontais com Halteres"
+  },
+  {
+    "id": 119,
+    "nome": "Elevações frontais no puxador"
+  },
+  {
+    "id": 120,
+    "nome": "Elevações frontal no banco inclinado com Halteres"
+  },
+  {
+    "id": 121,
+    "nome": "Elevações laterais com Halteres"
+  },
+  {
+    "id": 122,
+    "nome": "Elevações laterais com Halteres - unilateral"
+  },
+  {
+    "id": 123,
+    "nome": "Press de ombros com Halteres"
+  },
+  {
+    "id": 124,
+    "nome": "Press de ombros em máq. de discos"
+  },
+  {
+    "id": 125,
+    "nome": "Press militar com Barra Livre atrás"
+  },
+  {
+    "id": 126,
+    "nome": "Press militar com Barra Livre à frente"
+  },
+  {
+    "id": 127,
+    "nome": "Press militar com Haltere unilateral"
+  },
+  {
+    "id": 128,
+    "nome": "Press militar à nuca"
+  },
+  {
+    "id": 129,
+    "nome": "Press rotativo com Halteres"
+  },
+  {
+    "id": 130,
+    "nome": "Remada alta na máquina de polia"
+  },
+  {
+    "id": 131,
+    "nome": "Voos com Halteres"
+  },
+  {
+    "id": 132,
+    "nome": "Voos em polia baixa"
+  },
+  {
+    "id": 133,
+    "nome": "Aberturas com Halteres declinado"
+  },
+  {
+    "id": 134,
+    "nome": "Aberturas horizontal com Halteres"
+  },
+  {
+    "id": 135,
+    "nome": "Aberturas em máq. 5 estações banco horizontal"
+  },
+  {
+    "id": 136,
+    "nome": "Aberturas em máq. 5 estações banco inclinado"
+  },
+  {
+    "id": 137,
+    "nome": "Aberturas inclinado com Halteres"
+  },
+  {
+    "id": 138,
+    "nome": "Butterfly"
+  },
+  {
+    "id": 139,
+    "nome": "Chest Press"
+  },
+  {
+    "id": 140,
+    "nome": "Cross-over alto"
+  },
+  {
+    "id": 141,
+    "nome": "Cross-over baixo"
+  },
+  {
+    "id": 142,
+    "nome": "Flexão de braços - peitoral"
+  },
+  {
+    "id": 143,
+    "nome": "Flexão de braços com joelhos no solo"
+  },
+  {
+    "id": 144,
+    "nome": "Pull-over horizontal com Halteres"
+  },
+  {
+    "id": 145,
+    "nome": "Supino com Halteres declinado"
+  },
+  {
+    "id": 146,
+    "nome": "Supino declinado no Rack"
+  },
+  {
+    "id": 147,
+    "nome": "Supino horizontal com Barra"
+  },
+  {
+    "id": 148,
+    "nome": "Supino horizontal com Halteres"
+  },
+  {
+    "id": 149,
+    "nome": "Supino horizontal com Halteres - supinação"
+  },
+  {
+    "id": 150,
+    "nome": "Supino horizontal no Rack"
+  },
+  {
+    "id": 151,
+    "nome": "Supino inc. em máq. de discos"
+  },
+  {
+    "id": 152,
+    "nome": "Supino inclinado com Barra"
+  },
+  {
+    "id": 153,
+    "nome": "Supino inclinado com Halteres"
+  },
+  {
+    "id": 154,
+    "nome": "Supino inclinado no Rack"
+  },
+  {
+    "id": 155,
+    "nome": "Supino na máquina de polia"
+  },
+  {
+    "id": 156,
+    "nome": "Supino vertical em máquina"
+  },
+  {
+    "id": 157,
+    "nome": "Elevações com Barra Livre"
+  },
+  {
+    "id": 158,
+    "nome": "Elevações com Haltere"
+  },
+  {
+    "id": 159,
+    "nome": "Elevações com Haltere lateral"
+  },
+  {
+    "id": 160,
+    "nome": "Remo vertical com Barra Livre"
+  },
+  {
+    "id": 161,
+    "nome": "Alongamento abdominal"
+  },
+  {
+    "id": 162,
+    "nome": "Alongamento abdutor"
+  },
+  {
+    "id": 163,
+    "nome": "Alongamento abdutor em agachamento"
+  },
+  {
+    "id": 164,
+    "nome": "Alongamento abdutor no solo"
+  },
+  {
+    "id": 165,
+    "nome": "Alongamento adutor"
+  },
+  {
+    "id": 166,
+    "nome": "Alongamento adutor no solo"
+  },
+  {
+    "id": 167,
+    "nome": "Alongamento bíceps"
+  },
+  {
+    "id": 168,
+    "nome": "Alongamento deltoide"
+  },
+  {
+    "id": 169,
+    "nome": "Alongamento dorsal"
+  },
+  {
+    "id": 170,
+    "nome": "Alongamento dorsal e oblíquos"
+  },
+  {
+    "id": 171,
+    "nome": "Alongamento glúteos no solo"
+  },
+  {
+    "id": 172,
+    "nome": "Alongamento glúteos simultâneo"
+  },
+  {
+    "id": 173,
+    "nome": "Alongamento glúteos unilateral"
+  },
+  {
+    "id": 174,
+    "nome": "Alongamento gémeo"
+  },
+  {
+    "id": 175,
+    "nome": "Alongamento isquiotibiais"
+  },
+  {
+    "id": 176,
+    "nome": "Alongamento isquiotibiais no solo unilateral"
+  },
+  {
+    "id": 177,
+    "nome": "Alongamento isquiotibiais, pernas afastadas"
+  },
+  {
+    "id": 178,
+    "nome": "Alongamento lombares"
+  },
+  {
+    "id": 179,
+    "nome": "Alongamento peitoral"
+  },
+  {
+    "id": 180,
+    "nome": "Alongamento peitoral 2"
+  },
+  {
+    "id": 181,
+    "nome": "Alongamento peitoral 3"
+  },
+  {
+    "id": 182,
+    "nome": "Alongamento quadríceps"
+  },
+  {
+    "id": 183,
+    "nome": "Alongamento tríceps"
+  }
+]
