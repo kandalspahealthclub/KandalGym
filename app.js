@@ -273,6 +273,7 @@ class FitnessApp {
         if (!ONESIGNAL_APP_ID || ONESIGNAL_APP_ID.includes("SUA_")) return;
 
         try {
+            console.log("A preparar envio de Push para o ID de utilizador:", targetUserId);
             const response = await fetch("https://onesignal.com/api/v1/notifications", {
                 method: "POST",
                 headers: {
@@ -291,10 +292,15 @@ class FitnessApp {
                 })
             });
             const responseData = await response.json();
-            console.log("Push result:", responseData);
-            console.log("Push enviado com sucesso para ID:", targetUserId);
+            console.log("Resposta da OneSignal (JSON):", responseData);
+
+            if (responseData.errors) {
+                console.error("ERRO DA ONESIGNAL (Verifique os dados em baixo):", responseData.errors);
+            } else {
+                console.log("Push Processado pelo servidor da OneSignal com o ID:", responseData.id);
+            }
         } catch (e) {
-            console.error("Erro ao enviar Push:", e);
+            console.error("Falha DE REDE ao tentar contactar a OneSignal:", e);
         }
     }
 
