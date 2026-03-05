@@ -267,41 +267,16 @@ class FitnessApp {
     }
 
     async sendPushNotification(targetUserId, title, body) {
-        const ONESIGNAL_APP_ID = "c1861b79-0da1-40bd-b8ba-f40064a48624";
-        const ONESIGNAL_REST_API_KEY = "os_v2_app_ygdbw6inufal3of26qagjjegesqucptc2ejuqmfkaqw3ukfbvqmcvh5rdhjbvq6jmqclx65nsmsr7kabhkl7jmnsupptcbmsrteer6a";
+        // NOTA IMPORTANTE: A API REST da OneSignal bloqueia pedidos (CORS) originados diretamente do browser.
+        // O envio real de mensagens "peer-to-peer" requer um servidor backend ou uma Cloud Function. 
+        // Para a KandalGym App (como está alojada no GitHub Pages num frontend puro), 
+        // vamos simular o envio localmente e evitar o erro que interrompia as guardas na base de dados.
 
-        if (!ONESIGNAL_APP_ID || ONESIGNAL_APP_ID.includes("SUA_")) return;
+        console.warn('O envio de notificações Push entre utilizadores pelo browser está bloqueado por CORS pela OneSignal.', { targetUserId, title, body });
+        console.info('Para que os Push funcionem 100%, será necessário no futuro adicionar Firebase Cloud Functions ou um Backend.');
 
-        try {
-            console.log("A preparar envio de Push para o ID de utilizador:", targetUserId);
-            const response = await fetch("https://onesignal.com/api/v1/notifications", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json; charset=utf-8",
-                    "Authorization": `Key ${ONESIGNAL_REST_API_KEY}`
-                },
-                body: JSON.stringify({
-                    app_id: ONESIGNAL_APP_ID,
-                    include_aliases: {
-                        "external_id": [String(targetUserId)]
-                    },
-                    target_channel: "push",
-                    headings: { "en": title, "pt": title },
-                    contents: { "en": body, "pt": body },
-                    url: window.location.origin
-                })
-            });
-            const responseData = await response.json();
-            console.log("Resposta da OneSignal (JSON):", responseData);
-
-            if (responseData.errors) {
-                console.error("ERRO DA ONESIGNAL (Verifique os dados em baixo):", responseData.errors);
-            } else {
-                console.log("Push Processado pelo servidor da OneSignal com o ID:", responseData.id);
-            }
-        } catch (e) {
-            console.error("Falha DE REDE ao tentar contactar a OneSignal:", e);
-        }
+        // Em vez de crashar a app por causa do erro de CORS, finalizamos aqui graciosamente
+        return null;
     }
 
     showModal(content, maxWidth = '600px') {
