@@ -94,31 +94,47 @@ class FitnessApp {
         // 2. Iniciar escuta do Firebase em segundo plano
         this.init();
 
-        // 3. Inicializar OneSignal para Notificações (com pequeno delay)
-        setTimeout(() => this.initOneSignal(), 2000);
+        // 3. Inicializar OneSignal para Notificações
+        this.initOneSignal();
     }
 
     initOneSignal() {
-        window.OneSignal = window.OneSignal || [];
-        OneSignal.push(() => {
-            OneSignal.init({
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function (OneSignal) {
+            await OneSignal.init({
                 appId: "c1861b79-0da1-40bd-b8ba-f40064a48624",
-                allowLocalhostAsSecureOrigin: true,
-                serviceWorkerPath: 'OneSignalSDKWorker.js',
-                serviceWorkerParam: { scope: '/' }
+                safari_web_id: "web.onesignal.auto.5bb9a1c9-03c0-4629-b099-1bc8c9257be5",
+                notifyButton: {
+                    enable: true,
+                },
             });
 
-            // Forçar o pedido de permissão
-            OneSignal.showNativePrompt();
-
-
-            // Associar o utilizador logado ao OneSignal para notificações diretas
-            if (this.isLoggedIn && this.currentUser) {
-                OneSignal.setExternalUserId(String(this.currentUser.id));
-                console.log("OneSignal: Utilizador associado ID", this.currentUser.id);
+            // Associar utilizador logado (API v16)
+            if (window.app && window.app.isLoggedIn && window.app.currentUser) {
+                try {
+                    await OneSignal.login(String(window.app.currentUser.id));
+                    console.log("OneSignal v16: login ID", window.app.currentUser.id);
+                } catch (e) {
+                    console.warn("OneSignal login:", e);
+                }
             }
         });
     }
+
+    oneSignalLogin(userId) {
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function (OneSignal) {
+            try { await OneSignal.login(String(userId)); } catch (e) { }
+        });
+    }
+
+    oneSignalLogout() {
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function (OneSignal) {
+            try { await OneSignal.logout(); } catch (e) { }
+        });
+    }
+
 
     renderAppInterface() {
         try {
@@ -474,7 +490,7 @@ class FitnessApp {
                 this.isLoggedIn = true;
                 this.persistLogin();
                 this.renderAppInterface();
-                if (window.OneSignal) OneSignal.push(() => OneSignal.setExternalUserId(String(this.currentUser.id)));
+                this.oneSignalLogin(this.currentUser.id);
                 return;
             }
 
@@ -485,7 +501,7 @@ class FitnessApp {
                 this.isLoggedIn = true;
                 this.persistLogin();
                 this.renderAppInterface();
-                if (window.OneSignal) OneSignal.push(() => OneSignal.setExternalUserId(String(this.currentUser.id)));
+                this.oneSignalLogin(this.currentUser.id);
                 return;
             }
 
@@ -497,7 +513,7 @@ class FitnessApp {
                 this.isLoggedIn = true;
                 this.persistLogin();
                 this.renderAppInterface();
-                if (window.OneSignal) OneSignal.push(() => OneSignal.setExternalUserId(String(this.currentUser.id)));
+                this.oneSignalLogin(this.currentUser.id);
             } else {
                 alert('Email ou palavra-passe incorretos.');
             }
@@ -550,10 +566,8 @@ class FitnessApp {
             }
 
             // Re-identificar na OneSignal após restaurar sessão
-            if (this.isLoggedIn && this.currentUser && window.OneSignal) {
-                OneSignal.push(() => {
-                    OneSignal.setExternalUserId(String(this.currentUser.id));
-                });
+            if (this.isLoggedIn && this.currentUser) {
+                setTimeout(() => this.oneSignalLogin(this.currentUser.id), 2000);
             }
         } catch (e) {
             console.error("Erro ao restaurar sessao:", e);
@@ -562,11 +576,7 @@ class FitnessApp {
     }
 
     handleLogout() {
-        if (window.OneSignal) {
-            OneSignal.push(() => {
-                OneSignal.removeExternalUserId();
-            });
-        }
+        this.oneSignalLogout();
 
         this.isLoggedIn = false;
         this.currentUser = null;
