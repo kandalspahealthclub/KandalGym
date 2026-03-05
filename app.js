@@ -109,6 +109,9 @@ class FitnessApp {
                 },
             });
 
+            // Forcar pedido de notificacoes usando a nova API v16
+            OneSignal.Slidedown.promptPush();
+
             // Associar utilizador logado (API v16)
             if (window.app && window.app.isLoggedIn && window.app.currentUser) {
                 try {
