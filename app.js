@@ -103,11 +103,13 @@ class FitnessApp {
         OneSignal.push(() => {
             OneSignal.init({
                 appId: "c1861b79-0da1-40bd-b8ba-f40064a48624",
-                notifyButton: {
-                    enable: false,
-                },
                 allowLocalhostAsSecureOrigin: true,
+                serviceWorkerPath: 'OneSignalSDKWorker.js',
+                serviceWorkerParam: { scope: '/' }
             });
+
+            // Forçar o pedido de permissão ao utilizador
+            OneSignal.showNativePrompt();
 
             // Associar o utilizador logado ao OneSignal para notificações diretas
             if (this.isLoggedIn && this.currentUser) {
