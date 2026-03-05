@@ -273,11 +273,11 @@ class FitnessApp {
         if (!ONESIGNAL_APP_ID || ONESIGNAL_APP_ID.includes("SUA_")) return;
 
         try {
-            await fetch("https://onesignal.com/api/v1/notifications", {
+            const response = await fetch("https://onesignal.com/api/v1/notifications", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json; charset=utf-8",
-                    "Authorization": `Basic ${ONESIGNAL_REST_API_KEY}`
+                    "Authorization": `Key ${ONESIGNAL_REST_API_KEY}`
                 },
                 body: JSON.stringify({
                     app_id: ONESIGNAL_APP_ID,
@@ -287,9 +287,11 @@ class FitnessApp {
                     target_channel: "push",
                     headings: { "en": title, "pt": title },
                     contents: { "en": body, "pt": body },
-                    url: window.location.origin // Abrir a app ao clicar
+                    url: window.location.origin
                 })
             });
+            const responseData = await response.json();
+            console.log("Push result:", responseData);
             console.log("Push enviado com sucesso para ID:", targetUserId);
         } catch (e) {
             console.error("Erro ao enviar Push:", e);
