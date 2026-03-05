@@ -95,6 +95,7 @@ class FitnessApp {
         this.init();
     }
 
+
     renderAppInterface() {
         try {
             const loginScreen = document.getElementById('login-screen');
@@ -215,8 +216,8 @@ class FitnessApp {
 
         this.state.notifications.push(newNotification);
         if (shouldSave) this.saveState();
-
     }
+
     showModal(content, maxWidth = '600px') {
         this.closeModal();
         const modal = document.createElement('div');
@@ -414,6 +415,7 @@ class FitnessApp {
                 this.isLoggedIn = true;
                 this.persistLogin();
                 this.renderAppInterface();
+                this.oneSignalLogin(this.currentUser.id);
                 return;
             }
 
@@ -424,6 +426,7 @@ class FitnessApp {
                 this.isLoggedIn = true;
                 this.persistLogin();
                 this.renderAppInterface();
+                this.oneSignalLogin(this.currentUser.id);
                 return;
             }
 
@@ -485,6 +488,7 @@ class FitnessApp {
                     this.activeView = session.activeView || 'dashboard';
                 }
             }
+
         } catch (e) {
             console.error("Erro ao restaurar sessao:", e);
             localStorage.removeItem('kandalgym_session');
