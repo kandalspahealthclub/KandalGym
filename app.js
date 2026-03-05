@@ -93,51 +93,7 @@ class FitnessApp {
 
         // 2. Iniciar escuta do Firebase em segundo plano
         this.init();
-
-        // 3. Inicializar OneSignal para Notificações
-        this.initOneSignal();
     }
-
-    initOneSignal() {
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(async function (OneSignal) {
-            await OneSignal.init({
-                appId: "c1861b79-0da1-40bd-b8ba-f40064a48624",
-                safari_web_id: "web.onesignal.auto.5bb9a1c9-03c0-4629-b099-1bc8c9257be5",
-                notifyButton: {
-                    enable: true,
-                },
-            });
-
-            // Forcar pedido de notificacoes usando a nova API v16
-            OneSignal.Slidedown.promptPush();
-
-            // Associar utilizador logado (API v16)
-            if (window.app && window.app.isLoggedIn && window.app.currentUser) {
-                try {
-                    await OneSignal.login(String(window.app.currentUser.id));
-                    console.log("OneSignal v16: login ID", window.app.currentUser.id);
-                } catch (e) {
-                    console.warn("OneSignal login:", e);
-                }
-            }
-        });
-    }
-
-    oneSignalLogin(userId) {
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(async function (OneSignal) {
-            try { await OneSignal.login(String(userId)); } catch (e) { }
-        });
-    }
-
-    oneSignalLogout() {
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(async function (OneSignal) {
-            try { await OneSignal.logout(); } catch (e) { }
-        });
-    }
-
 
     renderAppInterface() {
         try {
@@ -260,25 +216,7 @@ class FitnessApp {
         this.state.notifications.push(newNotification);
         if (shouldSave) this.saveState();
 
-        // Se o destino nao for eu proprio, enviar Notificacao Push Real
-        if (Number(targetUserId) !== Number(this.currentUser?.id)) {
-            this.sendPushNotification(targetUserId, title, body);
-        }
     }
-
-    async sendPushNotification(targetUserId, title, body) {
-        // NOTA IMPORTANTE: A API REST da OneSignal bloqueia pedidos (CORS) originados diretamente do browser.
-        // O envio real de mensagens "peer-to-peer" requer um servidor backend ou uma Cloud Function. 
-        // Para a KandalGym App (como está alojada no GitHub Pages num frontend puro), 
-        // vamos simular o envio localmente e evitar o erro que interrompia as guardas na base de dados.
-
-        console.warn('O envio de notificações Push entre utilizadores pelo browser está bloqueado por CORS pela OneSignal.', { targetUserId, title, body });
-        console.info('Para que os Push funcionem 100%, será necessário no futuro adicionar Firebase Cloud Functions ou um Backend.');
-
-        // Em vez de crashar a app por causa do erro de CORS, finalizamos aqui graciosamente
-        return null;
-    }
-
     showModal(content, maxWidth = '600px') {
         this.closeModal();
         const modal = document.createElement('div');
@@ -476,7 +414,6 @@ class FitnessApp {
                 this.isLoggedIn = true;
                 this.persistLogin();
                 this.renderAppInterface();
-                this.oneSignalLogin(this.currentUser.id);
                 return;
             }
 
@@ -487,7 +424,6 @@ class FitnessApp {
                 this.isLoggedIn = true;
                 this.persistLogin();
                 this.renderAppInterface();
-                this.oneSignalLogin(this.currentUser.id);
                 return;
             }
 
@@ -499,7 +435,6 @@ class FitnessApp {
                 this.isLoggedIn = true;
                 this.persistLogin();
                 this.renderAppInterface();
-                this.oneSignalLogin(this.currentUser.id);
             } else {
                 alert('Email ou palavra-passe incorretos.');
             }
@@ -550,11 +485,6 @@ class FitnessApp {
                     this.activeView = session.activeView || 'dashboard';
                 }
             }
-
-            // Re-identificar na OneSignal após restaurar sessão
-            if (this.isLoggedIn && this.currentUser) {
-                setTimeout(() => this.oneSignalLogin(this.currentUser.id), 2000);
-            }
         } catch (e) {
             console.error("Erro ao restaurar sessao:", e);
             localStorage.removeItem('kandalgym_session');
@@ -562,8 +492,6 @@ class FitnessApp {
     }
 
     handleLogout() {
-        this.oneSignalLogout();
-
         this.isLoggedIn = false;
         this.currentUser = null;
         localStorage.removeItem('kandalgym_session');
