@@ -94,8 +94,8 @@ class FitnessApp {
         // 2. Iniciar escuta do Firebase em segundo plano
         this.init();
 
-        // 3. Inicializar OneSignal para Notificações
-        this.initOneSignal();
+        // 3. Inicializar OneSignal para Notificações (com pequeno delay)
+        setTimeout(() => this.initOneSignal(), 2000);
     }
 
     initOneSignal() {
@@ -108,8 +108,9 @@ class FitnessApp {
                 serviceWorkerParam: { scope: '/' }
             });
 
-            // Forçar o pedido de permissão ao utilizador
+            // Forçar o pedido de permissão
             OneSignal.showNativePrompt();
+
 
             // Associar o utilizador logado ao OneSignal para notificações diretas
             if (this.isLoggedIn && this.currentUser) {
