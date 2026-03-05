@@ -1,36 +1,58 @@
+// Tratador de Erros Global - Deve ser o primeiro a carregar
+window.onerror = function (message, source, lineno, colno, error) {
+    console.error("Erro detectado:", message, "em", source, ":", lineno);
+    const container = document.getElementById('main-content');
+    if (container && (container.innerHTML === '' || container.innerText.length < 50)) {
+        container.innerHTML = `
+            <div class="glass-card" style="margin:2rem; padding:2rem; border:2px solid var(--danger); text-align:center;">
+                <i class="fas fa-exclamation-circle" style="font-size:3rem; color:var(--danger); margin-bottom:1rem;"></i>
+                <h2 style="color:#fff;">Ocorreu um erro na aplicacao</h2>
+                <p style="color:var(--text-muted);">A pagina nao conseguiu carregar corretamente.</p>
+                <div style="background:rgba(0,0,0,0.3); padding:1rem; border-radius:8px; margin:1rem 0; text-align:left; font-family:monospace; font-size:0.75rem; color:var(--danger); overflow-x:auto;">
+                    ${message}<br><small>Linha: ${lineno}</small>
+                </div>
+                <button class="btn btn-primary" onclick="location.reload()">Recarregar App</button>
+            </div>
+        `;
+    }
+    return false;
+};
+
 class FitnessApp {
     constructor() {
-        this.role = 'teacher';
-        this.currentClientId = 101;
+        this.role = 'client';
+        this.currentClientId = null;
         this.activeView = 'dashboard';
         this.spySubView = 'training';
-        this.dashboardMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
-        this.state = mockState;
+        this.dashboardMonth = new Date().toISOString().substring(0, 7);
+        this.hasLoadedData = false; // Flag para evitar flickering de "Utilizador nao encontrado"
+        this.isCheckingClasses = false;
+        this.checkInterval = null;
 
-        // Ensure food categories exist
-        if (!this.state.foodCategories) {
-            this.state.foodCategories = [
-                "Carne", "Peixe", "Leguminosas", "Laticínios", "Cereais",
-                "Hortícolas", "Fruta", "Gorduras/Óleos", "Bebidas Energéticas", "Outros"
-            ];
+        // Tentar carregar estado do LocalStorage como cache inicial
+        const cachedState = localStorage.getItem('kandalgym_state');
+        if (cachedState) {
+            try {
+                this.state = JSON.parse(cachedState);
+            } catch (e) {
+                this.state = (typeof mockState !== 'undefined') ? mockState : {};
+            }
+        } else {
+            this.state = (typeof mockState !== 'undefined') ? mockState : {};
         }
 
-        if (!this.state.exerciseCategories) {
-            this.state.exerciseCategories = [
-                "Perna", "Costas", "Peito", "Ombros", "Braços", "Cárdio", "Abdominais", "Alongamentos", "Dorsal", "Geral"
-            ];
-        }
+        const vitalCollections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes'];
+        vitalCollections.forEach(c => { if (!this.state[c]) this.state[c] = []; });
+
+        const vitalDicts = ['trainingPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments'];
+        vitalDicts.forEach(d => { if (!this.state[d]) this.state[d] = {}; });
 
         this.shownNotifications = JSON.parse(localStorage.getItem('shown_notifications') || '[]');
         this.isLoggedIn = false;
         this.currentUser = null;
 
-        // Final fallback for QR state
-        if (!this.state) this.state = mockState || {};
-        if (!this.state.qrClients) this.state.qrClients = [];
-
         // Initialize Firebase
-        const firebaseConfig = {
+        this.firebaseAppConfig = {
             apiKey: "AIzaSyD7cf3sfJBm0YsLOagu6or2hCTd-xcjO1E",
             authDomain: "kandalgym.firebaseapp.com",
             databaseURL: "https://kandalgym-default-rtdb.europe-west1.firebasedatabase.app",
@@ -38,12 +60,19 @@ class FitnessApp {
             storageBucket: "kandalgym.firebasestorage.app",
             messagingSenderId: "367817039949",
             appId: "1:367817039949:web:5c72215819b9bb1eb07c04",
-            measurementId: "G-WY0QSKYVCR"
+            measurementId: "G-WY0QSKYVCR",
+            serverKey: "AIzaSyD7cf3sfJBm0YsLOagu6or2hCTd-xcjO1E" // ATENCAO: Esta chave deve comecar por AAAA...
         };
 
-        firebase.initializeApp(firebaseConfig);
-        this.db = firebase.database();
-        this.dbRef = this.db.ref('kandalGymState');
+        try {
+            firebase.initializeApp(this.firebaseAppConfig);
+            this.db = firebase.database();
+            this.dbRef = this.db.ref('kandalGymState');
+            console.log("Firebase inicializado.");
+        } catch (fbErr) {
+            console.error("Erro ao inicializar Firebase:", fbErr);
+            alert("Erro Firebase: Verifique a sua ligacao a internet.");
+        }
         this.isSaving = false;
 
         this.deferredPrompt = null;
@@ -59,38 +88,79 @@ class FitnessApp {
         if (!this.isLoggedIn) {
             this.renderLogin();
         } else {
-            this.renderAppInterface(); // Método auxiliar para mostrar o layout principal
+            this.renderAppInterface();
         }
 
         // 2. Iniciar escuta do Firebase em segundo plano
         this.init();
+
+        // 3. Inicializar OneSignal para Notificações
+        this.initOneSignal();
+    }
+
+    initOneSignal() {
+        window.OneSignal = window.OneSignal || [];
+        OneSignal.push(() => {
+            OneSignal.init({
+                appId: "c1861b79-0da1-40bd-b8ba-f40064a48624",
+                notifyButton: {
+                    enable: false,
+                },
+                allowLocalhostAsSecureOrigin: true,
+            });
+
+            // Associar o utilizador logado ao OneSignal para notificações diretas
+            if (this.isLoggedIn && this.currentUser) {
+                OneSignal.setExternalUserId(String(this.currentUser.id));
+                console.log("OneSignal: Utilizador associado ID", this.currentUser.id);
+            }
+        });
     }
 
     renderAppInterface() {
-        const loginScreen = document.getElementById('login-screen');
-        const appScreen = document.getElementById('app');
-        if (loginScreen) loginScreen.style.display = 'none';
-        if (appScreen) {
-            appScreen.style.display = 'flex';
-            appScreen.style.opacity = '1';
+        try {
+            const loginScreen = document.getElementById('login-screen');
+            const appScreen = document.getElementById('app');
+            if (loginScreen) loginScreen.style.display = 'none';
+            if (appScreen) {
+                appScreen.style.display = 'flex';
+                appScreen.style.opacity = '1';
+            }
+            this.renderNavbar();
+            this.renderSidebar();
+            this.renderUserProfile();
+            this.renderContent();
+            this.renderFAB();
+        } catch (e) {
+            console.error("Erro ao renderizar interface:", e);
         }
-        this.renderNavbar();
-        this.renderSidebar();
-        this.renderUserProfile();
-        this.renderContent();
-        this.renderFAB();
     }
 
     async saveState() {
+        if (!this.hasLoadedData) {
+            console.warn('Tentativa de gravar antes de carregar dados do Firebase ignorada.');
+            return;
+        }
+        if (this.isSaving) return;
         this.isSaving = true;
-        localStorage.setItem('kandalgym_state', JSON.stringify(this.state));
         try {
+            // Tentar gravar no LocalStorage (cache rapido)
+            try {
+                localStorage.setItem('kandalgym_state', JSON.stringify(this.state));
+            } catch (lsError) {
+                console.warn('LocalStorage Quota exceeded');
+            }
+
             await this.dbRef.set(this.state);
+            // Backup imediato no localStorage para evitar perda de dados local
+            localStorage.setItem('kandalgym_state', JSON.stringify(this.state));
+            console.log("Estado guardado com sucesso no Firebase");
         } catch (e) {
             console.error('Firebase Sync error:', e);
+            alert("Erro ao guardar dados. Verifique a internet.");
         } finally {
-            // Pequeno delay para garantir que o evento 'value' do Firebase seja processado ou ignorado
-            setTimeout(() => { this.isSaving = false; }, 800);
+            // Tempo suficiente para o Firebase processar e devolver o sinal de volta
+            setTimeout(() => { this.isSaving = false; }, 1000);
         }
     }
 
@@ -98,92 +168,55 @@ class FitnessApp {
         if (this.isInitialized) return;
         this.isInitialized = true;
 
-        // Escutar alterações em tempo real do Firebase
         this.dbRef.on('value', (snapshot) => {
+            // Se entrou no listener, ja temos resposta do servidor
+            this.hasLoadedData = true;
+
+            // Nao processar se for uma gravacao nossa (evita loops e cintilacao)
             if (this.isSaving) return;
 
             const data = snapshot.val();
-            let stateChanged = false;
-
             if (data) {
-                if (JSON.stringify(data) !== JSON.stringify(this.state)) {
-                    this.state = data;
-                    if (this.isLoggedIn) {
-                        this.checkAppNotifications();
-                        this.renderContent();
-                    }
-                }
-            } else {
-                console.log("Firebase vazio, inicializando com dados locais...");
-                this.saveState();
-                return;
+                this.state = data;
             }
 
-            // Garantir integridade das coleções vitais
-            const collections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories'];
-            collections.forEach(coll => {
-                if (!this.state[coll]) {
-                    this.state[coll] = [];
-                    stateChanged = true;
-                }
-            });
+            // 1. Integridade local
+            const collections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes'];
+            collections.forEach(coll => { if (!this.state[coll]) this.state[coll] = []; });
 
-            const dictCollections = ['trainingPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis'];
-            dictCollections.forEach(coll => {
-                if (!this.state[coll]) {
-                    this.state[coll] = {};
-                    stateChanged = true;
-                }
-            });
+            const dictCollections = ['trainingPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments'];
+            dictCollections.forEach(coll => { if (!this.state[coll]) this.state[coll] = {}; });
 
-            // Garantir conta mestre
-            const masterAdminExists = (this.state.admins || []).some(a => a.email === 'admin@kandalgym.com');
-            if (!masterAdminExists) {
-                if (!this.state.admins) this.state.admins = [];
+            // 2. Conta mestre garantida
+            if (!this.state.admins.some(a => a.email === 'admin@kandalgym.com')) {
                 this.state.admins.push({
-                    id: 1,
-                    name: 'KandalGym Master',
-                    email: 'admin@kandalgym.com',
-                    password: 'admin',
-                    role: 'admin'
+                    id: 1, name: 'KandalGym Master', email: 'admin@kandalgym.com', password: 'admin', role: 'admin'
                 });
-                stateChanged = true;
             }
 
-            if (stateChanged) {
-                this.saveState();
+            // 3. Sincronizacao local e UI
+            try {
+                localStorage.setItem('kandalgym_state', JSON.stringify(this.state));
+            } catch (e) { }
+
+            this.syncSessionWithState();
+
+            // Atualizar UI apenas se logado e nao houver modais abertas
+            if (this.isLoggedIn && !document.querySelector('.modal-overlay')) {
+                this.renderContent();
+            }
+
+            if (!this.checkInterval) {
+                setTimeout(() => this.checkFinishedClasses(), 2000);
+                this.checkInterval = setInterval(() => this.checkFinishedClasses(), 60000);
             }
         });
     }
 
     async backgroundSync() {
-        // Agora o 'init' com dbRef.on('value') já faz a sincronização automática em tempo real.
-        // Não precisamos mais de intervalo.
+        // Agora o 'init' com dbRef.on('value') ja faz a sincronizacao automatica em tempo real.
+        // Nao precisamos mais de intervalo.
         return;
-    }
-
-    // --- Notification System ---
-
-    async requestNotificationPermission() {
-        if (!("Notification" in window)) {
-            alert('Este navegador não suporta notificações.');
-            return;
-        }
-
-        const permission = await Notification.requestPermission();
-
-        if (permission === 'granted') {
-            this.showToast('Notificações ativadas com sucesso!');
-            this.sendTestNotification();
-        } else if (permission === 'denied') {
-            alert('As notificações foram bloqueadas no seu navegador. Para ativar, autorize nas definições do site.');
-        }
-
-        this.renderContent();
-    }
-
-    sendTestNotification() {
-        this.addAppNotification(this.currentUser.id, 'Teste KandalGym 🚀', 'Se está a ver isto, as suas notificações estão ativas!');
     }
 
     addAppNotification(targetUserId, title, body, senderId = null, type = 'notification', shouldSave = true) {
@@ -192,86 +225,52 @@ class FitnessApp {
             this.state.notifications = this.state.notifications.slice(-200);
         }
 
-        this.state.notifications.push({
+        const newNotification = {
             id: Date.now() + Math.random(),
             targetUserId: Number(targetUserId),
-            senderId: senderId, // ID de quem enviou (opcional)
-            type: type,         // 'notification' ou 'message'
+            senderId: senderId,
+            type: type,
             title,
             body,
             createdAt: new Date().toISOString()
-        });
+        };
+
+        this.state.notifications.push(newNotification);
         if (shouldSave) this.saveState();
+
+        // Se o destino nao for eu proprio, enviar Notificacao Push Real
+        if (Number(targetUserId) !== Number(this.currentUser?.id)) {
+            this.sendPushNotification(targetUserId, title, body);
+        }
     }
 
-    showManualNotificationModal(clientId) {
-        const client = this.state.clients.find(c => c.id == clientId);
-        this.showModal(`
-            <div style="padding: 1rem;">
-                <h3 style="margin-top:0; color:var(--primary);"><i class="fas fa-paper-plane"></i> Enviar Mensagem Direta</h3>
-                <p style="color:var(--text-muted); font-size:0.9rem;">O aluno ${client.name} receberá um alerta no telemóvel/PC.</p>
-                
-                <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Título da Notificação</label>
-                    <input type="text" id="notif-title" placeholder="Ex: Parabéns pelo treino!" 
-                        style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
-                </div>
+    async sendPushNotification(targetUserId, title, body) {
+        const ONESIGNAL_APP_ID = "c1861b79-0da1-40bd-b8ba-f40064a48624";
+        const ONESIGNAL_REST_API_KEY = "os_v2_app_ygdbw6inufal3of26qagjjegesqucptc2ejuqmfkaqw3ukfbvqmcvh5rdhjbvq6jmqclx65nsmsr7kabhkl7jmnsupptcbmsrteer6a";
 
-                <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Mensagem</label>
-                    <textarea id="notif-body" placeholder="Escreva aqui a sua mensagem personalizada..." 
-                        style="width:100%; height:120px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:15px; resize:none;"></textarea>
-                </div>
+        if (!ONESIGNAL_APP_ID || ONESIGNAL_APP_ID.includes("SUA_")) return;
 
-                <div style="display:flex; gap:1rem;">
-                    <button class="btn btn-primary" onclick="app.sendManualNotification(${clientId})" style="flex:2;">
-                        <i class="fas fa-share"></i> Enviar Agora
-                    </button>
-                    <button class="btn btn-ghost" onclick="app.closeModal()" style="flex:1;">Cancelar</button>
-                </div>
-            </div>
-        `);
-    }
-
-    sendManualNotification(clientId) {
-        const title = document.getElementById('notif-title').value.trim();
-        const body = document.getElementById('notif-body').value.trim();
-
-        if (!title || !body) return alert('Por favor, preencha o título e a mensagem.');
-
-        this.addAppNotification(clientId, title, body);
-        this.closeModal();
-        this.showToast('Notificação enviada com sucesso!');
-    }
-
-    checkAppNotifications() {
-        if (!this.state.notifications || !this.currentUser) return;
-        if (Notification.permission !== 'granted') return;
-
-        const myId = Number(this.currentUser.id);
-        const newNotifications = this.state.notifications.filter(n =>
-            n.targetUserId === myId && !this.shownNotifications.includes(n.id)
-        );
-
-        newNotifications.forEach(n => {
-            const options = {
-                body: n.body,
-                icon: 'logo.png',
-                badge: 'logo.png',
-                vibrate: [200, 100, 200]
-            };
-
-            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                navigator.serviceWorker.ready.then(reg => reg.showNotification(n.title, options));
-            } else {
-                new Notification(n.title, options);
-            }
-            this.shownNotifications.push(n.id);
-        });
-
-        if (newNotifications.length > 0) {
-            if (this.shownNotifications.length > 200) this.shownNotifications = this.shownNotifications.slice(-200);
-            localStorage.setItem('shown_notifications', JSON.stringify(this.shownNotifications));
+        try {
+            await fetch("https://onesignal.com/api/v1/notifications", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json; charset=utf-8",
+                    "Authorization": `Basic ${ONESIGNAL_REST_API_KEY}`
+                },
+                body: JSON.stringify({
+                    app_id: ONESIGNAL_APP_ID,
+                    include_aliases: {
+                        "external_id": [String(targetUserId)]
+                    },
+                    target_channel: "push",
+                    headings: { "en": title, "pt": title },
+                    contents: { "en": body, "pt": body },
+                    url: window.location.origin // Abrir a app ao clicar
+                })
+            });
+            console.log("Push enviado com sucesso para ID:", targetUserId);
+        } catch (e) {
+            console.error("Erro ao enviar Push:", e);
         }
     }
 
@@ -324,10 +323,13 @@ class FitnessApp {
         const photo = this.currentUser.photoUrl;
 
         container.innerHTML = `
-            <div style="display:flex; align-items:center; gap:0.75rem;">
+            <div style="display:flex; align-items:center; gap:0.5rem;">
                 <div class="avatar" style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; border: 2px solid var(--surface-border); overflow: hidden;">
                     ${photo ? `<img src="${photo}" style="width:100%; height:100%; object-fit:cover;">` : initials}
                 </div>
+                <button class="btn btn-ghost btn-sm" onclick="app.installPWA()" title="Instalar App" style="color: var(--primary); padding: 6px 10px; border: 1px solid var(--primary); border-radius: 8px;">
+                    <i class="fas fa-download"></i>
+                </button>
                 <button class="btn btn-ghost btn-sm" onclick="app.handleLogout()" title="Sair" style="color:var(--text-muted);">
                     <i class="fas fa-sign-out-alt"></i>
                 </button>
@@ -363,7 +365,7 @@ class FitnessApp {
                     </button>
                 </form>
                 <div class="login-footer">
-                    Ainda não tem conta? <a href="#" onclick="app.renderRegister(); return false;">Registe-se</a>
+                    Ainda nao tem conta? <a href="#" onclick="app.renderRegister(); return false;">Registe-se</a>
                 </div>
             </div>
         `;
@@ -394,17 +396,17 @@ class FitnessApp {
                     </div>
                     <div class="input-icon-group">
                         <i class="fas fa-phone"></i>
-                        <input type="tel" id="reg-phone" placeholder="Telemóvel (ex: 912345678)" required>
+                        <input type="tel" id="reg-phone" placeholder="Telemovel (ex: 912345678)" required>
                     </div>
                     <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.5rem 0; text-align: left;">
-                        * O seu registo será como <strong>Aluno</strong>. Contas de Professor devem ser solicitadas ao Administrador.
+                        * O seu registo sera como <strong>Aluno</strong>. Contas de Professor devem ser solicitadas ao Administrador.
                     </p>
                     <button type="submit" class="btn btn-primary" style="width:100%; margin-top:0.5rem;">
                         Criar Conta <i class="fas fa-check"></i>
                     </button>
                 </form>
                 <div class="login-footer">
-                    Já tem conta? <a href="#" onclick="app.renderLogin(); return false;">Faça Login</a>
+                    Ja tem conta? <a href="#" onclick="app.renderLogin(); return false;">Faca Login</a>
                 </div>
             </div>
         `;
@@ -421,11 +423,11 @@ class FitnessApp {
             return;
         }
 
-        // Verificar se já existe
+        // Verificar se ja existe
         const exists = this.state.clients.some(c => c.email.toLowerCase() === email) ||
             this.state.teachers.some(t => t.email.toLowerCase() === email);
         if (exists) {
-            alert('Este email já está registado.');
+            alert('Este email ja esta registado.');
             return;
         }
 
@@ -438,7 +440,7 @@ class FitnessApp {
         this.state.trainingHistory[newId] = [];
 
         this.saveState();
-        alert('Conta criada com sucesso! Já pode entrar.');
+        alert('Conta criada com sucesso! Ja pode entrar.');
         this.renderLogin();
     }
 
@@ -456,7 +458,7 @@ class FitnessApp {
                 return alert('Por favor, preencha todos os campos.');
             }
 
-            // Garantir que o estado e listas básicas existem
+            // Garantir que o estado e listas basicas existem
             if (!this.state) this.state = {};
             if (!this.state.admins) this.state.admins = [];
             if (!this.state.teachers) this.state.teachers = [];
@@ -469,6 +471,7 @@ class FitnessApp {
                 this.isLoggedIn = true;
                 this.persistLogin();
                 this.renderAppInterface();
+                if (window.OneSignal) OneSignal.push(() => OneSignal.setExternalUserId(String(this.currentUser.id)));
                 return;
             }
 
@@ -479,6 +482,7 @@ class FitnessApp {
                 this.isLoggedIn = true;
                 this.persistLogin();
                 this.renderAppInterface();
+                if (window.OneSignal) OneSignal.push(() => OneSignal.setExternalUserId(String(this.currentUser.id)));
                 return;
             }
 
@@ -490,12 +494,30 @@ class FitnessApp {
                 this.isLoggedIn = true;
                 this.persistLogin();
                 this.renderAppInterface();
+                if (window.OneSignal) OneSignal.push(() => OneSignal.setExternalUserId(String(this.currentUser.id)));
             } else {
                 alert('Email ou palavra-passe incorretos.');
             }
         } catch (error) {
             console.error('Erro no login:', error);
-            alert('Ocorreu um erro ao entrar. Tente refrescar a página.');
+            alert('Ocorreu um erro ao entrar. Tente refrescar a pagina.');
+        }
+    }
+
+    syncSessionWithState() {
+        if (!this.isLoggedIn || !this.currentUser) return;
+
+        const email = this.currentUser.email.toLowerCase();
+        let found = null;
+
+        // Procurar o utilizador fresco no estado descarregado
+        if (this.role === 'admin') found = this.state.admins.find(a => a.email.toLowerCase() === email);
+        else if (this.role === 'teacher') found = this.state.teachers.find(t => t.email.toLowerCase() === email);
+        else if (this.role === 'client') found = this.state.clients.find(c => c.email.toLowerCase() === email);
+
+        if (found) {
+            this.currentUser = found;
+            if (this.role === 'client') this.currentClientId = Number(found.id);
         }
     }
 
@@ -511,18 +533,38 @@ class FitnessApp {
     }
 
     restoreLogin() {
-        const savedSession = localStorage.getItem('kandalgym_session');
-        if (savedSession) {
-            const session = JSON.parse(savedSession);
-            this.isLoggedIn = session.isLoggedIn;
-            this.role = session.role;
-            this.currentUser = session.currentUser;
-            this.currentClientId = session.currentClientId;
-            this.activeView = session.activeView || 'dashboard';
+        try {
+            const savedSession = localStorage.getItem('kandalgym_session');
+            if (savedSession && savedSession !== 'null' && savedSession !== 'undefined') {
+                const session = JSON.parse(savedSession);
+                if (session && typeof session === 'object') {
+                    this.isLoggedIn = session.isLoggedIn || false;
+                    this.role = session.role || 'client';
+                    this.currentUser = session.currentUser || null;
+                    this.currentClientId = session.currentClientId || null;
+                    this.activeView = session.activeView || 'dashboard';
+                }
+            }
+
+            // Re-identificar na OneSignal após restaurar sessão
+            if (this.isLoggedIn && this.currentUser && window.OneSignal) {
+                OneSignal.push(() => {
+                    OneSignal.setExternalUserId(String(this.currentUser.id));
+                });
+            }
+        } catch (e) {
+            console.error("Erro ao restaurar sessao:", e);
+            localStorage.removeItem('kandalgym_session');
         }
     }
 
     handleLogout() {
+        if (window.OneSignal) {
+            OneSignal.push(() => {
+                OneSignal.removeExternalUserId();
+            });
+        }
+
         this.isLoggedIn = false;
         this.currentUser = null;
         localStorage.removeItem('kandalgym_session');
@@ -570,7 +612,7 @@ class FitnessApp {
                         </select>
                     </div>
                     <div id="teacher-select-container">
-                        <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Atribuir Professor Responsável</label>
+                        <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Atribuir Professor Responsavel</label>
                         <div class="teacher-assign-tag" style="width:100%; justify-content:space-between; padding:8px 15px; background:rgba(0,0,0,0.2);">
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <i class="fas fa-user-tie"></i>
@@ -626,31 +668,31 @@ class FitnessApp {
             const pass = document.getElementById('new-user-pass').value.trim();
             const phone = document.getElementById('new-user-phone').value.trim();
 
-            if (!name || !email || !pass || !phone) return alert('Por favor, preencha todos os campos obrigatórios.');
+            if (!name || !email || !pass || !phone) return alert('Por favor, preencha todos os campos obrigatorios.');
 
             // Garantir que as listas existem antes de verificar duplicados
             if (!this.state.clients) this.state.clients = [];
             if (!this.state.teachers) this.state.teachers = [];
             if (!this.state.admins) this.state.admins = [];
 
-            // Verificar se já existe email
+            // Verificar se ja existe email
             const existsEmail = this.state.clients.some(c => c.email.toLowerCase() === email) ||
                 this.state.teachers.some(t => t.email.toLowerCase() === email) ||
                 this.state.admins.some(a => a.email.toLowerCase() === email);
 
             if (existsEmail) {
-                alert('Este email já está registado no sistema.');
+                alert('Este email ja esta registado no sistema.');
                 return;
             }
 
-            // Verificar se já existe contacto telefónico (normalizando espaços)
+            // Verificar se ja existe contacto telefonico (normalizando espacos)
             const cleanPhone = phone.replace(/\s+/g, '');
             const existsPhone = this.state.clients.some(c => (c.phone || '').replace(/\s+/g, '') === cleanPhone) ||
                 this.state.teachers.some(t => (t.phone || '').replace(/\s+/g, '') === cleanPhone) ||
                 this.state.admins.some(a => (a.phone || '').replace(/\s+/g, '') === cleanPhone);
 
             if (existsPhone) {
-                alert('Este contacto telefónico já está registado na base de dados (Professor, Aluno ou Admin).');
+                alert('Este contacto telefonico ja esta registado na base de dados (Professor, Aluno ou Admin).');
                 return;
             }
 
@@ -686,7 +728,7 @@ class FitnessApp {
                 this.state.evaluations[newId] = [];
                 this.state.trainingHistory[newId] = [];
 
-                // Notificar o professor da nova inscrição (sem gravar ainda)
+                // Notificar o professor da nova Inscrição (sem gravar ainda)
                 if (teacherId) {
                     this.addAppNotification(teacherId, 'Novo Aluno Inscrito!', `O aluno ${name} foi registado no sistema.`, null, 'notification', false);
                 }
@@ -713,31 +755,31 @@ class FitnessApp {
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
 
-        const subject = `Bem-vindo à KandalGym - ${name}`;
-        const body = `Olá ${name},
+        const subject = `Bem-vindo a KandalGym - ${name}`;
+        const body = `Ola ${name},
 
 A sua conta de ${label} na KandalGym foi criada com sucesso!
 
-Poderá aceder à plataforma através do seguinte endereço: https://kandalspahealthclub.github.io/KandalGym/
+Podera aceder a plataforma atraves do seguinte endereco: https://kandalspahealthclub.github.io/KandalGym/
 
-As suas credenciais de acesso são:
+As suas credenciais de acesso sao:
 - Email: ${email}
 - Password: ${pass}
 
-Recomendamos que guarde este link nos seus favoritos ou instale a App no seu telemóvel.
+Recomendamos que guarde este link nos seus favoritos ou instale a App no seu telemovel.
 
 Bons treinos!
 Equipa KandalGym`;
 
-        const whatsappText = `*Bem-vindo à KandalGym* 🏋️‍♂️
+        const whatsappText = `*Bem-vindo a KandalGym* 
 
-Olá ${name}, a sua conta de ${label} foi criada!
+Ola ${name}, a sua conta de ${label} foi criada!
 
-🌐 Aceda aqui: https://kandalspahealthclub.github.io/KandalGym/
+ Aceda aqui: https://kandalspahealthclub.github.io/KandalGym/
 
-🔑 *Credenciais:*
-📧 Email: ${email}
-🔒 Password: ${pass}
+ *Credenciais:*
+ Email: ${email}
+ Password: ${pass}
 
 Bons treinos!`;
 
@@ -774,7 +816,7 @@ Bons treinos!`;
                 </div>
                 
                 <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 1.5rem;">
-                    * Escolha o método de envio acima para partilhar as credenciais com o utilizador.
+                    * Escolha o metodo de envio acima para partilhar as credenciais com o utilizador.
                 </p>
             </div>
         `;
@@ -784,14 +826,24 @@ Bons treinos!`;
     showAddExerciseModal() {
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
+        this.tempExercisePhoto = null;
 
         const cats = this.state.exerciseCategories || ["Geral"];
         const options = cats.map(c => `<option value="${c}">${c}</option>`).join('');
 
         modal.innerHTML = `
             <div class="modal-content">
-                <h2 style="margin-top:0;">Novo Exercício</h2>
+                <h2 style="margin-top:0;">Novo Exercicio</h2>
                 <div style="display:flex; flex-direction:column; gap:1.25rem;">
+                    <div style="text-align:center; margin-bottom:5px;">
+                        <div id="ex-photo-preview" style="width:120px; height:120px; border-radius:12px; border:2px dashed var(--surface-border); margin:0 auto 10px; display:flex; items-align:center; justify-content:center; overflow:hidden; background:rgba(0,0,0,0.2);">
+                            <i class="fas fa-image" style="font-size:2rem; color:var(--text-muted); align-self:center;"></i>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('ex-photo-input').click()">
+                            <i class="fas fa-camera"></i> Carregar Foto
+                        </button>
+                        <input type="file" id="ex-photo-input" style="display:none;" accept="image/*" onchange="app.handleExercisePhotoUpload(this, 'ex-photo-preview')">
+                    </div>
                     <div>
                         <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Nome</label>
                         <input type="text" id="ex-name" placeholder="Ex: Agachamento">
@@ -816,11 +868,23 @@ Bons treinos!`;
         document.body.appendChild(modal);
     }
 
+    handleExercisePhotoUpload(input, previewId) {
+        if (input.files && input.files[0]) {
+            this.processImage(input.files[0], 600, 0.75, (base64) => {
+                this.tempExercisePhoto = base64;
+                const preview = document.getElementById(previewId);
+                if (preview) {
+                    preview.innerHTML = `<img src="${base64}" style="width:100%; height:100%; object-fit:cover;">`;
+                }
+            });
+        }
+    }
+
     addExercise() {
         const name = document.getElementById('ex-name').value.trim();
         const url = document.getElementById('ex-url').value.trim();
         const cat = document.getElementById('ex-category').value;
-        if (!name) return alert('O nome do exercício é obrigatório.');
+        if (!name) return alert('O nome do exercicio e obrigatorio.');
 
         let finalUrl = "";
         if (url) {
@@ -836,6 +900,7 @@ Bons treinos!`;
             id: Date.now(),
             name: name,
             videoUrl: finalUrl,
+            photoUrl: this.tempExercisePhoto || '',
             category: cat || 'Geral'
         });
 
@@ -896,12 +961,12 @@ Bons treinos!`;
 
         if (!name) return alert('Insira o nome.');
 
-        // Verificar se já existe um alimento com o mesmo nome (ignorando maiúsculas/minúsculas)
+        // Verificar se ja existe um alimento com o mesmo nome (ignorando maiusculas/minusculas)
         const normalizedName = name.toLowerCase();
         const existingFood = this.state.foods.find(f => f.name.toLowerCase() === normalizedName);
 
         if (existingFood) {
-            alert(`O alimento "${existingFood.name}" já existe na base de dados.\n\nCategoria: ${existingFood.category}\nCalorias: ${existingFood.kcal} kcal/100g`);
+            alert(`O alimento "${existingFood.name}" ja existe na base de dados.\n\nCategoria: ${existingFood.category}\nCalorias: ${existingFood.kcal} kcal/100g`);
             return;
         }
 
@@ -932,24 +997,27 @@ Bons treinos!`;
         if (this.role === 'admin') {
             navItems = [
                 { id: 'dashboard', icon: 'fa-shield-alt', label: 'Painel' },
+                { id: 'classes', icon: 'fa-calendar-alt', label: 'Aulas' },
                 { id: 'users', icon: 'fa-users-cog', label: 'Contas' },
                 { id: 'qr_manager', icon: 'fa-qrcode', label: 'Entradas' },
-                { id: 'exercises', icon: 'fa-play-circle', label: 'Exercícios' },
+                { id: 'exercises', icon: 'fa-play-circle', label: 'Exercicios' },
                 { id: 'foods', icon: 'fa-apple-alt', label: 'Alimentos' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'Perfil' }
             ];
         } else if (this.role === 'teacher') {
             navItems = [
-                { id: 'dashboard', icon: 'fa-chart-pie', label: 'Início' },
+                { id: 'dashboard', icon: 'fa-chart-pie', label: 'Inicio' },
+                { id: 'classes', icon: 'fa-calendar-alt', label: 'Aulas' },
                 { id: 'clients', icon: 'fa-user-friends', label: 'Alunos' },
                 { id: 'chat', icon: 'fa-comment-alt', label: 'Msgs' },
-                { id: 'exercises', icon: 'fa-play-circle', label: 'Exercícios' },
+                { id: 'exercises', icon: 'fa-play-circle', label: 'Exercicios' },
                 { id: 'foods', icon: 'fa-apple-alt', label: 'Alim.' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'Perfil' }
             ];
         } else {
             navItems = [
                 { id: 'dashboard', icon: 'fa-home', label: 'Home' },
+                { id: 'classes', icon: 'fa-calendar-alt', label: 'Aulas' },
                 { id: 'training', icon: 'fa-dumbbell', label: 'Treino' },
                 { id: 'meal', icon: 'fa-apple-alt', label: 'Dieta' },
                 { id: 'evaluation', icon: 'fa-chart-line', label: 'Aval.' },
@@ -984,9 +1052,10 @@ Bons treinos!`;
         if (this.role === 'admin') {
             navItems = [
                 { id: 'dashboard', icon: 'fa-shield-alt', label: 'Painel Admin' },
-                { id: 'users', icon: 'fa-users-cog', label: 'Gestão Contas' },
-                { id: 'qr_manager', icon: 'fa-qrcode', label: 'Gestão de Entradas' },
-                { id: 'exercises', icon: 'fa-play-circle', label: 'Biblioteca Exercícios' },
+                { id: 'classes', icon: 'fa-calendar-alt', label: 'Horario & Aulas' },
+                { id: 'users', icon: 'fa-users-cog', label: 'Gestao Contas' },
+                { id: 'qr_manager', icon: 'fa-qrcode', label: 'Gestao de Entradas' },
+                { id: 'exercises', icon: 'fa-play-circle', label: 'Biblioteca Exercicios' },
                 { id: 'foods', icon: 'fa-apple-alt', label: 'Base de Alimentos' },
                 { id: 'all-clients', icon: 'fa-search', label: 'Acesso Global' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
@@ -994,19 +1063,21 @@ Bons treinos!`;
         } else if (this.role === 'teacher') {
             navItems = [
                 { id: 'dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
+                { id: 'classes', icon: 'fa-calendar-alt', label: 'Gestao de Aulas' },
                 { id: 'clients', icon: 'fa-user-friends', label: 'Meus Alunos' },
                 { id: 'anamnesis', icon: 'fa-notes-medical', label: 'Anamnese' },
-                { id: 'exercises', icon: 'fa-play-circle', label: 'Biblioteca Exercícios' },
+                { id: 'exercises', icon: 'fa-play-circle', label: 'Biblioteca Exercicios' },
                 { id: 'foods', icon: 'fa-apple-alt', label: 'Base de Alimentos' },
                 { id: 'chat', icon: 'fa-comment-alt', label: 'Mensagens' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
             ];
         } else {
             navItems = [
-                { id: 'dashboard', icon: 'fa-home', label: 'Início' },
+                { id: 'dashboard', icon: 'fa-home', label: 'Inicio' },
+                { id: 'classes', icon: 'fa-calendar-alt', label: 'Horario de Aulas' },
                 { id: 'training', icon: 'fa-dumbbell', label: 'Meu Treino' },
                 { id: 'meal', icon: 'fa-apple-alt', label: 'Minha Dieta' },
-                { id: 'evaluation', icon: 'fa-chart-line', label: 'Avaliação Física' },
+                { id: 'evaluation', icon: 'fa-chart-line', label: 'Avaliação Fisica' },
                 { id: 'chat', icon: 'fa-comment-alt', label: 'Mensagens' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
             ];
@@ -1017,11 +1088,8 @@ Bons treinos!`;
                 <i class="fas ${item.icon}"></i> <span>${item.label}</span>
             </button>
         `).join('') + `
-            <button class="btn" onclick="app.installPWA()" style="background: var(--primary); color: white; margin-top: 10px; border-radius: 8px; justify-content: center; font-weight: 800; animation: pulse 2s infinite; width: 100%;">
-            <i class="fas fa-download"></i> <span>Instalar App</span>
-        </button>
         <button class="btn btn-ghost" onclick="app.handleLogout()" style="margin-top:auto; color:var(--danger); gap: 10px;">
-                <i class="fas fa-sign-out-alt"></i> <span>Terminar Sessão</span>
+                <i class="fas fa-sign-out-alt"></i> <span>Terminar Sessao</span>
             </button>
         `;
     }
@@ -1039,6 +1107,20 @@ Bons treinos!`;
     renderContent() {
         const container = document.getElementById('main-content');
         if (!container) return;
+
+        // Se ainda nao carregamos dados frescos do Firebase, mostramos um loader
+        // em vez de mostrar dados potencialmente obsoletos do cache (evita aulas que "aparecem e desaparecem")
+        if (!this.hasLoadedData) {
+            container.innerHTML = `
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:5rem; gap:1.5rem; text-align:center;">
+                    <div class="loader"></div>
+                    <p style="color:var(--text-muted); font-size:1.1rem;">Sincronizando com o servidor...</p>
+                    <small style="color:var(--text-muted); opacity:0.7;">Isto garante que ve as inscricoes e horarios mais recentes.</small>
+                </div>
+            `;
+            return;
+        }
+
         container.innerHTML = '';
 
         if (this.activeView === 'edit_training') {
@@ -1056,12 +1138,17 @@ Bons treinos!`;
             return;
         }
 
+        if (this.activeView === 'classes') {
+            this.renderClassesView(container);
+            return;
+        }
+
         if (this.role === 'admin') {
             try {
                 this.renderAdminContent(container);
             } catch (e) {
                 console.error("Critical error rendering admin content:", e);
-                container.innerHTML = `<div class="glass-card" style="color:var(--danger); padding:2rem;">Erro ao carregar conteúdo: ${e.message}</div>`;
+                container.innerHTML = `<div class="glass-card" style="color:var(--danger); padding:2rem;">Erro ao carregar conteudo: ${e.message}</div>`;
             }
         } else if (this.role === 'teacher') {
             this.renderTeacherContent(container);
@@ -1071,6 +1158,10 @@ Bons treinos!`;
     }
 
     renderAdminContent(container) {
+        if (!this.hasLoadedData) {
+            container.innerHTML = `<div style="padding:5rem; text-align:center;"><div class="loader" style="margin:0 auto;"></div></div>`;
+            return;
+        }
         switch (this.activeView) {
             case 'dashboard':
                 container.innerHTML = `
@@ -1118,7 +1209,7 @@ Bons treinos!`;
 
                         <div class="glass-panel" style="padding: 1.5rem;">
                             <h3 style="margin-top: 0; color: var(--secondary); display: flex; align-items: center; gap: 0.5rem;">
-                                <i class="fas fa-user-friends"></i> Últimos Alunos Registados
+                                <i class="fas fa-user-friends"></i> Ultimos Alunos Registados
                             </h3>
                             <div class="client-list">
                                 ${this.state.clients.slice(-3).reverse().map(c => `
@@ -1138,7 +1229,7 @@ Bons treinos!`;
             case 'users':
                 container.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h2 style="margin:0;">Gestão de Contas</h2>
+                        <h2 style="margin:0;">Gestao de Contas</h2>
                         <button class="btn btn-primary" onclick="app.showAddUserModal()"><i class="fas fa-plus"></i> Novo Utilizador</button>
                     </div>
 
@@ -1174,7 +1265,7 @@ Bons treinos!`;
             case 'all-clients':
                 container.innerHTML = `
                     <h2 style="margin-bottom:0.5rem;">Acesso Global (Admin)</h2>
-                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Como Administrador, tem acesso total a todos os alunos, independentemente do professor atribuído.</p>
+                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Como Administrador, tem acesso total a todos os alunos, independentemente do professor atribuido.</p>
                     
                     <div class="search-container">
                         <i class="fas fa-search"></i>
@@ -1194,9 +1285,13 @@ Bons treinos!`;
     }
 
     renderTeacherContent(container) {
+        if (!this.hasLoadedData) {
+            container.innerHTML = `<div style="padding:5rem; text-align:center;"><div class="loader" style="margin:0 auto;"></div></div>`;
+            return;
+        }
         const teacherClients = this.state.clients.filter(c => c.teacherId === this.currentUser.id);
 
-        // Calcular estatísticas baseadas no mês selecionado
+        // Calcular estatisticas baseadas no mes selecionado
         const [selYear, selMonth] = this.dashboardMonth.split('-');
 
         let monthEvals = 0;
@@ -1259,7 +1354,7 @@ Bons treinos!`;
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
                         <h2 style="margin:0;"><i class="fas fa-chart-line"></i> Dashboard Trainer</h2>
                         <div style="display:flex; align-items:center; gap:0.5rem; background:rgba(255,255,255,0.05); padding:5px 15px; border-radius:12px; border:1px solid var(--surface-border);">
-                            <small style="color:var(--text-muted); font-weight:600; text-transform:uppercase; font-size:0.65rem;">Período:</small>
+                            <small style="color:var(--text-muted); font-weight:600; text-transform:uppercase; font-size:0.65rem;">Periodo:</small>
                             <input type="month" id="stats-month-picker" value="${this.dashboardMonth}" 
                                 onchange="app.updateDashboardMonth(this.value)"
                                 style="background:transparent; border:none; color:#fff; font-family:inherit; font-weight:600; font-size:0.9rem; outline:none; cursor:pointer; width:180px;">
@@ -1273,7 +1368,7 @@ Bons treinos!`;
                         </div>
                         
                         <div class="glass-card" style="border-left: 4px solid var(--accent);">
-                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Avaliações</small>
+                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Avaliacoes</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--accent);">${monthEvals}</div>
                         </div>
 
@@ -1295,7 +1390,7 @@ Bons treinos!`;
 
                     <div style="margin-top:2rem;">
                         <h3>Atividade de ${new Intl.DateTimeFormat('pt-PT', { month: 'long', year: 'numeric' }).format(displayDate)}</h3>
-                        <p style="color:var(--text-muted); font-size:0.9rem;">Resumo de produtividade registada por si neste período.</p>
+                        <p style="color:var(--text-muted); font-size:0.9rem;">Resumo de produtividade registada por si neste periodo.</p>
                     </div>
                 `;
                 break;
@@ -1319,7 +1414,7 @@ Bons treinos!`;
             case 'anamnesis':
                 container.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:10px;">
-                        <h2 style="margin:0;"><i class="fas fa-notes-medical"></i> Gestão de Anamneses</h2>
+                        <h2 style="margin:0;"><i class="fas fa-notes-medical"></i> Gestao de Anamneses</h2>
                         <button class="btn btn-primary" onclick="app.showAddAnamnesisModal()"><i class="fas fa-plus"></i> Nova Anamnese</button>
                     </div>
                     
@@ -1359,13 +1454,13 @@ Bons treinos!`;
 
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap: wrap; gap: 1rem;">
-                <h2>Biblioteca de Exercícios</h2>
+                <h2>Biblioteca de Exercicios</h2>
                 ${controls}
             </div>
 
             <div class="search-container">
                 <i class="fas fa-search"></i>
-                <input type="text" id="exercise-search-input" placeholder="Pesquisar exercícios..." 
+                <input type="text" id="exercise-search-input" placeholder="Pesquisar exercicios..." 
                     oninput="app.renderExerciseList(this.value)"
                     class="search-bar">
             </div>
@@ -1381,11 +1476,11 @@ Bons treinos!`;
         let filtered = this.state.exercises || [];
 
         if (searchQuery) {
-            const query = searchQuery.toLowerCase().trim();
+            const query = this.normalizeText(searchQuery);
             filtered = filtered.filter(ex =>
-                ex.name.toLowerCase().includes(query) ||
-                (ex.category && ex.category.toLowerCase().includes(query)) ||
-                (ex.muscle && ex.muscle.toLowerCase().includes(query))
+                this.normalizeText(ex.name).includes(query) ||
+                this.normalizeText(ex.category).includes(query) ||
+                this.normalizeText(ex.muscle).includes(query)
             );
         }
 
@@ -1403,7 +1498,7 @@ Bons treinos!`;
             return `
                 <div class="glass-card" style="text-align:center; padding:2rem;">
                     <i class="fas fa-search" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
-                    <p style="color:var(--text-muted);">Nenhum exercício encontrado para "${searchQuery}"</p>
+                    <p style="color:var(--text-muted);">Nenhum exercicio encontrado para "${searchQuery}"</p>
                 </div>
             `;
         }
@@ -1430,20 +1525,23 @@ Bons treinos!`;
                 }
 
                 return `
-                                <div class="glass-card" style="padding:0; overflow:hidden; position:relative;">
+                                <div class="glass-card" style="padding:0; overflow:hidden; position:relative; border-top: 3px solid var(--primary);">
                                     ${hasVideo ? `<iframe width="100%" height="150" src="${cleanUrl}" frameborder="0" allowfullscreen></iframe>` : `
-                                        <div style="width:100%; height:100px; background:rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; color:var(--text-muted);">
-                                            <i class="fas fa-video-slash" style="font-size:1.5rem;"></i>
+                                        <div style="width:100%; height:150px; background:rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; flex-direction: column; gap: 10px;">
+                                            ${ex.photoUrl ? `<img src="${ex.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : `
+                                                <i class="fas fa-video-slash" style="font-size:1.5rem; opacity: 0.3;"></i>
+                                                <small style="color:var(--text-muted); font-size: 0.7rem;">Sem video disponivel</small>
+                                            `}
                                         </div>
                                      `}
-                                     <div style="padding:0.75rem;">
-                                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                                            <div>
-                                                <strong style="font-size:1rem; color:#fff;">${ex.name}</strong><br>
-                                                <small style="color:var(--text-muted);">${ex.muscle ? ex.muscle : (ex.category || 'Geral')}</small>
-                                            </div>
-                                            <div style="display:flex; gap:0.4rem;">
-                                                ${this.role === 'admin' ? `
+                <div style="padding:0.75rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <strong style="font-size:1rem; color:#fff;">${ex.name}</strong><br>
+                                <small style="color:var(--text-muted);">${ex.muscle ? ex.muscle : (ex.category || 'Geral')}</small>
+                        </div>
+                        <div style="display:flex; gap:0.4rem;">
+                            ${this.role === 'admin' ? `
                                                 <button class="btn btn-ghost btn-sm" style="color:var(--accent); padding:5px;" onclick="app.showEditExerciseModal(${ex.id})" title="Editar">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
@@ -1451,11 +1549,11 @@ Bons treinos!`;
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                                 ` : ''}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
+                        </div>
+                    </div>
+                </div>
+                                </div >
+                    `;
             }).join('')}
                     </div>
                 </div>
@@ -1487,13 +1585,13 @@ Bons treinos!`;
         reader.onload = (e) => {
             try {
                 const imported = JSON.parse(e.target.result);
-                if (!Array.isArray(imported)) throw new Error("Formato inválido");
+                if (!Array.isArray(imported)) throw new Error("Formato invalido");
 
-                if (confirm(`Deseja importar ${imported.length} exercícios? Isso irá substituir a sua lista atual.`)) {
+                if (confirm(`Deseja importar ${imported.length} exercicios? Isso ira substituir a sua lista atual.`)) {
                     this.state.exercises = imported;
                     this.saveState();
                     this.renderContent();
-                    alert('Base de exercícios importada com sucesso!');
+                    alert('Base de exercicios importada com sucesso!');
                 }
             } catch (err) {
                 alert('Erro ao importar: ' + err.message);
@@ -1504,11 +1602,11 @@ Bons treinos!`;
     }
 
     async importLocalBaseExercicios() {
-        if (!confirm('Deseja importar a base de exercícios local (base_exercicios.json)? Novos exercícios serão adicionados aos existentes (sem duplicar nomes).')) return;
+        if (!confirm('Deseja importar a base de exercicios local (base_exercicios.json)? Novos exercicios serao adicionados aos existentes (sem duplicar nomes).')) return;
 
         try {
             const res = await fetch('base_exercicios.json');
-            if (!res.ok) throw new Error('Não foi possível carregar base_exercicios.json');
+            if (!res.ok) throw new Error('Nao foi possivel carregar base_exercicios.json');
 
             const data = await res.json();
             let addedCount = 0;
@@ -1532,9 +1630,9 @@ Bons treinos!`;
             if (addedCount > 0) {
                 this.saveState();
                 this.renderContent();
-                alert(`${addedCount} novos exercícios adicionados com sucesso!`);
+                alert(`${addedCount} novos exercicios adicionados com sucesso!`);
             } else {
-                alert('Nenhum exercício novo encontrado para adicionar.');
+                alert('Nenhum exercicio novo encontrado para adicionar.');
             }
         } catch (e) {
             alert('Erro ao importar base local: ' + e.message);
@@ -1561,7 +1659,7 @@ Bons treinos!`;
         modal.id = 'manage-ex-cats-modal';
         modal.innerHTML = `
             <div class="modal-content">
-                <h2 style="margin-top:0;">Categorias de Exercícios</h2>
+                <h2 style="margin-top:0;">Categorias de Exercicios</h2>
                 <div id="ex-cats-list-container" style="max-height:300px; overflow-y:auto; margin-bottom:1rem;">
                     ${renderListIdx()}
                 </div>
@@ -1579,7 +1677,7 @@ Bons treinos!`;
         const input = document.getElementById('new-ex-cat-name');
         const name = input.value.trim();
         if (!name) return;
-        if (this.state.exerciseCategories.includes(name)) return alert('Já existe.');
+        if (this.state.exerciseCategories.includes(name)) return alert('Ja existe.');
 
         this.state.exerciseCategories.push(name);
         this.saveState();
@@ -1616,7 +1714,7 @@ Bons treinos!`;
 
     deleteExerciseCategory(idx) {
         const name = this.state.exerciseCategories[idx];
-        if (confirm(`Tem a certeza que deseja eliminar a categoria "${name}"? Exercícios nesta categoria serão movidos para "Geral".`)) {
+        if (confirm(`Tem a certeza que deseja eliminar a categoria "${name}"? Exercicios nesta categoria serao movidos para "Geral".`)) {
             this.state.exerciseCategories.splice(idx, 1);
             this.state.exercises.forEach(ex => {
                 if (ex.category === name) ex.category = 'Geral';
@@ -1638,10 +1736,21 @@ Bons treinos!`;
 
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
+        this.tempExercisePhoto = ex.photoUrl || null;
+
         modal.innerHTML = `
             <div class="modal-content">
-                <h2 style="margin-top:0;">Editar Exercício</h2>
+                <h2 style="margin-top:0;">Editar Exercicio</h2>
                 <div style="display:flex; flex-direction:column; gap:1.25rem;">
+                    <div style="text-align:center; margin-bottom:5px;">
+                        <div id="edit-ex-photo-preview" style="width:120px; height:120px; border-radius:12px; border:2px dashed var(--surface-border); margin:0 auto 10px; display:flex; items-align:center; justify-content:center; overflow:hidden; background:rgba(0,0,0,0.2);">
+                            ${ex.photoUrl ? `<img src="${ex.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : `<i class="fas fa-image" style="font-size:2rem; color:var(--text-muted); align-self:center;"></i>`}
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('edit-ex-photo-input').click()">
+                            <i class="fas fa-camera"></i> Alterar Foto
+                        </button>
+                        <input type="file" id="edit-ex-photo-input" style="display:none;" accept="image/*" onchange="app.handleExercisePhotoUpload(this, 'edit-ex-photo-preview')">
+                    </div>
                     <div>
                         <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Nome</label>
                         <input type="text" id="edit-ex-name" value="${ex.name}">
@@ -1671,7 +1780,7 @@ Bons treinos!`;
         const url = document.getElementById('edit-ex-url').value.trim();
         const cat = document.getElementById('edit-ex-category').value;
 
-        if (!name) return alert('O nome é obrigatório.');
+        if (!name) return alert('O nome e obrigatorio.');
 
         const ex = this.state.exercises.find(e => e.id === id);
         if (ex) {
@@ -1685,21 +1794,22 @@ Bons treinos!`;
 
             ex.name = name;
             ex.videoUrl = finalUrl;
+            ex.photoUrl = this.tempExercisePhoto || '';
             ex.category = cat || 'Geral';
 
             this.saveState();
             document.querySelector('.modal-overlay').remove();
             this.renderContent();
-            alert('Exercício atualizado com sucesso! ✅');
+            alert('Exercicio atualizado com sucesso! ');
         }
     }
 
     deleteExercise(id) {
-        if (confirm('Tem a certeza que deseja eliminar este exercício da biblioteca?')) {
+        if (confirm('Tem a certeza que deseja eliminar este exercicio da biblioteca?')) {
             this.state.exercises = this.state.exercises.filter(e => e.id !== id);
             this.saveState();
             this.renderContent();
-            alert('Exercício removido. 🗑️');
+            alert('Exercicio removido. ');
         }
     }
 
@@ -1843,9 +1953,9 @@ Bons treinos!`;
         reader.onload = (e) => {
             try {
                 const importedFoods = JSON.parse(e.target.result);
-                if (!Array.isArray(importedFoods)) throw new Error("Formato inválido");
+                if (!Array.isArray(importedFoods)) throw new Error("Formato invalido");
 
-                if (confirm(`Deseja importar ${importedFoods.length} alimentos ? Isso irá substituir a sua lista atual.`)) {
+                if (confirm(`Deseja importar ${importedFoods.length} alimentos ? Isso ira substituir a sua lista atual.`)) {
                     this.state.foods = importedFoods;
                     this.saveState();
                     this.renderContent();
@@ -1903,7 +2013,7 @@ Bons treinos!`;
                 this.saveState();
                 this.refreshCategoriesModal();
             } else {
-                alert('Categoria já existe.');
+                alert('Categoria ja existe.');
             }
         }
     }
@@ -1913,7 +2023,7 @@ Bons treinos!`;
         const newName = prompt("Novo nome para a categoria:", oldName);
         if (newName && newName.trim() && newName !== oldName) {
             const finalName = newName.trim();
-            if (this.state.foodCategories.includes(finalName)) return alert('Nome já existe.');
+            if (this.state.foodCategories.includes(finalName)) return alert('Nome ja existe.');
 
             this.state.foodCategories[idx] = finalName;
 
@@ -1929,7 +2039,7 @@ Bons treinos!`;
 
     deleteCategory(idx) {
         const catName = this.state.foodCategories[idx];
-        if (confirm(`Tem a certeza que deseja eliminar a categoria "${catName}"? Os alimentos ficarão como "Outros".`)) {
+        if (confirm(`Tem a certeza que deseja eliminar a categoria "${catName}"? Os alimentos ficarao como "Outros".`)) {
             this.state.foodCategories.splice(idx, 1);
 
             // Reassign foods to 'Outros' (or just leave them, but safest to mark as Outros or let them fall to default)
@@ -2047,14 +2157,14 @@ Bons treinos!`;
             this.saveState();
             document.querySelector('.modal-overlay').remove();
             this.renderContent();
-            alert('Alimento atualizado com sucesso! ✅');
+            alert('Alimento atualizado com sucesso! ');
         }
     }
 
     renderTrainingView(container, clientId) {
         const c = this.state.clients.find(x => x.id == clientId);
         if (!c) {
-            container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
+            container.innerHTML = '<p class="text-muted">Erro: Cliente nao encontrado.</p>';
             return;
         }
 
@@ -2071,7 +2181,7 @@ Bons treinos!`;
                 </div>
                 <div class="header-actions">
                     <button class="btn btn-secondary btn-sm" onclick="app.downloadTrainingPDF('${clientId}')" title="Download PDF"><i class="fas fa-file-pdf"></i> <span class="hide-mobile">PDF</span></button>
-                    ${isClient ? `<button class="btn btn-secondary btn-sm" onclick="app.setView('training_history')"><i class="fas fa-history"></i> <span class="hide-mobile">Histórico</span></button>` : ''}
+                    ${isClient ? `<button class="btn btn-secondary btn-sm" onclick="app.setView('training_history')"><i class="fas fa-history"></i> <span class="hide-mobile">Historico</span></button>` : ''}
                     ${isTeacher ? `
                         <button class="btn btn-primary btn-sm" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-edit"></i> <span class="hide-mobile">Gerir</span></button>
                         <button class="btn btn-ghost btn-sm" style="color:var(--danger); border:1px solid rgba(220, 38, 38, 0.2);" onclick="app.deleteTrainingPlan('${clientId}')">
@@ -2089,22 +2199,36 @@ Bons treinos!`;
                     </h3>
                     <div style="display:grid; grid-template-columns: 1fr; gap:1.25rem;">
                         ${day.exercises.map((ex, exIdx) => {
-            const libEx = this.state.exercises.find(le => le.id == ex.id);
             const numSets = parseInt(ex.sets) || 0;
+            // Busca robusta: primeiro por ID, fallback por nome se o ID nao encontrar
+            let libEx = this.state.exercises.find(le => le.id == ex.id);
+            if (!libEx && ex.name) {
+                libEx = this.state.exercises.find(le => le.name.toLowerCase() === ex.name.toLowerCase());
+            }
 
             return `
-                            <div class="glass-card" style="margin-bottom:0; background:rgba(255,255,255,0.02);">
-                                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.75rem; gap: 8px;">
+                            <div class="glass-card" style="margin-bottom:0; background:rgba(255,255,255,0.02); padding: 1rem;">
+                                <div style="display:flex; align-items:center; gap:12px; margin-bottom:0.75rem;">
+                                    <!-- Miniatura do Exercicio -->
+                                    <div style="width:55px; height:55px; border-radius:10px; overflow:hidden; background:rgba(0,0,0,0.3); flex-shrink:0; display:flex; align-items:center; justify-content:center; border: 1px solid var(--surface-border); box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                                        ${libEx && libEx.photoUrl ?
+                    `<img src="${libEx.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` :
+                    `<div style="font-size:1.5rem; opacity:0.6;">${this.getExerciseIcon(libEx ? libEx.muscle : '')}</div>`
+                }
+                                    </div>
+
                                     <div style="min-width: 0; flex: 1;">
-                                        <strong style="font-size:1.05rem; display:block; margin-bottom:2px; overflow: hidden; text-overflow: ellipsis;">${ex.name}</strong>
-                                        <div style="color:var(--text-muted); font-size:0.85rem;">
-                                            <i class="fas fa-redo"></i> ${ex.sets} x ${ex.reps}
-                                            ${ex.observations ? `<br><small style="color:var(--accent); font-size: 0.75rem;"><i class="fas fa-info-circle"></i> ${ex.observations}</small>` : ''}
+                                        <strong style="font-size:1rem; display:block; margin-bottom:2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff;">${ex.name}</strong>
+                                        <div style="color:var(--text-muted); font-size:0.85rem; font-weight: 600;">
+                                            <span style="color: var(--primary);"><i class="fas fa-redo"></i> ${ex.sets} x ${ex.reps}</span>
+                                            ${ex.observations ? `<br><small style="color:var(--accent); font-size: 0.75rem; font-weight: 400;"><i class="fas fa-info-circle"></i> ${ex.observations}</small>` : ''}
                                         </div>
                                     </div>
+
                                     ${libEx && libEx.videoUrl ? `
-                                        <button class="btn btn-ghost btn-sm" onclick="app.viewExerciseVideo('${libEx.videoUrl}', '${ex.name}')" style="color:var(--primary); background:rgba(145,27,43,0.1); padding: 0.4rem 0.6rem; font-size: 0.8rem; flex-shrink: 0;">
-                                            <i class="fas fa-video"></i> <span class="hide-mobile">Vídeo</span>
+                                        <button class="btn btn-ghost btn-sm" onclick="app.viewExerciseVideo('${libEx.videoUrl}', '${ex.name}')" 
+                                            style="color:var(--primary); background:rgba(145,27,43,0.1); padding: 8px 12px; font-size: 0.75rem; flex-shrink: 0; border-radius: 8px; border: 1px solid rgba(145,27,43,0.2);">
+                                            <i class="fas fa-video"></i> <span class="hide-mobile" style="margin-left:4px;">Video</span>
                                         </button>
                                     ` : ''}
                                 </div>
@@ -2114,8 +2238,8 @@ Bons treinos!`;
                                         <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Cargas (kg)</label>
                                         <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
                                             ${Array.from({ length: numSets }).map((_, sIdx) => {
-                const val = (ex.weightLog && ex.weightLog[sIdx]) || '';
-                return `
+                    const val = (ex.weightLog && ex.weightLog[sIdx]) || '';
+                    return `
                                                 <div style="flex:1; min-width:45px; max-width:60px;">
                                                     <small style="display:block; text-align:center; font-size:0.6rem; color:var(--text-muted); margin-bottom:1px;">S${sIdx + 1}</small>
                                                     <input type="number" value="${val}" placeholder="0" 
@@ -2123,7 +2247,7 @@ Bons treinos!`;
                                                         style="width:100%; height:32px; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:6px; color:#fff; text-align:center; font-size:0.85rem;">
                                                 </div>
                                                 `;
-            }).join('')}
+                }).join('')}
                                         </div>
                                         <div style="margin-top:0.75rem;">
                                             <textarea id="note-${clientId}-${dIdx}-${exIdx}" 
@@ -2144,7 +2268,7 @@ Bons treinos!`;
                                 <i class="fas fa-check-circle"></i> Concluir Treino (${day.title})
                             </button>
                             <p style="font-size:0.75rem; color:var(--text-muted); margin-top:10px;">
-                                Ao concluir, os pesos registados serão gravados no seu histórico.
+                                Ao concluir, os pesos registados serao gravados no seu historico.
                             </p>
                         </div>
                     ` : ''}
@@ -2152,7 +2276,7 @@ Bons treinos!`;
             `).join('') : `
                 <div class="glass-panel" style="padding:3rem 1rem; text-align:center;">
                     <i class="fas fa-dumbbell" style="font-size:3rem; color:var(--text-muted); opacity:0.3; margin-bottom:1rem;"></i>
-                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda não tem plano de treino atribuído.</p>
+                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda nao tem plano de treino atribuido.</p>
                     ${isTeacher ? `<button class="btn btn-primary" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-plus"></i> Criar Plano de Treino</button>` : ''}
                 </div>
             `}
@@ -2174,19 +2298,19 @@ Bons treinos!`;
         const cid = String(clientId);
         const days = this.getTrainingDays(cid);
         const day = days ? days[dayIdx] : null;
-        if (!day) { alert('Dia de treino não encontrado. Tente recarregar a página.'); return; }
+        if (!day) { alert('Dia de treino nao encontrado. Tente recarregar a pagina.'); return; }
 
         const hasWeights = day.exercises.some(ex => ex.weightLog && ex.weightLog.some(w => w !== '' && w !== null && w !== undefined));
 
         if (!hasWeights) {
-            // Usar modal customizado — confirm() é bloqueado em PWA/standalone iOS
+            // Usar modal customizado  confirm() e bloqueado em PWA/standalone iOS
             const modal = document.createElement('div');
             modal.className = 'modal-overlay';
             modal.innerHTML = `
                 <div class="modal-content" style="max-width:380px; text-align:center; padding:2rem;">
-                    <div style="font-size:3rem; margin-bottom:1rem;">⚠️</div>
+                    <div style="font-size:3rem; margin-bottom:1rem;"></div>
                     <h3 style="margin:0 0 0.75rem;">Sem cargas registadas</h3>
-                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Não registou nenhuma carga neste treino. Deseja concluí-lo na mesma?</p>
+                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Nao registou nenhuma carga neste treino. Deseja conclui-lo na mesma?</p>
                     <div style="display:flex; gap:1rem;">
                         <button class="btn btn-secondary" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">
                             <i class="fas fa-times"></i> Cancelar
@@ -2229,7 +2353,7 @@ Bons treinos!`;
             this.state.trainingHistory[cid].unshift(session);
             this.saveState();
 
-            this.showToast('Treino concluído! 🎉 As suas cargas foram gravadas no histórico.');
+            this.showToast('Treino concluido!  As suas cargas foram gravadas no historico.');
             setTimeout(() => this.setView('dashboard'), 1200);
         } catch (err) {
             console.error('Erro ao concluir treino:', err);
@@ -2238,7 +2362,7 @@ Bons treinos!`;
     }
 
     deleteTrainingSession(index) {
-        if (confirm('Tem a certeza que deseja eliminar este treino do histórico?')) {
+        if (confirm('Tem a certeza que deseja eliminar este treino do historico?')) {
             const history = this.state.trainingHistory[this.currentClientId];
             if (history) {
                 history.splice(index, 1);
@@ -2305,7 +2429,7 @@ Bons treinos!`;
         if (draft) {
             const draftData = JSON.parse(draft);
             if (draftData.clientId === clientId) {
-                if (confirm('Detetámos um rascunho não guardado deste treino. Deseja recuperá-lo?')) {
+                if (confirm('Detetamos um rascunho nao guardado deste treino. Deseja recupera-lo?')) {
                     this.editingPlan = draftData.plan;
                     this.editingClientId = clientId;
                     this.setView('edit_training');
@@ -2371,7 +2495,7 @@ Bons treinos!`;
             <div style="margin-bottom:1.5rem; display:flex; gap:1rem; align-items:center; flex-wrap: wrap;">
                 <div>
                     <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase;">Objetivo do Plano</label>
-                    <input type="text" id="edit-training-goal" value="${c.goal || ''}" placeholder="Ex: Hipertrofia, Redução de Massa Gorda..."
+                    <input type="text" id="edit-training-goal" value="${c.goal || ''}" placeholder="Ex: Hipertrofia, Reducao de Massa Gorda..."
                         onchange="app.state.clients.find(x => x.id === app.editingClientId).goal = this.value; app.saveState();"
                         style="width:300px; height:40px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 12px; font-size:0.95rem;">
                 </div>
@@ -2399,23 +2523,23 @@ Bons treinos!`;
                                 <div class="glass-card" style="padding:1.5rem; margin-bottom:1.5rem; background:rgba(255,255,255,0.03); border-left:4px solid var(--secondary);">
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
                                         <div style="flex:1; margin-right:1rem;">
-                                            <label style="display:block; font-size:0.8rem; color:var(--accent); font-weight:600; text-transform:uppercase; margin-bottom:6px;">Exercício Selecionado</label>
-                                            <select onchange="app.updateEditorExercise(${dIdx}, ${eIdx}, 'id', this.value)" 
-                                                style="width:100%; height:45px; background:#1e293b; color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1rem; cursor:pointer;">
-                                                <option value="" style="background:#1e293b; color:#fff;">-- Escolher da Biblioteca --</option>
-                                                ${this.state.exercises.map(libEx => `
-                                                    <option value="${libEx.id}" ${libEx.id == ex.id ? 'selected' : ''} style="background:#1e293b; color:#fff;">${libEx.name}</option>
-                                                `).join('')}
-                                            </select>
+                                            <label style="display:block; font-size:0.8rem; color:var(--accent); font-weight:600; text-transform:uppercase; margin-bottom:6px;">Exercicio Selecionado</label>
+                                            <button class="btn btn-secondary exercise-search-btn" onclick="app.showExerciseSelectionModal(${dIdx}, ${eIdx})" 
+                                                style="width:100%; height:45px; background:#1e293b; color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:10px; justify-content:flex-start;">
+                                                <i class="fas fa-search" style="color:var(--primary);"></i>
+                                                <span id="ex-name-display-${dIdx}-${eIdx}" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                                    ${ex.name || '-- Selecionar Exercicio --'}
+                                                </span>
+                                            </button>
                                         </div>
-                                        <button class="btn btn-ghost" style="color:var(--danger); padding:0.5rem; align-self:flex-end;" onclick="app.removeExerciseFromEditor(${dIdx}, ${eIdx})" title="Remover Exercício">
+                                        <button class="btn btn-ghost" style="color:var(--danger); padding:0.5rem; align-self:flex-end;" onclick="app.removeExerciseFromEditor(${dIdx}, ${eIdx})" title="Remover Exercicio">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </div>
                                     
                                     <div style="display:grid; grid-template-columns: 100px 100px 1fr; gap:1.25rem;">
                                         <div>
-                                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Séries</label>
+                                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Series</label>
                                             <input type="text" value="${ex.sets || ''}" placeholder="Ex: 4" onchange="app.updateEditorExercise(${dIdx}, ${eIdx}, 'sets', this.value)"
                                                 style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:600;">
                                         </div>
@@ -2425,7 +2549,7 @@ Bons treinos!`;
                                                 style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:600;">
                                         </div>
                                         <div>
-                                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Observações (opcional)</label>
+                                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Observacoes (opcional)</label>
                                             <input type="text" value="${ex.observations || ''}" placeholder="Ex: Foco na descida controlada" onchange="app.updateEditorExercise(${dIdx}, ${eIdx}, 'observations', this.value)"
                                                 style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 15px; font-size:1rem;">
                                         </div>
@@ -2434,7 +2558,7 @@ Bons treinos!`;
                             `).join('')}
                         </div>
                         <button class="btn btn-ghost btn-sm" style="color:var(--primary);" onclick="app.addExerciseToEditor(${dIdx})">
-                            <i class="fas fa-plus"></i> Adicionar Exercício
+                            <i class="fas fa-plus"></i> Adicionar Exercicio
                         </button>
                     </div>
                 `).join('')}
@@ -2449,7 +2573,7 @@ Bons treinos!`;
     }
 
     removeTrainingDay(idx) {
-        if (confirm('Deseja remover este dia de treino e todos os exercícios associados?')) {
+        if (confirm('Deseja remover este dia de treino e todos os exercicios associados?')) {
             this.editingPlan.splice(idx, 1);
             this.saveTrainingDraft();
             this.renderTrainingEditor();
@@ -2480,7 +2604,7 @@ Bons treinos!`;
     }
 
     saveTrainingPlan() {
-        // Filtrar exercícios sem ID (linhas em branco que o utilizador não preencheu)
+        // Filtrar exercicios sem ID (linhas em branco que o utilizador nao preencheu)
         const cleanDays = this.editingPlan
             .map(day => ({
                 ...day,
@@ -2512,15 +2636,15 @@ Bons treinos!`;
             this.saveState();
             this.clearTrainingDraft();
             this.renderContent();
-            alert('Plano de treino eliminado com sucesso! 🗑️');
+            alert('Plano de treino eliminado com sucesso! ');
         }
     }
 
     renderMealView(container, clientId) {
-        // Usar comparação loosa (==) para garantir que encontra mesmo se for string vs number
+        // Usar comparacao loosa (==) para garantir que encontra mesmo se for string vs number
         const c = this.state.clients.find(x => x.id == clientId);
         if (!c) {
-            container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
+            container.innerHTML = '<p class="text-muted">Erro: Cliente nao encontrado.</p>';
             return;
         }
         const cid = String(clientId); // Firebase normaliza chaves para string
@@ -2575,7 +2699,7 @@ Bons treinos!`;
                 }).join('') : `
                         <div style="text-align:center; padding:3rem 1rem;">
                             <i class="fas fa-utensils" style="font-size:3rem; color:var(--text-muted); opacity:0.3; margin-bottom:1rem;"></i>
-                            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda não tem plano alimentar atribuído.</p>
+                            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda nao tem plano alimentar atribuido.</p>
                             ${canEdit ? `<button class="btn btn-primary" onclick="app.openMealEditor('${c.id}')"><i class="fas fa-plus"></i> Criar Plano Alimentar</button>` : ''}
                         </div>
                     `;
@@ -2583,7 +2707,7 @@ Bons treinos!`;
                 return (dailyTotal.kcal > 0 ? `
                         <div class="daily-macros-bar">
                             <div class="macro-box"><small>Kcal Total</small><strong>${Math.round(dailyTotal.kcal)}</strong></div>
-                            <div class="macro-box"><small>Proteína</small><strong>${Math.round(dailyTotal.prot)}g</strong></div>
+                            <div class="macro-box"><small>Proteina</small><strong>${Math.round(dailyTotal.prot)}g</strong></div>
                             <div class="macro-box"><small>Hidratos</small><strong>${Math.round(dailyTotal.carb)}g</strong></div>
                             <div class="macro-box"><small>Gordura</small><strong>${Math.round(dailyTotal.fat)}g</strong></div>
                         </div>
@@ -2594,22 +2718,57 @@ Bons treinos!`;
     }
 
     openMealEditor(clientId) {
-        const cid = String(clientId);
+        // Se o clientId vier vazio, tenta usar o currentClientId (o aluno que esta a ser visto)
+        const finalId = clientId || this.currentClientId;
+        if (!finalId) return alert("Erro: Nao foi possivel identificar o aluno.");
+
+        const cid = String(finalId);
+        this.editingClientId = Number(finalId);
+        this.currentClientId = Number(finalId); // Sincroniza ambos
+
+        if (!this.state.mealPlans) this.state.mealPlans = {};
+
         let existing = this.state.mealPlans[cid];
-        if (!existing || Array.isArray(existing)) {
+        if (!existing || typeof existing !== 'object' || Array.isArray(existing)) {
             existing = { title: 'Plano Alimentar', meals: [] };
         }
+
+        // Garantir estrutura minima para evitar erros de renderizacao
+        if (!existing.meals) existing.meals = [];
+        existing.meals = existing.meals.filter(m => m !== null);
+        existing.meals.forEach(m => {
+            m.items = m.items || '';
+            m.time = m.time || '08:00';
+            m.name = m.name || 'Refeicao';
+        });
+
         this.editingMeal = JSON.parse(JSON.stringify(existing));
-        this.editingClientId = cid;
         this.setView('edit_meal');
     }
 
     renderMealEditor() {
         const container = document.getElementById('main-content');
         if (!container) return;
-        const c = this.state.clients.find(x => x.id === this.editingClientId);
 
-        container.innerHTML = `
+        try {
+            // Se o ID de edicao sumiu, tenta recuperar do ID atual da ficha
+            if (!this.editingClientId && this.currentClientId) {
+                this.editingClientId = this.currentClientId;
+            }
+
+            if (!this.editingClientId) {
+                throw new Error("ID do aluno nao identificado. Por favor, volte a ficha do aluno e tente novamente.");
+            }
+
+            const c = this.state.clients.find(x => Number(x.id) === Number(this.editingClientId));
+            if (!c) throw new Error(`Aluno com ID ${this.editingClientId} nao encontrado.`);
+
+            // Garantir que a estrutura basica existe
+            if (!this.editingMeal.meals) this.editingMeal.meals = [];
+            this.editingMeal.meals = this.editingMeal.meals.filter(m => m !== null);
+            if (!this.state.foods) this.state.foods = [];
+
+            container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
                 <h2 style="margin:0;">Editar Dieta: ${c.name}</h2>
                 <div style="display:flex; gap:0.5rem;">
@@ -2621,24 +2780,24 @@ Bons treinos!`;
 
             <div class="glass-panel" style="padding:2rem;">
                 ${(() => {
-                const dailyTotal = { kcal: 0, prot: 0, carb: 0, fat: 0 };
-                this.editingMeal.meals.forEach(m => {
-                    const mN = this.getNutritionFromText(m.items);
-                    dailyTotal.kcal += mN.kcal;
-                    dailyTotal.prot += mN.prot;
-                    dailyTotal.carb += mN.carb;
-                    dailyTotal.fat += mN.fat;
-                });
+                    const dailyTotal = { kcal: 0, prot: 0, carb: 0, fat: 0 };
+                    this.editingMeal.meals.forEach(m => {
+                        const mN = this.getNutritionFromText(m.items);
+                        dailyTotal.kcal += mN.kcal;
+                        dailyTotal.prot += mN.prot;
+                        dailyTotal.carb += mN.carb;
+                        dailyTotal.fat += mN.fat;
+                    });
 
-                return dailyTotal.kcal > 0 ? `
+                    return dailyTotal.kcal > 0 ? `
                         <div class="daily-macros-bar" style="margin-bottom:2rem;">
                             <div class="macro-box"><small>Kcal Total</small><strong>${Math.round(dailyTotal.kcal)}</strong></div>
-                            <div class="macro-box"><small>Proteína</small><strong>${Math.round(dailyTotal.prot)}g</strong></div>
+                            <div class="macro-box"><small>Proteina</small><strong>${Math.round(dailyTotal.prot)}g</strong></div>
                             <div class="macro-box"><small>Hidratos</small><strong>${Math.round(dailyTotal.carb)}g</strong></div>
                             <div class="macro-box"><small>Gordura</small><strong>${Math.round(dailyTotal.fat)}g</strong></div>
                         </div>
                     ` : '';
-            })()}
+                })()}
 
                 <div style="margin-bottom:2rem;">
                     <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">Nome do Plano Alimentar</label>
@@ -2650,8 +2809,8 @@ Bons treinos!`;
 
                 <div id="meal-items-container">
                     ${this.editingMeal.meals.map((m, idx) => {
-                const mTotal = this.getNutritionFromText(m.items);
-                return `
+                    const mTotal = this.getNutritionFromText(m.items);
+                    return `
                             <div class="glass-card" style="padding:1.25rem; margin-bottom:2rem; border-left:4px solid var(--success); position:relative;">
                                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; gap:10px;">
                                     <div style="display:flex; flex-direction:column; gap:12px; flex:1;">
@@ -2663,7 +2822,7 @@ Bons treinos!`;
                                                 maxlength="5"
                                                 style="background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:8px; color:#fff; font-weight:600; width:100px; font-size:0.95rem; padding:8px 12px; outline:none; text-align:center; font-family: monospace;">
                                         </div>
-                                        <input type="text" value="${m.name}" placeholder="Nome (Ex: Pequeno Almoço)" oninput="app.editingMeal.meals[${idx}].name = this.value"
+                                        <input type="text" value="${m.name}" placeholder="Nome (Ex: Pequeno Almoco)" oninput="app.editingMeal.meals[${idx}].name = this.value"
                                             style="width:100%; max-width:400px; background:transparent; border:none; border-bottom:1px solid rgba(255,255,255,0.1); color:#fff; font-weight:700; font-size:1.15rem; padding:6px 0;">
                                     </div>
                                     <button class="btn btn-ghost" style="color:var(--danger); padding:8px;" onclick="app.removeMealFromEditor(${idx})">
@@ -2671,7 +2830,7 @@ Bons treinos!`;
                                     </button>
                                 </div>
 
-                                <!-- Seleção de Alimentos da Base de Dados -->
+                                <!-- Selecao de Alimentos da Base de Dados -->
                                 <div style="margin-bottom:1.5rem; background:rgba(0,0,0,0.2); padding:1.25rem; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
                                     <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">Adicionar Alimento da Base de Dados</label>
                                     <div style="display:flex; flex-direction:column; gap:12px;">
@@ -2688,25 +2847,25 @@ Bons treinos!`;
                                                     <option value="un" style="background:#1e293b; color:#fff;">unidades</option>
                                                     <option value="c. sopa" style="background:#1e293b; color:#fff;">colher de sopa</option>
                                                     <option value="c. sobremesa" style="background:#1e293b; color:#fff;">colher de sobremesa</option>
-                                                    <option value="c. café" style="background:#1e293b; color:#fff;">colher de café</option>
+                                                    <option value="c. cafe" style="background:#1e293b; color:#fff;">colher de cafe</option>
                                                    <option value="fatia(s)" style="background:#1e293b; color:#fff;">fatia(s)</option>
                                                 </select>
                                             </div>
                                         </div>
                                         
                                         <div id="selected-food-display-${idx}" style="display:none; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; border:1px solid var(--success);">
-                                            <!-- Alimento selecionado aparecerá aqui -->
+                                            <!-- Alimento selecionado aparecera aqui -->
                                         </div>
 
                                         <button class="btn btn-primary btn-sm" onclick="app.addSelectedFoodToMeal(${idx})" style="width:100%; height:40px; background:var(--success); border:none;">
-                                            <i class="fas fa-plus"></i> Adicionar à Refeição
+                                            <i class="fas fa-plus"></i> Adicionar a Refeicao
                                         </button>
                                     </div>
                                 </div>
                                 
                                 <div>
-                                    <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Resumo da Refeição</label>
-                                    <textarea id="meal-items-${idx}" placeholder="Os alimentos inseridos aparecerão aqui..." oninput="app.editingMeal.meals[${idx}].items = this.value" onblur="app.renderMealEditor()"
+                                    <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Resumo da Refeicao</label>
+                                    <textarea id="meal-items-${idx}" placeholder="Os alimentos inseridos aparecerao aqui..." oninput="app.editingMeal.meals[${idx}].items = this.value" onblur="app.renderMealEditor()"
                                         style="width:100%; min-height:120px; background:rgba(0,0,0,0.2); color:rgba(255,255,255,0.95); border:1px solid rgba(255,255,255,0.05); border-radius:12px; padding:15px; font-family:inherit; resize:vertical; line-height:1.6; font-size:0.95rem;">${m.items}</textarea>
                                 </div>
                                 ${mTotal.kcal > 0 ? `
@@ -2719,14 +2878,31 @@ Bons treinos!`;
                                 ` : ''}
                             </div>
                         `;
-            }).join('')}
+                }).join('')}
                 </div>
 
                 <button class="btn btn-ghost" style="color:var(--success); width:100%; border:1px dashed var(--success); padding:1rem;" onclick="app.addMealToEditor()">
-                    <i class="fas fa-plus"></i> Adicionar Refeição
+                    <i class="fas fa-plus"></i> Adicionar Refeicao
                 </button>
             </div>
         `;
+        } catch (error) {
+            console.error("Erro fatal no renderMealEditor:", error);
+            const container = document.getElementById('main-content');
+            if (container) {
+                container.innerHTML = `
+                    <div class="glass-card" style="padding:3rem; text-align:center; border:2px solid var(--danger);">
+                        <i class="fas fa-bug" style="font-size:4rem; color:var(--danger); margin-bottom:1.5rem;"></i>
+                        <h2 style="color:#fff;">Erro no Editor de Dieta</h2>
+                        <p style="color:var(--text-muted); margin-bottom:2rem;">Algo impediu o carregamento do plano.</p>
+                        <div style="background:rgba(0,0,0,0.3); padding:1rem; border-radius:8px; margin-bottom:2rem; text-align:left; font-family:monospace; font-size:0.8rem; color:var(--danger); overflow-x:auto;">
+                            <strong>Detalhes:</strong> ${error.message}
+                        </div>
+                        <button class="btn btn-primary" onclick="app.setView('spy_view')">Voltar</button>
+                    </div>
+                `;
+            }
+        }
     }
 
     addMealToEditor() {
@@ -2764,18 +2940,130 @@ Bons treinos!`;
 
     getFoodEmoji(category) {
         const emojiMap = {
-            'Carne': '🥩',
-            'Peixe': '🐟',
-            'Leguminosas': '🫘',
-            'Laticínios': '🥛',
-            'Cereais': '🌾',
-            'Hortícolas': '🥬',
-            'Fruta': '🍎',
-            'Gorduras/Óleos': '🫒',
-            'Bebidas Energéticas': '⚡',
-            'Outros': '🍽️'
+            'Carne': '',
+            'Peixe': '',
+            'Leguminosas': '',
+            'Laticinios': '',
+            'Cereais': '',
+            'Horticolas': '',
+            'Fruta': '',
+            'Gorduras/Oleos': '',
+            'Bebidas Energeticas': '',
+            'Outros': ''
         };
-        return emojiMap[category] || '🍽️';
+        return emojiMap[category] || '';
+    }
+
+    getExerciseIcon(muscle) {
+        const iconMap = {
+            'Peitorais': '',
+            'Costas': '',
+            'Ombros': '',
+            'Biceps': '',
+            'Triceps': '',
+            'Quadriceps': '',
+            'Isquiotibiais': '',
+            'Gluteos': '',
+            'Gemeos': '',
+            'Abdominais': '',
+            'Antebraco': '',
+            'Lombar': ''
+        };
+        return iconMap[muscle] || '';
+    }
+
+    showExerciseSelectionModal(dayIdx, exIdx) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width:800px; max-height:85vh; display:flex; flex-direction:column;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                    <h2 style="margin:0;"><i class="fas fa-dumbbell"></i> Selecionar Exercicio</h2>
+                    <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()" style="padding:8px;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="search-container" style="margin-bottom:1.5rem;">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="exercise-search-input" placeholder="Pesquisar exercicio ou musculo..." 
+                        oninput="app.filterExercisesInModal(this.value)"
+                        class="search-bar" autofocus>
+                </div>
+
+                <div id="exercise-grid-container" style="overflow-y:auto; flex:1; padding-right:5px;">
+                    ${this.renderExerciseGrid()}
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        this.currentSelectionState = { dayIdx, exIdx };
+    }
+
+    renderExerciseGrid(searchQuery = '') {
+        const baseEx = this.state.exercises || [];
+        let exercises = [...baseEx].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+        if (searchQuery) {
+            const query = this.normalizeText(searchQuery);
+            exercises = exercises.filter(ex =>
+                this.normalizeText(ex.name).includes(query) ||
+                this.normalizeText(ex.muscle).includes(query) ||
+                this.normalizeText(ex.category).includes(query)
+            );
+        }
+
+        if (exercises.length === 0) {
+            return `
+                <div style="text-align:center; padding:3rem; color:var(--text-muted);">
+                    <i class="fas fa-search" style="font-size:3rem; opacity:0.3; margin-bottom:1rem; display:block;"></i>
+                    <p>Nenhum exercicio encontrado</p>
+                </div>
+            `;
+        }
+
+        return `
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:1rem; padding:0.5rem;">
+                ${exercises.map(ex => `
+                    <div class="glass-card food-card" onclick="app.selectExerciseFromModal('${ex.id}')" 
+                        style="cursor:pointer; padding:1rem; transition:all 0.2s ease; border:2px solid transparent; text-align:center;">
+                        <div style="width:100%; height:120px; border-radius:10px; overflow:hidden; margin-bottom:0.75rem; background:rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">
+                            ${ex.photoUrl ? `<img src="${ex.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : `
+                                <div style="font-size:2.5rem;">${this.getExerciseIcon(ex.muscle)}</div>
+                            `}
+                        </div>
+                        <div style="font-weight:700; font-size:0.95rem; margin-bottom:0.25rem; color:#fff; line-height:1.2; padding:0 5px;">
+                            ${ex.name}
+                        </div>
+                        <div style="font-size:0.7rem; color:var(--primary); font-weight:600; text-transform:uppercase; margin-bottom:5px;">
+                            ${ex.muscle || 'Geral'}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    filterExercisesInModal(query) {
+        const container = document.getElementById('exercise-grid-container');
+        if (container) {
+            container.innerHTML = this.renderExerciseGrid(query);
+        }
+    }
+
+    selectExerciseFromModal(exId) {
+        if (!this.currentSelectionState) return;
+        const { dayIdx, exIdx } = this.currentSelectionState;
+
+        this.updateEditorExercise(dayIdx, exIdx, 'id', exId);
+
+        // Fechar modal
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) modal.remove();
+
+        // Renderizar novamente para atualizar o nome no botao
+        this.renderTrainingEditor();
     }
 
     showFoodSelectionModal(mealIdx) {
@@ -2884,7 +3172,7 @@ Bons treinos!`;
                 <div style="flex:1;">
                     <div style="font-weight:700; color:#fff;">${food.name}</div>
                     <div style="font-size:0.75rem; color:var(--text-muted);">
-                        ${food.kcal || 0} kcal • Prot: ${food.protein || 0}g • Carb: ${food.carbs || 0}g • Gord: ${food.fat || 0}g
+                        ${food.kcal || 0} kcal  Prot: ${food.protein || 0}g  Carb: ${food.carbs || 0}g  Gord: ${food.fat || 0}g
                     </div>
                 </div>
                 <button class="btn btn-ghost btn-sm" onclick="document.getElementById('selected-food-${mealIdx}').value=''; this.parentElement.parentElement.style.display='none'" style="color:var(--danger);">
@@ -2912,7 +3200,7 @@ Bons treinos!`;
         this.saveState();
 
         // Notificar o aluno do novo plano de dieta
-        this.addAppNotification(this.editingClientId, 'Nova Dieta Disponível!', 'O seu professor atualizou o seu plano alimentar.');
+        this.addAppNotification(this.editingClientId, 'Nova Dieta Disponivel!', 'O seu professor atualizou o seu plano alimentar.');
 
         alert('Plano alimentar guardado com sucesso!');
         this.setView('spy_view');
@@ -2924,14 +3212,14 @@ Bons treinos!`;
             this.state.mealPlans[cid] = { title: 'Plano Alimentar', meals: [], author: this.currentUser.name, updatedAt: new Date().toLocaleDateString('pt-PT') };
             this.saveState();
             this.renderContent();
-            alert('Dieta eliminada com sucesso! 🗑️');
+            alert('Dieta eliminada com sucesso! ');
         }
     }
 
     formatTimeInput(input, mealIdx) {
-        let value = input.value.replace(/[^0-9]/g, ''); // Remove tudo exceto números
+        let value = input.value.replace(/[^0-9]/g, ''); // Remove tudo exceto numeros
 
-        // Limitar a 4 dígitos
+        // Limitar a 4 digitos
         if (value.length > 4) {
             value = value.substring(0, 4);
         }
@@ -2968,9 +3256,9 @@ Bons treinos!`;
         const key = event.key;
         const cursorPos = input.selectionStart;
 
-        // Permitir teclas de navegação e controle
+        // Permitir teclas de navegacao e controle
         if (['ArrowLeft', 'ArrowRight', 'Tab', 'Delete'].includes(key)) {
-            // Se tentar deletar os dois pontos, pular para o próximo caractere
+            // Se tentar deletar os dois pontos, pular para o proximo caractere
             if (key === 'Delete' && cursorPos === 2) {
                 event.preventDefault();
                 input.setSelectionRange(3, 3);
@@ -2978,17 +3266,17 @@ Bons treinos!`;
             return;
         }
 
-        // Backspace: não permitir apagar os dois pontos
+        // Backspace: nao permitir apagar os dois pontos
         if (key === 'Backspace') {
             if (cursorPos === 3) {
-                // Se estiver logo após os dois pontos, voltar para antes
+                // Se estiver logo apos os dois pontos, voltar para antes
                 event.preventDefault();
                 input.setSelectionRange(2, 2);
             }
             return;
         }
 
-        // Permitir apenas números
+        // Permitir apenas numeros
         if (!/^[0-9]$/.test(key)) {
             event.preventDefault();
         }
@@ -2997,7 +3285,7 @@ Bons treinos!`;
     renderEvaluationView(container, clientId) {
         const c = this.state.clients.find(x => x.id == clientId);
         if (!c) {
-            container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
+            container.innerHTML = '<p class="text-muted">Erro: Cliente nao encontrado.</p>';
             return;
         }
         const cid = String(clientId); // Firebase usa chaves de string
@@ -3007,7 +3295,7 @@ Bons treinos!`;
         container.innerHTML = `
             <div class="page-header" style="margin-bottom: 2rem;">
                 <div>
-                    <h2 style="margin:0;">Avaliação Física</h2>
+                    <h2 style="margin:0;">Avaliação Fisica</h2>
                     <h3 class="client-name">${c.name}</h3>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
@@ -3021,7 +3309,7 @@ Bons treinos!`;
                 ${evals.length ? evals.map((ev, idx) => this.renderEvaluationCard(ev, idx, clientId, isTeacher)).join('') : `
                     <div class="glass-panel" style="padding: 4rem 1rem; text-align: center; color: var(--text-muted);">
                         <i class="fas fa-chart-line" style="font-size: 3rem; opacity: 0.2; margin-bottom: 1.5rem; display: block;"></i>
-                        Ainda não existem avaliações registadas.
+                        Ainda nao existem avaliacoes registadas.
                     </div>
                 `}
             </div>
@@ -3043,20 +3331,20 @@ Bons treinos!`;
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <button class="btn btn-ghost btn-sm" style="color: var(--text-muted);" onclick="app.downloadEvaluationPDF(${clientId}, ${idx})" title="Exportar esta avaliação">
+                        <button class="btn btn-ghost btn-sm" style="color: var(--text-muted);" onclick="app.downloadEvaluationPDF(${clientId}, ${idx})" title="Exportar esta Avaliação">
                             <i class="fas fa-file-pdf"></i>
                         </button>
                         ${isTeacher ? `
                             <button class="btn btn-ghost btn-sm" style="color: var(--accent);" onclick="app.showEvaluationModal(${clientId}, ${idx})"><i class="fas fa-edit"></i></button>
                             <button class="btn btn-ghost btn-sm" style="color: var(--danger);" onclick="app.deleteEvaluation(${clientId}, ${idx})"><i class="fas fa-trash-alt"></i></button>
                         ` : ''}
-                        <span class="badge badge-blue">Bioimpedância</span>
+                        <span class="badge badge-blue">Bioimpedancia</span>
                     </div>
                 </div>
 
                 <div style="margin-bottom: 1.5rem;">
                     <h4 style="font-size: 0.8rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-bolt"></i> Bioimpedância
+                        <i class="fas fa-bolt"></i> Bioimpedancia
                     </h4>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); gap: 0.75rem;">
                         <div class="macro-box">
@@ -3068,7 +3356,7 @@ Bons treinos!`;
                             <strong>${ev.height || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>Músculo</small>
+                            <small>Musculo</small>
                             <strong style="color: var(--success);">${ev.muscleMass || '-'} <span style="font-size: 0.65rem; font-weight: normal; color: var(--text-muted);">kg</span></strong>
                         </div>
                         <div class="macro-box">
@@ -3076,11 +3364,11 @@ Bons treinos!`;
                             <strong style="color: var(--danger);">${ev.fatPercentage || '-'} <span style="font-size: 0.65rem; font-weight: normal; color: var(--text-muted);">%</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>Água</small>
+                            <small>Agua</small>
                             <strong style="color: #60a5fa;">${ev.water || '-'} <span style="font-size: 0.65rem; font-weight: normal; color: var(--text-muted);">%</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>Óssea</small>
+                            <small>Ossea</small>
                             <strong>${ev.boneMass || '-'}</strong>
                         </div>
                         <div class="macro-box">
@@ -3104,7 +3392,7 @@ Bons treinos!`;
                     </h4>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); gap: 0.75rem;">
                         <div class="macro-box">
-                            <small>Toráx</small>
+                            <small>Torax</small>
                             <strong>${ev.chest || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
                         </div>
                         <div class="macro-box">
@@ -3149,7 +3437,7 @@ Bons treinos!`;
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
                     <div>
                         <h2 style="margin: 0;">${index === null ? 'Nova Avaliação' : 'Editar Avaliação'}</h2>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px;">Registe os dados da bioimpedância e medidas.</p>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px;">Registe os dados da bioimpedancia e medidas.</p>
                     </div>
                     <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">
                         <i class="fas fa-times"></i>
@@ -3164,7 +3452,7 @@ Bons treinos!`;
 
                     <div>
                         <h4 style="font-size: 0.85rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 5px;">
-                            <i class="fas fa-bolt"></i> Bioimpedância
+                            <i class="fas fa-bolt"></i> Bioimpedancia
                         </h4>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div>
@@ -3176,7 +3464,7 @@ Bons treinos!`;
                                 <input type="number" id="ev-height" value="${ev.height || ''}" placeholder="ex: 175">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Músculo (kg)</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Musculo (kg)</label>
                                 <input type="number" id="ev-muscle" step="0.1" value="${ev.muscleMass || ''}">
                             </div>
                             <div>
@@ -3184,11 +3472,11 @@ Bons treinos!`;
                                 <input type="number" id="ev-fat" step="0.1" value="${ev.fatPercentage || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Água (%)</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Agua (%)</label>
                                 <input type="number" id="ev-water" step="0.1" value="${ev.water || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Massa Óssea</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Massa Ossea</label>
                                 <input type="number" id="ev-bone" step="0.1" value="${ev.boneMass || ''}">
                             </div>
                             <div>
@@ -3196,7 +3484,7 @@ Bons treinos!`;
                                 <input type="number" id="ev-visceral" value="${ev.visceralFat || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Idade Metabólica</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Idade Metabolica</label>
                                 <input type="number" id="ev-metabolic-age" value="${ev.metabolicAge || ''}">
                             </div>
                             <div style="grid-column: span 2;">
@@ -3212,7 +3500,7 @@ Bons treinos!`;
                         </h4>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Toráx</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Torax</label>
                                 <input type="number" id="ev-chest" step="0.1" value="${ev.chest || ''}">
                             </div>
                             <div>
@@ -3271,7 +3559,7 @@ Bons treinos!`;
         };
 
         if (!entry.weight) {
-            alert('O peso é obrigatório para registar a avaliação.');
+            alert('O peso e obrigatorio para registar a Avaliação.');
             return;
         }
 
@@ -3284,7 +3572,7 @@ Bons treinos!`;
             this.state.evaluations[cid][index] = entry;
         }
 
-        // Atualizar o último peso/data no perfil do cliente se necessário
+        // Atualizar o ultimo peso/data no perfil do cliente se necessario
         const client = this.state.clients.find(c => c.id == clientId);
         if (client) {
             client.lastEvaluation = dateRaw;
@@ -3293,11 +3581,11 @@ Bons treinos!`;
         this.saveState();
         document.querySelector('.modal-overlay').remove();
         this.renderContent();
-        alert(index === null ? 'Avaliação registada com sucesso! 📈' : 'Avaliação atualizada com sucesso! ✅');
+        alert(index === null ? 'Avaliação registada com sucesso! ' : 'Avaliação atualizada com sucesso! ');
     }
 
     deleteEvaluation(clientId, index) {
-        if (confirm('Tem a certeza que deseja eliminar este registo de avaliação?')) {
+        if (confirm('Tem a certeza que deseja eliminar este registo de Avaliação?')) {
             this.state.evaluations[String(clientId)].splice(index, 1);
             this.saveState();
             this.renderContent();
@@ -3329,7 +3617,7 @@ Bons treinos!`;
                 </div>
                 <div style="display:flex; gap:0.5rem;">
                     ${(this.role === 'teacher' || this.role === 'admin') ? `
-                        <button class="btn btn-ghost btn-sm" style="color:var(--accent); font-size: 1.1rem; padding: 0.5rem 0.8rem;" onclick="app.showManualNotificationModal(${c.id})" title="Enviar Notificação Direta">
+                        <button class="btn btn-ghost btn-sm" style="color:var(--accent); font-size: 1.1rem; padding: 0.5rem 0.8rem;" onclick="app.showManualNotificationModal(${c.id})" title="Enviar Notificacao Direta">
                             <i class="fas fa-bell"></i>
                         </button>
                     ` : ''}
@@ -3374,7 +3662,7 @@ Bons treinos!`;
             this.renderClientNotificationsView(area, this.currentClientId);
         }
 
-        // O cabeçalho agora é mantido para dar acesso ao botão de edição
+        // O cabecalho agora e mantido para dar acesso ao botao de edicao
     }
 
     renderClientNotificationsView(container, clientId) {
@@ -3382,7 +3670,7 @@ Bons treinos!`;
 
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                <h3 style="margin:0;"><i class="fas fa-comment-dots"></i> Histórico de Mensagens</h3>
+                <h3 style="margin:0;"><i class="fas fa-comment-dots"></i> Historico de Mensagens</h3>
                 <p style="margin:0; font-size:0.85rem; color:var(--text-muted);">${notifications.length} registos</p>
             </div>
             
@@ -3390,7 +3678,7 @@ Bons treinos!`;
                 ${notifications.length === 0 ? `
                     <div class="glass-card" style="text-align:center; padding:3rem; opacity:0.6;">
                         <i class="fas fa-bell-slash" style="font-size:3rem; margin-bottom:1rem; display:block;"></i>
-                        <p>Ainda não foram enviadas notificações personalizadas para este aluno.</p>
+                        <p>Ainda nao foram enviadas notificacoes personalizadas para este aluno.</p>
                     </div>
                 ` : notifications.map(n => `
                     <div class="glass-card animate-fade-in" style="border-left: 4px solid var(--accent);">
@@ -3406,20 +3694,35 @@ Bons treinos!`;
     }
 
     renderClientContent(container) {
-        const c = this.state.clients.find(x => x.id === this.currentClientId);
+        // Mostrar loader apenas se nao houver dados nenhuns (nem cache nem servidor)
+        const hasClients = this.state.clients && this.state.clients.length > 0;
+        if (!this.hasLoadedData && !hasClients) {
+            container.innerHTML = `
+                <div style="padding:10rem 2rem; text-align:center;">
+                    <div class="loader" style="margin:0 auto 1.5rem;"></div>
+                    <h3 style="color:var(--primary); text-transform:uppercase; letter-spacing:1px;">A carregar...</h3>
+                </div>
+            `;
+            return;
+        }
+
+        // Tentar encontrar o cliente (flexivel Number/String)
+        const c = this.state.clients.find(x => String(x.id) === String(this.currentClientId));
+
         if (!c) {
-            container.innerHTML = `<div style="padding:2rem; text-align:center;">
-                <h3>Utilizador não encontrado.</h3>
-                <p>Por favor, tente fazer login novamente.</p>
-                <button class="btn btn-primary" onclick="app.handleLogout()">Sair</button>
+            container.innerHTML = `<div style="padding:4rem 2rem; text-align:center;">
+                <i class="fas fa-user-slash" style="font-size:3rem; color:var(--danger); opacity:0.5; margin-bottom:1.5rem;"></i>
+                <h3 style="color:#fff;">Utilizador nao encontrado.</h3>
+                <p style="color:var(--text-muted); margin-bottom:2rem;">O seu perfil (ID: ${this.currentClientId}) nao existe na base de dados.</p>
+                <button class="btn btn-primary" onclick="app.handleLogout()">Sair e Tentar Novamente</button>
             </div>`;
             return;
         }
         switch (this.activeView) {
             case 'dashboard':
                 container.innerHTML = `
-                    <h2 class="animate-fade-in">Bem-vindo, ${c.name} 👋</h2>
-                    <p style="color:var(--text-muted); margin-bottom:1rem;">Este é o seu painel de acompanhamento KandalGym.</p>
+                    <h2 class="animate-fade-in">Bem-vindo, ${c.name} </h2>
+                    <p style="color:var(--text-muted); margin-bottom:1rem;">Este e o seu painel de acompanhamento KandalGym.</p>
                     
                     ${(() => {
                         const t = this.state.teachers.find(teacher => teacher.id === c.teacherId);
@@ -3444,7 +3747,7 @@ Bons treinos!`;
                         <div class="glass-card" onclick="app.setView('training')" style="cursor:pointer;">
                             <i class="fas fa-dumbbell" style="font-size:1.5rem; color:var(--primary); margin-bottom:1rem;"></i>
                             <h3>O Meu Treino</h3>
-                            <small>Ver exercícios e séries</small>
+                            <small>Ver exercicios e series</small>
                         </div>
                         <div class="glass-card" onclick="app.setView('meal')" style="cursor:pointer;">
                             <i class="fas fa-apple-alt" style="font-size:1.5rem; color:var(--success); margin-bottom:1rem;"></i>
@@ -3453,7 +3756,7 @@ Bons treinos!`;
                         </div>
                         <div class="glass-card" onclick="app.setView('evaluation')" style="cursor:pointer;">
                             <i class="fas fa-chart-line" style="font-size:1.5rem; color:var(--accent); margin-bottom:1rem;"></i>
-                            <h3>Avaliação Física</h3>
+                            <h3>Avaliação Fisica</h3>
                             <small>Ver peso e medidas</small>
                         </div>
                     </div>
@@ -3473,14 +3776,14 @@ Bons treinos!`;
 
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                <h2 style="margin:0;"><i class="fas fa-history"></i> Histórico de Treinos</h2>
+                <h2 style="margin:0;"><i class="fas fa-history"></i> Historico de Treinos</h2>
                 <button class="btn btn-secondary" onclick="app.setView('training')">Voltar</button>
             </div>
 
             ${history.length === 0 ? `
                 <div class="glass-panel" style="padding:3rem; text-align:center; color:var(--text-muted);">
                     <i class="fas fa-calendar-times" style="font-size:3rem; opacity:0.2; margin-bottom:1rem; display:block;"></i>
-                    Ainda não concluiu nenhum treino.
+                    Ainda nao concluiu nenhum treino.
                 </div>
             ` : history.map(session => `
                 <div class="glass-panel" style="padding:1.5rem; margin-bottom:1.5rem; border-left:4px solid var(--accent); position:relative;">
@@ -3548,7 +3851,7 @@ Bons treinos!`;
                 </div>
 
                 <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Contacto Telefónico</label>
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Contacto Telefonico</label>
                     <input type="tel" id="edit-phone" value="${user.phone || ''}" placeholder="Ex: 912345678"
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
                 </div>
@@ -3560,41 +3863,6 @@ Bons treinos!`;
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px; color-scheme:dark;">
                 </div>
                 ` : ''}
-
-                <div style="margin-top:2rem; padding: 1.5rem; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid var(--surface-border); display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                    <div style="flex: 1; padding-right: 10px;">
-                        <strong style="display: block;">Notificações do Sistema</strong>
-                            ${(() => {
-                if (!("Notification" in window)) return '<span style="color:var(--danger);">Este dispositivo não suporta notificações.</span>';
-                if (!window.isSecureContext) {
-                    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-                    if (isMobile) return '<span style="color:var(--danger);">⚠️ Bloqueado (Telemóvel requer HTTPS).</span>';
-                    return '<span style="color:var(--danger);">⚠️ Bloqueado (PC requer HTTPS ou "localhost").</span>';
-                }
-                if (Notification.permission === 'denied') return '<span style="color:var(--danger);">Bloqueadas no navegador (mude no cadeado 🔒).</span>';
-                if (Notification.permission === 'default') return 'Clique em "Ativar" para receber alertas.';
-                return 'Receba alertas de novos planos.';
-            })()}
-                    </div>
-                    ${(() => {
-                if (!("Notification" in window)) return '<i class="fas fa-times-circle" style="color:var(--text-muted);"></i>';
-                if (!window.isSecureContext) {
-                    return '<i class="fas fa-lock-open" style="color:var(--text-muted);" title="Ambiente não seguro"></i>';
-                }
-                if (Notification.permission === 'granted') {
-                    return `
-                                <div style="display:flex; gap: 8px;">
-                                    <button class="btn btn-ghost btn-sm" onclick="app.sendTestNotification()" title="Enviar Teste"><i class="fas fa-paper-plane"></i></button>
-                                    <span style="color: var(--success); font-weight: 700; font-size: 0.9rem;"><i class="fas fa-check-circle"></i> Ativas</span>
-                                </div>
-                            `;
-                } else if (Notification.permission === 'denied') {
-                    return '<span style="color: var(--danger); font-weight: 700; font-size: 0.9rem;"><i class="fas fa-ban"></i> Bloqueadas</span>';
-                } else {
-                    return `<button class="btn btn-primary btn-sm" onclick="app.requestNotificationPermission()">Ativar</button>`;
-                }
-            })()}
-                </div>
 
                 <div style="margin-top:2rem; padding-top:1rem; border-top:1px dashed var(--surface-border);">
                     <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Nova Palavra-passe</label>
@@ -3612,16 +3880,16 @@ Bons treinos!`;
                 const displayId = qrInfo ? qrInfo.id : "K" + user.id;
                 return `
                     <div class="glass-card" style="margin-top:2rem; padding:1.5rem; text-align:center; border: 1px dashed var(--accent); background: rgba(196, 162, 77, 0.05);">
-                        <h4 style="margin-bottom:1rem; color:var(--accent);"><i class="fas fa-qrcode"></i> O Meu Código de Acesso</h4>
+                        <h4 style="margin-bottom:1rem; color:var(--accent);"><i class="fas fa-qrcode"></i> O Meu Codigo de Acesso</h4>
                         <div id="profile-qr-container" style="background: white; padding: 12px; border-radius: 12px; display: inline-block; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2);"></div>
-                        <p style="font-size:0.8rem; color:var(--text-muted);">Apresente este código na receção para registar a sua entrada.</p>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Apresente este codigo na rececao para registar a sua entrada.</p>
                         <div style="font-size: 0.7rem; color: var(--accent); opacity: 0.8; font-family: monospace; font-weight: 700;">ID: ${displayId}</div>
                     </div>
                 `;
             })() : ''}
 
                 <button class="btn btn-primary" onclick="app.updateProfile()" style="width:100%; height:50px; font-size:1.1rem; margin-top:2rem;">
-                    <i class="fas fa-save"></i> Guardar Alterações
+                    <i class="fas fa-save"></i> Guardar Alteracoes
                 </button>
             </div>
         `;
@@ -3647,67 +3915,110 @@ Bons treinos!`;
         }
     }
 
+    processImage(file, maxSize, quality, callback) {
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+            alert("A imagem e demasiado grande (Max 5MB).");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxSize) {
+                        height *= maxSize / width;
+                        width = maxSize;
+                    }
+                } else {
+                    if (height > maxSize) {
+                        width *= maxSize / height;
+                        height = maxSize;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+                callback(compressedBase64);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
     handlePhotoUpload(input) {
         if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const base64 = e.target.result;
-                this.currentUser.photoUrl = base64; // Guardar temporariamente no objeto da sessão
+            this.processImage(input.files[0], 400, 0.7, (base64) => {
+                this.currentUser.photoUrl = base64;
                 const preview = document.getElementById('profile-photo-preview');
                 if (preview) {
                     preview.innerHTML = `<img src="${base64}" style="width:100%; height:100%; object-fit:cover;">`;
                 }
-            };
-            reader.readAsDataURL(input.files[0]);
+            });
         }
     }
 
-    updateProfile() {
+    async updateProfile() {
         const name = document.getElementById('edit-name').value.trim();
         const email = document.getElementById('edit-email').value.trim();
         const phone = document.getElementById('edit-phone').value.trim();
         const pass = document.getElementById('edit-pass').value;
+        const btn = document.querySelector('button[onclick="app.updateProfile()"]');
 
         if (!name || !email || !pass) {
-            return alert('Nome, Email e Palavra-passe são obrigatórios.');
+            return alert('Nome, Email e Palavra-passe sao obrigatorios.');
         }
 
-        // Atualizar no estado global (procurar em clientes, professores ou admins)
-        let user = this.state.clients.find(c => c.id === this.currentUser.id);
-        let listType = 'clients';
-
-        if (!user) {
-            user = this.state.teachers.find(t => t.id === this.currentUser.id);
-            listType = 'teachers';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A gravar...';
         }
 
-        if (!user) {
-            user = this.state.admins.find(a => a.id === this.currentUser.id);
-            listType = 'admins';
-        }
+        try {
+            // Atualizar no estado global (procurar em clientes, professores ou admins)
+            let user = this.state.clients.find(c => c.id === this.currentUser.id);
+            if (!user) user = this.state.teachers.find(t => t.id === this.currentUser.id);
+            if (!user) user = this.state.admins.find(a => a.id === this.currentUser.id);
 
-        if (user) {
-            user.name = name;
-            user.email = email;
-            user.phone = phone;
-            user.password = pass;
+            if (user) {
+                user.name = name;
+                user.email = email;
+                user.phone = phone;
+                user.password = pass;
 
-            const dobInput = document.getElementById('edit-dob');
-            if (dobInput) {
-                user.birthDate = dobInput.value;
+                const dobInput = document.getElementById('edit-dob');
+                if (dobInput) {
+                    user.birthDate = dobInput.value;
+                }
+                if (this.currentUser.photoUrl) {
+                    user.photoUrl = this.currentUser.photoUrl;
+                }
+
+                // Atualizar utilizador atual na sessao
+                this.currentUser = { ...user };
+                await this.saveState();
+                this.persistLogin();
+                this.renderUserProfile(); // Atualizar avatar no topo
+
+                alert('Perfil atualizado com sucesso! ');
+                this.setView('dashboard');
             }
-            if (this.currentUser.photoUrl) {
-                user.photoUrl = this.currentUser.photoUrl;
+        } catch (err) {
+            console.error("Erro ao atualizar perfil:", err);
+            alert("Erro ao guardar perfil. A imagem pode ser demasiado grande.");
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Guardar Alteracoes';
             }
-
-            // Atualizar utilizador atual na sessão
-            this.currentUser = { ...user };
-            this.saveState();
-            this.persistLogin();
-            this.renderUserProfile(); // Atualizar avatar no topo
-
-            alert('Perfil atualizado com sucesso! ✅');
-            this.setView('dashboard');
         }
     }
 
@@ -3775,7 +4086,7 @@ Bons treinos!`;
                             </div>
                         ` : ''}
                         <div style="font-size: 0.8rem; color: var(--text-muted);">${user.phone || 'Sem contacto'}</div>
-                        <div style="margin-top:5px;"><span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted);">••••••••</span></div>
+                        <div style="margin-top:5px;"><span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted);"></span></div>
                     </div>
                 </div>
                 <div style="display:flex; gap:0.5rem;">
@@ -3796,37 +4107,46 @@ Bons treinos!`;
 
         // Agrupar conversas por utilizador
         const threads = {};
+
+        // 1. Adicionar contatos proativos baseados no papel (role)
+        if (this.role === 'client') {
+            // Aluno: Sempre ter o seu professor disponivel
+            const tid = this.currentUser.teacherId;
+            if (tid) {
+                const teacher = this.state.teachers.find(t => t.id === tid);
+                if (teacher) {
+                    threads[tid] = { id: tid, messages: [], user: teacher, lastMsg: { body: 'Sem mensagens anteriores.', createdAt: new Date(0).toISOString() } };
+                }
+            }
+            // Tambem incluir Admin se houve conversas
+        } else if (this.role === 'teacher') {
+            // Professor: Ver todos os seus alunos por omissao
+            const myClients = this.state.clients.filter(c => c.teacherId === myId);
+            myClients.forEach(c => {
+                threads[c.id] = { id: c.id, messages: [], user: c, lastMsg: { body: 'Inicie uma conversa...', createdAt: new Date(0).toISOString() } };
+            });
+        }
+
+        // 2. Preencher com mensagens existentes
         notifications.forEach(n => {
-            if (!n.senderId && !n.targetUserId) return; // Sistema?
+            if (!n.senderId && !n.targetUserId) return;
 
             let otherId;
             if (n.senderId === myId) otherId = n.targetUserId;
-            else otherId = n.senderId;
-
-            // Se for sistema (senderId null), agrupar como 'system'
-            if (!n.senderId && n.targetUserId === myId) otherId = 'system';
-
-            if (!otherId) return;
+            else otherId = n.senderId || 'system';
 
             if (!threads[otherId]) {
-                threads[otherId] = {
-                    id: otherId,
-                    messages: [],
-                    lastMsg: null,
-                    unreadCount: 0,
-                    user: null
-                };
+                threads[otherId] = { id: otherId, messages: [], user: null, lastMsg: null };
             }
             threads[otherId].messages.push(n);
         });
 
-        // Encontrar info dos utilizadores e ordenar mensagens
+        // 3. Encontrar info dos utilizadores e ordenar mensagens
         Object.keys(threads).forEach(id => {
             const t = threads[id];
-
             if (id === 'system') {
                 t.user = { name: 'Sistema KandalGym', photoUrl: null, role: 'system' };
-            } else {
+            } else if (!t.user) {
                 const uid = Number(id);
                 t.user = this.state.clients.find(c => c.id === uid) ||
                     this.state.teachers.find(tr => tr.id === uid) ||
@@ -3834,32 +4154,25 @@ Bons treinos!`;
                     { name: 'Utilizador Desconhecido', photoUrl: null };
             }
 
-            t.messages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-            t.lastMsg = t.messages[t.messages.length - 1];
+            if (t.messages.length > 0) {
+                t.messages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                t.lastMsg = t.messages[t.messages.length - 1];
+            }
         });
 
-        const sortedThreads = Object.values(threads).sort((a, b) =>
-            new Date(b.lastMsg.createdAt) - new Date(a.lastMsg.createdAt)
-        );
+        // 4. Ordenar threads: Conversas reais primeiro, depois ordem alfabetica
+        const sortedThreads = Object.values(threads).sort((a, b) => {
+            const dateA = new Date(a.lastMsg?.createdAt || 0);
+            const dateB = new Date(b.lastMsg?.createdAt || 0);
+            if (dateA > 0 || dateB > 0) return dateB - dateA;
+            return (a.user.name || '').localeCompare(b.user.name || '');
+        });
 
-        // Se for aluno e não tiver conversas, mostrar o professor
-        if (this.role === 'client' && sortedThreads.length === 0 && this.currentUser.teacherId) {
-            const teacher = this.state.teachers.find(t => t.id === this.currentUser.teacherId);
-            if (teacher) {
-                sortedThreads.push({
-                    id: teacher.id,
-                    messages: [],
-                    lastMsg: { body: 'Inicie uma conversa...', createdAt: new Date().toISOString() },
-                    user: teacher
-                });
-            }
-        }
-
-        const activeChatId = this.activeChatUserId; // Estado temporário na classe
+        const activeChatId = this.activeChatUserId; // Estado temporario na classe
         const isMobile = window.innerWidth <= 768;
         const containerClass = activeChatId ? 'chat-container active-chat' : 'chat-container';
 
-        // Renderização
+        // Renderizacao
         container.innerHTML = `
             <div class="${containerClass}">
                 <!-- Sidebar -->
@@ -3917,13 +4230,13 @@ Bons treinos!`;
             return `
                 <div class="chat-empty-state">
                     <i class="far fa-comments" style="font-size:4rem; margin-bottom:1rem; opacity:0.3;"></i>
-                    <p>Selecione uma conversa para começar.</p>
+                    <p>Selecione uma conversa para comecar.</p>
                 </div>
             `;
         }
 
         let thread = threads.find(t => t.id == activeChatId);
-        // Fallback: se a thread não existe (ex: aluno <-> professor novo), cria objeto temporário
+        // Fallback: se a thread nao existe (ex: aluno <-> professor novo), cria objeto temporario
         if (!thread) {
             // Tentar encontrar user info
             const uid = Number(activeChatId);
@@ -3934,7 +4247,7 @@ Bons treinos!`;
             if (user) {
                 thread = { id: uid, user: user, messages: [] };
             } else {
-                return '<div class="chat-empty-state">Utilizador não encontrado.</div>';
+                return '<div class="chat-empty-state">Utilizador nao encontrado.</div>';
             }
         }
 
@@ -3957,7 +4270,7 @@ Bons treinos!`;
             </div>
 
             <div class="chat-messages">
-                ${msgs.length === 0 ? '<div style="text-align:center; color:var(--text-muted); margin-top:2rem;">Início da conversa.</div>' : ''}
+                ${msgs.length === 0 ? '<div style="text-align:center; color:var(--text-muted); margin-top:2rem;">Inicio da conversa.</div>' : ''}
                 ${msgs.map(m => {
                         const isMe = m.senderId === Number(this.currentUser.id);
                         const isSystem = !m.senderId;
@@ -3984,7 +4297,7 @@ Bons treinos!`;
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
-            ` : '<div style="padding:1rem; text-align:center; color:var(--text-muted); background:rgba(0,0,0,0.2);">Este é um canal de notificações do sistema.</div>'}
+            ` : '<div style="padding:1rem; text-align:center; color:var(--text-muted); background:rgba(0,0,0,0.2);">Este e um canal de notificacoes do sistema.</div>'}
         `;
     }
 
@@ -4061,14 +4374,14 @@ Bons treinos!`;
         this.addAppNotification(targetId, subject, body, this.currentUser.id, 'message');
 
         this.closeModal();
-        alert('Resposta enviada com sucesso! ✅');
+        alert('Resposta enviada com sucesso! ');
     }
 
     showSendMessageModal() {
         const teacherId = this.currentUser.teacherId;
         const teacher = this.state.teachers.find(t => t.id === teacherId);
 
-        if (!teacher) return alert('Não tem professor atribuído.');
+        if (!teacher) return alert('Nao tem professor atribuido.');
 
         this.showModal(`
             <h3 style="margin-top:0;">Nova Mensagem</h3>
@@ -4077,7 +4390,7 @@ Bons treinos!`;
             <div style="display:flex; flex-direction:column; gap:1rem;">
                 <div>
                     <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Assunto</label>
-                    <input type="text" id="msg-subject" class="search-bar" placeholder="Ex: Dúvida no treino...">
+                    <input type="text" id="msg-subject" class="search-bar" placeholder="Ex: Duvida no treino...">
                 </div>
                 <div>
                     <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Mensagem</label>
@@ -4096,17 +4409,17 @@ Bons treinos!`;
 
         if (!subject || !body) return alert('Preencha o assunto e a mensagem.');
 
-        // Enviar notificação para o professor
+        // Enviar notificacao para o professor
         this.addAppNotification(teacherId, `Mensagem de ${this.currentUser.name}`, `${subject}\n\n${body}`, this.currentUser.id, 'message');
 
         this.closeModal();
-        alert('Mensagem enviada com sucesso! ✅');
+        alert('Mensagem enviada com sucesso! ');
     }
 
     deleteNotification(createdAt, userId) {
         if (!confirm('Eliminar esta mensagem?')) return;
 
-        // Encontrar índice (usar == para garantir que string vs number timestamp funciona)
+        // Encontrar indice (usar == para garantir que string vs number timestamp funciona)
         const idx = this.state.notifications.findIndex(n => n.targetUserId == userId && n.createdAt == createdAt);
         if (idx !== -1) {
             this.state.notifications.splice(idx, 1);
@@ -4152,25 +4465,39 @@ Bons treinos!`;
         if (client) {
             client.teacherId = Number(teacherId);
             this.saveState();
-            alert('Professor atribuído com sucesso!');
+            alert('Professor atribuido com sucesso!');
             this.switchAdminTab('clients');
         }
     }
 
     deleteUser(type, id, name) {
-        if (confirm(`Tem a certeza que deseja eliminar o utilizador ${name}?`)) {
+        if (confirm(`Tem a certeza que deseja eliminar o utilizador ${name}?\nAVISO: Todos os planos, historico e avaliacoes associados serao removidos permanentemente.`)) {
             if (type === 'admin') {
-                if (id === 1) return alert('O administrador principal não pode ser removido.');
-                if (id === this.currentUser.id) return alert('Não pode remover a sua própria conta enquanto estiver logado.');
+                if (id === 1) return alert('O administrador principal nao pode ser removido.');
+                if (id === this.currentUser.id) return alert('Nao pode remover a sua propria conta enquanto estiver logado.');
                 this.state.admins = this.state.admins.filter(u => u.id !== id);
             } else if (type === 'teacher') {
                 this.state.teachers = this.state.teachers.filter(u => u.id !== id);
             } else {
+                // Eliminar o cliente
                 this.state.clients = this.state.clients.filter(u => u.id !== id);
+
+                // Limpeza profunda de dados associados para libertar espaco no Firebase
+                const sid = String(id);
+                if (this.state.trainingPlans) delete this.state.trainingPlans[sid];
+                if (this.state.mealPlans) delete this.state.mealPlans[sid];
+                if (this.state.evaluations) delete this.state.evaluations[sid];
+                if (this.state.trainingHistory) delete this.state.trainingHistory[sid];
+                if (this.state.anamnesis) delete this.state.anamnesis[sid];
+
+                // Limpar mensagens trocadas com este cliente
+                if (this.state.notifications) {
+                    this.state.notifications = this.state.notifications.filter(n => n.targetUserId !== id && n.senderId !== id);
+                }
             }
             this.saveState();
-            alert('Utilizador eliminado!');
-            // Refresh list if we are in users view
+            alert('Utilizador e todos os seus dados eliminados com sucesso! ');
+
             if (this.activeView === 'users') {
                 this.switchAdminTab(type === 'client' ? 'clients' : (type === 'admin' ? 'admins' : 'teachers'));
             } else {
@@ -4186,7 +4513,7 @@ Bons treinos!`;
         // Filter teachers, exclude current one
         const otherTeachers = this.state.teachers.filter(t => t.id !== this.currentUser.id);
 
-        if (otherTeachers.length === 0) return alert('Não existem outros professores para transferir.');
+        if (otherTeachers.length === 0) return alert('Nao existem outros professores para transferir.');
 
         const options = otherTeachers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
 
@@ -4202,12 +4529,12 @@ Bons treinos!`;
                 </select>
 
                 <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">
-                    <i class="fas fa-info-circle"></i> O histórico, planos e avaliações serão mantidos. Os administradores serão notificados desta transferência.
+                    <i class="fas fa-info-circle"></i> O historico, planos e avaliacoes serao mantidos. Os administradores serao notificados desta transferencia.
                 </p>
 
                 <div style="display:flex; justify-content:flex-end; gap:10px;">
                     <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-                    <button class="btn btn-primary" onclick="app.transferClient(${clientId})">Confirmar Transferência</button>
+                    <button class="btn btn-primary" onclick="app.transferClient(${clientId})">Confirmar Transferencia</button>
                 </div>
             </div>
         `;
@@ -4226,7 +4553,7 @@ Bons treinos!`;
             client.teacherId = Number(newTeacherId);
 
             // Notify Admins
-            const msgText = `📢 TRANSFERÊNCIA DE ALUNO: O aluno ${client.name} foi transferido de ${oldTeacherName} para ${newTeacher.name} em ${new Date().toLocaleString()}.`;
+            const msgText = ` TRANSFERENCIA DE ALUNO: O aluno ${client.name} foi transferido de ${oldTeacherName} para ${newTeacher.name} em ${new Date().toLocaleString()}.`;
 
             // Allow storing admin notifications in messages or a separate log. 
             // Using 'messages' with specific 'to' for admin viewing if implemented, 
@@ -4278,14 +4605,14 @@ Bons treinos!`;
             'fatia(s)': 30,
             'c. sopa': 15,
             'c. sobremesa': 10,
-            'c. café': 5,
-            'chávena': 200,
+            'c. cafe': 5,
+            'chavena': 200,
             'copo': 200
         };
 
         lines.forEach(line => {
             // Regex melhorado para suportar ":" ou "-" como separador e unidades extras como "L"
-            const match = line.match(/^-?\s*(.*?)(?::|-)\s*(\d+(?:\.\d+)?)\s*(g|ml|l|un|c\. sopa|c\. sobremesa|c\. café|fatia(?:\(s\))?|chávena|copo)$/i);
+            const match = line.match(/^-?\s*(.*?)(?::|-)\s*(\d+(?:\.\d+)?)\s*(g|ml|l|un|c\. sopa|c\. sobremesa|c\. cafe|fatia(?:\(s\))?|chavena|copo)$/i);
             if (match) {
                 const name = match[1].trim();
                 const qty = parseFloat(match[2]);
@@ -4296,7 +4623,7 @@ Bons treinos!`;
 
                 const food = this.state.foods.find(f => f.name.toLowerCase() === name.toLowerCase());
                 if (food) {
-                    // Se o alimento tiver um peso específico por unidade (portionWeight), usamos esse para "un"
+                    // Se o alimento tiver um peso especifico por unidade (portionWeight), usamos esse para "un"
                     let weightInGrams = unitWeights[normalizedUnit] || 1;
                     if (normalizedUnit === 'un' && food.portionWeight) {
                         weightInGrams = food.portionWeight;
@@ -4402,14 +4729,14 @@ Bons treinos!`;
 
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                <h3 style="margin:0;"><i class="fas fa-history"></i> Histórico de Anamneses</h3>
+                <h3 style="margin:0;"><i class="fas fa-history"></i> Historico de Anamneses</h3>
                 ${isTeacher ? `<button class="btn btn-primary btn-sm" onclick="app.showAnamnesisModal(${clientId})"><i class="fas fa-plus"></i> Novo Registo</button>` : ''}
             </div>
             <div style="display: flex; flex-direction: column; gap: 1rem;">
                 ${entries.length === 0 ? `
                     <div class="glass-card animate-fade-in" style="text-align:center; padding:3rem; opacity: 0.7;">
                         <i class="fas fa-notes-medical" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
-                        <p style="margin:0;">Nenhum registo de anamnese disponível.</p>
+                        <p style="margin:0;">Nenhum registo de anamnese disponivel.</p>
                     </div>
                 ` :
                 entries.map((entry, idx) => `
@@ -4421,7 +4748,7 @@ Bons treinos!`;
                             <div>
                                 <div style="font-weight:700; font-size: 1.05rem;">${entry.date}</div>
                                 <div style="font-size:0.85rem; color:var(--text-muted); margin-top:2px;">
-                                    <span style="color: var(--primary); font-weight: 600;">Objetivo:</span> ${entry.objective || 'Não definido'}
+                                    <span style="color: var(--primary); font-weight: 600;">Objetivo:</span> ${entry.objective || 'Nao definido'}
                                 </div>
                             </div>
                         </div>
@@ -4440,7 +4767,7 @@ Bons treinos!`;
 
     showAddAnamnesisModal() {
         const myClients = this.state.clients.filter(c => c.teacherId === this.currentUser.id);
-        if (myClients.length === 0) return alert('Ainda não tem alunos atribuídos.');
+        if (myClients.length === 0) return alert('Ainda nao tem alunos atribuidos.');
 
         this.showModal(`
             <h3 style="margin-top:0;">Nova Anamnese</h3>
@@ -4461,8 +4788,8 @@ Bons treinos!`;
         let anam = {
             date: new Date().toISOString().split('T')[0],
             objective: '',
-            activityLevel: 'Sedentário',
-            isSmoker: 'Não',
+            activityLevel: 'Sedentario',
+            isSmoker: 'Nao',
             healthHistory: '',
             medications: '',
             surgeriesInjuries: '',
@@ -4499,7 +4826,7 @@ Bons treinos!`;
                         <i class="fas fa-user-check" style="width: 20px;"></i> <span>Perfil & Objetivos</span>
                     </button>
                     <button class="btn btn-ghost btn-sm" style="justify-content: flex-start;" onclick="document.getElementById('anam-section-2').scrollIntoView({behavior:'smooth'})">
-                        <i class="fas fa-heartbeat" style="width: 20px;"></i> <span>Histórico Saúde</span>
+                        <i class="fas fa-heartbeat" style="width: 20px;"></i> <span>Historico Saude</span>
                     </button>
                     <button class="btn btn-ghost btn-sm" style="justify-content: flex-start;" onclick="document.getElementById('anam-section-3').scrollIntoView({behavior:'smooth'})">
                         <i class="fas fa-pills" style="width: 20px;"></i> <span>Meds & Outros</span>
@@ -4530,9 +4857,9 @@ Bons treinos!`;
                                 <input type="text" id="anam-objective" value="${anam.objective}" class="search-bar" placeholder="Ex: Perda de Peso..." style="background: rgba(255,255,255,0.03);">
                             </div>
                             <div class="input-group">
-                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Nível Atividade</label>
+                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Nivel Atividade</label>
                                 <select id="anam-activity" class="search-bar" style="background: #1e293b;">
-                                    <option ${anam.activityLevel === 'Sedentário' ? 'selected' : ''}>Sedentário</option>
+                                    <option ${anam.activityLevel === 'Sedentario' ? 'selected' : ''}>Sedentario</option>
                                     <option ${anam.activityLevel === 'Leve' ? 'selected' : ''}>Leve</option>
                                     <option ${anam.activityLevel === 'Moderado' ? 'selected' : ''}>Moderado</option>
                                     <option ${anam.activityLevel === 'Intenso' ? 'selected' : ''}>Intenso</option>
@@ -4541,7 +4868,7 @@ Bons treinos!`;
                             <div class="input-group">
                                 <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Fumador?</label>
                                 <select id="anam-smoker" class="search-bar" style="background: #1e293b;">
-                                    <option ${anam.isSmoker === 'Não' ? 'selected' : ''}>Não</option>
+                                    <option ${anam.isSmoker === 'Nao' ? 'selected' : ''}>Nao</option>
                                     <option ${anam.isSmoker === 'Sim' ? 'selected' : ''}>Sim</option>
                                     <option ${anam.isSmoker === 'Ocasional' ? 'selected' : ''}>Ocasional</option>
                                 </select>
@@ -4552,16 +4879,16 @@ Bons treinos!`;
                     <div id="anam-section-2" style="margin-bottom: 4rem;">
                         <h3 style="color: var(--primary); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
                             <span style="width: 30px; height: 30px; border-radius: 50%; background: rgba(145, 27, 43, 0.1); display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">2</span>
-                            Histórico de Saúde
+                            Historico de Saude
                         </h3>
                         <div style="display: flex; flex-direction: column; gap: 2rem;">
                             <div class="input-group">
-                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Histórico de Saúde / Doenças</label>
-                                <textarea id="anam-health" class="search-bar" placeholder="Ex: Hipertensão, Diabetes..." style="height:120px; padding: 15px; background: rgba(255,255,255,0.03);">${anam.healthHistory}</textarea>
+                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Historico de Saude / Doencas</label>
+                                <textarea id="anam-health" class="search-bar" placeholder="Ex: Hipertensao, Diabetes..." style="height:120px; padding: 15px; background: rgba(255,255,255,0.03);">${anam.healthHistory}</textarea>
                             </div>
                             <div class="input-group">
-                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Cirurgias ou Lesões Recentes</label>
-                                <textarea id="anam-surgeries" class="search-bar" placeholder="Descreva problemas ortopédicos ou intervenções..." style="height:100px; padding: 15px; background: rgba(255,255,255,0.03);">${anam.surgeriesInjuries}</textarea>
+                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Cirurgias ou Lesoes Recentes</label>
+                                <textarea id="anam-surgeries" class="search-bar" placeholder="Descreva problemas ortopedicos ou intervencoes..." style="height:100px; padding: 15px; background: rgba(255,255,255,0.03);">${anam.surgeriesInjuries}</textarea>
                             </div>
                         </div>
                     </div>
@@ -4569,25 +4896,25 @@ Bons treinos!`;
                     <div id="anam-section-3">
                         <h3 style="color: var(--primary); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
                             <span style="width: 30px; height: 30px; border-radius: 50%; background: rgba(145, 27, 43, 0.1); display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">3</span>
-                            Medicação e Outros
+                            Medicacao e Outros
                         </h3>
                         <div style="display: flex; flex-direction: column; gap: 2rem;">
                             <div class="input-group">
-                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Medicamentação Atual</label>
+                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Medicamentacao Atual</label>
                                 <input type="text" id="anam-meds" value="${anam.medications}" class="search-bar" placeholder="Liste medicamentos em uso..." style="background: rgba(255,255,255,0.03);">
                             </div>
                             <div class="input-group" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
                                 <div>
                                     <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Alergias</label>
-                                    <input type="text" id="anam-allergies" value="${anam.allergies}" class="search-bar" placeholder="Ex: Penicilina, Ácaros..." style="background: rgba(255,255,255,0.03);">
+                                    <input type="text" id="anam-allergies" value="${anam.allergies}" class="search-bar" placeholder="Ex: Penicilina, Acaros..." style="background: rgba(255,255,255,0.03);">
                                 </div>
                                 <div>
-                                    <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Histórico Familiar</label>
-                                    <input type="text" id="anam-family" value="${anam.familyHistory}" class="search-bar" placeholder="Ex: Problemas cardíacos..." style="background: rgba(255,255,255,0.03);">
+                                    <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Historico Familiar</label>
+                                    <input type="text" id="anam-family" value="${anam.familyHistory}" class="search-bar" placeholder="Ex: Problemas cardiacos..." style="background: rgba(255,255,255,0.03);">
                                 </div>
                             </div>
                             <div class="input-group">
-                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Observações Adicionais</label>
+                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Observacoes Adicionais</label>
                                 <textarea id="anam-obs" class="search-bar" style="height:100px; padding: 15px; background: rgba(255,255,255,0.03);">${anam.observations}</textarea>
                             </div>
                         </div>
@@ -4646,7 +4973,7 @@ Bons treinos!`;
             this.saveState();
             this.closeModal();
             this.renderContent();
-            this.showToast('Anamnese guardada com sucesso! ✨');
+            this.showToast('Anamnese guardada com sucesso! ');
         } catch (err) {
             console.error('Error saving anamnesis:', err);
             alert('Erro ao guardar os dados. Verifique a consola.');
@@ -4724,7 +5051,7 @@ Bons treinos!`;
 
         if (!client || !plans || !plans.length) return alert('Sem dados para exportar.');
 
-        // 1. Criar um elemento temporário para impressão
+        // 1. Criar um elemento temporario para impressao
         const element = document.createElement('div');
         element.style.position = 'fixed';
         element.style.left = '0';
@@ -4758,8 +5085,8 @@ Bons treinos!`;
                     <h3 style="background: #911B2B; color: white; padding: 10px; margin-bottom: 0; font-size: 16px;">${day.title}</h3>
                     <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                         <tr style="background: #eee;">
-                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Exercício</th>
-                            <th style="padding: 8px; text-align: center; border: 1px solid #ddd; width: 80px;">Séries</th>
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Exercicio</th>
+                            <th style="padding: 8px; text-align: center; border: 1px solid #ddd; width: 80px;">Series</th>
                             <th style="padding: 8px; text-align: center; border: 1px solid #ddd; width: 80px;">Reps</th>
                             <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Obs</th>
                         </tr>
@@ -4892,7 +5219,7 @@ Bons treinos!`;
         const evals = this.state.evaluations[clientId] || [];
 
         if (!client || !evals.length) {
-            return alert('Ainda não existem avaliações para exportar.');
+            return alert('Ainda nao existem avaliacoes para exportar.');
         }
 
         const evalsToPrint = index !== null ? [evals[index]] : evals;
@@ -4900,12 +5227,12 @@ Bons treinos!`;
         let html = `
             <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #911B2B; padding-bottom: 10px;">
                 <h1 style="color: #911B2B; margin: 0;">KandalGym</h1>
-                <p style="color: #666; margin: 5px 0;">Relatório de Avaliação Física</p>
+                <p style="color: #666; margin: 5px 0;">Relatorio de Avaliação Fisica</p>
             </div>
 
             <div style="margin-bottom: 25px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
                 <h2 style="margin: 0; font-size: 18px; color: #333;">Aluno: ${client.name}</h2>
-                <p style="margin: 5px 0; font-size: 14px;"><strong>Data de Emissão:</strong> ${new Date().toLocaleDateString('pt-PT')}</p>
+                <p style="margin: 5px 0; font-size: 14px;"><strong>Data de Emissao:</strong> ${new Date().toLocaleDateString('pt-PT')}</p>
             </div>
         `;
 
@@ -4917,17 +5244,17 @@ Bons treinos!`;
                     </div>
                     
                     <div style="padding: 15px;">
-                        <h4 style="color: #911B2B; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 5px; text-transform: uppercase; font-size: 12px;">Bioimpedância</h4>
+                        <h4 style="color: #911B2B; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 5px; text-transform: uppercase; font-size: 12px;">Bioimpedancia</h4>
                         <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px;">
                             <tr>
                                 <td style="padding: 6px; border-bottom: 1px solid #f0f0f0; width: 33%;"><strong>Peso:</strong> ${ev.weight || '-'} kg</td>
                                 <td style="padding: 6px; border-bottom: 1px solid #f0f0f0; width: 33%;"><strong>Altura:</strong> ${ev.height || '-'} cm</td>
-                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0; width: 33%;"><strong>Músculo:</strong> ${ev.muscleMass || '-'} kg</td>
+                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0; width: 33%;"><strong>Musculo:</strong> ${ev.muscleMass || '-'} kg</td>
                             </tr>
                             <tr>
                                 <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Gordura:</strong> ${ev.fatPercentage || '-'} %</td>
-                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Água:</strong> ${ev.water || '-'} %</td>
-                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Massa Óssea:</strong> ${ev.boneMass || '-'}</td>
+                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Agua:</strong> ${ev.water || '-'} %</td>
+                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Massa Ossea:</strong> ${ev.boneMass || '-'}</td>
                             </tr>
                             <tr>
                                 <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Gord. Visceral:</strong> ${ev.visceralFat || '-'}</td>
@@ -4942,7 +5269,7 @@ Bons treinos!`;
 
         // 3. Imprimir usando o navegador (Reset para nativo)
         const printWindow = window.open('', '_blank');
-        const docTitle = index !== null ? `Avaliação - ${client.name}` : `Histórico de Avaliações - ${client.name}`;
+        const docTitle = index !== null ? `Avaliação - ${client.name}` : `Historico de Avaliacoes - ${client.name}`;
         printWindow.document.write(`
             <html>
                 <head><title>${docTitle}</title></head>
@@ -4961,12 +5288,12 @@ Bons treinos!`;
         const entries = this.state.anamnesis[clientId] || [];
         const entry = entries[index];
 
-        if (!client || !entry) return alert('Registo não encontrado.');
+        if (!client || !entry) return alert('Registo nao encontrado.');
 
         const html = `
             <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #911B2B; padding-bottom: 10px;">
                 <h1 style="color: #911B2B; margin: 0;">KandalGym</h1>
-                <p style="color: #666; margin: 5px 0;">Relatório de Anamnese Física</p>
+                <p style="color: #666; margin: 5px 0;">Relatorio de Anamnese Fisica</p>
             </div>
 
             <div style="margin-bottom: 25px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
@@ -4981,33 +5308,33 @@ Bons treinos!`;
                 <div style="border:1px solid #eee; padding:15px; border-radius:8px;">
                      <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Perfil Geral</h4>
                      <p style="font-size:13px; margin:8px 0;"><strong>Objetivo:</strong> ${entry.objective || '-'}</p>
-                     <p style="font-size:13px; margin:8px 0;"><strong>Nível Atividade:</strong> ${entry.activityLevel || '-'}</p>
+                     <p style="font-size:13px; margin:8px 0;"><strong>Nivel Atividade:</strong> ${entry.activityLevel || '-'}</p>
                      <p style="font-size:13px; margin:8px 0;"><strong>Fumador:</strong> ${entry.isSmoker || '-'}</p>
                 </div>
                 <div style="border:1px solid #eee; padding:15px; border-radius:8px;">
-                     <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Dados Médicos</h4>
+                     <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Dados Medicos</h4>
                      <p style="font-size:13px; margin:8px 0;"><strong>Alergias:</strong> ${entry.allergies || '-'}</p>
-                     <p style="font-size:13px; margin:8px 0;"><strong>Histórico Familiar:</strong> ${entry.familyHistory || '-'}</p>
+                     <p style="font-size:13px; margin:8px 0;"><strong>Historico Familiar:</strong> ${entry.familyHistory || '-'}</p>
                 </div>
             </div>
 
             <div style="margin-top:20px; border:1px solid #eee; padding:15px; border-radius:8px;">
-                <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Histórico de Saúde</h4>
+                <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Historico de Saude</h4>
                 <div style="font-size:13px; white-space:pre-wrap; line-height:1.5;">${entry.healthHistory || 'Sem dados registados.'}</div>
             </div>
 
             <div style="margin-top:20px; border:1px solid #eee; padding:15px; border-radius:8px;">
-                <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Cirurgias e Lesões</h4>
+                <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Cirurgias e Lesoes</h4>
                 <div style="font-size:13px; white-space:pre-wrap; line-height:1.5;">${entry.surgeriesInjuries || 'Sem dados registados.'}</div>
             </div>
 
             <div style="margin-top:20px; border:1px solid #eee; padding:15px; border-radius:8px;">
-                <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Medicamentação</h4>
+                <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Medicamentacao</h4>
                 <div style="font-size:13px; line-height:1.5;">${entry.medications || 'Nenhuma.'}</div>
             </div>
 
             <div style="margin-top:20px; border:1px solid #eee; padding:15px; border-radius:8px;">
-                <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Observações</h4>
+                <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Observacoes</h4>
                 <div style="font-size:13px; white-space:pre-wrap; line-height:1.5;">${entry.observations || '-'}</div>
             </div>
 
@@ -5037,7 +5364,7 @@ Bons treinos!`;
         try {
             container.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                    <h2 style="margin: 0;"><i class="fas fa-qrcode"></i> Gestão de Entradas</h2>
+                    <h2 style="margin: 0;"><i class="fas fa-qrcode"></i> Gestao de Entradas</h2>
                 </div>
 
                 <div class="dashboard" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; margin-top: 20px;">
@@ -5045,9 +5372,9 @@ Bons treinos!`;
                         <h3 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
                             <i class="fas fa-camera"></i> Scanner de Entrada
                         </h3>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Aponte a câmara para o código QR do aluno para validar a entrada.</p>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Aponte a camara para o codigo QR do aluno para validar a entrada.</p>
                         <button class="btn btn-secondary" style="width: 100%; border: 1px solid var(--primary); color: var(--primary); background: rgba(145, 27, 43, 0.05);" id="btnCam" onclick="app.iniciarLeitorQR()">
-                            <i class="fas fa-video"></i> Ativar Câmara
+                            <i class="fas fa-video"></i> Ativar Camara
                         </button>
                         <div id="video-container" class="qr-scanner-container" style="border: 2px solid var(--surface-border); margin-top: 15px;">
                             <video id="v-stream" class="qr-video" playsinline autoplay muted style="transform:none;"></video>
@@ -5064,13 +5391,13 @@ Bons treinos!`;
                                     <i class="fas fa-check"></i>
                                 </button>
                             </div>
-                            <small style="color:var(--text-muted); font-size:0.7rem; margin-top:5px; display:block;">Use isto se a câmara não estiver disponível.</small>
+                            <small style="color:var(--text-muted); font-size:0.7rem; margin-top:5px; display:block;">Use isto se a camara nao estiver disponivel.</small>
                         </div>
                     </div>
 
                     <div class="glass-panel" style="padding: 1.5rem;">
                         <h3 style="margin-top: 0; color: var(--accent); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
-                            <i class="fas fa-shield-alt"></i> Regras de Validação
+                            <i class="fas fa-shield-alt"></i> Regras de Validacao
                         </h3>
                         <div style="display: grid; gap: 10px; margin-top: 15px;">
                             <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
@@ -5080,13 +5407,13 @@ Bons treinos!`;
                                 <i class="fas fa-calendar-times" style="color: var(--accent); width: 20px;"></i> Data de validade superior a hoje.
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-ticket-alt" style="color: var(--danger); width: 20px;"></i> Deve ter pelo menos 1 crédito.
+                                <i class="fas fa-ticket-alt" style="color: var(--danger); width: 20px;"></i> Deve ter pelo menos 1 credito.
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
                                 <i class="fas fa-clock" style="color: var(--primary); width: 20px;"></i> Cooldown de 2 min entre leituras.
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-ban" style="color: var(--accent); width: 20px;"></i> Máximo de 2 entradas por dia.
+                                <i class="fas fa-ban" style="color: var(--accent); width: 20px;"></i> Maximo de 2 entradas por dia.
                             </div>
                         </div>
                     </div>
@@ -5106,10 +5433,10 @@ Bons treinos!`;
                             <tr style="border-bottom: 1px solid var(--surface-border); text-align: left; background: rgba(255,255,255,0.05);">
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Aluno</th>
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Estado</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Créditos</th>
+                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Creditos</th>
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Entradas (Hoje)</th>
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Validade</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent); text-align: right;">Ações</th>
+                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent); text-align: right;">Acoes</th>
                             </tr>
                         </thead>
                         <tbody id="gridQRClientes">
@@ -5120,7 +5447,7 @@ Bons treinos!`;
             `;
         } catch (err) {
             console.error("Error in renderQRManager:", err);
-            container.innerHTML = `<div class="glass-card" style="color:var(--danger);">Erro ao carregar Gestão de Entradas: ${err.message}</div>`;
+            container.innerHTML = `<div class="glass-card" style="color:var(--danger);">Erro ao carregar Gestao de Entradas: ${err.message}</div>`;
         }
 
         // Reset scanner state when rendering
@@ -5155,7 +5482,7 @@ Bons treinos!`;
                         <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" 
                             style="background:transparent; border:none; color:#fff; font-weight:700; font-size:1rem; width:100%; border-bottom: 1px dashed rgba(255,255,255,0.1); padding: 2px 0;">
                         <div style="display:flex; align-items:center; gap:5px; margin-top:5px;">
-                            <span style="font-size:0.75rem; color:var(--text-muted); opacity:0.7;">📱</span>
+                            <span style="font-size:0.75rem; color:var(--text-muted); opacity:0.7;"></span>
                             <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" 
                                 style="background:transparent; border:none; color:var(--text-muted); font-size:0.75rem; width:80%; border-bottom: 1px dashed rgba(255,255,255,0.05);">
                         </div>
@@ -5211,17 +5538,17 @@ Bons treinos!`;
         const client = (this.state.clients || []).find(c => c.id === Number(clientId));
         if (!client) return;
 
-        // Verificar se já tem ID curto para este cliente
+        // Verificar se ja tem ID curto para este cliente
         const exists = this.state.qrClients.find(qc => qc.clientId === Number(clientId));
         if (exists) {
             if (autoRedirect) {
                 this.setView('qr_manager');
-                this.showToast('Este cliente já tem acesso QR ativo.');
+                this.showToast('Este cliente ja tem acesso QR ativo.');
             }
             return;
         }
 
-        // Encontrar próximo ID curto sequencial
+        // Encontrar proximo ID curto sequencial
         const usedIds = this.state.qrClients.map(c => {
             const m = c.id.match(/^K(\d+)$/);
             return m ? parseInt(m[1]) : 0;
@@ -5300,7 +5627,7 @@ Bons treinos!`;
     }
 
     editQRClientData(id) {
-        // Obsoleto - Usando edição inline agora
+        // Obsoleto - Usando edicao inline agora
     }
 
     deleteQRClient(id) {
@@ -5346,18 +5673,18 @@ Bons treinos!`;
             const btnCam = document.getElementById("btnCam");
 
             if (typeof jsQR === 'undefined') {
-                throw new Error("A biblioteca de leitura de QR não foi carregada. Verifique a sua ligação à internet.");
+                throw new Error("A biblioteca de leitura de QR nao foi carregada. Verifique a sua ligacao a internet.");
             }
 
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                let errorMsg = "O seu navegador não suporta acesso à câmara.";
+                let errorMsg = "O seu navegador nao suporta acesso a camara.";
                 if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                    errorMsg = "⚠️ ERRO DE SEGURANÇA: O scanner live só funciona em ligações seguras (HTTPS disponível em KandalGym.com). Sugerimos usar o botão 'Tirar Foto' ou 'Entrada Manual'.";
+                    errorMsg = " ERRO DE SEGURANCA: O scanner live so funciona em ligacoes seguras (HTTPS disponivel em KandalGym.com). Sugerimos usar o botao 'Tirar Foto' ou 'Entrada Manual'.";
                 }
                 throw new Error(errorMsg);
             }
 
-            // Constraints mais flexíveis
+            // Constraints mais flexiveis
             const constraints = {
                 video: {
                     facingMode: "environment",
@@ -5370,14 +5697,14 @@ Bons treinos!`;
             try {
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
             } catch (err) {
-                console.warn("Falha ao tentar câmara traseira, tentando qualquer câmara...", err);
-                // Fallback para qualquer câmara disponível
+                console.warn("Falha ao tentar camara traseira, tentando qualquer camara...", err);
+                // Fallback para qualquer camara disponivel
                 stream = await navigator.mediaDevices.getUserMedia({ video: true });
             }
 
             video.srcObject = stream;
 
-            // Garantir que o vídeo carrega antes de iniciar o loop
+            // Garantir que o video carrega antes de iniciar o loop
             await new Promise((resolve) => {
                 video.onloadedmetadata = () => {
                     video.play().then(resolve);
@@ -5385,19 +5712,19 @@ Bons treinos!`;
             });
 
             container.style.display = "block";
-            btnCam.innerHTML = '<i class="fas fa-stop"></i> Parar Câmara';
+            btnCam.innerHTML = '<i class="fas fa-stop"></i> Parar Camara';
             btnCam.onclick = () => this.pararLeitorQR(stream);
 
             this.qrScannerAtivo = true;
             this.qrRequestAnimationFrameId = requestAnimationFrame(() => this.loopLeitorQR(video));
 
-            scanStatus.innerHTML = "<span style='color: var(--success)'>● Scanner Ativo</span><br>Aponte para o QR Code";
+            scanStatus.innerHTML = "<span style='color: var(--success)'> Scanner Ativo</span><br>Aponte para o QR Code";
             scanStatus.className = "";
         } catch (e) {
             console.error(e);
-            let msg = "Erro ao aceder à câmara: ";
-            if (e.name === 'NotAllowedError') msg = "⚠️ Permissão Negada: Por favor, autorize o acesso à câmara nas definições do seu navegador.";
-            else if (e.name === 'NotFoundError') msg = "⚠️ Câmara não encontrada no dispositivo.";
+            let msg = "Erro ao aceder a camara: ";
+            if (e.name === 'NotAllowedError') msg = " Permissao Negada: Por favor, autorize o acesso a camara nas definicoes do seu navegador.";
+            else if (e.name === 'NotFoundError') msg = " Camara nao encontrada no dispositivo.";
             else msg = e.message;
 
             this.showQRMsg(msg, "bg-qr-danger");
@@ -5407,7 +5734,7 @@ Bons treinos!`;
 
     escanearPorFoto() {
         if (typeof jsQR === 'undefined') {
-            return alert("A biblioteca de leitura de QR não está pronta. Tente novamente em instantes.");
+            return alert("A biblioteca de leitura de QR nao esta pronta. Tente novamente em instantes.");
         }
 
         const input = document.createElement('input');
@@ -5435,7 +5762,7 @@ Bons treinos!`;
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
-                    // Ratio para manter proporção
+                    // Ratio para manter proporcao
                     const scale = Math.min(1000 / img.width, 1000 / img.height, 1);
                     canvas.width = img.width * scale;
                     canvas.height = img.height * scale;
@@ -5450,15 +5777,15 @@ Bons treinos!`;
                     if (code) {
                         this.processarLeituraQR(code.data);
                     } else {
-                        // Tentar com inversão se falhar (para alguns códigos)
+                        // Tentar com inversao se falhar (para alguns codigos)
                         const code2 = jsQR(imageData.data, imageData.width, imageData.height, {
                             inversionAttempts: "attemptBoth",
                         });
                         if (code2) {
                             this.processarLeituraQR(code2.data);
                         } else {
-                            this.showQRMsg("❌ Não detetado", "bg-qr-danger");
-                            alert("Não foi possível encontrar um código QR na foto. Certifique-se de que o código está bem visível, focado e iluminado.");
+                            this.showQRMsg(" Nao detetado", "bg-qr-danger");
+                            alert("Nao foi possivel encontrar um codigo QR na foto. Certifique-se de que o codigo esta bem visivel, focado e iluminado.");
                         }
                     }
                     if (document.body.contains(input)) document.body.removeChild(input);
@@ -5491,7 +5818,7 @@ Bons treinos!`;
         cancelAnimationFrame(this.qrRequestAnimationFrameId);
 
         if (btnCam) {
-            btnCam.innerHTML = '<i class="fas fa-video"></i> Ativar Câmara';
+            btnCam.innerHTML = '<i class="fas fa-video"></i> Ativar Camara';
             btnCam.onclick = () => this.iniciarLeitorQR();
         }
 
@@ -5534,14 +5861,14 @@ Bons treinos!`;
         const c = this.state.qrClients.find(cli => cli.id === id);
 
         if (!c) {
-            this.showQRMsg("❌ Código não reconhecido", "bg-qr-danger");
+            this.showQRMsg(" Codigo nao reconhecido", "bg-qr-danger");
             this.lastProcessedQR = id;
             this.lastProcessedTime = Date.now();
             return;
         }
 
         if (!c.ativo) {
-            this.showQRMsg(`🛑 ${c.nome}: Conta Inativa`, "bg-qr-danger");
+            this.showQRMsg(` ${c.nome}: Conta Inativa`, "bg-qr-danger");
             this.lastProcessedQR = id;
             this.lastProcessedTime = Date.now();
             return;
@@ -5552,15 +5879,15 @@ Bons treinos!`;
 
         // Validar data
         if (hj > c.validade) {
-            this.showQRMsg(`⏰ ${c.nome}: Validade Expirada`, "bg-qr-warning");
+            this.showQRMsg(` ${c.nome}: Validade Expirada`, "bg-qr-warning");
             this.lastProcessedQR = id;
             this.lastProcessedTime = Date.now();
             return;
         }
 
-        // Validar créditos
+        // Validar creditos
         if ((c.ent || 0) <= 0) {
-            this.showQRMsg(`🎟️ ${c.nome}: Sem créditos`, "bg-qr-danger");
+            this.showQRMsg(` ${c.nome}: Sem creditos`, "bg-qr-danger");
             this.lastProcessedQR = id;
             this.lastProcessedTime = Date.now();
             return;
@@ -5572,17 +5899,17 @@ Bons treinos!`;
             const diffMin = (agora - lastEntry) / 1000 / 60;
             if (diffMin < 2) {
                 const waitSec = Math.ceil(120 - diffMin * 60);
-                this.showQRMsg(`⏳ ${c.nome}: Cooldown(${waitSec}s)`, "bg-qr-warning");
+                this.showQRMsg(` ${c.nome}: Cooldown(${waitSec}s)`, "bg-qr-warning");
                 this.lastProcessedQR = id;
                 this.lastProcessedTime = Date.now();
                 return;
             }
         }
 
-        // Validar limite diário
+        // Validar limite diario
         const entriesHj = (c.historico || []).filter(h => h.startsWith(hj)).length;
         if (entriesHj >= 2) {
-            this.showQRMsg(`🚫 ${c.nome}: Limite diário atingido`, "bg-qr-warning");
+            this.showQRMsg(` ${c.nome}: Limite diario atingido`, "bg-qr-warning");
             this.lastProcessedQR = id;
             this.lastProcessedTime = Date.now();
             return;
@@ -5593,7 +5920,7 @@ Bons treinos!`;
         if (!c.historico) c.historico = [];
         c.historico.unshift(agora.toISOString());
 
-        this.showQRMsg(`✅ Bem - vindo, ${c.nome} !Entrada validada.`, "bg-qr-success");
+        this.showQRMsg(` Bem - vindo, ${c.nome} !Entrada validada.`, "bg-qr-success");
         this.lastProcessedQR = id;
         this.lastProcessedTime = Date.now();
 
@@ -5621,7 +5948,7 @@ Bons treinos!`;
         // Clear message after 4 seconds
         setTimeout(() => {
             if (s && s.className === cls) {
-                s.innerHTML = "Pronto para ler código...";
+                s.innerHTML = "Pronto para ler codigo...";
                 s.className = "";
             }
         }, 4000);
@@ -5634,7 +5961,7 @@ Bons treinos!`;
         if (!id) return alert('Por favor, introduza um ID de aluno.');
 
         this.processarLeituraQR(id);
-        input.value = ''; // Limpar após processar
+        input.value = ''; // Limpar apos processar
     }
 
 
@@ -5642,7 +5969,7 @@ Bons treinos!`;
         if (!this.state.qrClients || this.state.qrClients.length === 0) return;
         let changed = false;
 
-        // 1. Garantir que todos os registos QR estão ligados a um ID de cliente interno (timestamp)
+        // 1. Garantir que todos os registos QR estao ligados a um ID de cliente interno (timestamp)
         this.state.qrClients.forEach(c => {
             if (!c.clientId) {
                 // Tentar extrair do ID antigo se for longo (K + timestamp)
@@ -5664,7 +5991,7 @@ Bons treinos!`;
             }
         });
 
-        // 2. Encontrar o maior ID curto existente para continuar a sequência
+        // 2. Encontrar o maior ID curto existente para continuar a sequencia
         const existingShortIds = this.state.qrClients
             .map(c => {
                 const m = c.id.match(/^K(\d+)$/);
@@ -5699,15 +6026,550 @@ Bons treinos!`;
                 this.renderNavbar();
             }
         } else {
-            // Instruções manuais caso o evento não tenha disparado (iOS ou HTTPS em falta)
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
             if (isIOS) {
-                alert("Para instalar no iPhone:\n1. Clique no botão 'Partilhar' (quadrado com seta) em baixo.\n2. Escolha 'Adicionar ao Ecrã Principal'.");
+                this.showModal(`
+                    <div style="padding:1.5rem; text-align:center;">
+                        <div style="font-size:3rem; margin-bottom:1rem;"></div>
+                        <h3 style="margin:0 0 1rem; color:var(--primary);">Instalar no iPhone / iPad</h3>
+                        <div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:1.2rem; text-align:left; line-height:2;">
+                            <p style="margin:0;"><strong>1.</strong> Toque no botao <strong>Partilhar</strong>  na barra do Safari</p>
+                            <p style="margin:0;"><strong>2.</strong> Toque em <strong>"Adicionar ao Ecra Principal"</strong> </p>
+                            <p style="margin:0;"><strong>3.</strong> Toque em <strong>"Adicionar"</strong> no canto superior direito</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="app.closeModal()" style="width:100%; margin-top:1.5rem;">Entendido!</button>
+                    </div>
+                `);
             } else {
-                alert("Para instalar:\n1. Clique nos 3 pontos (Menu) do navegador.\n2. Escolha 'Instalar Aplicação' ou 'Adicionar ao Ecrã Principal'.\n\nNota: Certifique-se de que está a usar uma ligação segura (HTTPS).");
+                this.showModal(`
+                    <div style="padding:1.5rem; text-align:center;">
+                        <div style="font-size:3rem; margin-bottom:1rem;"></div>
+                        <h3 style="margin:0 0 1rem; color:var(--primary);">Instalar no Android</h3>
+                        <div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:1.2rem; text-align:left; line-height:2;">
+                            <p style="margin:0;"><strong>1.</strong> Toque nos <strong>3 pontos</strong> no canto do Chrome </p>
+                            <p style="margin:0;"><strong>2.</strong> Toque em <strong>"Adicionar ao ecra principal"</strong></p>
+                            <p style="margin:0;"><strong>3.</strong> Confirme tocando em <strong>"Instalar"</strong></p>
+                        </div>
+                        <button class="btn btn-primary" onclick="app.closeModal()" style="width:100%; margin-top:1.5rem;">Entendido!</button>
+                    </div>
+                `);
             }
         }
     }
+
+    // --- CLASSES & SCHEDULING ---
+
+    async checkFinishedClasses() {
+        // MUITO IMPORTANTE: Apenas o Administrador pode arquivar aulas.
+        // Se um cliente o fizesse e tivesse o relogio errado, podia "matar" aulas prematuramente para todos.
+        if (this.role !== 'admin' || !this.state.classes || this.state.classes.length === 0 || !this.hasLoadedData || this.isCheckingClasses) return;
+
+        this.isCheckingClasses = true;
+        const now = new Date();
+        // Tolerancia de 30 min para evitar conflitos de relogios ligeiramente diferentes
+        const gracePeriod = 30 * 60 * 1000;
+
+        let changed = false;
+        const remainingClasses = [];
+
+        for (const c of this.state.classes) {
+            if (!c.date) {
+                remainingClasses.push(c);
+                continue;
+            }
+
+            const classDateTime = new Date(`${c.date}T${c.time}`);
+            const endDateTime = new Date(classDateTime.getTime() + 60 * 60 * 1000 + gracePeriod);
+
+            if (endDateTime < now) {
+                console.log(`Aula terminada detetada: ${c.name} (${c.date} ${c.time})`);
+                changed = true;
+                const participantsIds = this.state.enrollments[String(c.id)] || [];
+                const teacher = (this.state.teachers || []).find(t => Number(t.id) === Number(c.teacherId));
+
+                participantsIds.forEach(pid => {
+                    const clientId = Number(pid);
+                    if (!this.state.trainingHistory[clientId]) this.state.trainingHistory[clientId] = [];
+                    this.state.trainingHistory[clientId].push({
+                        date: c.date,
+                        time: c.time,
+                        type: 'class',
+                        title: c.name,
+                        teacher: teacher ? teacher.name : 'N/A',
+                        completedAt: now.toISOString()
+                    });
+                });
+
+                if (c.isRecurring) {
+                    const nextDate = new Date(classDateTime.getTime() + 7 * 24 * 60 * 60 * 1000);
+                    c.date = nextDate.toISOString().split('T')[0];
+                    c.day = nextDate.getDay();
+                    this.state.enrollments[String(c.id)] = [];
+                    remainingClasses.push(c);
+                } else {
+                    delete this.state.enrollments[String(c.id)];
+                }
+            } else {
+                remainingClasses.push(c);
+            }
+        }
+
+        if (changed) {
+            this.state.classes = remainingClasses;
+            await this.saveState();
+        }
+        this.isCheckingClasses = false;
+    }
+
+    isClassFinished(c) {
+        if (!c.date || !c.time) return false;
+        try {
+            const now = new Date();
+            // Formato ISO seguro para todos os browsers
+            const start = new Date(`${c.date}T${c.time}:00`);
+            if (isNaN(start.getTime())) return false; // Falha no parsing
+
+            // Bloquear inscricoes mal a hora passa (com 1 min de tolerancia apenas)
+            return now.getTime() > (start.getTime() + 60000);
+        } catch (e) {
+            return false;
+        }
+    }
+
+    formatFullDate(day, dateStr) {
+        if (!dateStr) return this.getDayName(day);
+        const dayName = this.getDayName(day);
+        const parts = dateStr.split('-');
+        const formattedDate = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateStr;
+        return `${dayName}, ${formattedDate}`;
+    }
+
+    renderClassesView(container) {
+        container.innerHTML = `
+            <div class="page-header">
+                <div>
+                    <h2>Horario de Aulas</h2>
+                    <p class="client-name">Consulte e inscreva-se nas aulas de grupo</p>
+                </div>
+                ${this.role === 'admin' ? `
+                <button class="btn btn-primary" onclick="app.showClassModal()">
+                    <i class="fas fa-plus"></i> <span class="hide-mobile">Nova Aula</span>
+                </button>
+                ` : ''}
+            </div>
+            <div id="classes-content" class="animate-fade-in"></div>
+        `;
+        const content = container.querySelector('#classes-content');
+        if (this.role === 'admin') {
+            this.renderAdminClasses(content);
+        } else if (this.role === 'teacher') {
+            this.renderTeacherClasses(content);
+        } else {
+            this.renderClientClasses(content);
+        }
+    }
+
+    renderAdminClasses(container) {
+        const classes = this.state.classes || [];
+        if (classes.length === 0) {
+            container.innerHTML = `
+                <div class="glass-card" style="text-align:center; padding:3rem;">
+                    <i class="fas fa-calendar-times" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
+                    <p>Ainda nao foram criadas aulas.</p>
+                    <button class="btn btn-primary btn-sm" onclick="app.showClassModal()" style="margin-top:1rem;">Criar Primeira Aula</button>
+                </div>
+            `;
+            return;
+        }
+
+        const sortedClasses = [...classes].sort((a, b) => {
+            if (a.day !== b.day) return a.day - b.day;
+            return a.time.localeCompare(b.time);
+        });
+
+        container.innerHTML = `
+            <div class="glass-card">
+                <div style="overflow-x:auto;">
+                    <table style="width:100%; border-collapse:collapse; text-align:left;">
+                        <thead>
+                            <tr style="border-bottom:1px solid var(--surface-border); color:var(--text-muted); font-size:0.8rem;">
+                                <th style="padding:1rem;">Data</th>
+                                <th style="padding:1rem;">Hora</th>
+                                <th style="padding:1rem;">Classe</th>
+                                <th style="padding:1rem;">Professor</th>
+                                <th style="padding:1rem;">Inscritos</th>
+                                <th style="padding:1rem; text-align:right;">Acoes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sortedClasses.map(c => {
+            const teacher = (this.state.teachers || []).find(t => Number(t.id) === Number(c.teacherId));
+            const classIdStr = String(c.id);
+            const participants = this.state.enrollments[classIdStr] || this.state.enrollments[c.id] || [];
+            return `
+                                <tr style="border-bottom:1px solid var(--surface-border);">
+                                    <td style="padding:1rem; font-weight:600;">
+                                        ${this.formatFullDate(c.day, c.date)}
+                                    </td>
+                                    <td style="padding:1rem;">${c.time}</td>
+                                    <td style="padding:1rem; color:var(--primary); font-weight:bold;">${c.name}</td>
+                                    <td style="padding:1rem; font-size:0.9rem;">${teacher ? teacher.name : 'N/A'}</td>
+                                    <td style="padding:1rem;">
+                                        ${this.isClassFinished(c) ?
+                    `<span class="badge badge-error">Finalizada</span>` :
+                    `<span class="badge ${participants.length >= (c.capacity || 20) ? 'badge-purple' : 'badge-green'}">
+                                                ${participants.length} / ${c.capacity || 20}
+                                            </span>`
+                }
+                                    </td>
+                                    <td style="padding:1rem; text-align:right;">
+                                        <button class="btn btn-ghost btn-sm" onclick="app.showClassModal(${c.id})"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.deleteClass(${c.id})"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                `;
+        }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+
+    renderTeacherClasses(container) {
+        if (!this.currentUser || !this.currentUser.id) {
+            container.innerHTML = `<p style="text-align:center; padding:2rem;">Erro ao identificar professor.</p>`;
+            return;
+        }
+
+        const currentUserid = Number(this.currentUser.id);
+        const myClasses = (this.state.classes || []).filter(c => Number(c.teacherId) === currentUserid).sort((a, b) => {
+            if (a.date && b.date) return a.date.localeCompare(b.date) || a.time.localeCompare(b.time);
+            if (a.day !== b.day) return a.day - b.day;
+            return a.time.localeCompare(b.time);
+        });
+
+        if (myClasses.length === 0) {
+            container.innerHTML = `
+                <div class="glass-card" style="text-align:center; padding:3rem;">
+                    <i class="fas fa-calendar-day" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
+                    <p>Nao tem aulas atribuidas ao seu nome (ID: ${currentUserid}).</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="video-grid">
+                ${myClasses.map(c => {
+            const classIdStr = String(c.id);
+            const participantsIds = this.state.enrollments[classIdStr] || [];
+            const participants = participantsIds.map(pid => {
+                const clientId = Number(pid);
+                return (this.state.clients || []).find(cl => Number(cl.id) === clientId);
+            }).filter(x => x);
+
+            return `
+                        <div class="glass-card" style="display:flex; flex-direction:column; padding:0.8rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:0.4rem;">
+                                <span style="font-size:1rem; font-weight:800; color:var(--primary);">${c.time}</span>
+                                <div class="badge badge-blue" style="font-size:0.6rem; padding:0.1rem 0.4rem;">${participants.length} Alunos</div>
+                            </div>
+                            <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:0.2rem;">
+                                <i class="fas fa-calendar-alt"></i> ${this.formatFullDate(c.day, c.date)}
+                            </div>
+                            <h4 style="margin-bottom:0.5rem; font-size:0.95rem; line-height:1.2; min-height:2.4em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${c.name}</h4>
+                            
+                            <div style="margin-top:auto; padding-top:0.5rem; border-top:1px solid var(--surface-border);">
+                                <button class="btn btn-primary btn-sm" style="width:100%; font-size:0.75rem; padding:0.5rem;" onclick='app.showParticipantsList("${classIdStr}")'>
+                                    <i class="fas fa-users"></i> Ver Lista
+                                </button>
+                            </div>
+                        </div>
+                    `;
+        }).join('')}
+            </div>
+        `;
+    }
+
+    showParticipantsList(classId) {
+        const classIdStr = String(classId);
+        const cls = this.state.classes.find(c => String(c.id) === classIdStr);
+        const participantsIds = this.state.enrollments[classIdStr] || [];
+        const participants = participantsIds.map(pid => {
+            const clientId = Number(pid);
+            return (this.state.clients || []).find(cl => Number(cl.id) === clientId);
+        }).filter(x => x);
+
+        const content = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h2 style="margin:0;">Alunos Inscritos</h2>
+                <button class="btn btn-ghost" onclick="app.closeModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">Aula: <strong>${cls ? cls.name : 'N/A'}</strong></p>
+            <div style="display:flex; flex-direction:column; gap:0.8rem; max-height:60vh; overflow-y:auto;">
+                ${participants.length === 0 ? '<p style="text-align:center; color:var(--text-muted);">Nenhum aluno inscrito ainda.</p>' :
+                participants.map(p => `
+                    <div style="display:flex; align-items:center; gap:0.75rem; padding:0.8rem; background:rgba(255,255,255,0.03); border-radius:12px;">
+                        <div style="width:36px; height:36px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:bold;">
+                            ${p.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size:0.95rem; font-weight:600;">${p.name}</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">${p.phone || 'Sem telefone'}</div>
+                        </div>
+                        <button class="btn btn-ghost btn-sm" onclick="app.closeModal(); app.openChat(${p.id})"><i class="fas fa-comment-alt" style="color:var(--primary);"></i></button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        this.showModal(content);
+    }
+
+    renderClientClasses(container) {
+        const classes = this.state.classes || [];
+        if (classes.length === 0) {
+            container.innerHTML = `
+                <div class="glass-card" style="text-align:center; padding:3rem;">
+                    <i class="fas fa-calendar-day" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
+                    <p>Nao existem aulas de grupo agendadas de momento.</p>
+                </div>
+            `;
+            return;
+        }
+
+        const DAYS = [1, 2, 3, 4, 5, 6, 0]; // Seg a Dom
+
+        container.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                ${DAYS.map(dayIdx => {
+            const dayClasses = (classes || [])
+                .filter(c => Number(c.day) === dayIdx)
+                .sort((a, b) => {
+                    if (a.date && b.date) return a.date.localeCompare(b.date) || a.time.localeCompare(b.time);
+                    return a.time.localeCompare(b.time);
+                });
+            if (dayClasses.length === 0) return '';
+
+            return `
+                        <div style="margin-bottom:1rem;">
+                            <h3 style="border-left:4px solid var(--primary); padding-left:1rem; margin-bottom:1rem; font-size:1.1rem; color:#fff;">${this.getDayName(dayIdx)}</h3>
+                            <div class="classes-grid">
+                                ${dayClasses.map(c => {
+                const classIdStr = String(c.id);
+                const participants = this.state.enrollments[classIdStr] || [];
+                const isEnrolled = participants.map(id => Number(id)).includes(Number(this.currentClientId));
+                const isFull = participants.length >= (c.capacity || 20);
+                const teacher = (this.state.teachers || []).find(t => Number(t.id) === Number(c.teacherId));
+
+                return `
+                                        <div class="glass-card" style="display:flex; flex-direction:column; padding:0.8rem; border-top:3px solid ${isEnrolled ? 'var(--success)' : 'var(--surface-border)'};">
+                                            <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:0.3rem;">
+                                                <span style="font-size:1rem; font-weight:800; color:var(--primary);">${c.time}</span>
+                                                ${isEnrolled ? '<span class="badge badge-green" style="font-size:0.55rem; padding:0.1rem 0.4rem;">Inscrito</span>' : ''}
+                                            </div>
+                                            <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:0.2rem;">
+                                                <i class="fas fa-calendar-alt"></i> ${this.formatFullDate(c.day, c.date)}
+                                            </div>
+                                            <h4 style="margin-bottom:0.3rem; font-size:0.9rem; line-height:1.2; min-height:2.4em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${c.name}</h4>
+                                            <p style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.8rem;">
+                                                <i class="fas fa-user-tie"></i> ${teacher ? teacher.name : 'N/A'}<br>
+                                                <i class="fas fa-users"></i> ${participants.length} / ${c.capacity || 20}
+                                            </p>
+                                            
+                                            <div style="margin-top:auto;">
+                                                ${this.isClassFinished(c) ? `
+                                                    <div style="text-align:center; padding:0.5rem; background:rgba(255,255,255,0.05); border-radius:4px; font-size:0.7rem; color:var(--text-muted); border:1px solid var(--surface-border);">Finalizada</div>
+                                                ` : (isEnrolled ? `
+                                                    <button class="btn btn-secondary btn-sm" style="width:100%; color:var(--danger); font-size:0.7rem; padding:0.5rem;" onclick="app.leaveClass(${c.id})">
+                                                        Sair
+                                                     </button>
+                                                ` : (isFull ? `
+                                                    <button class="btn btn-ghost btn-sm" style="width:100%; font-size:0.75rem; padding:0.5rem;" disabled>Cheio</button>
+                                                ` : `
+                                                    <button class="btn btn-primary btn-sm" style="width:100%; font-size:0.75rem; padding:0.5rem;" onclick="app.enrollInClass(${c.id})">
+                                                        Reservar
+                                                    </button>
+                                                `))}
+                                            </div>
+                                        </div>
+                                    `;
+            }).join('')}
+                            </div>
+                        </div>
+                    `;
+        }).join('')}
+            </div>
+        `;
+    }
+
+    showClassModal(classId = null) {
+        // Garantir que classId e tratado corretamente (se vier do HTML pode vir como string "null")
+        const actualClassId = (classId === null || classId === 'null') ? null : Number(classId);
+        const c = actualClassId ? this.state.classes.find(x => Number(x.id) === actualClassId) : null;
+        const teachers = this.state.teachers || [];
+
+        const content = `
+            <h2 style="margin-top:0;">${c ? 'Editar Aula' : 'Nova Aula'}</h2>
+            <div style="display:flex; flex-direction:column; gap:1rem;">
+                <div>
+                    <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Nome da Aula</label>
+                    <input type="text" id="cls-name" value="${c ? c.name : ''}" placeholder="Ex: Cross Training, Yoga, Pilates...">
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <div>
+                        <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Data da Aula</label>
+                        <input type="date" id="cls-date" value="${c ? c.date : new Date().toISOString().split('T')[0]}">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Hora</label>
+                        <input type="time" id="cls-time" value="${c ? c.time : '18:00'}">
+                    </div>
+                </div>
+                <div style="display:none;">
+                    <select id="cls-day">
+                        <option value="1">Segunda</option>
+                    </select>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <div>
+                        <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Professor</label>
+                        <select id="cls-teacher">
+                            <option value="">-- Selecionar --</option>
+                            ${teachers.map(t => `<option value="${t.id}" ${c && c.teacherId == t.id ? 'selected' : ''}>${t.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">lotação Max.</label>
+                        <input type="number" id="cls-capacity" value="${c ? c.capacity : 20}">
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem; background:rgba(255,255,255,0.05); padding:0.8rem; border-radius:8px;">
+                    <input type="checkbox" id="cls-recurring" ${c && c.isRecurring ? 'checked' : ''} style="width:20px; height:20px; cursor:pointer;">
+                    <label for="cls-recurring" style="cursor:pointer; font-size:0.9rem;">Aula Recorrente (Repetir semanalmente)</label>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-top:1rem;">
+                    <button class="btn btn-secondary" onclick="app.closeModal()">Cancelar</button>
+                    <button class="btn btn-primary" onclick="app.saveClass(${actualClassId})">${c ? 'Atualizar' : 'Guardar'}</button>
+                </div>
+            </div>
+        `;
+        this.showModal(content);
+    }
+
+    async saveClass(classId = null) {
+        // Normalizar classId
+        const actualClassId = (classId === null || classId === 'null') ? null : Number(classId);
+        const name = document.getElementById('cls-name').value.trim();
+        const date = document.getElementById('cls-date').value;
+        const time = document.getElementById('cls-time').value;
+        const teacherId = Number(document.getElementById('cls-teacher').value);
+        const capacity = Number(document.getElementById('cls-capacity').value);
+
+        if (!name || !time || !teacherId || !date) {
+            return alert('Preencha os campos obrigatorios (Nome, Data, Hora e Professor).');
+        }
+
+        const isRecurring = document.getElementById('cls-recurring').checked;
+        const classDate = new Date(`${date}T${time}`);
+        const now = new Date();
+
+        if (classDate < now) {
+            return alert('Nao pode criar ou editar uma aula com uma data/hora que ja passou.');
+        }
+
+        // Usar meio-dia para evitar desvios de fuso horario ao calcular o dia da semana
+        const day = new Date(date + 'T12:00:00').getDay();
+
+        if (!this.state.classes) this.state.classes = [];
+        if (!this.state.enrollments) this.state.enrollments = {};
+
+        if (actualClassId) {
+            const idx = this.state.classes.findIndex(x => Number(x.id) === actualClassId);
+            if (idx !== -1) {
+                this.state.classes[idx] = { ...this.state.classes[idx], name, date, day, time, teacherId, capacity, isRecurring };
+            }
+        } else {
+            const newId = Date.now();
+            this.state.classes.push({ id: newId, name, date, day, time, teacherId, capacity, isRecurring });
+            this.state.enrollments[String(newId)] = [];
+        }
+
+        await this.saveState();
+        this.closeModal();
+        this.renderContent();
+        this.showToast('Horario atualizado com sucesso!');
+    }
+
+    async deleteClass(classId) {
+        if (!confirm('Tem a certeza que deseja eliminar esta aula?')) return;
+
+        const idToDelete = Number(classId);
+        this.state.classes = this.state.classes.filter(x => Number(x.id) !== idToDelete);
+        delete this.state.enrollments[idToDelete];
+
+        await this.saveState();
+        this.renderContent();
+        this.showToast('Aula eliminada.', 'error');
+    }
+
+    async enrollInClass(classId) {
+        console.log("Iniciando inscricao na aula:", classId);
+        const actualClassId = Number(classId);
+        const classIdStr = String(actualClassId);
+
+        const cls = this.state.classes.find(x => Number(x.id) === actualClassId);
+        if (cls && this.isClassFinished(cls)) {
+            console.warn("Inscricao recusada: Aula ja terminou.");
+            return alert('Esta aula ja terminou e nao aceita mais inscricoes.');
+        }
+
+        if (!this.state.enrollments[classIdStr]) this.state.enrollments[classIdStr] = [];
+
+        const participants = this.state.enrollments[classIdStr];
+        const clientId = Number(this.currentClientId);
+
+        console.log("Client ID para inscricao:", clientId);
+        if (!clientId) {
+            console.error("Erro: currentClientId nao encontrado.");
+            return alert("Sessao invalida. Por favor saia e entre novamente na conta.");
+        }
+
+        if (participants.map(id => Number(id)).includes(clientId)) return;
+
+        if (cls && participants.length >= (cls.capacity || 20)) {
+            return alert('Esta aula ja atingiu a lotação maxima.');
+        }
+
+        participants.push(clientId);
+
+        // Notificar professor
+        if (cls && cls.teacherId) {
+            this.addAppNotification(cls.teacherId, 'Nova Inscrição em Aula', `O aluno ${this.currentUser.name} inscreveu-se na aula de ${cls.name} (${this.getDayName(cls.day)} - ${cls.time}).`, null, 'notification', false);
+        }
+
+        await this.saveState();
+        this.renderContent();
+        this.showToast('Inscrição confirmada!');
+    }
+
+    async leaveClass(classId) {
+        if (!confirm('Deseja cancelar a sua Inscrição nesta aula?')) return;
+        const classIdStr = String(classId);
+
+        if (this.state.enrollments[classIdStr]) {
+            this.state.enrollments[classIdStr] = this.state.enrollments[classIdStr].filter(id => Number(id) !== Number(this.currentClientId));
+            await this.saveState();
+            this.renderContent();
+            this.showToast('Inscrição cancelada.');
+        }
+    }
+
+    getDayName(dayIndex) {
+        const days = ['Domingo', 'Segunda-feira', 'terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'sábado'];
+        return days[dayIndex];
+    }
+
 }
 
 const app = new FitnessApp();
