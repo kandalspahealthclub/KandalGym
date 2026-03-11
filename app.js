@@ -5435,7 +5435,7 @@ Bons treinos!`;
                         <div style="display: flex; align-items: center; justify-content:center; gap: 5px;">
                             <button class="btn-circular-sm" onclick="app.editQRCredit('${c.id}', -1)" style="width:24px; height:24px;"><i class="fas fa-minus" style="font-size:0.6rem;"></i></button>
                             <input type="number" value="${c.ent}" onchange="app.updateQRClientField('${c.id}', 'ent', parseInt(this.value) || 0)"
-                                style="background:rgba(255,255,255,0.03); border:1px solid var(--surface-border); border-radius:6px; color:${c.ent <= 5 ? 'var(--danger)' : '#fff'}; font-weight:700; width:45px; text-align:center; outline:none; font-size:0.95rem; height:30px;">
+                                style="background:rgba(255,255,255,0.03); border:1px solid var(--surface-border); border-radius:6px; color:${c.ent <= 5 ? 'var(--danger)' : '#fff'}; font-weight:700; width:60px; text-align:center; outline:none; font-size:0.85rem; height:30px;">
                             <button class="btn-circular-sm" onclick="app.editQRCredit('${c.id}', 1)" style="width:24px; height:24px; color:var(--primary); background:rgba(145,27,43,0.1);"><i class="fas fa-plus" style="font-size:0.6rem;"></i></button>
                         </div>
                     </td>
