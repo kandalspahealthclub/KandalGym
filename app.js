@@ -6533,9 +6533,10 @@ Bons treinos!`;
                                             </span>`
                 }
                                     </td>
-                                    <td style="padding:1rem; text-align:right;">
-                                        <button class="btn btn-ghost btn-sm" onclick="app.showClassModal(${c.id})"><i class="fas fa-edit"></i></button>
-                                        <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.deleteClass(${c.id})"><i class="fas fa-trash"></i></button>
+                                    <td style="padding:1rem; text-align:right; white-space:nowrap;">
+                                        <button class="btn btn-ghost btn-sm" onclick="app.showParticipantsList('${classIdStr}')" title="Ver Inscritos"><i class="fas fa-users"></i></button>
+                                        <button class="btn btn-ghost btn-sm" onclick="app.showClassModal(${c.id})" title="Editar"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.deleteClass(${c.id})" title="Eliminar"><i class="fas fa-trash"></i></button>
                                     </td>
                                 </tr>
                                 `;
@@ -6606,35 +6607,116 @@ Bons treinos!`;
     showParticipantsList(classId) {
         const classIdStr = String(classId);
         const cls = this.state.classes.find(c => String(c.id) === classIdStr);
-        const participantsIds = this.state.enrollments[classIdStr] || [];
-        const participants = participantsIds.map(pid => {
-            const clientId = Number(pid);
-            return (this.state.clients || []).find(cl => Number(cl.id) === clientId);
+        const enrolledIds = this.state.enrollments[classIdStr] || [];
+        const participants = enrolledIds.map(pid => {
+            return (this.state.clients || []).find(cl => Number(cl.id) === Number(pid));
         }).filter(x => x);
 
-        const content = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                <h2 style="margin:0;">Alunos Inscritos</h2>
+        let content = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h2 style="margin:0;"><i class="fas fa-users" style="color:var(--primary);"></i> Inscritos</h2>
                 <button class="btn btn-ghost" onclick="app.closeModal()"><i class="fas fa-times"></i></button>
             </div>
-            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">Aula: <strong>${cls ? cls.name : 'N/A'}</strong></p>
-            <div style="display:flex; flex-direction:column; gap:0.8rem; max-height:60vh; overflow-y:auto;">
-                ${participants.length === 0 ? '<p style="text-align:center; color:var(--text-muted);">Nenhum aluno inscrito ainda.</p>' :
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Aula: <strong style="color:#fff;">${cls ? cls.name : 'N/A'}</strong></p>
+
+            <!-- Pesquisa para adicionar novos alunos -->
+            <div style="margin-bottom:2rem; padding:1.2rem; background:rgba(196,162,77,0.05); border:1px dashed var(--accent); border-radius:15px; position:relative;">
+                <label style="display:block; font-size:0.7rem; color:var(--accent); font-weight:700; text-transform:uppercase; margin-bottom:8px; letter-spacing:1px;">Adicionar Aluno Manualmente</label>
+                <div class="search-container" style="margin:0; width:100%; height:45px; position:relative;">
+                    <i class="fas fa-search" style="position:absolute; left:15px; top:15px; color:var(--text-muted);"></i>
+                    <input type="text" class="search-bar" placeholder="Pesquisar por nome ou ID..." id="search-enroll-client" 
+                        style="width:100%; height:100%; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:10px; color:#fff; padding:0 15px 0 45px;"
+                        oninput="app.searchClientsForClass('${classIdStr}', this.value)">
+                    <div id="enroll-search-results" style="position:absolute; top:100%; left:0; right:0; background:var(--surface); border:1px solid var(--surface-border); border-radius:0 0 12px 12px; z-index:1000; max-height:200px; overflow-y:auto; display:none; box-shadow:0 10px 30px rgba(0,0,0,0.5);"></div>
+                </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:0.8rem; max-height:40vh; overflow-y:auto; padding-right:5px;">
+                ${participants.length === 0 ? '<p style="text-align:center; color:var(--text-muted); padding:2rem; background:rgba(255,255,255,0.02); border-radius:12px;">Nenhum aluno inscrito ainda.</p>' :
                 participants.map(p => `
-                    <div style="display:flex; align-items:center; gap:0.75rem; padding:0.8rem; background:rgba(255,255,255,0.03); border-radius:12px;">
-                        <div style="width:36px; height:36px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:bold;">
+                    <div style="display:flex; align-items:center; gap:0.75rem; padding:0.8rem; background:rgba(255,255,255,0.03); border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                        <div style="width:36px; height:36px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:bold; color:#000;">
                             ${p.name.substring(0, 2).toUpperCase()}
                         </div>
                         <div style="flex:1;">
-                            <div style="font-size:0.95rem; font-weight:600;">${p.name}</div>
-                            <div style="font-size:0.8rem; color:var(--text-muted);">${p.phone || 'Sem telefone'}</div>
+                            <div style="font-size:0.95rem; font-weight:600; color:#fff;">${p.name}</div>
+                            <div style="font-size:0.75rem; color:var(--text-muted);">ID: ${p.id} ${p.phone ? '• ' + p.phone : ''}</div>
                         </div>
-                        <button class="btn btn-ghost btn-sm" onclick="app.closeModal(); app.openChat(${p.id})"><i class="fas fa-comment-alt" style="color:var(--primary);"></i></button>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn btn-ghost btn-sm" onclick="app.closeModal(); app.openChat(${p.id})" title="Enviar Mensagem"><i class="fas fa-comment-alt" style="color:var(--primary);"></i></button>
+                            <button class="btn btn-ghost btn-sm" onclick="app.removeFromClass('${classIdStr}', ${p.id})" title="Remover Aluno"><i class="fas fa-user-minus" style="color:var(--danger); font-size:0.8rem;"></i></button>
+                        </div>
                     </div>
                 `).join('')}
             </div>
         `;
         this.showModal(content);
+    }
+
+    searchClientsForClass(classId, query) {
+        const resultsDiv = document.getElementById('enroll-search-results');
+        if (!resultsDiv) return;
+
+        if (!query || query.length < 2) {
+            resultsDiv.style.display = 'none';
+            return;
+        }
+
+        const q = query.toLowerCase();
+        const enrolledIds = (this.state.enrollments[classId] || []).map(id => Number(id));
+
+        const matches = (this.state.clients || []).filter(c => {
+            const nameMatch = (c.name || '').toLowerCase().includes(q);
+            const idMatch = String(c.id) === query;
+            return (nameMatch || idMatch) && !enrolledIds.includes(Number(c.id));
+        }).slice(0, 5);
+
+        if (matches.length === 0) {
+            resultsDiv.innerHTML = `<div style="padding:15px; font-size:0.8rem; color:var(--text-muted); text-align:center;">Nenhum aluno disponivel</div>`;
+            resultsDiv.style.display = 'block';
+            return;
+        }
+
+        resultsDiv.innerHTML = matches.map(m => `
+            <div onclick="app.manualEnrollInClass('${classId}', ${m.id})" 
+                style="padding:10px 15px; cursor:pointer; border-bottom:1px solid var(--surface-border); display:flex; align-items:center; gap:10px;" 
+                onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                <div style="width:28px; height:28px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:bold; color:#000;">${m.name.substring(0, 2).toUpperCase()}</div>
+                <div style="flex:1;">
+                    <div style="font-size:0.85rem; font-weight:600;">${m.name}</div>
+                    <div style="font-size:0.7rem; color:var(--text-muted);">ID: ${m.id}</div>
+                </div>
+                <i class="fas fa-user-plus" style="color:var(--accent); font-size:0.8rem;"></i>
+            </div>
+        `).join('');
+        resultsDiv.style.display = 'block';
+    }
+
+    async manualEnrollInClass(classId, clientId) {
+        const classIdStr = String(classId);
+        if (!this.state.enrollments[classIdStr]) this.state.enrollments[classIdStr] = [];
+
+        const participants = this.state.enrollments[classIdStr];
+        if (!participants.map(id => Number(id)).includes(Number(clientId))) {
+            participants.push(Number(clientId));
+            await this.saveState();
+            this.showToast('Aluno adicionado!');
+            this.showParticipantsList(classId);
+            this.renderContent();
+        }
+    }
+
+    async removeFromClass(classId, clientId) {
+        if (!confirm('Deseja remover este aluno da aula?')) return;
+
+        const classIdStr = String(classId);
+        if (this.state.enrollments[classIdStr]) {
+            this.state.enrollments[classIdStr] = this.state.enrollments[classIdStr].filter(id => Number(id) !== Number(clientId));
+            await this.saveState();
+            this.showToast('Aluno removido.');
+            this.showParticipantsList(classId);
+            this.renderContent();
+        }
     }
 
     renderClientClasses(container) {
