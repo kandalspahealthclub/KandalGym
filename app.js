@@ -6639,6 +6639,7 @@ Bons treinos!`;
                             ${p.name.substring(0, 2).toUpperCase()}
                         </div>
                         <div style="flex:1;">
+                            <div style="font-size:0.6rem; color:var(--primary); margin-bottom:2px; display:flex; align-items:center; gap:4px; font-weight:700; text-transform:uppercase;"><i class="fas fa-user"></i> Aluno</div>
                             <div style="font-size:0.95rem; font-weight:600; color:#fff;">${p.name}</div>
                             <div style="font-size:0.75rem; color:var(--text-muted);">ID: ${p.id} ${p.phone ? '• ' + p.phone : ''}</div>
                         </div>
@@ -6662,12 +6663,12 @@ Bons treinos!`;
             return;
         }
 
-        const q = query.toLowerCase();
+        const q = this.normalizeText(query);
         const enrolledIds = (this.state.enrollments[classId] || []).map(id => Number(id));
 
         const matches = (this.state.clients || []).filter(c => {
-            const nameMatch = (c.name || '').toLowerCase().includes(q);
-            const idMatch = String(c.id) === query;
+            const nameMatch = this.normalizeText(c.name || '').includes(q);
+            const idMatch = this.normalizeText(String(c.id)) === q;
             return (nameMatch || idMatch) && !enrolledIds.includes(Number(c.id));
         }).slice(0, 5);
 
@@ -6683,7 +6684,8 @@ Bons treinos!`;
                 onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
                 <div style="width:28px; height:28px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:bold; color:#000;">${m.name.substring(0, 2).toUpperCase()}</div>
                 <div style="flex:1;">
-                    <div style="font-size:0.85rem; font-weight:600;">${m.name}</div>
+                    <div style="font-size:0.55rem; color:var(--accent); margin-bottom:1px; display:flex; align-items:center; gap:3px; font-weight:700; text-transform:uppercase;"><i class="fas fa-user-plus"></i> Disponivel</div>
+                    <div style="font-size:0.85rem; font-weight:600; color:#fff;">${m.name}</div>
                     <div style="font-size:0.7rem; color:var(--text-muted);">ID: ${m.id}</div>
                 </div>
                 <i class="fas fa-user-plus" style="color:var(--accent); font-size:0.8rem;"></i>
