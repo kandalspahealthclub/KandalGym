@@ -5362,6 +5362,7 @@ Bons treinos!`;
                     <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
                         <thead>
                             <tr style="border-bottom: 1px solid var(--surface-border); text-align: left; background: rgba(255,255,255,0.05);">
+                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">ID</th>
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Aluno</th>
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Estado</th>
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Creditos</th>
@@ -5398,7 +5399,7 @@ Bons treinos!`;
         });
 
         if (qrList.length === 0) {
-            return `<tr><td colspan="6" style="padding: 3rem; text-align: center; color: var(--text-muted);"><i class="fas fa-info-circle"></i> Nenhum aluno encontrado.</td></tr>`;
+            return `<tr><td colspan="7" style="padding: 3rem; text-align: center; color: var(--text-muted);"><i class="fas fa-info-circle"></i> Nenhum aluno encontrado.</td></tr>`;
         }
 
         const hoje = new Date().toISOString().split('T')[0];
@@ -5409,6 +5410,9 @@ Bons treinos!`;
 
             return `
                 <tr style="border-bottom: 1px solid var(--surface-border); transition: background 0.2s;" class="qr-row">
+                    <td style="padding: 1rem;">
+                        <span style="font-weight: 800; color: var(--primary); font-family: monospace; font-size: 1.1rem;">${c.id}</span>
+                    </td>
                     <td style="padding: 1rem;">
                         <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" 
                             style="background:transparent; border:none; color:#fff; font-weight:700; font-size:1rem; width:100%; border-bottom: 1px dashed rgba(255,255,255,0.1); padding: 2px 0;">
@@ -5449,7 +5453,7 @@ Bons treinos!`;
                     </td>
                 </tr>
                 <tr id="qr-row-area-${idx}" style="display:none; background: rgba(255,255,255,0.05);">
-                    <td colspan="6" style="padding: 1rem; text-align: center;">
+                    <td colspan="7" style="padding: 1rem; text-align: center;">
                         <div id="canvas-${idx}" style="background: white; padding: 10px; border-radius: 8px; display: inline-block; margin: 10px 0;"></div>
                         <div style="font-size: 0.7rem; color: var(--text-muted);">ID: ${c.id}</div>
                     </td>
