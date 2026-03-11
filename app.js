@@ -5335,7 +5335,7 @@ Bons treinos!`;
                         <div style="margin-bottom: 2rem;">
                             <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Introduzir ID do Aluno</label>
                             <div style="display:flex; gap:10px;">
-                                <input type="text" id="manual-qr-id" placeholder="Ex: K1" 
+                                <input type="text" id="manual-qr-id" placeholder="Ex: K1" onkeyup="if(event.key==='Enter') app.processarManualQR()"
                                     style="flex:1; height:45px; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:12px; color:#fff; padding:0 15px; font-weight:700;">
                                 <button class="btn btn-accent" onclick="app.processarManualQR()" style="padding: 0 20px;">
                                     <i class="fas fa-check"></i>
