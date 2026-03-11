@@ -28,6 +28,7 @@ class FitnessApp {
         this.hasLoadedData = false; // Flag para evitar flickering de "Utilizador nao encontrado"
         this.isCheckingClasses = false;
         this.checkInterval = null;
+        this.qrActiveTab = 'clients';
 
         // Tentar carregar estado do LocalStorage como cache inicial
         const cachedState = localStorage.getItem('kandalgym_state');
@@ -5355,11 +5356,20 @@ Bons treinos!`;
                     </div>
                 </div>
 
+                <div class="glass-panel" style="padding: 0.5rem; display:flex; gap:0.5rem; margin-bottom:1.5rem; background:rgba(255,255,255,0.03); border-radius:15px;">
+                    <button class="btn btn-sm ${this.qrActiveTab === 'clients' ? 'btn-primary' : 'btn-ghost'}" onclick="app.setQRTab('clients')" style="flex:1; border-radius:10px;">
+                        <i class="fas fa-users"></i> Clientes
+                    </button>
+                    <button class="btn btn-sm ${this.qrActiveTab === 'staff' ? 'btn-primary' : 'btn-ghost'}" onclick="app.setQRTab('staff')" style="flex:1; border-radius:10px;">
+                        <i class="fas fa-id-badge"></i> Admin & Staff
+                    </button>
+                </div>
+
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                    <h3 style="font-weight: 700; margin:0; display:flex; align-items:center; gap:0.5rem;"><i class="fas fa-users" style="color:var(--primary);"></i> Alunos Registados <span style="font-size:0.8rem; background:rgba(255,255,255,0.05); padding:2px 10px; border-radius:20px; color:var(--text-muted);">${this.state.qrClients.length}</span></h3>
+                    <h3 style="font-weight: 700; margin:0; display:flex; align-items:center; gap:0.5rem;"><i class="fas fa-list" style="color:var(--primary);"></i> ${this.qrActiveTab === 'clients' ? 'Alunos Registados' : 'Staff Autorizado'}</h3>
                     <div class="search-container" style="margin:0; width: 100%; max-width: 400px; height: 45px;">
                         <i class="fas fa-search"></i>
-                        <input type="text" class="search-bar" placeholder="Pesquisar por nome, ID ou contacto..." oninput="app.filterQRList(this.value)">
+                        <input type="text" class="search-bar" placeholder="Pesquisar..." oninput="app.filterQRList(this.value)">
                     </div>
                 </div>
                 
@@ -5395,6 +5405,11 @@ Bons treinos!`;
         this.qrScannerAtivo = false;
     }
 
+    setQRTab(tab) {
+        this.qrActiveTab = tab;
+        this.renderContent();
+    }
+
     renderQRClientCards(filter = '') {
         const qrList = (this.state.qrClients || []).filter(c => {
             const f = this.normalizeText(filter);
@@ -5402,11 +5417,15 @@ Bons treinos!`;
             const telNormal = this.normalizeText(c.tel || "");
             const idNormal = this.normalizeText(c.id);
 
+            // Filter by active tab
+            if (this.qrActiveTab === 'clients' && (c.type === 'admin' || c.type === 'teacher')) return false;
+            if (this.qrActiveTab === 'staff' && (c.type !== 'admin' && c.type !== 'teacher')) return false;
+
             return nomeNormal.includes(f) || telNormal.includes(f) || idNormal.includes(f);
         });
 
         if (qrList.length === 0) {
-            return `<tr><td colspan="7" style="padding: 4rem; text-align: center; color: var(--text-muted);"><i class="fas fa-search" style="font-size:2rem; margin-bottom:1rem; opacity:0.3; display:block;"></i> Nenhum aluno encontrado com esses criterios.</td></tr>`;
+            return `<tr><td colspan="7" style="padding: 4rem; text-align: center; color: var(--text-muted);"><i class="fas fa-search" style="font-size:2rem; margin-bottom:1rem; opacity:0.3; display:block;"></i> Nenhum registo encontrado nesta categoria.</td></tr>`;
         }
 
         const hoje = new Date().toISOString().split('T')[0];
@@ -5573,12 +5592,13 @@ Bons treinos!`;
             }
         });
 
-        // Teachers
-        (this.state.teachers || []).forEach(t => {
+        // Teachers (P for Professor)
+        (this.state.teachers || []).sort((a, b) => a.id - b.id).forEach((t, idx) => {
             const exists = this.state.qrClients.find(qc => qc.clientId === t.id && qc.type === 'teacher');
             if (!exists) {
+                const pId = "P" + (idx + 1);
                 this.state.qrClients.push({
-                    id: "T" + t.id,
+                    id: pId,
                     clientId: t.id,
                     nome: t.name,
                     tel: t.phone || "Professor",
