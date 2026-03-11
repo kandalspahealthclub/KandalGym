@@ -5291,91 +5291,95 @@ Bons treinos!`;
     // --- QR MANAGER FUNCTIONALITY ---
     renderQRManager(container) {
         if (!this.state.qrClients) this.state.qrClients = [];
+        if (this.role !== 'admin') return container.innerHTML = '<div class="glass-card">Acesso restrito a administradores.</div>';
 
         try {
             container.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                    <h2 style="margin: 0;"><i class="fas fa-qrcode"></i> Gestao de Entradas</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h2 style="margin: 0;"><i class="fas fa-qrcode"></i> Gestao de Entradas</h2>
+                        <p style="color:var(--text-muted); font-size:0.9rem; margin-top:5px;">Controle e validacao de acessos ao ginasio.</p>
+                    </div>
                 </div>
 
-                <div class="dashboard" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; margin-top: 20px;">
-                    <div class="glass-panel" style="padding: 1.5rem;">
-                        <h3 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
-                            <i class="fas fa-camera"></i> Scanner de Entrada
+                <div class="stats-grid" style="margin-bottom: 2rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                    <div class="glass-panel" style="padding: 1.5rem; border-left: 4px solid var(--primary);">
+                        <h3 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 10px; font-size: 1.1rem; margin-bottom:1rem;">
+                            <i class="fas fa-camera"></i> Scanner em Tempo Real
                         </h3>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Aponte a camara para o codigo QR do aluno para validar a entrada.</p>
-                        <button class="btn btn-secondary" style="width: 100%; border: 1px solid var(--primary); color: var(--primary); background: rgba(145, 27, 43, 0.05);" id="btnCam" onclick="app.iniciarLeitorQR()">
+                        <div id="video-container" class="qr-scanner-container" style="border: 2px solid var(--surface-border); border-radius:15px; overflow:hidden; position:relative; aspect-ratio: 4/3; background:#000; margin-bottom:1rem;">
+                            <video id="v-stream" class="qr-video" playsinline autoplay muted style="width:100%; height:100%; object-fit:cover;"></video>
+                            <div id="scan-overlay" style="position:absolute; top:0; left:0; right:0; bottom:0; border:2px solid var(--primary); opacity:0.3; pointer-events:none; margin:20%; border-radius:10px;"></div>
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%;" id="btnCam" onclick="app.iniciarLeitorQR()">
                             <i class="fas fa-video"></i> Ativar Camara
                         </button>
-                        <div id="video-container" class="qr-scanner-container" style="border: 2px solid var(--surface-border); margin-top: 15px;">
-                            <video id="v-stream" class="qr-video" playsinline autoplay muted style="transform:none;"></video>
-                        </div>
-                        <div id="scan-status" style="margin-top: 15px; min-height: 50px;"></div>
-                        <canvas id="c-hidden" style="display:none;"></canvas>
+                        <div id="scan-status" style="margin-top: 15px; padding:10px; border-radius:10px; text-align:center; font-weight:600; font-size:0.9rem;"></div>
+                    </div>
 
-                        <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed var(--surface-border);">
-                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Entrada Manual (Backup)</label>
+                    <div class="glass-panel" style="padding: 1.5rem; border-left: 4px solid var(--accent);">
+                        <h3 style="margin-top: 0; color: var(--accent); display: flex; align-items: center; gap: 10px; font-size: 1.1rem; margin-bottom:1.5rem;">
+                            <i class="fas fa-keyboard"></i> Entrada Manual & Info
+                        </h3>
+                        
+                        <div style="margin-bottom: 2rem;">
+                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Introduzir ID do Aluno</label>
                             <div style="display:flex; gap:10px;">
                                 <input type="text" id="manual-qr-id" placeholder="Ex: K1" 
-                                    style="flex:1; height:42px; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 12px; font-size:0.9rem;">
-                                <button class="btn btn-primary btn-sm" onclick="app.processarManualQR()" style="padding: 0 15px;">
+                                    style="flex:1; height:45px; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:12px; color:#fff; padding:0 15px; font-weight:700;">
+                                <button class="btn btn-accent" onclick="app.processarManualQR()" style="padding: 0 20px;">
                                     <i class="fas fa-check"></i>
                                 </button>
                             </div>
-                            <small style="color:var(--text-muted); font-size:0.7rem; margin-top:5px; display:block;">Use isto se a camara nao estiver disponivel.</small>
                         </div>
-                    </div>
 
-                    <div class="glass-panel" style="padding: 1.5rem;">
-                        <h3 style="margin-top: 0; color: var(--accent); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
-                            <i class="fas fa-shield-alt"></i> Regras de Validacao
-                        </h3>
-                        <div style="display: grid; gap: 10px; margin-top: 15px;">
-                            <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-user-check" style="color: var(--success); width: 20px;"></i> Conta deve estar Ativa.
+                        <div style="display: grid; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: var(--text-muted);">
+                                <div style="width:24px; height:24px; border-radius:50%; background:rgba(16, 185, 129, 0.1); display:flex; align-items:center; justify-content:center; color:var(--success);"><i class="fas fa-check" style="font-size:0.7rem;"></i></div>
+                                <span>Conta deve estar <strong>Ativa</strong></span>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-calendar-times" style="color: var(--accent); width: 20px;"></i> Data de validade superior a hoje.
+                            <div style="display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: var(--text-muted);">
+                                <div style="width:24px; height:24px; border-radius:50%; background:rgba(196, 162, 77, 0.1); display:flex; align-items:center; justify-content:center; color:var(--accent);"><i class="fas fa-calendar-alt" style="font-size:0.7rem;"></i></div>
+                                <span>Validade superior a <strong>Hoje</strong></span>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-ticket-alt" style="color: var(--danger); width: 20px;"></i> Deve ter pelo menos 1 credito.
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-clock" style="color: var(--primary); width: 20px;"></i> Cooldown de 2 min entre leituras.
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-ban" style="color: var(--accent); width: 20px;"></i> Maximo de 2 entradas por dia.
+                            <div style="display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: var(--text-muted);">
+                                <div style="width:24px; height:24px; border-radius:50%; background:rgba(145, 27, 43, 0.1); display:flex; align-items:center; justify-content:center; color:var(--primary);"><i class="fas fa-ticket-alt" style="font-size:0.7rem;"></i></div>
+                                <span>Pelo menos <strong>1 Credito</strong></span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 1rem;">
-                    <h3 style="font-weight: 700; font-size: 1.2rem; margin:0;"><i class="fas fa-list"></i> Lista de Alunos (${this.state.qrClients.length})</h3>
-                    <div class="search-container" style="margin:0; width: 300px; height: 40px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <h3 style="font-weight: 700; margin:0; display:flex; align-items:center; gap:0.5rem;"><i class="fas fa-users" style="color:var(--primary);"></i> Alunos Registados <span style="font-size:0.8rem; background:rgba(255,255,255,0.05); padding:2px 10px; border-radius:20px; color:var(--text-muted);">${this.state.qrClients.length}</span></h3>
+                    <div class="search-container" style="margin:0; width: 100%; max-width: 400px; height: 45px;">
                         <i class="fas fa-search"></i>
-                        <input type="text" class="search-bar" placeholder="Pesquisar aluno..." onkeyup="app.filterQRList(this.value)" style="height: 100% !important;">
+                        <input type="text" class="search-bar" placeholder="Pesquisar por nome, ID ou contacto..." oninput="app.filterQRList(this.value)">
                     </div>
                 </div>
                 
-                <div class="glass-panel" style="padding: 0; overflow-x: auto; background: rgba(255,255,255,0.03);">
-                    <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
-                        <thead>
-                            <tr style="border-bottom: 1px solid var(--surface-border); text-align: left; background: rgba(255,255,255,0.05);">
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">ID</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Aluno</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Estado</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Creditos</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Entradas (Hoje)</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Validade</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent); text-align: right;">Acoes</th>
-                            </tr>
-                        </thead>
-                        <tbody id="gridQRClientes">
-                            ${this.renderQRClientCards()}
-                        </tbody>
-                    </table>
+                <div class="glass-panel" style="padding: 0; overflow:hidden; border-radius:20px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; min-width: 900px;">
+                            <thead>
+                                <tr style="text-align: left; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--surface-border);">
+                                    <th style="padding: 1.25rem 1rem; font-size: 0.75rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; width:80px;">ID</th>
+                                    <th style="padding: 1.25rem 1rem; font-size: 0.75rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Aluno</th>
+                                    <th style="padding: 1.25rem 1rem; font-size: 0.75rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:center;">Estado</th>
+                                    <th style="padding: 1.25rem 1rem; font-size: 0.75rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:center;">Creditos</th>
+                                    <th style="padding: 1.25rem 1rem; font-size: 0.75rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:center;">Acesso Hoje</th>
+                                    <th style="padding: 1.25rem 1rem; font-size: 0.75rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Validade</th>
+                                    <th style="padding: 1.25rem 1rem; font-size: 0.75rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align: right;">Acoes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gridQRClientes">
+                                ${this.renderQRClientCards()}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+                <!-- canvas movido para renderQRManager principal -->
+                <canvas id="c-hidden" style="display:none;"></canvas>
             `;
         } catch (err) {
             console.error("Error in renderQRManager:", err);
@@ -5388,74 +5392,84 @@ Bons treinos!`;
 
     renderQRClientCards(filter = '') {
         const qrList = (this.state.qrClients || []).filter(c => {
-            const f = filter.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-            const nomeNormal = c.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-            const telNormal = (c.tel || "").toLowerCase();
-            const idNormal = c.id.toLowerCase();
+            const f = this.normalizeText(filter);
+            const nomeNormal = this.normalizeText(c.nome);
+            const telNormal = this.normalizeText(c.tel || "");
+            const idNormal = this.normalizeText(c.id);
 
-            return nomeNormal.includes(f) ||
-                telNormal.includes(f) ||
-                idNormal.includes(f);
+            return nomeNormal.includes(f) || telNormal.includes(f) || idNormal.includes(f);
         });
 
         if (qrList.length === 0) {
-            return `<tr><td colspan="7" style="padding: 3rem; text-align: center; color: var(--text-muted);"><i class="fas fa-info-circle"></i> Nenhum aluno encontrado.</td></tr>`;
+            return `<tr><td colspan="7" style="padding: 4rem; text-align: center; color: var(--text-muted);"><i class="fas fa-search" style="font-size:2rem; margin-bottom:1rem; opacity:0.3; display:block;"></i> Nenhum aluno encontrado com esses criterios.</td></tr>`;
         }
 
         const hoje = new Date().toISOString().split('T')[0];
 
         return qrList.map((c, idx) => {
             const entHj = (c.historico || []).filter(h => h.startsWith(hoje)).length;
-            const statusColor = c.ativo ? 'var(--success)' : 'var(--danger)';
+            const isInvalid = hoje > c.validade || !c.ativo;
 
             return `
-                <tr style="border-bottom: 1px solid var(--surface-border); transition: background 0.2s;" class="qr-row">
+                <tr style="border-bottom: 1px solid var(--surface-border); transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
                     <td style="padding: 1rem;">
-                        <span style="font-weight: 800; color: var(--primary); font-family: monospace; font-size: 1.1rem;">${c.id}</span>
+                        <div style="background: rgba(145,27,43,0.1); color: var(--primary); padding: 5px 10px; border-radius: 8px; font-weight: 800; font-family: monospace; display: inline-block; font-size: 1rem;">${c.id}</div>
                     </td>
                     <td style="padding: 1rem;">
                         <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" 
-                            style="background:transparent; border:none; color:#fff; font-weight:700; font-size:1rem; width:100%; border-bottom: 1px dashed rgba(255,255,255,0.1); padding: 2px 0;">
-                        <div style="display:flex; align-items:center; gap:5px; margin-top:5px;">
-                            <span style="font-size:0.75rem; color:var(--text-muted); opacity:0.7;"></span>
-                            <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" 
-                                style="background:transparent; border:none; color:var(--text-muted); font-size:0.75rem; width:80%; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                            style="background:transparent; border:none; color:#fff; font-weight:700; font-size:1rem; width:100%; border-bottom: 1px dashed rgba(255,255,255,0.05); padding: 2px 0; margin-bottom:2px;">
+                        <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" 
+                            style="background:transparent; border:none; color:var(--text-muted); font-size:0.75rem; width:100%; border-bottom: 1px dashed rgba(255,255,255,0.03);">
+                    </td>
+                    <td style="padding: 1rem; text-align:center;">
+                        <div style="display:flex; justify-content:center;">
+                            <label class="switch" style="position:relative; display:inline-block; width:44px; height:24px;">
+                                <input type="checkbox" ${c.ativo ? 'checked' : ''} onchange="app.toggleQRClientStatus('${c.id}')" style="opacity:0; width:0; height:0;">
+                                <span style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:${c.ativo ? 'var(--success)' : '#475569'}; border-radius:24px; transition:0.3s;">
+                                    <span style="position:absolute; content:''; height:18px; width:18px; left:3px; bottom:3px; background-color:white; border-radius:50%; transition:0.3s; transform:${c.ativo ? 'translateX(20px)' : 'translateX(0)'};"></span>
+                                </span>
+                            </label>
                         </div>
                     </td>
                     <td style="padding: 1rem;">
-                        <input type="checkbox" ${c.ativo ? 'checked' : ''} onchange="app.toggleQRClientStatus('${c.id}')" style="accent-color: var(--primary); width:18px; height:18px; cursor:pointer;">
-                    </td>
-                    <td style="padding: 1rem;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div class="qr-btn-circle-sm" onclick="app.editQRCredit('${c.id}', -1)">-</div>
+                        <div style="display: flex; align-items: center; justify-content:center; gap: 8px;">
+                            <button class="btn-circular-sm" onclick="app.editQRCredit('${c.id}', -1)" style="background:rgba(255,255,255,0.05); color:var(--text-muted); border:none; width:28px; height:28px; border-radius:50%; cursor:pointer;"><i class="fas fa-minus" style="font-size:0.7rem;"></i></button>
                             <input type="number" value="${c.ent}" onchange="app.updateQRClientField('${c.id}', 'ent', parseInt(this.value) || 0)"
-                                class="no-spin"
-                                style="background:transparent; border:none; color:inherit; font-weight:700; width:50px; text-align:center; outline:none;">
-                            <div class="qr-btn-circle-sm" onclick="app.editQRCredit('${c.id}', 1)">+</div>
+                                style="background:transparent; border:none; color:${c.ent <= 5 ? 'var(--danger)' : '#fff'}; font-weight:800; width:35px; text-align:center; outline:none; font-size:1.1rem;">
+                            <button class="btn-circular-sm" onclick="app.editQRCredit('${c.id}', 1)" style="background:rgba(145,27,43,0.1); color:var(--primary); border:none; width:28px; height:28px; border-radius:50%; cursor:pointer;"><i class="fas fa-plus" style="font-size:0.7rem;"></i></button>
                         </div>
                     </td>
-                    <td style="padding: 1rem;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div class="qr-btn-circle-sm" onclick="app.editQREntryHj('${c.id}', -1)">-</div>
-                            <span style="font-weight:700; color:var(--primary);">${entHj} / 2</span>
-                            <div class="qr-btn-circle-sm" onclick="app.editQREntryHj('${c.id}', 1)">+</div>
+                    <td style="padding: 1rem; text-align:center;">
+                        <div style="display: flex; align-items: center; justify-content:center; gap: 10px;">
+                            <button class="btn-circular-sm" onclick="app.editQREntryHj('${c.id}', -1)" style="background:rgba(255,255,255,0.05); color:var(--text-muted); border:none; width:24px; height:24px; border-radius:50%;"><i class="fas fa-minus" style="font-size:0.6rem;"></i></button>
+                            <div style="background:${entHj >= 2 ? 'var(--danger)' : 'var(--success)'}; color:white; padding:3px 10px; border-radius:12px; font-weight:700; font-size:0.8rem;">${entHj} / 2</div>
+                            <button class="btn-circular-sm" onclick="app.editQREntryHj('${c.id}', 1)" style="background:rgba(16, 185, 129, 0.1); color:var(--success); border:none; width:24px; height:24px; border-radius:50%;"><i class="fas fa-plus" style="font-size:0.6rem;"></i></button>
                         </div>
                     </td>
                     <td style="padding: 1rem;">
                         <input type="date" value="${c.validade}" onchange="app.updateQRClientField('${c.id}', 'validade', this.value)"
-                            style="background:transparent; border:none; color:${hoje > c.validade ? 'var(--danger)' : 'inherit'}; font-size:0.85rem; cursor:pointer;">
+                            style="background:rgba(255,255,255,0.03); border:1px solid var(--surface-border); border-radius:8px; color:${hoje > c.validade ? 'var(--danger)' : 'inherit'}; font-size:0.85rem; padding:5px 10px; cursor:pointer;">
                     </td>
                     <td style="padding: 1rem; text-align: right;">
-                        <div style="display: flex; gap: 5px; justify-content: flex-end;">
-                            <button class="btn-icon" onclick="app.toggleQRCodeDisplay('qr-row-area-${idx}', '${c.id}')" title="Gerar QR"><i class="fas fa-qrcode"></i></button>
-                            <button class="btn-icon danger" onclick="app.deleteQRClient('${c.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                            <button class="btn btn-ghost btn-sm" onclick="app.toggleQRCodeDisplay('qr-row-area-${idx}', '${c.id}')" style="background: rgba(255,255,255,0.05); border-radius:10px; height:38px; width:38px; color:var(--text-main);" title="Ver Codigo QR"><i class="fas fa-qrcode"></i></button>
+                            <button class="btn btn-ghost btn-sm" onclick="app.deleteQRClient('${c.id}')" style="border-radius:10px; height:38px; width:38px; color:var(--danger); background:rgba(239, 68, 68, 0.05);" title="Eliminar"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>
-                <tr id="qr-row-area-${idx}" style="display:none; background: rgba(255,255,255,0.05);">
-                    <td colspan="7" style="padding: 1rem; text-align: center;">
-                        <div id="canvas-${idx}" style="background: white; padding: 10px; border-radius: 8px; display: inline-block; margin: 10px 0;"></div>
-                        <div style="font-size: 0.7rem; color: var(--text-muted);">ID: ${c.id}</div>
+                <tr id="qr-row-area-${idx}" style="display:none; background: rgba(0,0,0,0.2);">
+                    <td colspan="7" style="padding: 2.5rem 1rem; text-align: center;">
+                        <div style="display:inline-flex; flex-direction:column; align-items:center; gap:1.5rem; background:rgba(255,255,255,0.02); padding:2rem; border-radius:24px; border:1px solid var(--surface-border);">
+                            <div id="canvas-${idx}" style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></div>
+                            <div style="text-align:center;">
+                                <div style="font-weight: 800; color: var(--primary); font-family: monospace; font-size: 1.5rem; margin-bottom:5px;">${c.id}</div>
+                                <div style="color:var(--text-muted); font-size:0.85rem;">Nome: ${c.nome}</div>
+                            </div>
+                            <button class="btn btn-primary" onclick="app.downloadQRCode('canvas-${idx}', '${c.id}', '${c.nome}')" style="padding: 12px 25px; border-radius:15px; font-size:1rem; box-shadow: 0 5px 15px rgba(145,27,43,0.3);">
+                                <i class="fas fa-download"></i> Descarregar QR Code
+                            </button>
+                            <p style="font-size:0.75rem; color:var(--text-muted); max-width:250px;">Pode imprimir ou enviar este codigo diretamente ao aluno para acesso ao ginasio.</p>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -5573,26 +5587,65 @@ Bons treinos!`;
         }
     }
 
+    normalizeText(text) {
+        return (text || "").toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    }
+
+    downloadQRCode(canvasId, idCode, name) {
+        if (this.role !== 'admin') {
+            alert("Apenas administradores podem descarregar codigos QR.");
+            return;
+        }
+
+        const container = document.getElementById(canvasId);
+        const img = container.querySelector('img');
+        const canvas = container.querySelector('canvas');
+
+        let dataUrl = "";
+        if (img && img.src) {
+            dataUrl = img.src;
+        } else if (canvas) {
+            dataUrl = canvas.toDataURL("image/png");
+        }
+
+        if (!dataUrl) {
+            alert("Nao foi possivel gerar a imagem para download.");
+            return;
+        }
+
+        const link = document.createElement('a');
+        link.download = `QR_${idCode}_${name.replace(/\s+/g, '_')}.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        this.showToast("QR Code descarregado com sucesso!");
+    }
+
     toggleQRCodeDisplay(areaId, val) {
         const el = document.getElementById(areaId);
         const canvas = document.getElementById('canvas-' + areaId.split('-').pop());
 
-        if (el.classList.contains('show')) {
-            el.classList.remove('show');
+        if (el.style.display === 'table-row') {
+            el.style.display = 'none';
         } else {
             // Hide any other visible QR codes first
-            document.querySelectorAll('.qr-area').forEach(area => area.classList.remove('show'));
+            document.querySelectorAll('[id^="qr-row-area-"]').forEach(area => area.style.display = 'none');
 
             canvas.innerHTML = "";
             new QRCode(canvas, {
                 text: val,
-                width: 160,
-                height: 160,
+                width: 200,
+                height: 200,
                 colorDark: "#000000",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             });
-            el.classList.add('show');
+            el.style.display = 'table-row';
+
+            // Scroll to view
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }
 
