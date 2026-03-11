@@ -5575,10 +5575,12 @@ Bons treinos!`;
 
         // Admins
         (this.state.admins || []).forEach(admin => {
-            const exists = this.state.qrClients.find(qc => qc.clientId === admin.id && qc.type === 'admin');
-            if (!exists) {
+            let qc = this.state.qrClients.find(qc => qc.clientId === admin.id && qc.type === 'admin');
+            const expectedId = "A" + admin.id;
+
+            if (!qc) {
                 this.state.qrClients.push({
-                    id: "A" + admin.id,
+                    id: expectedId,
                     clientId: admin.id,
                     nome: admin.name,
                     tel: admin.email || "Admin",
@@ -5589,16 +5591,20 @@ Bons treinos!`;
                     type: 'admin'
                 });
                 changed = true;
+            } else if (qc.id !== expectedId) {
+                qc.id = expectedId;
+                changed = true;
             }
         });
 
         // Teachers (P for Professor)
         (this.state.teachers || []).sort((a, b) => a.id - b.id).forEach((t, idx) => {
-            const exists = this.state.qrClients.find(qc => qc.clientId === t.id && qc.type === 'teacher');
-            if (!exists) {
-                const pId = "P" + (idx + 1);
+            let qc = this.state.qrClients.find(qc => qc.clientId === t.id && qc.type === 'teacher');
+            const expectedId = "P" + (idx + 1);
+
+            if (!qc) {
                 this.state.qrClients.push({
-                    id: pId,
+                    id: expectedId,
                     clientId: t.id,
                     nome: t.name,
                     tel: t.phone || "Professor",
@@ -5609,15 +5615,18 @@ Bons treinos!`;
                     type: 'teacher'
                 });
                 changed = true;
+            } else if (qc.id !== expectedId) {
+                qc.id = expectedId;
+                changed = true;
             }
         });
 
         if (changed) {
             this.saveState();
-            this.showToast("QR Codes de Staff sincronizados!");
+            this.showToast("QR Codes de Staff atualizados!");
             this.renderContent();
         } else {
-            this.showToast("Todos os staff ja possuem QR ativo.");
+            this.showToast("Os QR Codes do staff ja estao simplificados.");
         }
     }
 
