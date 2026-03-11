@@ -6639,7 +6639,6 @@ Bons treinos!`;
                             ${p.name.substring(0, 2).toUpperCase()}
                         </div>
                         <div style="flex:1;">
-                            <div style="font-size:0.6rem; color:var(--primary); margin-bottom:2px; display:flex; align-items:center; gap:4px; font-weight:700; text-transform:uppercase;"><i class="fas fa-user"></i> Aluno</div>
                             <div style="font-size:0.95rem; font-weight:600; color:#fff;">${p.name}</div>
                             <div style="font-size:0.75rem; color:var(--text-muted);">ID: ${p.id} ${p.phone ? '• ' + p.phone : ''}</div>
                         </div>
@@ -6684,7 +6683,6 @@ Bons treinos!`;
                 onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
                 <div style="width:28px; height:28px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:bold; color:#000;">${m.name.substring(0, 2).toUpperCase()}</div>
                 <div style="flex:1;">
-                    <div style="font-size:0.55rem; color:var(--accent); margin-bottom:1px; display:flex; align-items:center; gap:3px; font-weight:700; text-transform:uppercase;"><i class="fas fa-user-plus"></i> Disponivel</div>
                     <div style="font-size:0.85rem; font-weight:600; color:#fff;">${m.name}</div>
                     <div style="font-size:0.7rem; color:var(--text-muted);">ID: ${m.id}</div>
                 </div>
