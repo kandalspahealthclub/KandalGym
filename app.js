@@ -29,6 +29,7 @@ class FitnessApp {
         this.isCheckingClasses = false;
         this.checkInterval = null;
         this.qrActiveTab = 'clients';
+        this.selectedQRClients = [];
 
         // Tentar carregar estado do LocalStorage como cache inicial
         const cachedState = localStorage.getItem('kandalgym_state');
@@ -5369,6 +5370,27 @@ Bons treinos!`;
                     </button>
                 </div>
 
+                ${this.selectedQRClients.length > 0 ? `
+                <div class="glass-panel animate-fade-in" style="margin-bottom: 1.5rem; padding: 1rem; border: 1px dashed var(--accent); background: rgba(196, 162, 77, 0.05); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="background:var(--accent); color:#000; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.8rem;">${this.selectedQRClients.length}</div>
+                        <span style="font-weight:600; color:var(--accent);">Selecionados</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Nova Validade:</span>
+                            <input type="date" id="bulk-qr-date" style="background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:5px 10px; font-size:0.85rem;">
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="app.applyBulkQRDateUpdate()">
+                            <i class="fas fa-sync"></i> Atualizar Selecionados
+                        </button>
+                        <button class="btn btn-ghost btn-sm" onclick="app.clearQRSelection()" style="color:var(--text-muted);">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+                ` : ''}
+
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <h3 style="font-weight: 700; margin:0; display:flex; align-items:center; gap:0.5rem;"><i class="fas fa-list" style="color:var(--primary);"></i> ${this.qrActiveTab === 'clients' ? 'Alunos Registados' : 'Staff Autorizado'}</h3>
                     <div class="search-container" style="margin:0; width: 100%; max-width: 400px; height: 45px;">
@@ -5382,13 +5404,18 @@ Bons treinos!`;
                         <table style="width: 100%; border-collapse: collapse; min-width: 900px;">
                             <thead>
                                 <tr style="text-align: left; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--surface-border);">
-                                    <th style="padding: 1.25rem 1rem; font-size: 0.75rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; width:80px;">ID</th>
-                                    <th style="padding: 1.25rem 1rem; font-size: 0.75rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Aluno</th>
-                                    <th style="padding: 1.25rem 1rem; font-size: 0.75rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:center;">Estado</th>
-                                    <th style="padding: 1.25rem 1rem; font-size: 0.75rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:center;">Creditos</th>
-                                    <th style="padding: 1.25rem 1rem; font-size: 0.75rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:center;">Acesso Hoje</th>
-                                    <th style="padding: 1.25rem 1rem; font-size: 0.75rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Validade</th>
-                                    <th style="padding: 1.25rem 1rem; font-size: 0.75rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align: right;">Acoes</th>
+                                    <th style="padding: 1.25rem 0.5rem; width:40px; text-align:center;">
+                                        <input type="checkbox" onclick="app.toggleAllQRSelections(this.checked)" 
+                                            style="width:16px; height:16px; cursor:pointer;" 
+                                            ${this.selectedQRClients.length > 0 && this.selectedQRClients.length === this.getCurrentQRListCount() ? 'checked' : ''}>
+                                    </th>
+                                    <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; width:70px;">ID</th>
+                                    <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; min-width:180px;">Aluno / Colaborador</th>
+                                    <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:center;">Status</th>
+                                    <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:center;">Creditos</th>
+                                    <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:center;">Entradas Hoje</th>
+                                    <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Validade</th>
+                                    <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align: right;">Acoes</th>
                                 </tr>
                             </thead>
                             <tbody id="gridQRClientes">
@@ -5411,7 +5438,67 @@ Bons treinos!`;
 
     setQRTab(tab) {
         this.qrActiveTab = tab;
+        this.selectedQRClients = []; // Limpar selecao ao trocar aba
         this.renderContent();
+    }
+
+    getCurrentQRListCount() {
+        const qrList = (this.state.qrClients || []).filter(c => {
+            if (this.qrActiveTab === 'clients' && (c.type === 'admin' || c.type === 'teacher')) return false;
+            if (this.qrActiveTab === 'staff' && (c.type !== 'admin' && c.type !== 'teacher')) return false;
+            return true;
+        });
+        return qrList.length;
+    }
+
+    toggleQRSelection(id, checked) {
+        if (checked) {
+            if (!this.selectedQRClients.includes(id)) this.selectedQRClients.push(id);
+        } else {
+            this.selectedQRClients = this.selectedQRClients.filter(i => i !== id);
+        }
+        this.renderContent();
+    }
+
+    toggleAllQRSelections(checked) {
+        if (checked) {
+            const qrList = (this.state.qrClients || []).filter(c => {
+                if (this.qrActiveTab === 'clients' && (c.type === 'admin' || c.type === 'teacher')) return false;
+                if (this.qrActiveTab === 'staff' && (c.type !== 'admin' && c.type !== 'teacher')) return false;
+                return true;
+            });
+            this.selectedQRClients = qrList.map(c => c.id);
+        } else {
+            this.selectedQRClients = [];
+        }
+        this.renderContent();
+    }
+
+    clearQRSelection() {
+        this.selectedQRClients = [];
+        this.renderContent();
+    }
+
+    applyBulkQRDateUpdate() {
+        const dateInput = document.getElementById('bulk-qr-date');
+        if (!dateInput || !dateInput.value) return alert('Por favor, selecione uma data de validade.');
+
+        const newDate = dateInput.value;
+        let updatedCount = 0;
+
+        this.state.qrClients.forEach(c => {
+            if (this.selectedQRClients.includes(c.id)) {
+                c.validade = newDate;
+                updatedCount++;
+            }
+        });
+
+        if (updatedCount > 0) {
+            this.saveState();
+            this.showToast(`${updatedCount} validades atualizadas com sucesso!`);
+            this.selectedQRClients = [];
+            this.renderContent();
+        }
     }
 
     renderQRClientCards(filter = '') {
@@ -5438,9 +5525,18 @@ Bons treinos!`;
             const entHj = (c.historico || []).filter(h => h.startsWith(hoje)).length;
             const isInvalid = hoje > c.validade || !c.ativo;
             const isStaff = c.type === 'admin' || c.type === 'teacher';
+            const isSelected = this.selectedQRClients.includes(c.id);
 
             return `
-                <tr style="border-bottom: 1px solid var(--surface-border); transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+                <tr style="border-bottom: 1px solid var(--surface-border); transition: background 0.3s; ${isSelected ? 'background: rgba(196, 162, 77, 0.08);' : ''}" 
+                    onmouseover="if(!this.dataset.selected) this.style.background='rgba(255,255,255,0.02)'" 
+                    onmouseout="if(!this.dataset.selected) this.style.background='transparent'"
+                    ${isSelected ? 'data-selected="true"' : ''}>
+                    <td style="padding: 0.75rem 0.5rem; text-align:center;">
+                        <input type="checkbox" ${isSelected ? 'checked' : ''} 
+                            onclick="app.toggleQRSelection('${c.id}', this.checked)"
+                            style="width:16px; height:16px; cursor:pointer;">
+                    </td>
                     <td style="padding: 0.75rem 0.5rem;">
                         <div style="background: ${c.type === 'admin' ? 'rgba(196,162,77,0.1)' : c.type === 'teacher' ? 'rgba(16,185,129,0.1)' : 'rgba(145,27,43,0.1)'}; 
                              color: ${c.type === 'admin' ? 'var(--accent)' : c.type === 'teacher' ? 'var(--success)' : 'var(--primary)'}; 
