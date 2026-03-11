@@ -3807,9 +3807,12 @@ Bons treinos!`;
                     <small style="color:var(--text-muted);">Mantenha ou altere para uma nova.</small>
                 </div>
 
-                ${this.role === 'client' ? (() => {
-                const qrInfo = (this.state.qrClients || []).find(q => q.clientId === user.id || q.nome === user.name);
-                const displayId = qrInfo ? qrInfo.id : "K" + user.id;
+                ${(() => {
+                const qrInfo = (this.state.qrClients || []).find(q => q.clientId === user.id && q.type === this.role);
+                const displayId = qrInfo ? qrInfo.id : (this.role === 'client' ? "K" + user.id : null);
+
+                if (!displayId && !qrInfo) return '';
+
                 return `
                     <div class="glass-card" style="margin-top:2rem; padding:1.5rem; text-align:center; border: 1px dashed var(--accent); background: rgba(196, 162, 77, 0.05);">
                         <h4 style="margin-bottom:1rem; color:var(--accent);"><i class="fas fa-qrcode"></i> O Meu Codigo de Acesso</h4>
@@ -3818,7 +3821,7 @@ Bons treinos!`;
                         <div style="font-size: 0.7rem; color: var(--accent); opacity: 0.8; font-family: monospace; font-weight: 700;">ID: ${displayId}</div>
                     </div>
                 `;
-            })() : ''}
+            })()}
 
                 <button class="btn btn-primary" onclick="app.updateProfile()" style="width:100%; height:50px; font-size:1.1rem; margin-top:2rem;">
                     <i class="fas fa-save"></i> Guardar Alteracoes
@@ -3826,14 +3829,15 @@ Bons treinos!`;
             </div>
         `;
 
-        // Gerar o QR Code se for aluno
-        if (this.role === 'client') {
-            setTimeout(() => {
-                const qrContainer = document.getElementById('profile-qr-container');
-                if (qrContainer) {
-                    qrContainer.innerHTML = "";
-                    const qrInfo = (this.state.qrClients || []).find(q => q.clientId === user.id || q.nome === user.name);
-                    const textId = qrInfo ? qrInfo.id : "K" + user.id;
+        // Gerar o QR Code para qualquer utilizador que tenha acesso QR ativo
+        setTimeout(() => {
+            const qrContainer = document.getElementById('profile-qr-container');
+            if (qrContainer) {
+                qrContainer.innerHTML = "";
+                const qrInfo = (this.state.qrClients || []).find(q => q.clientId === user.id && q.type === this.role);
+                const textId = qrInfo ? qrInfo.id : (this.role === 'client' ? "K" + user.id : null);
+
+                if (textId) {
                     new QRCode(qrContainer, {
                         text: textId,
                         width: 180,
@@ -3843,8 +3847,8 @@ Bons treinos!`;
                         correctLevel: QRCode.CorrectLevel.H
                     });
                 }
-            }, 100);
-        }
+            }
+        }, 100);
     }
 
     processImage(file, maxSize, quality, callback) {
