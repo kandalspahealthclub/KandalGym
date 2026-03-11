@@ -5522,7 +5522,11 @@ Bons treinos!`;
         const hoje = new Date().toISOString().split('T')[0];
 
         return qrList.map((c, idx) => {
-            const entHj = (c.historico || []).filter(h => h.startsWith(hoje)).length;
+            const entHj = (c.historico || []).filter(h => {
+                const ts = typeof h === 'string' ? h : h.t;
+                const type = typeof h === 'string' ? 'entrada' : h.type;
+                return ts.startsWith(hoje) && type === 'entrada';
+            }).length;
             const isInvalid = hoje > c.validade || !c.ativo;
             const isStaff = c.type === 'admin' || c.type === 'teacher';
             const isSelected = this.selectedQRClients.includes(c.id);
@@ -5592,6 +5596,7 @@ Bons treinos!`;
                     </td>
                     <td style="padding: 0.75rem 0.5rem; text-align: right;">
                         <div style="display: flex; gap: 5px; justify-content: flex-end;">
+                            <button class="btn btn-ghost btn-sm" onclick="app.showQRClientHistory('${c.id}')" style="background: rgba(255,255,255,0.05); border-radius:8px; height:34px; width:34px; color:var(--accent); font-size:0.8rem;" title="Ver Log de Entradas"><i class="fas fa-history"></i></button>
                             <button class="btn btn-ghost btn-sm" onclick="app.toggleQRCodeDisplay('qr-row-area-${idx}', '${c.id}')" style="background: rgba(255,255,255,0.05); border-radius:8px; height:34px; width:34px; color:var(--text-main); font-size:0.8rem;" title="Ver Codigo QR"><i class="fas fa-qrcode"></i></button>
                             <button class="btn btn-ghost btn-sm" onclick="app.deleteQRClient('${c.id}')" style="border-radius:8px; height:34px; width:34px; color:var(--danger); background:rgba(239, 68, 68, 0.05); font-size:0.8rem;" title="Eliminar"><i class="fas fa-trash"></i></button>
                         </div>
@@ -5779,6 +5784,94 @@ Bons treinos!`;
 
     editQRClientData(id) {
         // Obsoleto - Usando edicao inline agora
+    }
+
+    showQRClientHistory(id) {
+        const c = this.state.qrClients.find(cli => cli.id === id);
+        if (!c) return;
+
+        const history = c.historico || [];
+        let html = `
+            <div style="padding:1.5rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                    <div>
+                        <h3 style="margin:0; color:var(--primary);"><i class="fas fa-history"></i> Log de Acessos</h3>
+                        <p style="margin:5px 0 0; color:var(--text-muted); font-size:0.85rem;">Historico para: <strong>${c.nome}</strong></p>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.05); padding:8px 15px; border-radius:10px; font-size:0.8rem; border:1px solid var(--surface-border);">
+                        Total de Visitas: <span style="color:var(--primary); font-weight:800;">${history.filter(h => (typeof h === 'string' ? 'entrada' : h.type) === 'entrada').length}</span>
+                    </div>
+                </div>
+                
+                <div style="max-height: 400px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius:15px; border:1px solid var(--surface-border);">
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr style="text-align:left; background:rgba(255,255,255,0.03); border-bottom:1px solid var(--surface-border);">
+                                <th style="padding:10px 15px; font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Data / Hora</th>
+                                <th style="padding:10px 15px; font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; text-align:center;">Tipo</th>
+                                <th style="padding:10px 15px; font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; text-align:right;">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+
+        if (history.length === 0) {
+            html += `<tr><td colspan="3" style="padding:3rem; text-align:center; color:var(--text-muted);">Ainda nao existem registos de acesso.</td></tr>`;
+        } else {
+            history.forEach(h => {
+                const ts = typeof h === 'string' ? h : h.t;
+                const type = typeof h === 'string' ? 'entrada' : h.type;
+                const dateObj = new Date(ts);
+                const dateStr = dateObj.toLocaleDateString('pt-PT');
+                const timeStr = dateObj.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+
+                html += `
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.02);">
+                        <td style="padding:12px 15px; font-size:0.85rem;">
+                            <div style="color:#fff; font-weight:600;">${dateStr}</div>
+                            <div style="font-size:0.7rem; color:var(--text-muted);">${timeStr}</div>
+                        </td>
+                        <td style="padding:12px 15px; text-align:center;">
+                            <span style="background:${type === 'entrada' ? 'rgba(16,185,129,0.1)' : 'rgba(145,27,43,0.1)'}; 
+                                         color:${type === 'entrada' ? 'var(--success)' : 'var(--primary)'}; 
+                                         padding:3px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; text-transform:uppercase;">
+                                ${type}
+                            </span>
+                        </td>
+                        <td style="padding:12px 15px; text-align:right;">
+                            <i class="fas fa-check-circle" style="color:var(--success); font-size:0.8rem;"></i>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="margin-top:1.5rem; display:flex; gap:10px;">
+                    <button class="btn btn-ghost" onclick="app.closeModal()" style="flex:1;">Fechar</button>
+                    <button class="btn btn-ghost" onclick="if(confirm('Limpar todo o historico deste cliente?')) { app.clearQRClientHistory('${c.id}'); }" style="color:var(--danger); font-size:0.8rem;">
+                        <i class="fas fa-trash-alt"></i> Limpar Log
+                    </button>
+                </div>
+            </div>
+        `;
+
+        this.showModal(html);
+    }
+
+    clearQRClientHistory(id) {
+        const c = this.state.qrClients.find(cli => cli.id === id);
+        if (c) {
+            c.historico = [];
+            this.saveState();
+            this.closeModal();
+            this.renderContent();
+            this.showToast("Historico limpo com sucesso!");
+        }
     }
 
     deleteQRClient(id) {
@@ -6098,7 +6191,12 @@ Bons treinos!`;
 
         // Validar limite diario (Apenas para clientes)
         if (c.type !== 'admin' && c.type !== 'teacher') {
-            const entriesHj = (c.historico || []).filter(h => h.startsWith(hj)).length;
+            const entriesHj = (c.historico || []).filter(h => {
+                const ts = typeof h === 'string' ? h : h.t;
+                const type = typeof h === 'string' ? 'entrada' : h.type;
+                return ts.startsWith(hj) && type === 'entrada';
+            }).length;
+
             if (entriesHj >= 2) {
                 this.showQRMsg(` ${c.nome}: Limite diario atingido`, "bg-qr-warning");
                 this.lastProcessedQR = id;
@@ -6107,19 +6205,33 @@ Bons treinos!`;
             }
         }
 
-        // Processar sucesso
-        if (c.type !== 'admin' && c.type !== 'teacher') {
-            c.ent--;
+        // Determinar se e Entrada ou Saida
+        if (!c.historico) c.historico = [];
+        let eventType = 'entrada';
+        const lastAccess = c.historico[0];
+        if (lastAccess) {
+            const lastDate = (typeof lastAccess === 'string' ? lastAccess : lastAccess.t).split('T')[0];
+            if (lastDate === hj) {
+                const lastType = (typeof lastAccess === 'string' ? 'entrada' : lastAccess.type);
+                eventType = (lastType === 'entrada') ? 'saída' : 'entrada';
+            }
         }
 
-        if (!c.historico) c.historico = [];
-        c.historico.unshift(agora.toISOString());
+        // Processar sucesso
+        if (c.type !== 'admin' && c.type !== 'teacher') {
+            if (eventType === 'entrada') c.ent--;
+        }
+
+        c.historico.unshift({
+            t: agora.toISOString(),
+            type: eventType
+        });
 
         const welcomeMsg = (c.type === 'admin' || c.type === 'teacher')
-            ? ` Bem-vindo, ${c.nome}! Acesso Staff Autorizado.`
-            : ` Bem-vindo, ${c.nome}! Entrada validada.`;
+            ? ` Bem-vindo, ${c.nome}! Staff (${eventType.toUpperCase()})`
+            : ` Bem-vindo, ${c.nome}! ${eventType === 'entrada' ? 'Entrada Validada' : 'Saida Registada'}.`;
 
-        this.showQRMsg(welcomeMsg, "bg-qr-success");
+        this.showQRMsg(welcomeMsg, eventType === 'entrada' ? "bg-qr-success" : "bg-qr-warning");
         this.lastProcessedQR = id;
         this.lastProcessedTime = Date.now();
 
