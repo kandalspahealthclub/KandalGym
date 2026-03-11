@@ -5412,63 +5412,62 @@ Bons treinos!`;
 
             return `
                 <tr style="border-bottom: 1px solid var(--surface-border); transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-                    <td style="padding: 1rem;">
-                        <div style="background: rgba(145,27,43,0.1); color: var(--primary); padding: 5px 10px; border-radius: 8px; font-weight: 800; font-family: monospace; display: inline-block; font-size: 1rem;">${c.id}</div>
+                    <td style="padding: 0.75rem 0.5rem;">
+                        <div style="background: rgba(145,27,43,0.1); color: var(--primary); padding: 3px 8px; border-radius: 6px; font-weight: 700; font-family: monospace; display: inline-block; font-size: 0.85rem;">${c.id}</div>
                     </td>
-                    <td style="padding: 1rem;">
+                    <td style="padding: 0.75rem 0.5rem; min-width: 180px;">
                         <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" 
-                            style="background:transparent; border:none; color:#fff; font-weight:700; font-size:1rem; width:100%; border-bottom: 1px dashed rgba(255,255,255,0.05); padding: 2px 0; margin-bottom:2px;">
+                            style="background:transparent; border:none; color:#fff; font-weight:600; font-size:0.9rem; width:100%; border-bottom: 1px dashed rgba(255,255,255,0.05); padding: 2px 5px; margin-bottom:2px;">
                         <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" 
-                            style="background:transparent; border:none; color:var(--text-muted); font-size:0.75rem; width:100%; border-bottom: 1px dashed rgba(255,255,255,0.03);">
+                            style="background:transparent; border:none; color:var(--text-muted); font-size:0.7rem; width:100%; border-bottom: 1px dashed rgba(255,255,255,0.03); padding-left: 5px;">
                     </td>
-                    <td style="padding: 1rem; text-align:center;">
+                    <td style="padding: 0.75rem 0.5rem; text-align:center;">
                         <div style="display:flex; justify-content:center;">
-                            <label class="switch" style="position:relative; display:inline-block; width:44px; height:24px;">
+                            <label class="switch" style="position:relative; display:inline-block; width:38px; height:20px;">
                                 <input type="checkbox" ${c.ativo ? 'checked' : ''} onchange="app.toggleQRClientStatus('${c.id}')" style="opacity:0; width:0; height:0;">
-                                <span style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:${c.ativo ? 'var(--success)' : '#475569'}; border-radius:24px; transition:0.3s;">
-                                    <span style="position:absolute; content:''; height:18px; width:18px; left:3px; bottom:3px; background-color:white; border-radius:50%; transition:0.3s; transform:${c.ativo ? 'translateX(20px)' : 'translateX(0)'};"></span>
+                                <span style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:${c.ativo ? 'var(--success)' : '#475569'}; border-radius:20px; transition:0.3s;">
+                                    <span style="position:absolute; content:''; height:14px; width:14px; left:3px; bottom:3px; background-color:white; border-radius:50%; transition:0.3s; transform:${c.ativo ? 'translateX(18px)' : 'translateX(0)'};"></span>
                                 </span>
                             </label>
                         </div>
                     </td>
-                    <td style="padding: 1rem;">
-                        <div style="display: flex; align-items: center; justify-content:center; gap: 8px;">
-                            <button class="btn-circular-sm" onclick="app.editQRCredit('${c.id}', -1)" style="background:rgba(255,255,255,0.05); color:var(--text-muted); border:none; width:28px; height:28px; border-radius:50%; cursor:pointer;"><i class="fas fa-minus" style="font-size:0.7rem;"></i></button>
+                    <td style="padding: 0.75rem 0.5rem;">
+                        <div style="display: flex; align-items: center; justify-content:center; gap: 5px;">
+                            <button class="btn-circular-sm" onclick="app.editQRCredit('${c.id}', -1)" style="width:24px; height:24px;"><i class="fas fa-minus" style="font-size:0.6rem;"></i></button>
                             <input type="number" value="${c.ent}" onchange="app.updateQRClientField('${c.id}', 'ent', parseInt(this.value) || 0)"
-                                style="background:transparent; border:none; color:${c.ent <= 5 ? 'var(--danger)' : '#fff'}; font-weight:800; width:35px; text-align:center; outline:none; font-size:1.1rem;">
-                            <button class="btn-circular-sm" onclick="app.editQRCredit('${c.id}', 1)" style="background:rgba(145,27,43,0.1); color:var(--primary); border:none; width:28px; height:28px; border-radius:50%; cursor:pointer;"><i class="fas fa-plus" style="font-size:0.7rem;"></i></button>
+                                style="background:rgba(255,255,255,0.03); border:1px solid var(--surface-border); border-radius:6px; color:${c.ent <= 5 ? 'var(--danger)' : '#fff'}; font-weight:700; width:45px; text-align:center; outline:none; font-size:0.95rem; height:30px;">
+                            <button class="btn-circular-sm" onclick="app.editQRCredit('${c.id}', 1)" style="width:24px; height:24px; color:var(--primary); background:rgba(145,27,43,0.1);"><i class="fas fa-plus" style="font-size:0.6rem;"></i></button>
                         </div>
                     </td>
-                    <td style="padding: 1rem; text-align:center;">
-                        <div style="display: flex; align-items: center; justify-content:center; gap: 10px;">
-                            <button class="btn-circular-sm" onclick="app.editQREntryHj('${c.id}', -1)" style="background:rgba(255,255,255,0.05); color:var(--text-muted); border:none; width:24px; height:24px; border-radius:50%;"><i class="fas fa-minus" style="font-size:0.6rem;"></i></button>
-                            <div style="background:${entHj >= 2 ? 'var(--danger)' : 'var(--success)'}; color:white; padding:3px 10px; border-radius:12px; font-weight:700; font-size:0.8rem;">${entHj} / 2</div>
-                            <button class="btn-circular-sm" onclick="app.editQREntryHj('${c.id}', 1)" style="background:rgba(16, 185, 129, 0.1); color:var(--success); border:none; width:24px; height:24px; border-radius:50%;"><i class="fas fa-plus" style="font-size:0.6rem;"></i></button>
+                    <td style="padding: 0.75rem 0.5rem; text-align:center;">
+                        <div style="display: flex; align-items: center; justify-content:center; gap: 8px;">
+                            <button class="btn-circular-sm" onclick="app.editQREntryHj('${c.id}', -1)" style="width:22px; height:22px;"><i class="fas fa-minus" style="font-size:0.5rem;"></i></button>
+                            <div style="color:${entHj >= 2 ? 'var(--danger)' : 'var(--accent)'}; font-weight:800; font-size:0.85rem; min-width:40px;">${entHj} / 2</div>
+                            <button class="btn-circular-sm" onclick="app.editQREntryHj('${c.id}', 1)" style="width:22px; height:22px;"><i class="fas fa-plus" style="font-size:0.5rem;"></i></button>
                         </div>
                     </td>
-                    <td style="padding: 1rem;">
+                    <td style="padding: 0.75rem 0.5rem;">
                         <input type="date" value="${c.validade}" onchange="app.updateQRClientField('${c.id}', 'validade', this.value)"
-                            style="background:rgba(255,255,255,0.03); border:1px solid var(--surface-border); border-radius:8px; color:${hoje > c.validade ? 'var(--danger)' : 'inherit'}; font-size:0.85rem; padding:5px 10px; cursor:pointer;">
+                            style="background:rgba(255,255,255,0.03); border:1px solid var(--surface-border); border-radius:6px; color:${hoje > c.validade ? 'var(--danger)' : 'inherit'}; font-size:0.8rem; padding:4px 8px; cursor:pointer;">
                     </td>
-                    <td style="padding: 1rem; text-align: right;">
-                        <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                            <button class="btn btn-ghost btn-sm" onclick="app.toggleQRCodeDisplay('qr-row-area-${idx}', '${c.id}')" style="background: rgba(255,255,255,0.05); border-radius:10px; height:38px; width:38px; color:var(--text-main);" title="Ver Codigo QR"><i class="fas fa-qrcode"></i></button>
-                            <button class="btn btn-ghost btn-sm" onclick="app.deleteQRClient('${c.id}')" style="border-radius:10px; height:38px; width:38px; color:var(--danger); background:rgba(239, 68, 68, 0.05);" title="Eliminar"><i class="fas fa-trash"></i></button>
+                    <td style="padding: 0.75rem 0.5rem; text-align: right;">
+                        <div style="display: flex; gap: 5px; justify-content: flex-end;">
+                            <button class="btn btn-ghost btn-sm" onclick="app.toggleQRCodeDisplay('qr-row-area-${idx}', '${c.id}')" style="background: rgba(255,255,255,0.05); border-radius:8px; height:34px; width:34px; color:var(--text-main); font-size:0.8rem;" title="Ver Codigo QR"><i class="fas fa-qrcode"></i></button>
+                            <button class="btn btn-ghost btn-sm" onclick="app.deleteQRClient('${c.id}')" style="border-radius:8px; height:34px; width:34px; color:var(--danger); background:rgba(239, 68, 68, 0.05); font-size:0.8rem;" title="Eliminar"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>
                 <tr id="qr-row-area-${idx}" style="display:none; background: rgba(0,0,0,0.2);">
-                    <td colspan="7" style="padding: 2.5rem 1rem; text-align: center;">
-                        <div style="display:inline-flex; flex-direction:column; align-items:center; gap:1.5rem; background:rgba(255,255,255,0.02); padding:2rem; border-radius:24px; border:1px solid var(--surface-border);">
-                            <div id="canvas-${idx}" style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></div>
+                    <td colspan="7" style="padding: 1.5rem 1rem; text-align: center;">
+                        <div style="display:inline-flex; flex-direction:column; align-items:center; gap:1.2rem; background:rgba(255,255,255,0.02); padding:1.5rem; border-radius:20px; border:1px solid var(--surface-border);">
+                            <div id="canvas-${idx}" style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></div>
                             <div style="text-align:center;">
-                                <div style="font-weight: 800; color: var(--primary); font-family: monospace; font-size: 1.5rem; margin-bottom:5px;">${c.id}</div>
-                                <div style="color:var(--text-muted); font-size:0.85rem;">Nome: ${c.nome}</div>
+                                <div style="font-weight: 800; color: var(--primary); font-family: monospace; font-size: 1.2rem; margin-bottom:3px;">${c.id}</div>
+                                <div style="color:var(--text-muted); font-size:0.8rem;">Nome: ${c.nome}</div>
                             </div>
-                            <button class="btn btn-primary" onclick="app.downloadQRCode('canvas-${idx}', '${c.id}', '${c.nome}')" style="padding: 12px 25px; border-radius:15px; font-size:1rem; box-shadow: 0 5px 15px rgba(145,27,43,0.3);">
+                            <button class="btn btn-primary" onclick="app.downloadQRCode('canvas-${idx}', '${c.id}', '${c.nome}')" style="padding: 10px 20px; border-radius:12px; font-size:0.9rem; box-shadow: 0 5px 15px rgba(145,27,43,0.3);">
                                 <i class="fas fa-download"></i> Descarregar QR Code
                             </button>
-                            <p style="font-size:0.75rem; color:var(--text-muted); max-width:250px;">Pode imprimir ou enviar este codigo diretamente ao aluno para acesso ao ginasio.</p>
                         </div>
                     </td>
                 </tr>
