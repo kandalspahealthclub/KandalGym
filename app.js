@@ -5300,6 +5300,11 @@ Bons treinos!`;
                         <h2 style="margin: 0;"><i class="fas fa-qrcode"></i> Gestao de Entradas</h2>
                         <p style="color:var(--text-muted); font-size:0.9rem; margin-top:5px;">Controle e validacao de acessos ao ginasio.</p>
                     </div>
+                    <div>
+                        <button class="btn btn-secondary" onclick="app.syncStaffQR()" style="height:45px;">
+                            <i class="fas fa-user-shield"></i> Gerar QR Staff
+                        </button>
+                    </div>
                 </div>
 
                 <div class="stats-grid" style="margin-bottom: 2rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
@@ -5409,15 +5414,22 @@ Bons treinos!`;
         return qrList.map((c, idx) => {
             const entHj = (c.historico || []).filter(h => h.startsWith(hoje)).length;
             const isInvalid = hoje > c.validade || !c.ativo;
+            const isStaff = c.type === 'admin' || c.type === 'teacher';
 
             return `
                 <tr style="border-bottom: 1px solid var(--surface-border); transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
                     <td style="padding: 0.75rem 0.5rem;">
-                        <div style="background: rgba(145,27,43,0.1); color: var(--primary); padding: 3px 8px; border-radius: 6px; font-weight: 700; font-family: monospace; display: inline-block; font-size: 0.85rem;">${c.id}</div>
+                        <div style="background: ${c.type === 'admin' ? 'rgba(196,162,77,0.1)' : c.type === 'teacher' ? 'rgba(16,185,129,0.1)' : 'rgba(145,27,43,0.1)'}; 
+                             color: ${c.type === 'admin' ? 'var(--accent)' : c.type === 'teacher' ? 'var(--success)' : 'var(--primary)'}; 
+                             padding: 3px 8px; border-radius: 6px; font-weight: 700; font-family: monospace; display: inline-block; font-size: 0.85rem;">${c.id}</div>
                     </td>
                     <td style="padding: 0.75rem 0.5rem; min-width: 180px;">
-                        <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" 
-                            style="background:transparent; border:none; color:#fff; font-weight:600; font-size:0.9rem; width:100%; border-bottom: 1px dashed rgba(255,255,255,0.05); padding: 2px 5px; margin-bottom:2px;">
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" 
+                                style="background:transparent; border:none; color:#fff; font-weight:600; font-size:0.9rem; width:auto; flex:1; border-bottom: 1px dashed rgba(255,255,255,0.05); padding: 2px 5px; margin-bottom:2px;">
+                            ${c.type === 'admin' ? '<span style="font-size:0.6rem; background:var(--accent); color:#000; padding:1px 4px; border-radius:4px; font-weight:700;">ADMIN</span>' : ''}
+                            ${c.type === 'teacher' ? '<span style="font-size:0.6rem; background:var(--success); color:#fff; padding:1px 4px; border-radius:4px; font-weight:700;">STAFF</span>' : ''}
+                        </div>
                         <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" 
                             style="background:transparent; border:none; color:var(--text-muted); font-size:0.7rem; width:100%; border-bottom: 1px dashed rgba(255,255,255,0.03); padding-left: 5px;">
                     </td>
@@ -5433,22 +5445,31 @@ Bons treinos!`;
                     </td>
                     <td style="padding: 0.75rem 0.5rem;">
                         <div style="display: flex; align-items: center; justify-content:center; gap: 5px;">
-                            <button class="btn-circular-sm" onclick="app.editQRCredit('${c.id}', -1)" style="width:24px; height:24px;"><i class="fas fa-minus" style="font-size:0.6rem;"></i></button>
-                            <input type="number" value="${c.ent}" onchange="app.updateQRClientField('${c.id}', 'ent', parseInt(this.value) || 0)"
-                                style="background:rgba(255,255,255,0.03); border:1px solid var(--surface-border); border-radius:6px; color:${c.ent <= 5 ? 'var(--danger)' : '#fff'}; font-weight:700; width:60px; text-align:center; outline:none; font-size:0.85rem; height:30px;">
-                            <button class="btn-circular-sm" onclick="app.editQRCredit('${c.id}', 1)" style="width:24px; height:24px; color:var(--primary); background:rgba(145,27,43,0.1);"><i class="fas fa-plus" style="font-size:0.6rem;"></i></button>
+                            ${isStaff ?
+                    '<span style="color:var(--text-muted); font-size:0.8rem; font-weight:600;">Ilimitado</span>' :
+                    `<button class="btn-circular-sm" onclick="app.editQRCredit('${c.id}', -1)" style="width:24px; height:24px;"><i class="fas fa-minus" style="font-size:0.6rem;"></i></button>
+                                 <input type="number" value="${c.ent}" onchange="app.updateQRClientField('${c.id}', 'ent', parseInt(this.value) || 0)"
+                                    style="background:rgba(255,255,255,0.03); border:1px solid var(--surface-border); border-radius:6px; color:${c.ent <= 5 ? 'var(--danger)' : '#fff'}; font-weight:700; width:60px; text-align:center; outline:none; font-size:0.85rem; height:30px;">
+                                 <button class="btn-circular-sm" onclick="app.editQRCredit('${c.id}', 1)" style="width:24px; height:24px; color:var(--primary); background:rgba(145,27,43,0.1);"><i class="fas fa-plus" style="font-size:0.6rem;"></i></button>`
+                }
                         </div>
                     </td>
                     <td style="padding: 0.75rem 0.5rem; text-align:center;">
                         <div style="display: flex; align-items: center; justify-content:center; gap: 8px;">
-                            <button class="btn-circular-sm" onclick="app.editQREntryHj('${c.id}', -1)" style="width:22px; height:22px;"><i class="fas fa-minus" style="font-size:0.5rem;"></i></button>
-                            <div style="color:${entHj >= 2 ? 'var(--danger)' : 'var(--accent)'}; font-weight:800; font-size:0.85rem; min-width:40px;">${entHj} / 2</div>
-                            <button class="btn-circular-sm" onclick="app.editQREntryHj('${c.id}', 1)" style="width:22px; height:22px;"><i class="fas fa-plus" style="font-size:0.5rem;"></i></button>
+                            ${isStaff ?
+                    `<div style="color:var(--success); font-weight:700; font-size:0.8rem;">Livre</div>` :
+                    `<button class="btn-circular-sm" onclick="app.editQREntryHj('${c.id}', -1)" style="width:22px; height:22px;"><i class="fas fa-minus" style="font-size:0.5rem;"></i></button>
+                                 <div style="color:${entHj >= 2 ? 'var(--danger)' : 'var(--accent)'}; font-weight:800; font-size:0.85rem; min-width:40px;">${entHj} / 2</div>
+                                 <button class="btn-circular-sm" onclick="app.editQREntryHj('${c.id}', 1)" style="width:22px; height:22px;"><i class="fas fa-plus" style="font-size:0.5rem;"></i></button>`
+                }
                         </div>
                     </td>
                     <td style="padding: 0.75rem 0.5rem;">
-                        <input type="date" value="${c.validade}" onchange="app.updateQRClientField('${c.id}', 'validade', this.value)"
-                            style="background:rgba(255,255,255,0.03); border:1px solid var(--surface-border); border-radius:6px; color:${hoje > c.validade ? 'var(--danger)' : 'inherit'}; font-size:0.8rem; padding:4px 8px; cursor:pointer;">
+                        ${isStaff ?
+                    '<span style="color:var(--text-muted); font-size:0.8rem;">Vitalicia</span>' :
+                    `<input type="date" value="${c.validade}" onchange="app.updateQRClientField('${c.id}', 'validade', this.value)"
+                                style="background:rgba(255,255,255,0.03); border:1px solid var(--surface-border); border-radius:6px; color:${hoje > c.validade ? 'var(--danger)' : 'inherit'}; font-size:0.8rem; padding:4px 8px; cursor:pointer;">`
+                }
                     </td>
                     <td style="padding: 0.75rem 0.5rem; text-align: right;">
                         <div style="display: flex; gap: 5px; justify-content: flex-end;">
@@ -5515,7 +5536,8 @@ Bons treinos!`;
             ativo: true,
             ent: 30,
             validade: validDate.toISOString().split('T')[0],
-            historico: []
+            historico: [],
+            type: 'client'
         });
 
         if (autoRedirect) {
@@ -5524,6 +5546,58 @@ Bons treinos!`;
             if (this.activeView !== 'qr_manager' && this.activeView !== 'dashboard') {
                 this.setView('qr_manager');
             }
+        }
+    }
+
+    syncStaffQR() {
+        if (!this.state.qrClients) this.state.qrClients = [];
+
+        let changed = false;
+
+        // Admins
+        (this.state.admins || []).forEach(admin => {
+            const exists = this.state.qrClients.find(qc => qc.clientId === admin.id && qc.type === 'admin');
+            if (!exists) {
+                this.state.qrClients.push({
+                    id: "A" + admin.id,
+                    clientId: admin.id,
+                    nome: admin.name,
+                    tel: admin.email || "Admin",
+                    ativo: true,
+                    ent: 9999,
+                    validade: '2099-12-31',
+                    historico: [],
+                    type: 'admin'
+                });
+                changed = true;
+            }
+        });
+
+        // Teachers
+        (this.state.teachers || []).forEach(t => {
+            const exists = this.state.qrClients.find(qc => qc.clientId === t.id && qc.type === 'teacher');
+            if (!exists) {
+                this.state.qrClients.push({
+                    id: "T" + t.id,
+                    clientId: t.id,
+                    nome: t.name,
+                    tel: t.phone || "Professor",
+                    ativo: true,
+                    ent: 9999,
+                    validade: '2099-12-31',
+                    historico: [],
+                    type: 'teacher'
+                });
+                changed = true;
+            }
+        });
+
+        if (changed) {
+            this.saveState();
+            this.showToast("QR Codes de Staff sincronizados!");
+            this.renderContent();
+        } else {
+            this.showToast("Todos os staff ja possuem QR ativo.");
         }
     }
 
@@ -5873,7 +5947,7 @@ Bons treinos!`;
         }
 
         // Validar creditos
-        if ((c.ent || 0) <= 0) {
+        if ((c.ent || 0) <= 0 && c.type !== 'admin' && c.type !== 'teacher') {
             this.showQRMsg(` ${c.nome}: Sem creditos`, "bg-qr-danger");
             this.lastProcessedQR = id;
             this.lastProcessedTime = Date.now();
@@ -5893,21 +5967,30 @@ Bons treinos!`;
             }
         }
 
-        // Validar limite diario
-        const entriesHj = (c.historico || []).filter(h => h.startsWith(hj)).length;
-        if (entriesHj >= 2) {
-            this.showQRMsg(` ${c.nome}: Limite diario atingido`, "bg-qr-warning");
-            this.lastProcessedQR = id;
-            this.lastProcessedTime = Date.now();
-            return;
+        // Validar limite diario (Apenas para clientes)
+        if (c.type !== 'admin' && c.type !== 'teacher') {
+            const entriesHj = (c.historico || []).filter(h => h.startsWith(hj)).length;
+            if (entriesHj >= 2) {
+                this.showQRMsg(` ${c.nome}: Limite diario atingido`, "bg-qr-warning");
+                this.lastProcessedQR = id;
+                this.lastProcessedTime = Date.now();
+                return;
+            }
         }
 
         // Processar sucesso
-        c.ent--;
+        if (c.type !== 'admin' && c.type !== 'teacher') {
+            c.ent--;
+        }
+
         if (!c.historico) c.historico = [];
         c.historico.unshift(agora.toISOString());
 
-        this.showQRMsg(` Bem - vindo, ${c.nome} !Entrada validada.`, "bg-qr-success");
+        const welcomeMsg = (c.type === 'admin' || c.type === 'teacher')
+            ? ` Bem-vindo, ${c.nome}! Acesso Staff Autorizado.`
+            : ` Bem-vindo, ${c.nome}! Entrada validada.`;
+
+        this.showQRMsg(welcomeMsg, "bg-qr-success");
         this.lastProcessedQR = id;
         this.lastProcessedTime = Date.now();
 
