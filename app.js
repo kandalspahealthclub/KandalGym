@@ -692,7 +692,7 @@ class FitnessApp {
             }
         } catch (error) {
             console.error('Erro ao adicionar utilizador:', error);
-            alert('Erro ao guardar utilizador. Por favor, tente novamente ou contacte o suporte.');
+            alert('Erro ao guardar utilizador: ' + error.message);
         }
     }
 
