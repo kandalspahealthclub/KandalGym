@@ -572,6 +572,15 @@ class FitnessApp {
                     <div id="client-job-container">
                         <input type="text" id="new-user-job" placeholder="Profissao (Obrigatorio)">
                     </div>
+                    <div id="client-plan-container">
+                        <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Plano de Acesso</label>
+                        <select id="new-user-plan">
+                            <option value="total">Total (Musculacao + Todas as Aulas)</option>
+                            <option value="musculacao">Musculacao (Sem Aulas)</option>
+                            <option value="aulas">Aulas (Exceto Pilates)</option>
+                            <option value="pilates">Pilates (So Aulas de Pilates)</option>
+                        </select>
+                    </div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
                         <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
                         <button class="btn btn-primary" onclick="app.addUser()">Adicionar</button>
@@ -648,7 +657,8 @@ class FitnessApp {
                     goal: 'Novo Aluno',
                     teacherId: teacherId ? Number(teacherId) : null,
                     birthDate: document.getElementById('new-user-dob').value,
-                    job: job
+                    job: job,
+                    plan: document.getElementById('new-user-plan')?.value || 'total'
                 };
                 this.state.clients.push(newClient);
 
@@ -3596,8 +3606,9 @@ Bons treinos!`;
                 <div>
                     <h2 style="margin:0;">Ficha: ${c.name}</h2>
                     ${c.birthDate ? `<small style="color:var(--text-muted); font-size:0.9rem;">${this.calculateAge(c.birthDate)} anos (${this.formatDate(c.birthDate)})` : ''}
-                    ${c.job ? ` • <i class="fas fa-briefcase" style="font-size:0.8rem; opacity:0.7;"></i> ${c.job}` : ''}
+                    ${c.job ? ` &bull; <i class="fas fa-briefcase" style="font-size:0.8rem; opacity:0.7;"></i> ${c.job}` : ''}
                     ${c.birthDate ? '</small>' : ''}
+                    ${(() => { const p = this.getPlanLabel(c.plan); return `<div style="display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,0.05); border:1px solid ${p.color}; color:${p.color}; border-radius:20px; padding:3px 10px; font-size:0.75rem; font-weight:700; margin-top:6px;"><i class="fas ${p.icon}" style="font-size:0.65rem;"></i> ${p.label}</div>`; })()}
                     <div style="font-size:0.85rem; color:var(--primary); margin-top:5px; font-weight:500;">
                         <i class="fas fa-user-tie" style="font-size:0.8rem; margin-right:5px;"></i> 
                         ${(() => {
@@ -3606,13 +3617,21 @@ Bons treinos!`;
             })()}
                     </div>
                 </div>
-                <div style="display:flex; gap:0.5rem;">
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
                     ${(this.role === 'teacher' || this.role === 'admin') ? `
                         <button class="btn btn-ghost btn-sm" style="color:var(--accent); font-size: 1.1rem; padding: 0.5rem 0.8rem;" onclick="app.showManualNotificationModal(${c.id})" title="Enviar Notificacao Direta">
                             <i class="fas fa-bell"></i>
                         </button>
                     ` : ''}
                     ${this.role === 'teacher' ? `<button class="btn btn-primary btn-sm" onclick="app.showTransferClientModal(${c.id})"><i class="fas fa-exchange-alt"></i> Transferir</button>` : ''}
+                    ${this.role === 'admin' ? `
+                        <select onchange="app.updateClientPlan(${c.id}, this.value)" style="height:36px; font-size:0.8rem; padding:0 10px; border-radius:8px; background:rgba(255,255,255,0.07); border:1px solid var(--surface-border); color:#fff;" title="Mudar Plano de Acesso">
+                            <option value="total" ${(c.plan || 'total') === 'total' ? 'selected' : ''}>Total</option>
+                            <option value="musculacao" ${c.plan === 'musculacao' ? 'selected' : ''}>Musculacao</option>
+                            <option value="aulas" ${c.plan === 'aulas' ? 'selected' : ''}>Aulas</option>
+                            <option value="pilates" ${c.plan === 'pilates' ? 'selected' : ''}>Pilates</option>
+                        </select>
+                    ` : ''}
                     <button class="btn btn-secondary" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')">
                         <i class="fas fa-arrow-left"></i> Voltar
                     </button>
@@ -4055,6 +4074,36 @@ Bons treinos!`;
         }
     }
 
+    getPlanLabel(plan) {
+        const plans = {
+            total: { label: 'Plano Total', color: 'var(--accent)', icon: 'fa-star' },
+            musculacao: { label: 'Musculacao', color: '#4A90E2', icon: 'fa-dumbbell' },
+            aulas: { label: 'Aulas Gerais', color: 'var(--success)', icon: 'fa-calendar-check' },
+            pilates: { label: 'Pilates', color: '#9B59B6', icon: 'fa-spa' }
+        };
+        return plans[plan] || plans['total'];
+    }
+
+    canClientEnrollInClass(client, cls) {
+        const plan = client.plan || 'total';
+        const className = (cls.name || '').toLowerCase();
+        const isPilates = className.includes('pilates');
+
+        if (plan === 'total') return { allowed: true };
+        if (plan === 'musculacao') return { allowed: false, reason: 'O seu plano é de Musculacao e nao inclui reserva de aulas.' };
+        if (plan === 'pilates') {
+            return isPilates
+                ? { allowed: true }
+                : { allowed: false, reason: 'O seu plano só permite reservar aulas de Pilates.' };
+        }
+        if (plan === 'aulas') {
+            return isPilates
+                ? { allowed: false, reason: 'O seu plano nao inclui aulas de Pilates. Contacte a recepçao para fazer upgrade.' }
+                : { allowed: true };
+        }
+        return { allowed: true };
+    }
+
     renderUserCard(user, type) {
         if (!user) return '';
         const isTeacher = type === 'teacher';
@@ -4099,6 +4148,7 @@ Bons treinos!`;
                                 <i class="fas fa-briefcase" style="font-size:0.7rem;"></i> ${user.job}
                             </div>
                         ` : ''}
+                        ${isClient ? (() => { const p = this.getPlanLabel(user.plan); return `<div style="font-size:0.7rem; font-weight:600; margin-top:4px; color:${p.color};"><i class="fas ${p.icon}" style="font-size:0.6rem;"></i> ${p.label}</div>`; })() : ''}
                         <div style="margin-top:5px;"><span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted);"></span></div>
                     </div>
                 </div>
@@ -4481,6 +4531,16 @@ Bons treinos!`;
             alert('Professor atribuido com sucesso!');
             this.switchAdminTab('clients');
         }
+    }
+
+    async updateClientPlan(clientId, plan) {
+        const client = this.state.clients.find(c => Number(c.id) === Number(clientId));
+        if (!client) return;
+        client.plan = plan;
+        await this.saveState();
+        const p = this.getPlanLabel(plan);
+        this.showToast(`Plano alterado para: ${p.label}`);
+        this.renderContent();
     }
 
     deleteUser(type, id, name) {
@@ -7006,6 +7066,22 @@ Bons treinos!`;
         }
 
         if (participants.map(id => Number(id)).includes(clientId)) return;
+
+        // Verificar permissao do plano
+        const client = this.state.clients.find(cl => Number(cl.id) === clientId);
+        if (client && cls) {
+            const check = this.canClientEnrollInClass(client, cls);
+            if (!check.allowed) {
+                return this.showModal(`
+                    <div style="text-align:center; padding:1rem 0;">
+                        <div style="font-size:3rem; margin-bottom:1rem;">🔒</div>
+                        <h3 style="margin-bottom:0.5rem;">Acesso Restrito</h3>
+                        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">${check.reason}</p>
+                        <button class="btn btn-secondary" onclick="app.closeModal()">Fechar</button>
+                    </div>
+                `, '380px');
+            }
+        }
 
         if (cls && participants.length >= (cls.capacity || 20)) {
             return alert('Esta aula ja atingiu a lotação maxima.');
