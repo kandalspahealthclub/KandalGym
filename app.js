@@ -608,6 +608,7 @@ class FitnessApp {
             const name = document.getElementById('new-user-name').value.trim();
             const email = document.getElementById('new-user-email').value.trim().toLowerCase();
             const pass = document.getElementById('new-user-pass').value.trim();
+            const phone = document.getElementById('new-user-phone').value.trim();
             const jobInput = document.getElementById('new-user-job');
             const job = jobInput ? jobInput.value.trim() : '';
 
