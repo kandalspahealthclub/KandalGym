@@ -535,7 +535,7 @@ class FitnessApp {
                 <div style="display:flex; flex-direction:column; gap:1.25rem;">
                     <div>
                         <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Tipo</label>
-                        <select id="new-user-type" onchange="const val = this.value; const isClient = val === 'client'; ['teacher-select-container', 'client-dob-container', 'client-job-container'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display = isClient ? 'block' : 'none'; });">
+                        <select id="new-user-type" onchange="const val = this.value; const isClient = val === 'client'; ['teacher-select-container', 'client-dob-container', 'client-job-container', 'client-plan-container'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display = isClient ? 'block' : 'none'; });">
                             <option value="client">Aluno/Cliente</option>
                             <option value="teacher">Professor/Trainer</option>
                             ${this.role === 'admin' ? '<option value="admin">Administrador (Gestor)</option>' : ''}
