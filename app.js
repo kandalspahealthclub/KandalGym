@@ -6932,11 +6932,12 @@ Bons treinos!`;
         const name = document.getElementById('cls-name').value.trim();
         const date = document.getElementById('cls-date').value;
         const time = document.getElementById('cls-time').value;
-        const teacherId = Number(document.getElementById('cls-teacher').value);
+        const teacherVal = document.getElementById('cls-teacher').value;
+        const teacherId = teacherVal ? Number(teacherVal) : null;
         const capacity = Number(document.getElementById('cls-capacity').value);
 
-        if (!name || !time || !teacherId || !date) {
-            return alert('Preencha os campos obrigatorios (Nome, Data, Hora e Professor).');
+        if (!name || !time || !date) {
+            return alert('Preencha os campos obrigatorios (Nome, Data e Hora).');
         }
 
         const isRecurring = document.getElementById('cls-recurring').checked;
