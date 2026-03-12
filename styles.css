@@ -451,7 +451,7 @@ option {
     }
 }
 
-.fab {
+.action-fab {
     position: fixed;
     bottom: calc(5.5rem + var(--safe-bottom));
     right: 1.5rem;
@@ -471,12 +471,12 @@ option {
     transition: transform 0.2s;
 }
 
-.fab:active {
+.action-fab:active {
     transform: scale(0.9);
 }
 
 @media (min-width: 901px) {
-    .fab {
+    .action-fab {
         bottom: 2.5rem;
         right: 2.5rem;
     }

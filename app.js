@@ -507,20 +507,19 @@ class FitnessApp {
     }
 
     renderFAB() {
-        const existingFab = document.querySelector('.fab');
+        const existingFab = document.querySelector('.action-fab');
         if (existingFab) existingFab.remove();
 
         if (this.role === 'admin') {
             const fab = document.createElement('button');
-            fab.className = 'fab animate-fade-in';
+            fab.className = 'action-fab animate-fade-in';
             fab.innerHTML = '<i class="fas fa-plus"></i>';
             fab.onclick = () => {
-                if (this.activeView === 'users' || this.activeView === 'dashboard') {
+                const userTab = document.querySelector('.admin-tabs .tab.active');
+                if (this.activeView === 'users') {
                     this.showAddUserModal();
-                } else if (this.activeView === 'exercises') {
-                    this.showAddExerciseModal();
-                } else if (this.activeView === 'foods') {
-                    this.showAddFoodModal();
+                } else if (this.activeView === 'classes') {
+                    // Logic to add class if needed
                 } else {
                     this.showAddUserModal();
                 }
@@ -794,25 +793,27 @@ Bons treinos!`;
         const whatsappLink = `https://wa.me/${cleanPhone.startsWith('351') || (cleanPhone.length < 12 && cleanPhone.length >= 9) ? (cleanPhone.length === 9 ? '351' + cleanPhone : cleanPhone) : cleanPhone}?text=${encodeURIComponent(whatsappText)}`;
 
         this.showModal(`
-            <div style="text-align: center; padding: 0.5rem;">
-                <h2 style="margin-top: 0;">Plano Guardado!</h2>
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem;">
-                    O plano de <strong>${typeLabel}</strong> para <strong>${name}</strong> foi guardado com sucesso. Deseja notificar o aluno?
+            <div style="text-align: center; padding: 1rem 0;">
+                <h2 style="margin-top: 0; font-size: 1.5rem;">Plano Guardado!</h2>
+                <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem;">
+                    Deseja notificar o aluno <strong>${name}</strong>?
                 </p>
 
-                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                    <a href="${whatsappLink}" target="_blank" class="btn" style="text-decoration: none; background: #25D366; color: white; width: 100%;">
-                        <i class="fab fa-whatsapp"></i> Enviar por WhatsApp
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <a href="${whatsappLink}" target="_blank" class="btn" style="text-decoration: none; background: #25D366; color: white; display:flex; align-items:center; justify-content:center; gap:10px; height:50px; font-weight:600;">
+                        <i class="fab fa-whatsapp" style="font-size:1.2rem;"></i> Enviar por WhatsApp
                     </a>
-                    <a href="${mailtoLink}" class="btn btn-secondary" style="text-decoration: none; width: 100%;">
+                    
+                    <a href="${mailtoLink}" class="btn btn-secondary" style="text-decoration: none; display:flex; align-items:center; justify-content:center; gap:10px; height:50px; font-weight:600;">
                         <i class="fas fa-envelope"></i> Enviar por Email
                     </a>
-                    <button class="btn btn-ghost" onclick="app.closeModal(); app.setView('spy_view');" style="width: 100%;">
+
+                    <button class="btn btn-ghost" onclick="app.closeModal(); app.setView('spy_view');" style="margin-top: 0.5rem; font-weight: 500; opacity: 0.8;">
                         Concluir sem enviar
                     </button>
                 </div>
             </div>
-        `, '400px');
+        `, '380px');
     }
 
     showAddExerciseModal() {
