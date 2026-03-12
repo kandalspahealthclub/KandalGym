@@ -724,9 +724,6 @@ Bons treinos!`;
 
         modal.innerHTML = `
             <div class="modal-content animate-fade-in" style="max-width: 450px; text-align: center;">
-                <div style="background: var(--success); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: white; font-size: 1.5rem;">
-                    <i class="fas fa-check"></i>
-                </div>
                 <h2 style="margin-top: 0;">Conta Criada!</h2>
                 <p style="color: var(--text-muted); font-size: 0.9rem;">O utilizador <strong>${name}</strong> foi adicionado com sucesso ao sistema.</p>
                 
@@ -6690,7 +6687,7 @@ Bons treinos!`;
                 ${participants.length === 0 ? '<p style="text-align:center; color:var(--text-muted); padding:2rem; background:rgba(255,255,255,0.02); border-radius:12px;">Nenhum aluno inscrito ainda.</p>' :
                 participants.map(p => `
                     <div style="display:flex; align-items:center; gap:0.75rem; padding:0.8rem; background:rgba(255,255,255,0.03); border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
-                        <div style="width:36px; height:36px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:bold; color:#000;">
+                        <div style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:bold; color:#fff; border:1px solid var(--surface-border);">
                             ${p.name.substring(0, 2).toUpperCase()}
                         </div>
                         <div style="flex:1;">
@@ -6736,7 +6733,7 @@ Bons treinos!`;
             <div onclick="app.manualEnrollInClass('${classId}', ${m.id})" 
                 style="padding:10px 15px; cursor:pointer; border-bottom:1px solid var(--surface-border); display:flex; align-items:center; gap:10px;" 
                 onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                <div style="width:28px; height:28px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:bold; color:#000;">${m.name.substring(0, 2).toUpperCase()}</div>
+                <div style="width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:bold; color:#fff; border:1px solid var(--surface-border);">${m.name.substring(0, 2).toUpperCase()}</div>
                 <div style="flex:1;">
                     <div style="font-size:0.85rem; font-weight:600; color:#fff;">${m.name}</div>
                     <div style="font-size:0.7rem; color:var(--text-muted);">ID: ${m.id}</div>
