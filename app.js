@@ -6926,10 +6926,16 @@ Bons treinos!`;
                                                 <i class="fas fa-calendar-alt"></i> ${this.formatFullDate(c.day, c.date)}
                                             </div>
                                             <h4 style="margin-bottom:0.3rem; font-size:0.9rem; line-height:1.2; min-height:2.4em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${c.name}</h4>
-                                            <p style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.8rem;">
-                                                <i class="fas fa-user-tie"></i> ${teacher ? teacher.name : 'N/A'}<br>
-                                                <i class="fas fa-users"></i> ${participants.length} / ${c.capacity || 20}
-                                            </p>
+                                            <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.8rem; display:flex; align-items:center; gap:5px; justify-content:space-between;">
+                                                <div style="display:flex; align-items:center; gap:5px;">
+                                                    ${teacher && teacher.photoUrl ? 
+                                                        `<img src="${teacher.photoUrl}" style="width:20px; height:20px; border-radius:50%; object-fit:cover;">` : 
+                                                        `<i class="fas fa-user-tie"></i>`
+                                                    }
+                                                    <span>${teacher ? teacher.name : 'N/A'}</span>
+                                                </div>
+                                                <div><i class="fas fa-users"></i> ${participants.length} / ${c.capacity || 20}</div>
+                                            </div>
                                             
                                             <div style="margin-top:auto;">
                                                 ${this.isClassFinished(c) ? `
