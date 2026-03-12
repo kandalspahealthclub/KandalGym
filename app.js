@@ -537,7 +537,7 @@ class FitnessApp {
                 <div style="display:flex; flex-direction:column; gap:1.25rem;">
                     <div>
                         <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Tipo</label>
-                        <select id="new-user-type" onchange="const val = this.value; const isClient = val === 'client'; document.getElementById('teacher-select-container').style.display = isClient ? 'block' : 'none'; document.getElementById('client-dob-container').style.display = isClient ? 'block' : 'none';">
+                        <select id="new-user-type" onchange="const val = this.value; const isClient = val === 'client'; ['teacher-select-container', 'client-dob-container', 'client-job-container'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display = isClient ? 'block' : 'none'; });">
                             <option value="client">Aluno/Cliente</option>
                             <option value="teacher">Professor/Trainer</option>
                             ${this.role === 'admin' ? '<option value="admin">Administrador (Gestor)</option>' : ''}
@@ -601,10 +601,10 @@ class FitnessApp {
             const name = document.getElementById('new-user-name').value.trim();
             const email = document.getElementById('new-user-email').value.trim().toLowerCase();
             const pass = document.getElementById('new-user-pass').value.trim();
-            const phone = document.getElementById('new-user-phone').value.trim();
-            const job = document.getElementById('new-user-job').value.trim();
+            const jobInput = document.getElementById('new-user-job');
+            const job = jobInput ? jobInput.value.trim() : '';
 
-            if (!name || !email || !pass || !phone || (type === 'client' && !job)) return alert('Por favor, preencha todos os campos obrigatorios, incluindo a profissao.');
+            if (!name || !email || !pass || !phone || (type === 'client' && !job)) return alert('Por favor, preencha todos os campos obrigatorios' + (type === 'client' ? ', incluindo a profissao.' : '.'));
 
             // Garantir que as listas existem antes de verificar duplicados
             if (!this.state.clients) this.state.clients = [];
@@ -3847,11 +3847,13 @@ Bons treinos!`;
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
                 </div>
 
+                ${this.role === 'client' ? `
                 <div style="margin-bottom:1.5rem;">
                     <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Profissao</label>
                     <input type="text" id="edit-job" value="${user.job || ''}" placeholder="Ex: Engenheiro, Professor..."
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
                 </div>
+                ` : ''}
 
                 ${this.role === 'client' ? `
                 <div style="margin-bottom:1.5rem;">
@@ -3971,12 +3973,13 @@ Bons treinos!`;
         const name = document.getElementById('edit-name').value.trim();
         const email = document.getElementById('edit-email').value.trim();
         const phone = document.getElementById('edit-phone').value.trim();
-        const job = document.getElementById('edit-job').value.trim();
+        const jobInput = document.getElementById('edit-job');
+        const job = jobInput ? jobInput.value.trim() : '';
         const pass = document.getElementById('edit-pass').value;
         const btn = document.querySelector('button[onclick="app.updateProfile()"]');
 
-        if (!name || !email || !pass || !job) {
-            return alert('Nome, Email, Palavra-passe e Profissao sao obrigatorios.');
+        if (!name || !email || !pass || (this.role === 'client' && !job)) {
+            return alert('Nome, Email, Palavra-passe' + (this.role === 'client' ? ' e Profissao' : '') + ' sao obrigatorios.');
         }
 
         if (btn) {
@@ -3994,7 +3997,9 @@ Bons treinos!`;
                 user.name = name;
                 user.email = email;
                 user.phone = phone;
-                user.job = job;
+                if (this.role === 'client') {
+                    user.job = job;
+                }
                 user.password = pass;
 
                 const dobInput = document.getElementById('edit-dob');
