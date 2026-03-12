@@ -3597,7 +3597,9 @@ Bons treinos!`;
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
                 <div>
                     <h2 style="margin:0;">Ficha: ${c.name}</h2>
-                    ${c.birthDate ? `<small style="color:var(--text-muted); font-size:0.9rem;">${this.calculateAge(c.birthDate)} anos (${this.formatDate(c.birthDate)})</small>` : ''}
+                    ${c.birthDate ? `<small style="color:var(--text-muted); font-size:0.9rem;">${this.calculateAge(c.birthDate)} anos (${this.formatDate(c.birthDate)})` : ''}
+                    ${c.job ? ` • <i class="fas fa-briefcase" style="font-size:0.8rem; opacity:0.7;"></i> ${c.job}` : ''}
+                    ${c.birthDate ? '</small>' : ''}
                     <div style="font-size:0.85rem; color:var(--primary); margin-top:5px; font-weight:500;">
                         <i class="fas fa-user-tie" style="font-size:0.8rem; margin-right:5px;"></i> 
                         ${(() => {
@@ -4094,6 +4096,11 @@ Bons treinos!`;
                             </div>
                         ` : ''}
                         <div style="font-size: 0.8rem; color: var(--text-muted);">${user.phone || 'Sem contacto'}</div>
+                        ${isClient && user.job ? `
+                            <div style="font-size: 0.75rem; color: var(--accent); font-weight: 500; margin-top:2px;">
+                                <i class="fas fa-briefcase" style="font-size:0.7rem;"></i> ${user.job}
+                            </div>
+                        ` : ''}
                         <div style="margin-top:5px;"><span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted);"></span></div>
                     </div>
                 </div>
