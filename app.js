@@ -3808,14 +3808,14 @@ Bons treinos!`;
                         </button>
                     </div>
                     <div style="display:grid; grid-template-columns: 1fr; gap:0.75rem;">
-                        ${session.exercises.map(ex => `
+                        ${(session.exercises || []).map(ex => `
                             <div style="padding:10px; background:rgba(255,255,255,0.03); border-radius:10px;">
                                 <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
                                     <strong style="font-size:0.9rem;">${ex.name}</strong>
                                     <small style="color:var(--text-muted);">${ex.sets}x${ex.reps}</small>
                                 </div>
                                 <div style="display:flex; gap:5px; flex-wrap:wrap;">
-                                    ${ex.weights.map((w, idx) => `
+                                    ${(ex.weights || []).map((w, idx) => `
                                         <div style="font-size:0.75rem; background:rgba(0,0,0,0.2); padding:3px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.05);">
                                             S${idx + 1}: <span style="color:var(--accent); font-weight:bold;">${w || '-'}kg</span>
                                         </div>
