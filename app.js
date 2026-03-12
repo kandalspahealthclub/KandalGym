@@ -417,7 +417,6 @@ class FitnessApp {
                 this.isLoggedIn = true;
                 this.persistLogin();
                 this.renderAppInterface();
-                this.oneSignalLogin(this.currentUser.id);
                 return;
             }
 
@@ -428,7 +427,6 @@ class FitnessApp {
                 this.isLoggedIn = true;
                 this.persistLogin();
                 this.renderAppInterface();
-                this.oneSignalLogin(this.currentUser.id);
                 return;
             }
 
