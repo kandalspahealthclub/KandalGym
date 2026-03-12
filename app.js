@@ -793,9 +793,6 @@ Bons treinos!`;
 
         this.showModal(`
             <div style="text-align: center; padding: 0.5rem;">
-                <div style="background: var(--success); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: white; font-size: 1.5rem;">
-                    <i class="fas fa-check"></i>
-                </div>
                 <h2 style="margin-top: 0;">Plano Guardado!</h2>
                 <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem;">
                     O plano de <strong>${typeLabel}</strong> para <strong>${name}</strong> foi guardado com sucesso. Deseja notificar o aluno?
