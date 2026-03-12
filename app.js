@@ -4543,6 +4543,16 @@ Bons treinos!`;
         this.renderContent();
     }
 
+    async updateClientPlanFromQR(clientId, plan) {
+        if (!clientId) return;
+        const client = this.state.clients.find(c => Number(c.id) === Number(clientId));
+        if (!client) return;
+        client.plan = plan;
+        await this.saveState();
+        const p = this.getPlanLabel(plan);
+        this.showToast(`${client.name}: Mensalidade alterada para ${p.label}`);
+    }
+
     deleteUser(type, id, name) {
         if (confirm(`Tem a certeza que deseja eliminar o utilizador ${name}?\nAVISO: Todos os planos, historico e avaliacoes associados serao removidos permanentemente.`)) {
             if (type === 'admin') {
@@ -5551,6 +5561,7 @@ Bons treinos!`;
                                     <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:center;">Creditos</th>
                                     <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:center;">Entradas Hoje</th>
                                     <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Validade</th>
+                                    <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Mensalidade</th>
                                     <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align: right;">Acoes</th>
                                 </tr>
                             </thead>
@@ -5730,6 +5741,20 @@ Bons treinos!`;
                                 style="background:rgba(255,255,255,0.03); border:1px solid var(--surface-border); border-radius:6px; color:${hoje > c.validade ? 'var(--danger)' : 'inherit'}; font-size:0.8rem; padding:4px 8px; cursor:pointer;">`
                 }
                     </td>
+                    <td style="padding: 0.75rem 0.5rem;">
+                        ${isStaff ? '<span style="color:var(--text-muted); font-size:0.8rem;">N/A</span>' : (() => {
+                            const clientData = (this.state.clients || []).find(cl => Number(cl.id) === Number(c.clientId));
+                            const currentPlan = clientData ? (clientData.plan || 'total') : 'total';
+                            const p = this.getPlanLabel(currentPlan);
+                            return `<select onchange="app.updateClientPlanFromQR(${c.clientId}, this.value)"
+                                style="height:28px; font-size:0.72rem; padding:0 6px; border-radius:6px; background:rgba(255,255,255,0.05); border:1px solid ${p.color}; color:${p.color}; font-weight:700; cursor:pointer;">
+                                <option value="total" ${currentPlan === 'total' ? 'selected' : ''}>&#11088; Total</option>
+                                <option value="musculacao" ${currentPlan === 'musculacao' ? 'selected' : ''}>&#128170; Musculacao</option>
+                                <option value="aulas" ${currentPlan === 'aulas' ? 'selected' : ''}>&#128197; Aulas</option>
+                                <option value="pilates" ${currentPlan === 'pilates' ? 'selected' : ''}>&#129472; Pilates</option>
+                            </select>`;
+                        })()}
+                    </td>
                     <td style="padding: 0.75rem 0.5rem; text-align: right;">
                         <div style="display: flex; gap: 5px; justify-content: flex-end;">
                             <button class="btn btn-ghost btn-sm" onclick="app.showQRClientHistory('${c.id}')" style="background: rgba(255,255,255,0.05); border-radius:8px; height:34px; width:34px; color:var(--accent); font-size:0.8rem;" title="Ver Log de Entradas"><i class="fas fa-history"></i></button>
@@ -5739,7 +5764,7 @@ Bons treinos!`;
                     </td>
                 </tr>
                 <tr id="qr-row-area-${idx}" style="display:none; background: rgba(0,0,0,0.2);">
-                    <td colspan="7" style="padding: 1.5rem 1rem; text-align: center;">
+                    <td colspan="8" style="padding: 1.5rem 1rem; text-align: center;">
                         <div style="display:inline-flex; flex-direction:column; align-items:center; gap:1.2rem; background:rgba(255,255,255,0.02); padding:1.5rem; border-radius:20px; border:1px solid var(--surface-border);">
                             <div id="canvas-${idx}" style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></div>
                             <div style="text-align:center;">
