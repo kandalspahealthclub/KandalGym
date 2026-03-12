@@ -311,7 +311,7 @@ class FitnessApp {
                     </button>
                 </form>
                 <div class="login-footer">
-                    Ainda nao tem conta? <a href="#" onclick="app.renderRegister(); return false;">Registe-se</a>
+                    Problemas de Acesso? <a href="https://wa.me/351963939017" target="_blank"><i class="fab fa-whatsapp"></i> Contacte-nos</a>
                 </div>
             </div>
         `;
