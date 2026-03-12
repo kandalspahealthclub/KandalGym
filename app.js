@@ -572,6 +572,9 @@ class FitnessApp {
                         <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Data de Nascimento</label>
                         <input type="date" id="new-user-dob" style="color-scheme: dark;">
                     </div>
+                    <div id="client-job-container">
+                        <input type="text" id="new-user-job" placeholder="Profissao (Obrigatorio)">
+                    </div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
                         <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
                         <button class="btn btn-primary" onclick="app.addUser()">Adicionar</button>
@@ -600,8 +603,9 @@ class FitnessApp {
             const email = document.getElementById('new-user-email').value.trim().toLowerCase();
             const pass = document.getElementById('new-user-pass').value.trim();
             const phone = document.getElementById('new-user-phone').value.trim();
+            const job = document.getElementById('new-user-job').value.trim();
 
-            if (!name || !email || !pass || !phone) return alert('Por favor, preencha todos os campos obrigatorios.');
+            if (!name || !email || !pass || !phone || (type === 'client' && !job)) return alert('Por favor, preencha todos os campos obrigatorios, incluindo a profissao.');
 
             // Garantir que as listas existem antes de verificar duplicados
             if (!this.state.clients) this.state.clients = [];
@@ -646,7 +650,8 @@ class FitnessApp {
                     lastEvaluation: '-',
                     goal: 'Novo Aluno',
                     teacherId: teacherId ? Number(teacherId) : null,
-                    birthDate: document.getElementById('new-user-dob').value
+                    birthDate: document.getElementById('new-user-dob').value,
+                    job: job
                 };
                 this.state.clients.push(newClient);
 
@@ -3841,6 +3846,12 @@ Bons treinos!`;
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
                 </div>
 
+                <div style="margin-bottom:1.5rem;">
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Profissao</label>
+                    <input type="text" id="edit-job" value="${user.job || ''}" placeholder="Ex: Engenheiro, Professor..."
+                        style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
+                </div>
+
                 ${this.role === 'client' ? `
                 <div style="margin-bottom:1.5rem;">
                     <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Data de Nascimento</label>
@@ -3959,11 +3970,12 @@ Bons treinos!`;
         const name = document.getElementById('edit-name').value.trim();
         const email = document.getElementById('edit-email').value.trim();
         const phone = document.getElementById('edit-phone').value.trim();
+        const job = document.getElementById('edit-job').value.trim();
         const pass = document.getElementById('edit-pass').value;
         const btn = document.querySelector('button[onclick="app.updateProfile()"]');
 
-        if (!name || !email || !pass) {
-            return alert('Nome, Email e Palavra-passe sao obrigatorios.');
+        if (!name || !email || !pass || !job) {
+            return alert('Nome, Email, Palavra-passe e Profissao sao obrigatorios.');
         }
 
         if (btn) {
@@ -3981,6 +3993,7 @@ Bons treinos!`;
                 user.name = name;
                 user.email = email;
                 user.phone = phone;
+                user.job = job;
                 user.password = pass;
 
                 const dobInput = document.getElementById('edit-dob');
