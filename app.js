@@ -756,6 +756,66 @@ Bons treinos!`;
         document.body.appendChild(modal);
     }
 
+    showSharePlanModal(clientId, planType) {
+        const client = (this.state.clients || []).find(c => Number(c.id) === Number(clientId));
+        if (!client) {
+            this.setView('spy_view');
+            return;
+        }
+
+        const name = client.name;
+        const email = client.email;
+        const phone = client.phone;
+        const typeLabel = planType === 'training' ? 'Treino' : 'Alimentar';
+
+        const subject = `Novo Plano de ${typeLabel} - KandalGym`;
+        const body = `Ola ${name},
+
+O seu plano de ${typeLabel} foi atualizado no sistema KandalGym.
+
+Pode consulta-lo na sua area pessoal atraves do endereco: https://kandalspahealthclub.github.io/KandalGym/
+
+Bons treinos!
+Equipa KandalGym`;
+
+        const whatsappText = `*KandalGym - Novo Plano de ${typeLabel}*
+
+Ola ${name}, o seu plano de ${typeLabel} foi atualizado! 🏋️‍♂️🍎
+
+Aceda aqui para consultar: https://kandalspahealthclub.github.io/KandalGym/
+
+Bons treinos!`;
+
+        const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+        const cleanPhone = phone ? String(phone).replace(/\s+/g, '').replace(/^00/, '').replace(/^\+/, '') : '';
+        const whatsappLink = `https://wa.me/${cleanPhone.startsWith('351') || (cleanPhone.length < 12 && cleanPhone.length >= 9) ? (cleanPhone.length === 9 ? '351' + cleanPhone : cleanPhone) : cleanPhone}?text=${encodeURIComponent(whatsappText)}`;
+
+        this.showModal(`
+            <div style="text-align: center; padding: 0.5rem;">
+                <div style="background: var(--success); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: white; font-size: 1.5rem;">
+                    <i class="fas fa-check"></i>
+                </div>
+                <h2 style="margin-top: 0;">Plano Guardado!</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem;">
+                    O plano de <strong>${typeLabel}</strong> para <strong>${name}</strong> foi guardado com sucesso. Deseja notificar o aluno?
+                </p>
+
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <a href="${whatsappLink}" target="_blank" class="btn" style="text-decoration: none; background: #25D366; color: white; width: 100%;">
+                        <i class="fab fa-whatsapp"></i> Enviar por WhatsApp
+                    </a>
+                    <a href="${mailtoLink}" class="btn btn-secondary" style="text-decoration: none; width: 100%;">
+                        <i class="fas fa-envelope"></i> Enviar por Email
+                    </a>
+                    <button class="btn btn-ghost" onclick="app.closeModal(); app.setView('spy_view');" style="width: 100%;">
+                        Concluir sem enviar
+                    </button>
+                </div>
+            </div>
+        `, '400px');
+    }
+
     showAddExerciseModal() {
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
@@ -2559,8 +2619,7 @@ Bons treinos!`;
         this.addAppNotification(this.editingClientId, 'Novo Plano de Treino!', 'O seu professor atualizou o seu plano de treino.', null, 'notification', false);
 
         this.clearTrainingDraft();
-        alert('Plano de treino guardado com sucesso!');
-        this.setView('spy_view');
+        this.showSharePlanModal(this.editingClientId, 'training');
     }
 
     deleteTrainingPlan(clientId) {
@@ -3135,8 +3194,7 @@ Bons treinos!`;
         // Notificar o aluno do novo plano de dieta
         this.addAppNotification(this.editingClientId, 'Nova Dieta Disponivel!', 'O seu professor atualizou o seu plano alimentar.');
 
-        alert('Plano alimentar guardado com sucesso!');
-        this.setView('spy_view');
+        this.showSharePlanModal(this.editingClientId, 'meal');
     }
 
     deleteMealPlan(clientId) {
