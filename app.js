@@ -4351,10 +4351,10 @@ Bons treinos!`;
                                 </span>
                                  <div class="msg-actions-container" style="display: flex; gap: 8px; align-items: center;">
                                     ${!isDeleted ? `
-                                        <div class="desktop-only" style="display: flex; gap: 10px;">
+                                         <div class="desktop-only" style="display: flex; gap: 10px;">
                                             <i class="fas fa-reply" style="font-size:0.7rem; cursor:pointer; opacity:0.3;" 
                                             onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.3'"
-                                            onclick="app.prepareReply('${m.id}', '${activeChatId}')" title="Responder"></i>
+                                            onclick="app.prepareReply('${activeChatId}', '${m.createdAt}')" title="Responder"></i>
                                             ${(isMe || activeChatId === 'system') ? `
                                             <i class="fas fa-trash-alt" style="font-size:0.7rem; cursor:pointer; opacity:0.3;" 
                                             onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.3'"
@@ -4362,7 +4362,7 @@ Bons treinos!`;
                                             ` : ''}
                                         </div>
                                         <i class="fas fa-ellipsis-v mobile-only msg-more-btn" 
-                                           onclick="app.showMessageMenu(event, '${m.id}', '${activeChatId}', ${isMe || activeChatId === 'system'})"></i>
+                                           onclick="app.showMessageMenu(event, '${activeChatId}', '${m.createdAt}', ${isMe || activeChatId === 'system'})"></i>
                                     ` : ''}
                                 </div>
                             </div>
@@ -4416,11 +4416,15 @@ Bons treinos!`;
         }
     }
 
-    showMessageMenu(event, msgId, chatId, canDelete) {
+    showMessageMenu(event, chatId, createdAt, canDelete) {
         event.stopPropagation();
         
-        // Find message to get body and sender
-        const msg = (this.state.notifications || []).find(n => n.id == msgId);
+        // Find message to get body and sender using common login
+        const myId = Number(this.currentUser.id);
+        const msg = (this.state.notifications || []).find(n => {
+            const isTarget = (n.targetUserId == myId && n.senderId == chatId) || (n.targetUserId == chatId && n.senderId == myId) || (chatId === 'system' && n.targetUserId == myId && !n.senderId);
+            return isTarget && n.createdAt === createdAt;
+        });
         if (!msg) return;
 
         // Remove existing menu if any
@@ -4444,13 +4448,13 @@ Bons treinos!`;
         `;
 
         menu.innerHTML = `
-            <div style="padding: 14px 20px; cursor: pointer; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); user-select: none; -webkit-tap-highlight-color: transparent;" 
-                 onclick="event.stopPropagation(); app.prepareReply('${msgId}', '${chatId}'); document.querySelector('.msg-context-menu')?.remove();">
+            <div style="padding: 14px 20px; cursor: pointer; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); user-select: none;" 
+                 onclick="event.stopPropagation(); app.prepareReply('${chatId}', '${createdAt}'); document.querySelector('.msg-context-menu')?.remove();">
                 <i class="fas fa-reply" style="color: var(--accent); font-size: 1rem;"></i> <strong>Responder</strong>
             </div>
             ${canDelete ? `
-            <div style="padding: 14px 20px; cursor: pointer; display: flex; align-items: center; gap: 12px; color: #ff4444; user-select: none; -webkit-tap-highlight-color: transparent;" 
-                 onclick="event.stopPropagation(); app.deleteMessage('${chatId}', '${msg.createdAt}'); document.querySelector('.msg-context-menu')?.remove();">
+            <div style="padding: 14px 20px; cursor: pointer; display: flex; align-items: center; gap: 12px; color: #ff4444; user-select: none;" 
+                 onclick="event.stopPropagation(); app.deleteMessage('${chatId}', '${createdAt}'); document.querySelector('.msg-context-menu')?.remove();">
                 <i class="fas fa-trash-alt" style="font-size: 1rem;"></i> <strong>Apagar</strong>
             </div>
             ` : ''}
@@ -4473,8 +4477,12 @@ Bons treinos!`;
         }, 100);
     }
 
-    prepareReply(msgId, chatId) {
-        const msg = (this.state.notifications || []).find(n => n.id == msgId);
+    prepareReply(chatId, createdAt) {
+        const myId = Number(this.currentUser.id);
+        const msg = (this.state.notifications || []).find(n => {
+            const isTarget = (n.targetUserId == myId && n.senderId == chatId) || (n.targetUserId == chatId && n.senderId == myId) || (chatId === 'system' && n.targetUserId == myId && !n.senderId);
+            return isTarget && n.createdAt === createdAt;
+        });
         if (!msg) return;
 
         let senderName = "Utilizador";
