@@ -1400,59 +1400,72 @@ option {
         background: transparent;
     }
 
-    /* Mobile Chat Fix: Solid full-screen overlay */
-    .chat-container.active-chat .chat-main {
-        display: flex !important;
+    /* Radical Fix: The container itself becomes the full-screen overlay */
+    .chat-container.active-chat {
         position: fixed !important;
         top: 0 !important;
         left: 0 !important;
         width: 100vw !important;
         height: 100vh !important;
         height: 100dvh !important;
-        z-index: 9999 !important; /* Extremely high to be above everything */
-        background: #0a0c10 !important; /* Solid dark background */
-        flex-direction: column !important;
+        z-index: 10000 !important;
+        background: #0a0c10 !important;
         margin: 0 !important;
         padding: 0 !important;
+        display: block !important;
         border: none !important;
         border-radius: 0 !important;
+    }
+
+    .chat-container.active-chat .chat-sidebar {
+        display: none !important;
+    }
+
+    .chat-container.active-chat .chat-main {
+        display: flex !important;
+        position: relative !important; /* No longer fixed as parent is fixed */
+        width: 100% !important;
+        height: 100% !important;
+        flex-direction: column !important;
         animation: slideUpMobile 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        top: 0 !important;
+        left: 0 !important;
     }
 
     .chat-header {
-        padding: calc(0.8rem + var(--safe-top)) 1rem 0.8rem !important;
-        height: auto !important;
+        padding: calc(0.8rem + var(--safe-top)) 1.25rem 0.8rem !important;
         background: rgba(22, 27, 34, 0.98) !important;
         backdrop-filter: blur(20px);
         border-bottom: 1px solid var(--surface-border) !important;
-        flex-shrink: 0 !important;
         display: flex !important;
         justify-content: space-between !important;
         align-items: center !important;
+        flex-shrink: 0 !important;
     }
 
     .chat-messages {
         flex: 1 !important;
         overflow-y: auto !important;
+        padding: 1.25rem !important;
         background: transparent !important;
-        padding: 1rem !important;
         display: flex !important;
         flex-direction: column !important;
+        gap: 0.75rem !important;
     }
 
     .chat-input-area {
-        padding: 0.75rem 1rem calc(1rem + var(--safe-bottom)) !important;
+        padding: 0.75rem 1.25rem calc(1.5rem + var(--safe-bottom)) !important;
         background: rgba(22, 27, 34, 0.98) !important;
         backdrop-filter: blur(20px);
         border-top: 1px solid var(--surface-border) !important;
-        flex-shrink: 0 !important;
         display: flex !important;
-        gap: 10px !important;
+        gap: 12px !important;
+        flex-shrink: 0 !important;
     }
 
     @keyframes slideUpMobile {
-        from { transform: translateY(100%); }
-        to { transform: translateY(0); }
+        from { transform: translateY(30px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
     }
 }
 
