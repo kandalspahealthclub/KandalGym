@@ -200,7 +200,7 @@ class FitnessApp {
         return;
     }
 
-    addAppNotification(targetUserId, title, body, senderId = null, type = 'notification', shouldSave = true) {
+    addAppNotification(targetUserId, title, body, senderId = null, type = 'notification', shouldSave = true, replyTo = null) {
         if (!this.state.notifications) this.state.notifications = [];
         if (this.state.notifications.length > 200) {
             this.state.notifications = this.state.notifications.slice(-200);
@@ -213,7 +213,8 @@ class FitnessApp {
             type: type,
             title,
             body,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            replyTo: replyTo // Store reference to original message
         };
 
         this.state.notifications.push(newNotification);
@@ -4340,20 +4341,32 @@ Bons treinos!`;
                 ${msgs.map(m => {
                         const isMe = m.senderId === Number(this.currentUser.id);
                         const isSystem = !m.senderId;
+                        const isDeleted = m.deleted;
                         const bubbleClass = isSystem ? 'message-received' : (isMe ? 'message-sent' : 'message-received');
 
                         return `
-                        <div class="message-bubble ${bubbleClass}" style="${isSystem ? 'background: #334155; width:100%; max-width:100%; text-align:center; font-size:0.85rem;' : ''}">
+                        <div class="message-bubble ${bubbleClass}" style="${isSystem ? 'background: #334155; width:100%; max-width:100%; text-align:center; font-size:0.85rem;' : ''} ${isDeleted ? 'font-style: italic; opacity: 0.7;' : ''}">
+                            ${m.replyTo ? `
+                                <div class="reply-quote" style="background: rgba(0,0,0,0.1); border-left: 3px solid var(--accent); padding: 5px 8px; border-radius: 4px; margin-bottom: 8px; font-size: 0.75rem; cursor: pointer;" onclick="app.jumpToMessage('${m.replyTo.id}')">
+                                    <div style="font-weight: bold; color: var(--accent); margin-bottom: 2px;">${m.replyTo.senderName}</div>
+                                    <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.8;">${m.replyTo.body}</div>
+                                </div>
+                            ` : ''}
                             ${isSystem ? `<strong style="display:block; margin-bottom:4px; color:var(--accent);">${m.title}</strong>` : ''}
-                            ${!isSystem && !isMe ? `<div style="font-size:0.7rem; color:var(--primary); font-weight:bold; margin-bottom:2px;">${thread.user.name}</div>` : ''}
-                            ${m.body}
+                            ${!isSystem && !isMe && !isDeleted ? `<div style="font-size:0.7rem; color:var(--primary); font-weight:bold; margin-bottom:2px;">${thread.user.name}</div>` : ''}
+                            <div id="msg-${m.id}">${m.body}</div>
                              <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:10px; margin-top:4px;">
                                 <span class="message-time" style="margin:0;">
                                     ${new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
-                                <i class="fas fa-trash-alt" style="font-size:0.7rem; cursor:pointer; opacity:0.3;" 
-                                   onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.3'"
-                                   onclick="app.deleteMessage('${activeChatId}', '${m.createdAt}')" title="Eliminar mensagem"></i>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    ${!isDeleted ? `<i class="fas fa-reply" style="font-size:0.7rem; cursor:pointer; opacity:0.3;" 
+                                       onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.3'"
+                                       onclick="app.prepareReply('${m.id}', '${m.senderId || 'system'}', \`${(m.body || '').replace(/'/g, "\\'").replace(/"/g, '\\"')}\`)" title="Responder"></i>` : ''}
+                                    ${!isDeleted ? `<i class="fas fa-trash-alt" style="font-size:0.7rem; cursor:pointer; opacity:0.3;" 
+                                       onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.3'"
+                                       onclick="app.deleteMessage('${activeChatId}', '${m.createdAt}')" title="Eliminar mensagem"></i>` : ''}
+                                </div>
                             </div>
                         </div>
                     `;
@@ -4361,6 +4374,15 @@ Bons treinos!`;
             </div>
 
             ${activeChatId !== 'system' ? `
+            <div id="reply-preview-container" style="display:none; background: rgba(0,0,0,0.2); padding: 10px 15px; border-top: 1px solid rgba(255,255,255,0.05); border-left: 4px solid var(--accent);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div style="flex:1;">
+                        <div id="reply-preview-user" style="font-weight:bold; font-size:0.8rem; color:var(--accent); margin-bottom:2px;"></div>
+                        <div id="reply-preview-text" style="font-size:0.75rem; opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:250px;"></div>
+                    </div>
+                    <i class="fas fa-times" style="cursor:pointer; opacity:0.5; font-size:0.9rem;" onclick="app.cancelReply()"></i>
+                </div>
+            </div>
             <div class="chat-input-area">
                 <input type="text" id="chat-input-text" placeholder="Escreva uma mensagem..." onkeypress="app.handleChatInput(event, '${activeChatId}')">
                 <button class="btn btn-primary btn-sm" style="border-radius:50%; width:40px; height:40px; padding:0; display:flex; align-items:center; justify-content:center;" 
@@ -4382,10 +4404,61 @@ Bons treinos!`;
         });
 
         if (idx !== -1) {
-            this.state.notifications.splice(idx, 1);
+            // Se ja estiver apagada, removemos de vez
+            if (this.state.notifications[idx].deleted) {
+                this.state.notifications.splice(idx, 1);
+                this.showToast('Mensagem removida permanentemente.');
+            } else {
+                this.state.notifications[idx].deleted = true;
+                this.state.notifications[idx].body = "🚫 Esta mensagem foi apagada.";
+                this.showToast('Mensagem apagada.');
+            }
             this.saveState();
             this.renderContent();
-            this.showToast('Mensagem eliminada.');
+        }
+    }
+
+    prepareReply(msgId, senderId, body) {
+        let senderName = "Utilizador";
+        if (senderId === 'system') {
+            senderName = "Sistema";
+        } else {
+            const uid = Number(senderId);
+            const user = (this.state.clients || []).find(c => c.id === uid) || 
+                         (this.state.teachers || []).find(t => t.id === uid) || 
+                         (this.state.admins || []).find(a => a.id === uid);
+            if (user) senderName = user.name;
+        }
+
+        this.replyContext = { id: msgId, senderName, body };
+        
+        const preview = document.getElementById('reply-preview-container');
+        const userEl = document.getElementById('reply-preview-user');
+        const textEl = document.getElementById('reply-preview-text');
+        
+        if (preview && userEl && textEl) {
+            userEl.innerText = `A responder a ${senderName}`;
+            textEl.innerText = body;
+            preview.style.display = 'block';
+            document.getElementById('chat-input-text').focus();
+        }
+    }
+
+    cancelReply() {
+        this.replyContext = null;
+        const preview = document.getElementById('reply-preview-container');
+        if (preview) preview.style.display = 'none';
+    }
+
+    jumpToMessage(msgId) {
+        const el = document.getElementById(`msg-${msgId}`);
+        if (el) {
+            el.closest('.message-bubble').style.transition = 'background 0.5s';
+            el.closest('.message-bubble').style.background = 'rgba(255,255,255,0.2)';
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => {
+                if (el) el.closest('.message-bubble').style.background = '';
+            }, 2000);
         }
     }
 
@@ -4425,8 +4498,11 @@ Bons treinos!`;
         const text = input.value.trim();
         if (!text) return;
 
-        // Add message
-        this.addAppNotification(targetId, `Nova mensagem`, text, this.currentUser.id, 'message');
+        // Add message with optional reply context
+        this.addAppNotification(targetId, `Nova mensagem`, text, this.currentUser.id, 'message', true, this.replyContext);
+
+        // Reset context
+        this.cancelReply();
 
         // Refresh view
         input.value = ''; // Clean input first to feel responsive
