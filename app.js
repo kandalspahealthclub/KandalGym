@@ -4478,35 +4478,54 @@ Bons treinos!`;
     }
 
     prepareReply(chatId, createdAt) {
-        const myId = Number(this.currentUser.id);
-        const msg = (this.state.notifications || []).find(n => {
-            const isTarget = (n.targetUserId == myId && n.senderId == chatId) || (n.targetUserId == chatId && n.senderId == myId) || (chatId === 'system' && n.targetUserId == myId && !n.senderId);
-            return isTarget && n.createdAt === createdAt;
-        });
-        if (!msg) return;
+        try {
+            if (!this.currentUser) return;
+            const myId = Number(this.currentUser.id);
+            
+            // Find message to get body and sender
+            const msg = (this.state.notifications || []).find(n => {
+                const sameTime = n.createdAt === createdAt;
+                if (!sameTime) return false;
+                
+                if (chatId === 'system') {
+                    return !n.senderId && n.targetUserId == myId;
+                }
+                return (n.targetUserId == myId && n.senderId == chatId) || (n.targetUserId == chatId && n.senderId == myId);
+            });
 
-        let senderName = "Utilizador";
-        if (!msg.senderId) {
-            senderName = "Sistema";
-        } else {
-            const uid = Number(msg.senderId);
-            const user = (this.state.clients || []).find(c => c.id === uid) || 
-                         (this.state.teachers || []).find(t => t.id === uid) || 
-                         (this.state.admins || []).find(a => a.id === uid);
-            if (user) senderName = user.name;
-        }
+            if (!msg) {
+                console.warn("Mensagem nao encontrada para resposta.");
+                return;
+            }
 
-        this.replyContext = { id: msgId, senderName, body: msg.body };
-        
-        const preview = document.getElementById('reply-preview-container');
-        const userEl = document.getElementById('reply-preview-user');
-        const textEl = document.getElementById('reply-preview-text');
-        
-        if (preview && userEl && textEl) {
-            userEl.innerText = `A responder a ${senderName}`;
-            textEl.innerText = body;
-            preview.style.display = 'block';
-            document.getElementById('chat-input-text').focus();
+            let senderName = "Utilizador";
+            if (!msg.senderId) {
+                senderName = "Sistema";
+            } else {
+                const uid = Number(msg.senderId);
+                const user = (this.state.clients || []).find(c => c.id === uid) || 
+                             (this.state.teachers || []).find(t => t.id === uid) || 
+                             (this.state.admins || []).find(a => a.id === uid);
+                if (user) senderName = user.name;
+            }
+
+            this.replyContext = { id: msg.id || msg.createdAt, senderName, body: msg.body };
+            
+            const preview = document.getElementById('reply-preview-container');
+            const userEl = document.getElementById('reply-preview-user');
+            const textEl = document.getElementById('reply-preview-text');
+            const input = document.getElementById('chat-input-text');
+            
+            if (preview && userEl && textEl) {
+                userEl.innerText = `A responder a ${senderName}`;
+                textEl.innerText = msg.body;
+                preview.style.display = 'block';
+                if (input) {
+                    input.focus();
+                }
+            }
+        } catch (err) {
+            console.error("Erro no prepareReply:", err);
         }
     }
 
