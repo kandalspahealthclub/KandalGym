@@ -4444,28 +4444,33 @@ Bons treinos!`;
         `;
 
         menu.innerHTML = `
-            <div style="padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);" 
-                 onclick="app.prepareReply('${msgId}', '${chatId}'); this.parentElement.remove();">
-                <i class="fas fa-reply" style="color: var(--accent);"></i> Responder
+            <div style="padding: 14px 20px; cursor: pointer; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); user-select: none; -webkit-tap-highlight-color: transparent;" 
+                 onclick="event.stopPropagation(); app.prepareReply('${msgId}', '${chatId}'); document.querySelector('.msg-context-menu')?.remove();">
+                <i class="fas fa-reply" style="color: var(--accent); font-size: 1rem;"></i> <strong>Responder</strong>
             </div>
             ${canDelete ? `
-            <div style="padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #ff4444;" 
-                 onclick="app.deleteMessage('${chatId}', '${msg.createdAt}'); this.parentElement.remove();">
-                <i class="fas fa-trash-alt"></i> Apagar
+            <div style="padding: 14px 20px; cursor: pointer; display: flex; align-items: center; gap: 12px; color: #ff4444; user-select: none; -webkit-tap-highlight-color: transparent;" 
+                 onclick="event.stopPropagation(); app.deleteMessage('${chatId}', '${msg.createdAt}'); document.querySelector('.msg-context-menu')?.remove();">
+                <i class="fas fa-trash-alt" style="font-size: 1rem;"></i> <strong>Apagar</strong>
             </div>
             ` : ''}
         `;
 
         document.body.appendChild(menu);
 
-        // Click outside to close
+        // Click outside to close (usando timeout maior para evitar conflitos no mobile)
         const closeMenu = (e) => {
-            if (!menu.contains(e.target)) {
-                menu.remove();
+            const m = document.querySelector('.msg-context-menu');
+            if (m && !m.contains(e.target)) {
+                m.remove();
                 document.removeEventListener('click', closeMenu);
+                document.removeEventListener('touchstart', closeMenu);
             }
         };
-        setTimeout(() => document.addEventListener('click', closeMenu), 10);
+        setTimeout(() => {
+            document.addEventListener('click', closeMenu);
+            document.addEventListener('touchstart', closeMenu, { passive: true });
+        }, 100);
     }
 
     prepareReply(msgId, chatId) {
