@@ -4364,13 +4364,15 @@ Bons treinos!`;
                                         <div class="desktop-only" style="display: flex; gap: 10px;">
                                             <i class="fas fa-reply" style="font-size:0.7rem; cursor:pointer; opacity:0.3;" 
                                             onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.3'"
-                                            onclick="app.prepareReply('${m.id}', '${m.senderId || 'system'}', \`${(m.body || '').replace(/'/g, "\\'").replace(/"/g, '\\"')}\`)" title="Responder"></i>
+                                            onclick="app.prepareReply('${m.id}', '${activeChatId}')" title="Responder"></i>
+                                            ${(isMe || activeChatId === 'system') ? `
                                             <i class="fas fa-trash-alt" style="font-size:0.7rem; cursor:pointer; opacity:0.3;" 
                                             onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.3'"
                                             onclick="app.deleteMessage('${activeChatId}', '${m.createdAt}')" title="Eliminar mensagem"></i>
+                                            ` : ''}
                                         </div>
                                         <i class="fas fa-ellipsis-v mobile-only msg-more-btn" 
-                                           onclick="app.showMessageMenu(event, '${m.id}', '${activeChatId}', \`${(m.body || '').replace(/'/g, "\\'").replace(/"/g, '\\"')}\`, '${m.createdAt}', '${m.senderId || 'system'}')"></i>
+                                           onclick="app.showMessageMenu(event, '${m.id}', '${activeChatId}', ${isMe || activeChatId === 'system'})"></i>
                                     ` : ''}
                                 </div>
                             </div>
@@ -4424,9 +4426,13 @@ Bons treinos!`;
         }
     }
 
-    showMessageMenu(event, msgId, chatId, body, createdAt, senderId) {
+    showMessageMenu(event, msgId, chatId, canDelete) {
         event.stopPropagation();
         
+        // Find message to get body and sender
+        const msg = (this.state.notifications || []).find(n => n.id == msgId);
+        if (!msg) return;
+
         // Remove existing menu if any
         const existing = document.querySelector('.msg-context-menu');
         if (existing) existing.remove();
@@ -4449,13 +4455,15 @@ Bons treinos!`;
 
         menu.innerHTML = `
             <div style="padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);" 
-                 onclick="app.prepareReply('${msgId}', '${senderId}', \`${body.replace(/'/g, "\\'")}\`); this.parentElement.remove();">
+                 onclick="app.prepareReply('${msgId}', '${chatId}'); this.parentElement.remove();">
                 <i class="fas fa-reply" style="color: var(--accent);"></i> Responder
             </div>
+            ${canDelete ? `
             <div style="padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #ff4444;" 
-                 onclick="app.deleteMessage('${chatId}', '${createdAt}'); this.parentElement.remove();">
+                 onclick="app.deleteMessage('${chatId}', '${msg.createdAt}'); this.parentElement.remove();">
                 <i class="fas fa-trash-alt"></i> Apagar
             </div>
+            ` : ''}
         `;
 
         document.body.appendChild(menu);
@@ -4470,19 +4478,22 @@ Bons treinos!`;
         setTimeout(() => document.addEventListener('click', closeMenu), 10);
     }
 
-    prepareReply(msgId, senderId, body) {
+    prepareReply(msgId, chatId) {
+        const msg = (this.state.notifications || []).find(n => n.id == msgId);
+        if (!msg) return;
+
         let senderName = "Utilizador";
-        if (senderId === 'system') {
+        if (!msg.senderId) {
             senderName = "Sistema";
         } else {
-            const uid = Number(senderId);
+            const uid = Number(msg.senderId);
             const user = (this.state.clients || []).find(c => c.id === uid) || 
                          (this.state.teachers || []).find(t => t.id === uid) || 
                          (this.state.admins || []).find(a => a.id === uid);
             if (user) senderName = user.name;
         }
 
-        this.replyContext = { id: msgId, senderName, body };
+        this.replyContext = { id: msgId, senderName, body: msg.body };
         
         const preview = document.getElementById('reply-preview-container');
         const userEl = document.getElementById('reply-preview-user');

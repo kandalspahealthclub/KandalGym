@@ -1614,3 +1614,16 @@ option {
 .glass-panel::-webkit-scrollbar-track {
     background: transparent;
 }
+
+/* Visibility Helpers */
+@media (min-width: 769px) {
+    .mobile-only {
+        display: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .desktop-only {
+        display: none !important;
+    }
+}
