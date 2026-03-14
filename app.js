@@ -4396,7 +4396,15 @@ Bons treinos!`;
         // Timeout to ensure scroll happens after render
         setTimeout(() => {
             const msgsContainer = document.querySelector('.chat-messages');
-            if (msgsContainer) msgsContainer.scrollTop = msgsContainer.scrollHeight;
+            if (msgsContainer) {
+                // For novos envios, usamos smooth scroll para uma experiencia fluida
+                msgsContainer.style.scrollBehavior = 'smooth';
+                msgsContainer.scrollTop = msgsContainer.scrollHeight;
+                // Reset scroll behavior back to auto after scroll finishes
+                setTimeout(() => {
+                    if (msgsContainer) msgsContainer.style.scrollBehavior = 'auto';
+                }, 500);
+            }
         }, 50);
     }
 
