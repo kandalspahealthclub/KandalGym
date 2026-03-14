@@ -1034,17 +1034,7 @@ Bons treinos!`;
                 <i class="fas ${item.icon}"></i>
                 <span>${item.label}</span>
             </a>
-        `).join('') + `
-            <a href="#" class="mobile-nav-item" onclick="app.installPWA(); return false;" style="color:var(--primary); font-weight:bold; animation: pulse 2s infinite;">
-                <i class="fas fa-download"></i>
-                <span>App</span>
-            </a>
-        ` + `
-            <a href="#" class="mobile-nav-item" onclick="app.handleLogout(); return false;">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Sair</span>
-            </a>
-        `;
+        `).join('');
     }
 
     renderSidebar() {
