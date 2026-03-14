@@ -4330,7 +4330,9 @@ Bons treinos!`;
                     </div>
                     <strong>${thread.user.name}</strong>
                 </div>
-                <!-- Actions could go here -->
+                <button class="btn btn-ghost btn-sm" onclick="app.deleteAllMessagesInChat('${activeChatId}')" style="color:var(--danger); font-size:0.75rem;" title="Limpar conversa">
+                    <i class="fas fa-trash-alt"></i> <span class="desktop-only" style="margin-left:5px;">Limpar</span>
+                </button>
             </div>
 
             <div class="chat-messages">
@@ -4345,9 +4347,14 @@ Bons treinos!`;
                             ${isSystem ? `<strong style="display:block; margin-bottom:4px; color:var(--accent);">${m.title}</strong>` : ''}
                             ${!isSystem && !isMe ? `<div style="font-size:0.7rem; color:var(--primary); font-weight:bold; margin-bottom:2px;">${thread.user.name}</div>` : ''}
                             ${m.body}
-                            <span class="message-time">
-                                ${new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
+                             <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:10px; margin-top:4px;">
+                                <span class="message-time" style="margin:0;">
+                                    ${new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                                <i class="fas fa-trash-alt" style="font-size:0.7rem; cursor:pointer; opacity:0.3;" 
+                                   onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.3'"
+                                   onclick="app.deleteMessage('${activeChatId}', '${m.createdAt}')" title="Eliminar mensagem"></i>
+                            </div>
                         </div>
                     `;
                     }).join('')}
@@ -4363,6 +4370,38 @@ Bons treinos!`;
             </div>
             ` : '<div style="padding:1rem; text-align:center; color:var(--text-muted); background:rgba(0,0,0,0.2);">Este e um canal de notificacoes do sistema.</div>'}
         `;
+    }
+
+    deleteMessage(chatId, createdAt) {
+        if (!confirm('Eliminar esta mensagem?')) return;
+        
+        const myId = Number(this.currentUser.id);
+        const idx = (this.state.notifications || []).findIndex(n => {
+            const isTarget = (n.targetUserId == myId && n.senderId == chatId) || (n.targetUserId == chatId && n.senderId == myId) || (chatId === 'system' && n.targetUserId == myId && !n.senderId);
+            return isTarget && n.createdAt === createdAt;
+        });
+
+        if (idx !== -1) {
+            this.state.notifications.splice(idx, 1);
+            this.saveState();
+            this.renderContent();
+            this.showToast('Mensagem eliminada.');
+        }
+    }
+
+    deleteAllMessagesInChat(chatId) {
+        if (!confirm('Tem a certeza que deseja apagar TODA a conversa? Esta acao nao pode ser revertida.')) return;
+
+        const myId = Number(this.currentUser.id);
+        this.state.notifications = (this.state.notifications || []).filter(n => {
+            const isSystemChat = chatId === 'system' && n.targetUserId == myId && !n.senderId;
+            const isUserChat = (n.targetUserId == myId && n.senderId == chatId) || (n.targetUserId == chatId && n.senderId == myId);
+            return !(isSystemChat || isUserChat);
+        });
+
+        this.saveState();
+        this.renderContent();
+        this.showToast('Conversa limpa.');
     }
 
     openChat(userId) {
