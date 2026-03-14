@@ -6163,7 +6163,14 @@ Bons treinos!`;
             this.qrScannerAtivo = true;
             this.qrRequestAnimationFrameId = requestAnimationFrame(() => this.loopLeitorQR(video));
 
-            scanStatus.innerHTML = "<span style='color: var(--success)'> Scanner Ativo</span><br>Aponte para o QR Code";
+            scanStatus.innerHTML = `
+                <div style="display:flex; flex-direction:column; align-items:center; gap:5px; padding: 5px;">
+                    <span style="color: var(--success); font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-check-circle pulse"></i> Scanner Ativo
+                    </span>
+                    <span style="font-size: 0.8rem; opacity: 0.8;">Aponte para o QR Code</span>
+                </div>
+            `;
             scanStatus.className = "";
         } catch (e) {
             console.error(e);
@@ -6391,7 +6398,9 @@ Bons treinos!`;
 
         const welcomeMsg = (c.type === 'admin' || c.type === 'teacher')
             ? ` Bem-vindo, ${c.nome}! Staff (${eventType.toUpperCase()})`
-            : ` Bem-vindo, ${c.nome}! ${eventType === 'entrada' ? 'Entrada Validada' : 'Saida Registada'}.`;
+            : (eventType === 'entrada' 
+                ? ` Bem-vindo, ${c.nome}! Entrada Validada.` 
+                : ` Obrigado pela visita, ${c.nome}, bom descanso. Saída Registada.`);
 
         this.showQRMsg(welcomeMsg, eventType === 'entrada' ? "bg-qr-success" : "bg-qr-warning");
         this.lastProcessedQR = id;
