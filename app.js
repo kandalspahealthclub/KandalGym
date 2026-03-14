@@ -4359,13 +4359,19 @@ Bons treinos!`;
                                 <span class="message-time" style="margin:0;">
                                     ${new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
-                                <div style="display: flex; gap: 10px; align-items: center;">
-                                    ${!isDeleted ? `<i class="fas fa-reply" style="font-size:0.7rem; cursor:pointer; opacity:0.3;" 
-                                       onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.3'"
-                                       onclick="app.prepareReply('${m.id}', '${m.senderId || 'system'}', \`${(m.body || '').replace(/'/g, "\\'").replace(/"/g, '\\"')}\`)" title="Responder"></i>` : ''}
-                                    ${!isDeleted ? `<i class="fas fa-trash-alt" style="font-size:0.7rem; cursor:pointer; opacity:0.3;" 
-                                       onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.3'"
-                                       onclick="app.deleteMessage('${activeChatId}', '${m.createdAt}')" title="Eliminar mensagem"></i>` : ''}
+                                 <div class="msg-actions-container" style="display: flex; gap: 8px; align-items: center;">
+                                    ${!isDeleted ? `
+                                        <div class="desktop-only" style="display: flex; gap: 10px;">
+                                            <i class="fas fa-reply" style="font-size:0.7rem; cursor:pointer; opacity:0.3;" 
+                                            onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.3'"
+                                            onclick="app.prepareReply('${m.id}', '${m.senderId || 'system'}', \`${(m.body || '').replace(/'/g, "\\'").replace(/"/g, '\\"')}\`)" title="Responder"></i>
+                                            <i class="fas fa-trash-alt" style="font-size:0.7rem; cursor:pointer; opacity:0.3;" 
+                                            onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.3'"
+                                            onclick="app.deleteMessage('${activeChatId}', '${m.createdAt}')" title="Eliminar mensagem"></i>
+                                        </div>
+                                        <i class="fas fa-ellipsis-v mobile-only msg-more-btn" 
+                                           onclick="app.showMessageMenu(event, '${m.id}', '${activeChatId}', \`${(m.body || '').replace(/'/g, "\\'").replace(/"/g, '\\"')}\`, '${m.createdAt}', '${m.senderId || 'system'}')"></i>
+                                    ` : ''}
                                 </div>
                             </div>
                         </div>
@@ -4416,6 +4422,52 @@ Bons treinos!`;
             this.saveState();
             this.renderContent();
         }
+    }
+
+    showMessageMenu(event, msgId, chatId, body, createdAt, senderId) {
+        event.stopPropagation();
+        
+        // Remove existing menu if any
+        const existing = document.querySelector('.msg-context-menu');
+        if (existing) existing.remove();
+
+        const menu = document.createElement('div');
+        menu.className = 'msg-context-menu animate-fade-in';
+        menu.style.cssText = `
+            position: fixed;
+            top: ${event.clientY}px;
+            right: 20px;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            z-index: 9999;
+            min-width: 150px;
+            overflow: hidden;
+        `;
+
+        menu.innerHTML = `
+            <div style="padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);" 
+                 onclick="app.prepareReply('${msgId}', '${senderId}', \`${body.replace(/'/g, "\\'")}\`); this.parentElement.remove();">
+                <i class="fas fa-reply" style="color: var(--accent);"></i> Responder
+            </div>
+            <div style="padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #ff4444;" 
+                 onclick="app.deleteMessage('${chatId}', '${createdAt}'); this.parentElement.remove();">
+                <i class="fas fa-trash-alt"></i> Apagar
+            </div>
+        `;
+
+        document.body.appendChild(menu);
+
+        // Click outside to close
+        const closeMenu = (e) => {
+            if (!menu.contains(e.target)) {
+                menu.remove();
+                document.removeEventListener('click', closeMenu);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', closeMenu), 10);
     }
 
     prepareReply(msgId, senderId, body) {

@@ -1179,6 +1179,24 @@ option {
     background: rgba(0, 0, 0, 0.05);
 }
 
+.msg-more-btn {
+    opacity: 0.3;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    padding: 5px;
+}
+
+@media (max-width: 768px) {
+    .msg-more-btn {
+        opacity: 0.8; /* Mais visivel no telemovel */
+    }
+}
+
+.message-bubble:hover .msg-more-btn {
+    opacity: 1;
+}
+
+
 /* Bubbles Estilo Telegram */
 .message-bubble {
     max-width: 80%;
