@@ -49,6 +49,7 @@ body {
     min-height: 100vh;
     min-height: 100dvh;
     overflow-x: hidden;
+    position: relative; /* Prevent fixed elements from causing scroll issues */
     background-image:
         linear-gradient(rgba(10, 12, 16, 0.94), rgba(10, 12, 16, 0.94)),
         url('hero1.png');
@@ -60,11 +61,13 @@ body {
 #app {
     max-width: 1400px;
     margin: 0 auto;
+    width: 100%;
     min-height: 100vh;
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
     padding: 0;
+    overflow-x: hidden; /* Prevent any internal element from causing horizontal scroll */
 }
 
 header {
@@ -82,12 +85,65 @@ header {
     display: flex;
     align-items: center;
     gap: 0.8rem;
+    flex-shrink: 0;
 }
 
 .logo img {
     height: 40px;
     width: auto;
     object-fit: contain;
+}
+
+.header-user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.header-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+    border: 2px solid var(--surface-border);
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-header {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--surface-border);
+    color: var(--text-muted);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%; /* Circular for premium look */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-header:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.btn-header.logout:hover {
+    color: var(--danger);
 }
 
 main {
@@ -187,15 +243,33 @@ h3 {
     }
 
     header {
-        padding: calc(0.75rem + var(--safe-top)) 1rem 0.75rem;
+        padding: calc(0.6rem + var(--safe-top)) 1rem 0.6rem;
+        background: rgba(10, 12, 16, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
     }
 
-    .logo {
-        font-size: 1.1rem;
+    .logo img {
+        height: 28px; /* Slightly smaller for a more elegant look */
     }
 
-    .logo span {
-        font-size: 1.4rem;
+    .header-avatar {
+        width: 34px;
+        height: 34px;
+    }
+
+    .btn-header {
+        width: 30px;
+        height: 30px;
+        font-size: 0.8rem;
     }
 
     .stats-grid {
@@ -228,17 +302,21 @@ h3 {
     .mobile-nav {
         display: flex !important;
         position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: rgba(10, 12, 16, 0.98);
+        bottom: 1.25rem;
+        left: 0.75rem;
+        right: 0.75rem;
+        background: rgba(15, 23, 42, 0.85);
         backdrop-filter: blur(25px);
         -webkit-backdrop-filter: blur(25px);
-        border-top: 1px solid var(--surface-border);
-        padding: 0.5rem 0.2rem calc(0.5rem + var(--safe-bottom));
-        justify-content: space-between;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 0.5rem;
+        gap: 2px;
+        justify-content: space-around;
         z-index: 1000;
-        box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.5);
+        border-radius: 24px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        max-width: 500px;
+        margin: 0 auto;
     }
 
     .mobile-nav-item {
@@ -247,12 +325,15 @@ h3 {
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 2px;
+        gap: 4px;
         color: var(--text-muted);
-        font-size: 0.6rem;
+        font-size: 0.55rem;
         text-decoration: none;
         text-align: center;
         min-width: 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 16px;
+        padding: 4px 0;
     }
 
     .mobile-nav-item span {
@@ -260,16 +341,39 @@ h3 {
         overflow: hidden;
         text-overflow: ellipsis;
         width: 100%;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        opacity: 0.7;
     }
 
     .mobile-nav-item.active {
-        color: var(--primary);
-        font-weight: 600;
+        color: var(--accent);
+    }
+
+    .mobile-nav-item.active span {
+        opacity: 1;
     }
 
     .mobile-nav-item i {
-        font-size: 1.2rem;
-        margin-bottom: 2px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .mobile-nav-item.active i {
+        transform: scale(1.1) translateY(-2px);
+        color: var(--accent);
+        text-shadow: 0 0 15px rgba(196, 162, 77, 0.4);
+    }
+
+    .mobile-nav-item.active i {
+        background: rgba(196, 162, 77, 0.15);
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        color: var(--accent);
     }
 }
 
@@ -1274,15 +1378,16 @@ option {
 @media (max-width: 768px) {
     .chat-container {
         display: block;
-        height: calc(100vh - 120px);
-        margin: -0.75rem;
-        border-radius: 0;
+        height: auto;
+        margin: 0;
+        padding: 0;
         border: none;
+        background: transparent;
     }
 
     .chat-sidebar {
-        height: 100%;
-        background: var(--background);
+        height: auto;
+        background: transparent;
     }
 
     .chat-main {
@@ -1291,9 +1396,16 @@ option {
         left: 0;
         right: 0;
         bottom: 0;
-        z-index: 3000;
-        background: #0a0c10;
+        z-index: 2000;
+        background: var(--background);
+        flex-direction: column;
         display: none;
+        animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
     }
 
     .chat-container.active-chat .chat-main {
@@ -1301,12 +1413,18 @@ option {
     }
 
     .chat-header {
-        height: calc(60px + var(--safe-top));
-        padding-top: var(--safe-top);
+        padding: calc(0.75rem + var(--safe-top)) 1rem 0.75rem;
+        background: rgba(22, 27, 34, 0.8);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--surface-border);
     }
 
     .chat-input-area {
-        padding-bottom: calc(1rem + var(--safe-bottom));
+        padding: 1rem 1rem calc(1.5rem + var(--safe-bottom));
+        background: rgba(22, 27, 34, 0.8);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
     }
 }
 
@@ -1625,5 +1743,27 @@ option {
 @media (max-width: 768px) {
     .desktop-only {
         display: none !important;
+    }
+
+    .header-actions {
+        gap: 0.4rem;
+    }
+
+    .btn-header {
+        width: 32px;
+        height: 32px;
+        font-size: 0.85rem;
+    }
+
+    /* Hide scrollbars but keep functionality */
+    .tab-container::-webkit-scrollbar,
+    .scroll-x::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .tab-container,
+    .scroll-x {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
     }
 }
