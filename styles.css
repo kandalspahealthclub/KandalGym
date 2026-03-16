@@ -168,19 +168,20 @@ main {
 .sidebar .btn {
     width: 100%;
     justify-content: flex-start;
-    padding: 0.85rem 1.25rem;
+    padding: 0.85rem 1rem;
     font-size: 0.95rem;
     border: 1px solid transparent;
-    gap: 12px !important;
+    gap: 8px;
 }
 
 .sidebar i {
-    width: 20px;
+    width: 22px;
     font-size: 1.1rem;
     text-align: center;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .sidebar .glass-card {
