@@ -2341,7 +2341,8 @@ Bons treinos!`;
                     name: ex.name,
                     sets: ex.sets,
                     reps: ex.reps,
-                    weights: [...(ex.weightLog || [])]
+                    weights: [...(ex.weightLog || [])],
+                    notes: ex.clientNotes || ''
                 }))
             };
 
@@ -3808,13 +3809,16 @@ Bons treinos!`;
                                     <strong style="font-size:0.9rem;">${ex.name}</strong>
                                     <small style="color:var(--text-muted);">${ex.sets}x${ex.reps}</small>
                                 </div>
-                                <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                                <div style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom: 5px;">
                                     ${(ex.weights || []).map((w, idx) => `
                                         <div style="font-size:0.75rem; background:rgba(0,0,0,0.2); padding:3px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.05);">
                                             S${idx + 1}: <span style="color:var(--accent); font-weight:bold;">${w || '-'}kg</span>
                                         </div>
                                     `).join('')}
                                 </div>
+                                ${ex.notes ? `<div style="font-size:0.8rem; color:var(--text-muted); font-style: italic; border-top: 1px solid rgba(255,255,255,0.05); padding-top:5px; margin-top:5px;">
+                                    <i class="fas fa-comment-dots" style="font-size:0.75rem; margin-right:4px; color:var(--accent);"></i> ${ex.notes}
+                                </div>` : ''}
                             </div>
                         `).join('')}
                     </div>
