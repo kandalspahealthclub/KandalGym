@@ -2188,7 +2188,7 @@ Bons treinos!`;
             </div>
 
             ${plans && plans.length ? plans.map((day, dIdx) => `
-                <div class="glass-panel" style="padding:1.5rem; margin-bottom:1.5rem;">
+                <div class="glass-panel training-day-panel" style="margin-bottom:1.5rem;">
                     <h3 style="color:var(--primary); margin-bottom:1.25rem; display:flex; align-items:center; gap:0.6rem; border-bottom:1px solid var(--surface-border); padding-bottom:0.75rem;">
                         <i class="fas fa-calendar-day"></i> ${day.title}
                     </h3>
@@ -2213,10 +2213,10 @@ Bons treinos!`;
                                     </div>
 
                                     <div style="min-width: 0; flex: 1;">
-                                        <strong style="font-size:1rem; display:block; margin-bottom:2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff;">${ex.name}</strong>
+                                        <strong style="font-size:1rem; display:block; margin-bottom:2px; color: #fff; line-height:1.2;">${ex.name}</strong>
                                         <div style="color:var(--text-muted); font-size:0.85rem; font-weight: 600;">
                                             <span style="color: var(--primary);"><i class="fas fa-redo"></i> ${ex.sets} x ${ex.reps}</span>
-                                            ${ex.observations ? `<br><small style="color:var(--accent); font-size: 0.75rem; font-weight: 400;"><i class="fas fa-info-circle"></i> ${ex.observations}</small>` : ''}
+                                            ${ex.observations ? `<br><small style="color:var(--accent); font-size: 0.75rem; font-weight: 400; display:block; margin-top:2px;"><i class="fas fa-info-circle"></i> ${ex.observations}</small>` : ''}
                                         </div>
                                     </div>
 
@@ -2235,11 +2235,11 @@ Bons treinos!`;
                                             ${Array.from({ length: numSets }).map((_, sIdx) => {
                     const val = (ex.weightLog && ex.weightLog[sIdx]) || '';
                     return `
-                                                <div style="flex:1; min-width:45px; max-width:60px;">
+                                                <div style="flex:1; min-width:38px; max-width:55px;">
                                                     <small style="display:block; text-align:center; font-size:0.6rem; color:var(--text-muted); margin-bottom:1px;">S${sIdx + 1}</small>
                                                     <input type="number" value="${val}" placeholder="0" 
                                                         onblur="app.logWeight(${clientId}, ${dIdx}, ${exIdx}, ${sIdx}, this.value)"
-                                                        style="width:100%; height:32px; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:6px; color:#fff; text-align:center; font-size:0.85rem;">
+                                                        style="width:100%; height:32px; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:6px; color:#fff; text-align:center; font-size:0.85rem; padding:0;">
                                                 </div>
                                                 `;
                 }).join('')}
