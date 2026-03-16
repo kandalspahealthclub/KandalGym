@@ -1033,8 +1033,7 @@ Bons treinos!`;
 
         mobileNav.innerHTML = navItems.map(item => `
             <a href="#" class="mobile-nav-item ${this.activeView === item.id ? 'active' : ''}" onclick="app.setView('${item.id}'); return false;">
-                <i class="fas ${item.icon}"></i>
-                <span>${item.label}</span>
+                <i class="fas ${item.icon}"></i><span>${item.label}</span>
             </a>
         `).join('');
     }
@@ -1079,12 +1078,12 @@ Bons treinos!`;
         }
 
         sidebar.innerHTML = navItems.map(item => `
-            <button class="btn btn-ghost ${this.activeView === item.id ? 'glass-card' : ''}" onclick="app.setView('${item.id}')">
-                <i class="fas ${item.icon}"></i> <span>${item.label}</span>
+            <button class="btn btn-ghost ${this.activeView === item.id ? 'glass-card' : ''}" onclick="app.setView('${item.id}')" style="gap: 8px;">
+                <i class="fas ${item.icon}"></i><span>${item.label}</span>
             </button>
         `).join('') + `
-        <button class="btn btn-ghost" onclick="app.handleLogout()" style="margin-top:auto; color:var(--danger); gap: 10px;">
-                <i class="fas fa-sign-out-alt"></i> <span>Terminar Sessao</span>
+        <button class="btn btn-ghost" onclick="app.handleLogout()" style="margin-top:auto; color:var(--danger); gap: 12px;">
+                <i class="fas fa-sign-out-alt"></i><span>Terminar Sessao</span>
             </button>
         `;
     }
