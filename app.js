@@ -6,8 +6,8 @@ window.onerror = function (message, source, lineno, colno, error) {
         container.innerHTML = `
             <div class="glass-card" style="margin:2rem; padding:2rem; border:2px solid var(--danger); text-align:center;">
                 <i class="fas fa-exclamation-circle" style="font-size:3rem; color:var(--danger); margin-bottom:1rem;"></i>
-                <h2 style="color:#fff;">Ocorreu um erro na aplicacao</h2>
-                <p style="color:var(--text-muted);">A pagina nao conseguiu carregar corretamente.</p>
+                <h2 style="color:#fff;">Ocorreu um erro na aplicação</h2>
+                <p style="color:var(--text-muted);">A página não conseguiu carregar corretamente.</p>
                 <div style="background:rgba(0,0,0,0.3); padding:1rem; border-radius:8px; margin:1rem 0; text-align:left; font-family:monospace; font-size:0.75rem; color:var(--danger); overflow-x:auto;">
                     ${message}<br><small>Linha: ${lineno}</small>
                 </div>
@@ -25,11 +25,9 @@ class FitnessApp {
         this.activeView = 'dashboard';
         this.spySubView = 'training';
         this.dashboardMonth = new Date().toISOString().substring(0, 7);
-        this.hasLoadedData = false; // Flag para evitar flickering de "Utilizador nao encontrado"
+        this.hasLoadedData = false; // Flag para evitar flickering de "Utilizador não encontrado"
         this.isCheckingClasses = false;
         this.checkInterval = null;
-        this.qrActiveTab = 'clients';
-        this.selectedQRClients = [];
 
         // Tentar carregar estado do LocalStorage como cache inicial
         const cachedState = localStorage.getItem('kandalgym_state');
@@ -63,7 +61,7 @@ class FitnessApp {
             messagingSenderId: "367817039949",
             appId: "1:367817039949:web:5c72215819b9bb1eb07c04",
             measurementId: "G-WY0QSKYVCR",
-            serverKey: "AIzaSyD7cf3sfJBm0YsLOagu6or2hCTd-xcjO1E" // ATENCAO: Esta chave deve comecar por AAAA...
+            serverKey: "AIzaSyD7cf3sfJBm0YsLOagu6or2hCTd-xcjO1E" // ATENÇÃO: Está chave deve começar por AAAA...
         };
 
         try {
@@ -73,7 +71,7 @@ class FitnessApp {
             console.log("Firebase inicializado.");
         } catch (fbErr) {
             console.error("Erro ao inicializar Firebase:", fbErr);
-            alert("Erro Firebase: Verifique a sua ligacao a internet.");
+            alert("Erro Firebase: Verifique a sua ligação à internet.");
         }
         this.isSaving = false;
 
@@ -150,10 +148,10 @@ class FitnessApp {
         this.isInitialized = true;
 
         this.dbRef.on('value', (snapshot) => {
-            // Se entrou no listener, ja temos resposta do servidor
+            // Se entrou no listener, já temos resposta do servidor
             this.hasLoadedData = true;
 
-            // Nao processar se for uma gravacao nossa (evita loops e cintilacao)
+            // Não processar se for uma gravação nossa (evita loops e cintilação)
             if (this.isSaving) return;
 
             const data = snapshot.val();
@@ -175,14 +173,14 @@ class FitnessApp {
                 });
             }
 
-            // 3. Sincronizacao local e UI
+            // 3. Sincronização local e UI
             try {
                 localStorage.setItem('kandalgym_state', JSON.stringify(this.state));
             } catch (e) { }
 
             this.syncSessionWithState();
 
-            // Atualizar UI apenas se logado e nao houver modais abertas
+            // Atualizar UI apenas se logado e não houver modais abertas
             if (this.isLoggedIn && !document.querySelector('.modal-overlay')) {
                 this.renderContent();
             }
@@ -195,12 +193,12 @@ class FitnessApp {
     }
 
     async backgroundSync() {
-        // Agora o 'init' com dbRef.on('value') ja faz a sincronizacao automatica em tempo real.
-        // Nao precisamos mais de intervalo.
+        // Agora o 'init' com dbRef.on('value') já faz a sincronização automática em tempo real.
+        // Não precisamos mais de intervalo.
         return;
     }
 
-    addAppNotification(targetUserId, title, body, senderId = null, type = 'notification', shouldSave = true, replyTo = null) {
+    addAppNotification(targetUserId, title, body, senderId = null, type = 'notification', shouldSave = true) {
         if (!this.state.notifications) this.state.notifications = [];
         if (this.state.notifications.length > 200) {
             this.state.notifications = this.state.notifications.slice(-200);
@@ -213,8 +211,7 @@ class FitnessApp {
             type: type,
             title,
             body,
-            createdAt: new Date().toISOString(),
-            replyTo: replyTo // Store reference to original message
+            createdAt: new Date().toISOString()
         };
 
         this.state.notifications.push(newNotification);
@@ -270,18 +267,16 @@ class FitnessApp {
         const photo = this.currentUser.photoUrl;
 
         container.innerHTML = `
-            <div class="header-user-profile">
-                <div class="header-avatar">
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+                <div class="avatar" style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; border: 2px solid var(--surface-border); overflow: hidden;">
                     ${photo ? `<img src="${photo}" style="width:100%; height:100%; object-fit:cover;">` : initials}
                 </div>
-                <div class="header-actions">
-                    <button class="btn-header" onclick="app.installPWA()" title="Instalar App">
-                        <i class="fas fa-download"></i>
-                    </button>
-                    <button class="btn-header logout" onclick="app.handleLogout()" title="Sair">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </button>
-                </div>
+                <button class="btn btn-ghost btn-sm" onclick="app.installPWA()" title="Instalar App" style="color: var(--primary); padding: 6px 10px; border: 1px solid var(--primary); border-radius: 8px;">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button class="btn btn-ghost btn-sm" onclick="app.handleLogout()" title="Sair" style="color:var(--text-muted);">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
             </div>
         `;
     }
@@ -314,7 +309,7 @@ class FitnessApp {
                     </button>
                 </form>
                 <div class="login-footer">
-                    Problemas de Acesso? <a href="https://wa.me/351963939017" target="_blank"><i class="fab fa-whatsapp"></i> Contacte-nos</a>
+                    Ainda não tem conta? <a href="#" onclick="app.renderRegister(); return false;">Registe-se</a>
                 </div>
             </div>
         `;
@@ -345,17 +340,17 @@ class FitnessApp {
                     </div>
                     <div class="input-icon-group">
                         <i class="fas fa-phone"></i>
-                        <input type="tel" id="reg-phone" placeholder="Telemovel (ex: 912345678)" required>
+                        <input type="tel" id="reg-phone" placeholder="Telemóvel (ex: 912345678)" required>
                     </div>
                     <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.5rem 0; text-align: left;">
-                        * O seu registo sera como <strong>Aluno</strong>. Contas de Professor devem ser solicitadas ao Administrador.
+                        * O seu registo será como <strong>Aluno</strong>. Contas de Professor devem ser solicitadas ao Administrador.
                     </p>
                     <button type="submit" class="btn btn-primary" style="width:100%; margin-top:0.5rem;">
                         Criar Conta <i class="fas fa-check"></i>
                     </button>
                 </form>
                 <div class="login-footer">
-                    Ja tem conta? <a href="#" onclick="app.renderLogin(); return false;">Faca Login</a>
+                    Já tem conta? <a href="#" onclick="app.renderLogin(); return false;">Faça Login</a>
                 </div>
             </div>
         `;
@@ -372,11 +367,11 @@ class FitnessApp {
             return;
         }
 
-        // Verificar se ja existe
+        // Verificar se já existe
         const exists = this.state.clients.some(c => c.email.toLowerCase() === email) ||
             this.state.teachers.some(t => t.email.toLowerCase() === email);
         if (exists) {
-            alert('Este email ja esta registado.');
+            alert('Este email já está registado.');
             return;
         }
 
@@ -389,7 +384,7 @@ class FitnessApp {
         this.state.trainingHistory[newId] = [];
 
         this.saveState();
-        alert('Conta criada com sucesso! Ja pode entrar.');
+        alert('Conta criada com sucesso! Já pode entrar.');
         this.renderLogin();
     }
 
@@ -420,6 +415,7 @@ class FitnessApp {
                 this.isLoggedIn = true;
                 this.persistLogin();
                 this.renderAppInterface();
+                this.oneSignalLogin(this.currentUser.id);
                 return;
             }
 
@@ -430,6 +426,7 @@ class FitnessApp {
                 this.isLoggedIn = true;
                 this.persistLogin();
                 this.renderAppInterface();
+                this.oneSignalLogin(this.currentUser.id);
                 return;
             }
 
@@ -446,7 +443,7 @@ class FitnessApp {
             }
         } catch (error) {
             console.error('Erro no login:', error);
-            alert('Ocorreu um erro ao entrar. Tente refrescar a pagina.');
+            alert('Ocorreu um erro ao entrar. Tente refrescar a página.');
         }
     }
 
@@ -493,7 +490,7 @@ class FitnessApp {
             }
 
         } catch (e) {
-            console.error("Erro ao restaurar sessao:", e);
+            console.error("Erro ao restaurar sessão:", e);
             localStorage.removeItem('kandalgym_session');
         }
     }
@@ -508,19 +505,20 @@ class FitnessApp {
     }
 
     renderFAB() {
-        const existingFab = document.querySelector('.action-fab');
+        const existingFab = document.querySelector('.fab');
         if (existingFab) existingFab.remove();
 
         if (this.role === 'admin') {
             const fab = document.createElement('button');
-            fab.className = 'action-fab animate-fade-in';
+            fab.className = 'fab animate-fade-in';
             fab.innerHTML = '<i class="fas fa-plus"></i>';
             fab.onclick = () => {
-                const userTab = document.querySelector('.admin-tabs .tab.active');
-                if (this.activeView === 'users') {
+                if (this.activeView === 'users' || this.activeView === 'dashboard') {
                     this.showAddUserModal();
-                } else if (this.activeView === 'classes') {
-                    // Logic to add class if needed
+                } else if (this.activeView === 'exercises') {
+                    this.showAddExerciseModal();
+                } else if (this.activeView === 'foods') {
+                    this.showAddFoodModal();
                 } else {
                     this.showAddUserModal();
                 }
@@ -538,7 +536,7 @@ class FitnessApp {
                 <div style="display:flex; flex-direction:column; gap:1.25rem;">
                     <div>
                         <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Tipo</label>
-                        <select id="new-user-type" onchange="const val = this.value; const isClient = val === 'client'; ['teacher-select-container', 'client-dob-container', 'client-job-container', 'client-plan-container'].forEach(id => { const el = document.getElementById(id); if(el) el.style.display = isClient ? 'block' : 'none'; });">
+                        <select id="new-user-type" onchange="const val = this.value; const isClient = val === 'client'; document.getElementById('teacher-select-container').style.display = isClient ? 'block' : 'none'; document.getElementById('client-dob-container').style.display = isClient ? 'block' : 'none';">
                             <option value="client">Aluno/Cliente</option>
                             <option value="teacher">Professor/Trainer</option>
                             ${this.role === 'admin' ? '<option value="admin">Administrador (Gestor)</option>' : ''}
@@ -572,18 +570,6 @@ class FitnessApp {
                         <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Data de Nascimento</label>
                         <input type="date" id="new-user-dob" style="color-scheme: dark;">
                     </div>
-                    <div id="client-job-container">
-                        <input type="text" id="new-user-job" placeholder="Profissao (Obrigatorio)">
-                    </div>
-                    <div id="client-plan-container">
-                        <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Plano de Acesso</label>
-                        <select id="new-user-plan">
-                            <option value="total">Total (Musculacao + Todas as Aulas)</option>
-                            <option value="musculacao">Musculacao (Sem Aulas)</option>
-                            <option value="aulas">Aulas (Exceto Pilates)</option>
-                            <option value="pilates">Pilates (So Aulas de Pilates)</option>
-                        </select>
-                    </div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
                         <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
                         <button class="btn btn-primary" onclick="app.addUser()">Adicionar</button>
@@ -612,34 +598,32 @@ class FitnessApp {
             const email = document.getElementById('new-user-email').value.trim().toLowerCase();
             const pass = document.getElementById('new-user-pass').value.trim();
             const phone = document.getElementById('new-user-phone').value.trim();
-            const jobInput = document.getElementById('new-user-job');
-            const job = jobInput ? jobInput.value.trim() : '';
 
-            if (!name || !email || !pass || !phone || (type === 'client' && !job)) return alert('Por favor, preencha todos os campos obrigatorios' + (type === 'client' ? ', incluindo a profissao.' : '.'));
+            if (!name || !email || !pass || !phone) return alert('Por favor, preencha todos os campos obrigatorios.');
 
             // Garantir que as listas existem antes de verificar duplicados
             if (!this.state.clients) this.state.clients = [];
             if (!this.state.teachers) this.state.teachers = [];
             if (!this.state.admins) this.state.admins = [];
 
-            // Verificar se ja existe email
+            // Verificar se já existe email
             const existsEmail = this.state.clients.some(c => c.email.toLowerCase() === email) ||
                 this.state.teachers.some(t => t.email.toLowerCase() === email) ||
                 this.state.admins.some(a => a.email.toLowerCase() === email);
 
             if (existsEmail) {
-                alert('Este email ja esta registado no sistema.');
+                alert('Este email já está registado no sistema.');
                 return;
             }
 
-            // Verificar se ja existe contacto telefonico (normalizando espacos)
+            // Verificar se já existe contacto telefonico (normalizando espacos)
             const cleanPhone = phone.replace(/\s+/g, '');
             const existsPhone = this.state.clients.some(c => (c.phone || '').replace(/\s+/g, '') === cleanPhone) ||
                 this.state.teachers.some(t => (t.phone || '').replace(/\s+/g, '') === cleanPhone) ||
                 this.state.admins.some(a => (a.phone || '').replace(/\s+/g, '') === cleanPhone);
 
             if (existsPhone) {
-                alert('Este contacto telefonico ja esta registado na base de dados (Professor, Aluno ou Admin).');
+                alert('Este contacto telefonico já está registado na base de dados (Professor, Aluno ou Admin).');
                 return;
             }
 
@@ -660,9 +644,7 @@ class FitnessApp {
                     lastEvaluation: '-',
                     goal: 'Novo Aluno',
                     teacherId: teacherId ? Number(teacherId) : null,
-                    birthDate: document.getElementById('new-user-dob').value,
-                    job: job,
-                    plan: document.getElementById('new-user-plan')?.value || 'total'
+                    birthDate: document.getElementById('new-user-dob').value
                 };
                 this.state.clients.push(newClient);
 
@@ -695,7 +677,7 @@ class FitnessApp {
             }
         } catch (error) {
             console.error('Erro ao adicionar utilizador:', error);
-            alert('Erro ao guardar utilizador: ' + error.message);
+            alert('Erro ao guardar utilizador. Por favor, tente novamente ou contacte o suporte.');
         }
     }
 
@@ -709,13 +691,13 @@ class FitnessApp {
 
 A sua conta de ${label} na KandalGym foi criada com sucesso!
 
-Podera aceder a plataforma atraves do seguinte endereco: https://kandalspahealthclub.github.io/KandalGym/
+Poderá aceder a plataforma através do seguinte endereço: https://kandalspahealthclub.github.io/KandalGym/
 
 As suas credenciais de acesso sao:
 - Email: ${email}
 - Password: ${pass}
 
-Recomendamos que guarde este link nos seus favoritos ou instale a App no seu telemovel.
+Recomendamos que guarde este link nos seus favoritos ou instale a App no seu telemóvel.
 
 Bons treinos!
 Equipa KandalGym`;
@@ -740,6 +722,9 @@ Bons treinos!`;
 
         modal.innerHTML = `
             <div class="modal-content animate-fade-in" style="max-width: 450px; text-align: center;">
+                <div style="background: var(--success); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: white; font-size: 1.5rem;">
+                    <i class="fas fa-check"></i>
+                </div>
                 <h2 style="margin-top: 0;">Conta Criada!</h2>
                 <p style="color: var(--text-muted); font-size: 0.9rem;">O utilizador <strong>${name}</strong> foi adicionado com sucesso ao sistema.</p>
                 
@@ -769,65 +754,6 @@ Bons treinos!`;
         document.body.appendChild(modal);
     }
 
-    showSharePlanModal(clientId, planType) {
-        const client = (this.state.clients || []).find(c => Number(c.id) === Number(clientId));
-        if (!client) {
-            this.setView('spy_view');
-            return;
-        }
-
-        const name = client.name;
-        const email = client.email;
-        const phone = client.phone;
-        const typeLabel = planType === 'training' ? 'Treino' : 'Alimentar';
-
-        const subject = `Novo Plano de ${typeLabel} - KandalGym`;
-        const body = `Ola ${name},
-
-O seu plano de ${typeLabel} foi atualizado no sistema KandalGym.
-
-Pode consulta-lo na sua area pessoal atraves do endereco: https://kandalspahealthclub.github.io/KandalGym/
-
-Bons treinos!
-Equipa KandalGym`;
-
-        const whatsappText = `*KandalGym - Novo Plano de ${typeLabel}*
-
-Ola ${name}, o seu plano de ${typeLabel} foi atualizado! 🏋️‍♂️🍎
-
-Aceda aqui para consultar: https://kandalspahealthclub.github.io/KandalGym/
-
-Bons treinos!`;
-
-        const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
-        const cleanPhone = phone ? String(phone).replace(/\s+/g, '').replace(/^00/, '').replace(/^\+/, '') : '';
-        const whatsappLink = `https://wa.me/${cleanPhone.startsWith('351') || (cleanPhone.length < 12 && cleanPhone.length >= 9) ? (cleanPhone.length === 9 ? '351' + cleanPhone : cleanPhone) : cleanPhone}?text=${encodeURIComponent(whatsappText)}`;
-
-        this.showModal(`
-            <div style="text-align: center; padding: 1rem 0;">
-                <h2 style="margin-top: 0; font-size: 1.5rem;">Plano Guardado!</h2>
-                <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem;">
-                    Deseja notificar o aluno <strong>${name}</strong>?
-                </p>
-
-                <div style="display: flex; flex-direction: column; gap: 1rem;">
-                    <a href="${whatsappLink}" target="_blank" class="btn" style="text-decoration: none; background: #25D366; color: white; display:flex; align-items:center; justify-content:center; gap:10px; height:50px; font-weight:600;">
-                        <i class="fab fa-whatsapp" style="font-size:1.2rem;"></i> Enviar por WhatsApp
-                    </a>
-                    
-                    <a href="${mailtoLink}" class="btn btn-secondary" style="text-decoration: none; display:flex; align-items:center; justify-content:center; gap:10px; height:50px; font-weight:600;">
-                        <i class="fas fa-envelope"></i> Enviar por Email
-                    </a>
-
-                    <button class="btn btn-ghost" onclick="app.closeModal(); app.setView('spy_view');" style="margin-top: 0.5rem; font-weight: 500; opacity: 0.8;">
-                        Concluir sem enviar
-                    </button>
-                </div>
-            </div>
-        `, '380px');
-    }
-
     showAddExerciseModal() {
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
@@ -838,7 +764,7 @@ Bons treinos!`;
 
         modal.innerHTML = `
             <div class="modal-content">
-                <h2 style="margin-top:0;">Novo Exercicio</h2>
+                <h2 style="margin-top:0;">Novo Exercício</h2>
                 <div style="display:flex; flex-direction:column; gap:1.25rem;">
                     <div style="text-align:center; margin-bottom:5px;">
                         <div id="ex-photo-preview" style="width:120px; height:120px; border-radius:12px; border:2px dashed var(--surface-border); margin:0 auto 10px; display:flex; items-align:center; justify-content:center; overflow:hidden; background:rgba(0,0,0,0.2);">
@@ -889,7 +815,7 @@ Bons treinos!`;
         const name = document.getElementById('ex-name').value.trim();
         const url = document.getElementById('ex-url').value.trim();
         const cat = document.getElementById('ex-category').value;
-        if (!name) return alert('O nome do exercicio e obrigatorio.');
+        if (!name) return alert('O nome do exercício e obrigatório.');
 
         let finalUrl = "";
         if (url) {
@@ -966,12 +892,12 @@ Bons treinos!`;
 
         if (!name) return alert('Insira o nome.');
 
-        // Verificar se ja existe um alimento com o mesmo nome (ignorando maiusculas/minusculas)
+        // Verificar se já existe um alimento com o mesmo nome (ignorando maiusculas/minusculas)
         const normalizedName = name.toLowerCase();
         const existingFood = this.state.foods.find(f => f.name.toLowerCase() === normalizedName);
 
         if (existingFood) {
-            alert(`O alimento "${existingFood.name}" ja existe na base de dados.\n\nCategoria: ${existingFood.category}\nCalorias: ${existingFood.kcal} kcal/100g`);
+            alert(`O alimento "${existingFood.name}" já existe na base de dados.\n\nCategoria: ${existingFood.category}\nCalorias: ${existingFood.kcal} kcal/100g`);
             return;
         }
 
@@ -1005,7 +931,7 @@ Bons treinos!`;
                 { id: 'classes', icon: 'fa-calendar-alt', label: 'Aulas' },
                 { id: 'users', icon: 'fa-users-cog', label: 'Contas' },
                 { id: 'qr_manager', icon: 'fa-qrcode', label: 'Entradas' },
-                { id: 'exercises', icon: 'fa-play-circle', label: 'Exercicios' },
+                { id: 'exercises', icon: 'fa-play-circle', label: 'Exercícios' },
                 { id: 'foods', icon: 'fa-apple-alt', label: 'Alimentos' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'Perfil' }
             ];
@@ -1015,7 +941,7 @@ Bons treinos!`;
                 { id: 'classes', icon: 'fa-calendar-alt', label: 'Aulas' },
                 { id: 'clients', icon: 'fa-user-friends', label: 'Alunos' },
                 { id: 'chat', icon: 'fa-comment-alt', label: 'Msgs' },
-                { id: 'exercises', icon: 'fa-play-circle', label: 'Exercicios' },
+                { id: 'exercises', icon: 'fa-play-circle', label: 'Exercícios' },
                 { id: 'foods', icon: 'fa-apple-alt', label: 'Alim.' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'Perfil' }
             ];
@@ -1033,9 +959,20 @@ Bons treinos!`;
 
         mobileNav.innerHTML = navItems.map(item => `
             <a href="#" class="mobile-nav-item ${this.activeView === item.id ? 'active' : ''}" onclick="app.setView('${item.id}'); return false;">
-                <i class="fas ${item.icon} fa-fw"></i><span>${item.label}</span>
+                <i class="fas ${item.icon}"></i>
+                <span>${item.label}</span>
             </a>
-        `).join('');
+        `).join('') + `
+            <a href="#" class="mobile-nav-item" onclick="app.installPWA(); return false;" style="color:var(--primary); font-weight:bold; animation: pulse 2s infinite;">
+                <i class="fas fa-download"></i>
+                <span>App</span>
+            </a>
+        ` + `
+            <a href="#" class="mobile-nav-item" onclick="app.handleLogout(); return false;">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Sair</span>
+            </a>
+        `;
     }
 
     renderSidebar() {
@@ -1046,10 +983,10 @@ Bons treinos!`;
         if (this.role === 'admin') {
             navItems = [
                 { id: 'dashboard', icon: 'fa-shield-alt', label: 'Painel Admin' },
-                { id: 'classes', icon: 'fa-calendar-alt', label: 'Horario & Aulas' },
-                { id: 'users', icon: 'fa-users-cog', label: 'Gestao Contas' },
-                { id: 'qr_manager', icon: 'fa-qrcode', label: 'Gestao de Entradas' },
-                { id: 'exercises', icon: 'fa-play-circle', label: 'Biblioteca Exercicios' },
+                { id: 'classes', icon: 'fa-calendar-alt', label: 'Horário & Aulas' },
+                { id: 'users', icon: 'fa-users-cog', label: 'Gestão Contas' },
+                { id: 'qr_manager', icon: 'fa-qrcode', label: 'Gestão de Entradas' },
+                { id: 'exercises', icon: 'fa-play-circle', label: 'Biblioteca Exercícios' },
                 { id: 'foods', icon: 'fa-apple-alt', label: 'Base de Alimentos' },
                 { id: 'all-clients', icon: 'fa-search', label: 'Acesso Global' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
@@ -1057,10 +994,10 @@ Bons treinos!`;
         } else if (this.role === 'teacher') {
             navItems = [
                 { id: 'dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
-                { id: 'classes', icon: 'fa-calendar-alt', label: 'Gestao de Aulas' },
+                { id: 'classes', icon: 'fa-calendar-alt', label: 'Gestão de Aulas' },
                 { id: 'clients', icon: 'fa-user-friends', label: 'Meus Alunos' },
                 { id: 'anamnesis', icon: 'fa-notes-medical', label: 'Anamnese' },
-                { id: 'exercises', icon: 'fa-play-circle', label: 'Biblioteca Exercicios' },
+                { id: 'exercises', icon: 'fa-play-circle', label: 'Biblioteca Exercícios' },
                 { id: 'foods', icon: 'fa-apple-alt', label: 'Base de Alimentos' },
                 { id: 'chat', icon: 'fa-comment-alt', label: 'Mensagens' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
@@ -1068,10 +1005,10 @@ Bons treinos!`;
         } else {
             navItems = [
                 { id: 'dashboard', icon: 'fa-home', label: 'Inicio' },
-                { id: 'classes', icon: 'fa-calendar-alt', label: 'Horario de Aulas' },
+                { id: 'classes', icon: 'fa-calendar-alt', label: 'Horário de Aulas' },
                 { id: 'training', icon: 'fa-dumbbell', label: 'Meu Treino' },
                 { id: 'meal', icon: 'fa-apple-alt', label: 'Minha Dieta' },
-                { id: 'evaluation', icon: 'fa-chart-line', label: 'Avaliação Fisica' },
+                { id: 'evaluation', icon: 'fa-chart-line', label: 'Avaliação Física' },
                 { id: 'chat', icon: 'fa-comment-alt', label: 'Mensagens' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
             ];
@@ -1079,11 +1016,11 @@ Bons treinos!`;
 
         sidebar.innerHTML = navItems.map(item => `
             <button class="btn btn-ghost ${this.activeView === item.id ? 'glass-card' : ''}" onclick="app.setView('${item.id}')">
-                <i class="fas ${item.icon} fa-fw"></i><span>${item.label}</span>
+                <i class="fas ${item.icon}"></i> <span>${item.label}</span>
             </button>
         `).join('') + `
-        <button class="btn btn-ghost" onclick="app.handleLogout()" style="margin-top:auto; color:var(--danger);">
-                <i class="fas fa-sign-out-alt fa-fw"></i><span>Terminar Sessao</span>
+        <button class="btn btn-ghost" onclick="app.handleLogout()" style="margin-top:auto; color:var(--danger); gap: 10px;">
+                <i class="fas fa-sign-out-alt"></i> <span>Terminar Sessão</span>
             </button>
         `;
     }
@@ -1102,7 +1039,7 @@ Bons treinos!`;
         const container = document.getElementById('main-content');
         if (!container) return;
 
-        // Se ainda nao carregamos dados frescos do Firebase, mostramos um loader
+        // Se ainda não carregamos dados frescos do Firebase, mostramos um loader
         // em vez de mostrar dados potencialmente obsoletos do cache (evita aulas que "aparecem e desaparecem")
         if (!this.hasLoadedData) {
             container.innerHTML = `
@@ -1223,7 +1160,7 @@ Bons treinos!`;
             case 'users':
                 container.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h2 style="margin:0;">Gestao de Contas</h2>
+                        <h2 style="margin:0;">Gestão de Contas</h2>
                         <button class="btn btn-primary" onclick="app.showAddUserModal()"><i class="fas fa-plus"></i> Novo Utilizador</button>
                     </div>
 
@@ -1259,7 +1196,7 @@ Bons treinos!`;
             case 'all-clients':
                 container.innerHTML = `
                     <h2 style="margin-bottom:0.5rem;">Acesso Global (Admin)</h2>
-                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Como Administrador, tem acesso total a todos os alunos, independentemente do professor atribuido.</p>
+                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Como Administrador, tem acesso total a todos os alunos, independentemente do professor atribuído.</p>
                     
                     <div class="search-container">
                         <i class="fas fa-search"></i>
@@ -1285,7 +1222,7 @@ Bons treinos!`;
         }
         const teacherClients = this.state.clients.filter(c => c.teacherId === this.currentUser.id);
 
-        // Calcular estatisticas baseadas no mes selecionado
+        // Calcular estatisticas baseadas no mês selecionado
         const [selYear, selMonth] = this.dashboardMonth.split('-');
 
         let monthEvals = 0;
@@ -1348,7 +1285,7 @@ Bons treinos!`;
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
                         <h2 style="margin:0;"><i class="fas fa-chart-line"></i> Dashboard Trainer</h2>
                         <div style="display:flex; align-items:center; gap:0.5rem; background:rgba(255,255,255,0.05); padding:5px 15px; border-radius:12px; border:1px solid var(--surface-border);">
-                            <small style="color:var(--text-muted); font-weight:600; text-transform:uppercase; font-size:0.65rem;">Periodo:</small>
+                            <small style="color:var(--text-muted); font-weight:600; text-transform:uppercase; font-size:0.65rem;">Período:</small>
                             <input type="month" id="stats-month-picker" value="${this.dashboardMonth}" 
                                 onchange="app.updateDashboardMonth(this.value)"
                                 style="background:transparent; border:none; color:#fff; font-family:inherit; font-weight:600; font-size:0.9rem; outline:none; cursor:pointer; width:180px;">
@@ -1362,7 +1299,7 @@ Bons treinos!`;
                         </div>
                         
                         <div class="glass-card" style="border-left: 4px solid var(--accent);">
-                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Avaliacoes</small>
+                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Avaliações</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--accent);">${monthEvals}</div>
                         </div>
 
@@ -1384,7 +1321,7 @@ Bons treinos!`;
 
                     <div style="margin-top:2rem;">
                         <h3>Atividade de ${new Intl.DateTimeFormat('pt-PT', { month: 'long', year: 'numeric' }).format(displayDate)}</h3>
-                        <p style="color:var(--text-muted); font-size:0.9rem;">Resumo de produtividade registada por si neste periodo.</p>
+                        <p style="color:var(--text-muted); font-size:0.9rem;">Resumo de produtividade registada por si neste período.</p>
                     </div>
                 `;
                 break;
@@ -1408,7 +1345,7 @@ Bons treinos!`;
             case 'anamnesis':
                 container.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:10px;">
-                        <h2 style="margin:0;"><i class="fas fa-notes-medical"></i> Gestao de Anamneses</h2>
+                        <h2 style="margin:0;"><i class="fas fa-notes-medical"></i> Gestão de Anamneses</h2>
                         <button class="btn btn-primary" onclick="app.showAddAnamnesisModal()"><i class="fas fa-plus"></i> Nova Anamnese</button>
                     </div>
                     
@@ -1448,13 +1385,13 @@ Bons treinos!`;
 
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap: wrap; gap: 1rem;">
-                <h2>Biblioteca de Exercicios</h2>
+                <h2>Biblioteca de Exercícios</h2>
                 ${controls}
             </div>
 
             <div class="search-container">
                 <i class="fas fa-search"></i>
-                <input type="text" id="exercise-search-input" placeholder="Pesquisar exercicios..." 
+                <input type="text" id="exercise-search-input" placeholder="Pesquisar exercícios..." 
                     oninput="app.renderExerciseList(this.value)"
                     class="search-bar">
             </div>
@@ -1492,7 +1429,7 @@ Bons treinos!`;
             return `
                 <div class="glass-card" style="text-align:center; padding:2rem;">
                     <i class="fas fa-search" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
-                    <p style="color:var(--text-muted);">Nenhum exercicio encontrado para "${searchQuery}"</p>
+                    <p style="color:var(--text-muted);">Nenhum exercício encontrado para "${searchQuery}"</p>
                 </div>
             `;
         }
@@ -1524,7 +1461,7 @@ Bons treinos!`;
                                         <div style="width:100%; height:150px; background:rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; flex-direction: column; gap: 10px;">
                                             ${ex.photoUrl ? `<img src="${ex.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : `
                                                 <i class="fas fa-video-slash" style="font-size:1.5rem; opacity: 0.3;"></i>
-                                                <small style="color:var(--text-muted); font-size: 0.7rem;">Sem video disponivel</small>
+                                                <small style="color:var(--text-muted); font-size: 0.7rem;">Sem video disponível</small>
                                             `}
                                         </div>
                                      `}
@@ -1581,11 +1518,11 @@ Bons treinos!`;
                 const imported = JSON.parse(e.target.result);
                 if (!Array.isArray(imported)) throw new Error("Formato invalido");
 
-                if (confirm(`Deseja importar ${imported.length} exercicios? Isso ira substituir a sua lista atual.`)) {
+                if (confirm(`Deseja importar ${imported.length} exercícios? Isso irá substituir a sua lista atual.`)) {
                     this.state.exercises = imported;
                     this.saveState();
                     this.renderContent();
-                    alert('Base de exercicios importada com sucesso!');
+                    alert('Base de exercícios importada com sucesso!');
                 }
             } catch (err) {
                 alert('Erro ao importar: ' + err.message);
@@ -1596,11 +1533,11 @@ Bons treinos!`;
     }
 
     async importLocalBaseExercicios() {
-        if (!confirm('Deseja importar a base de exercicios local (base_exercicios.json)? Novos exercicios serao adicionados aos existentes (sem duplicar nomes).')) return;
+        if (!confirm('Deseja importar a base de exercícios local (base_exercicios.json)? Novos exercícios serao adicionados aos existentes (sem duplicar nomes).')) return;
 
         try {
             const res = await fetch('base_exercicios.json');
-            if (!res.ok) throw new Error('Nao foi possivel carregar base_exercicios.json');
+            if (!res.ok) throw new Error('Não foi possível carregar base_exercicios.json');
 
             const data = await res.json();
             let addedCount = 0;
@@ -1624,9 +1561,9 @@ Bons treinos!`;
             if (addedCount > 0) {
                 this.saveState();
                 this.renderContent();
-                alert(`${addedCount} novos exercicios adicionados com sucesso!`);
+                alert(`${addedCount} novos exercícios adicionados com sucesso!`);
             } else {
-                alert('Nenhum exercicio novo encontrado para adicionar.');
+                alert('Nenhum exercício novo encontrado para adicionar.');
             }
         } catch (e) {
             alert('Erro ao importar base local: ' + e.message);
@@ -1653,7 +1590,7 @@ Bons treinos!`;
         modal.id = 'manage-ex-cats-modal';
         modal.innerHTML = `
             <div class="modal-content">
-                <h2 style="margin-top:0;">Categorias de Exercicios</h2>
+                <h2 style="margin-top:0;">Categorias de Exercícios</h2>
                 <div id="ex-cats-list-container" style="max-height:300px; overflow-y:auto; margin-bottom:1rem;">
                     ${renderListIdx()}
                 </div>
@@ -1671,7 +1608,7 @@ Bons treinos!`;
         const input = document.getElementById('new-ex-cat-name');
         const name = input.value.trim();
         if (!name) return;
-        if (this.state.exerciseCategories.includes(name)) return alert('Ja existe.');
+        if (this.state.exerciseCategories.includes(name)) return alert('Já existe.');
 
         this.state.exerciseCategories.push(name);
         this.saveState();
@@ -1708,7 +1645,7 @@ Bons treinos!`;
 
     deleteExerciseCategory(idx) {
         const name = this.state.exerciseCategories[idx];
-        if (confirm(`Tem a certeza que deseja eliminar a categoria "${name}"? Exercicios nesta categoria serao movidos para "Geral".`)) {
+        if (confirm(`Tem a certeza que deseja eliminar a categoria "${name}"? Exercícios nesta categoria serao movidos para "Geral".`)) {
             this.state.exerciseCategories.splice(idx, 1);
             this.state.exercises.forEach(ex => {
                 if (ex.category === name) ex.category = 'Geral';
@@ -1734,7 +1671,7 @@ Bons treinos!`;
 
         modal.innerHTML = `
             <div class="modal-content">
-                <h2 style="margin-top:0;">Editar Exercicio</h2>
+                <h2 style="margin-top:0;">Editar Exercício</h2>
                 <div style="display:flex; flex-direction:column; gap:1.25rem;">
                     <div style="text-align:center; margin-bottom:5px;">
                         <div id="edit-ex-photo-preview" style="width:120px; height:120px; border-radius:12px; border:2px dashed var(--surface-border); margin:0 auto 10px; display:flex; items-align:center; justify-content:center; overflow:hidden; background:rgba(0,0,0,0.2);">
@@ -1774,7 +1711,7 @@ Bons treinos!`;
         const url = document.getElementById('edit-ex-url').value.trim();
         const cat = document.getElementById('edit-ex-category').value;
 
-        if (!name) return alert('O nome e obrigatorio.');
+        if (!name) return alert('O nome e obrigatório.');
 
         const ex = this.state.exercises.find(e => e.id === id);
         if (ex) {
@@ -1794,16 +1731,16 @@ Bons treinos!`;
             this.saveState();
             document.querySelector('.modal-overlay').remove();
             this.renderContent();
-            alert('Exercicio atualizado com sucesso! ');
+            alert('Exercício atualizado com sucesso! ');
         }
     }
 
     deleteExercise(id) {
-        if (confirm('Tem a certeza que deseja eliminar este exercicio da biblioteca?')) {
+        if (confirm('Tem a certeza que deseja eliminar este exercício da biblioteca?')) {
             this.state.exercises = this.state.exercises.filter(e => e.id !== id);
             this.saveState();
             this.renderContent();
-            alert('Exercicio removido. ');
+            alert('Exercício removido. ');
         }
     }
 
@@ -1949,7 +1886,7 @@ Bons treinos!`;
                 const importedFoods = JSON.parse(e.target.result);
                 if (!Array.isArray(importedFoods)) throw new Error("Formato invalido");
 
-                if (confirm(`Deseja importar ${importedFoods.length} alimentos ? Isso ira substituir a sua lista atual.`)) {
+                if (confirm(`Deseja importar ${importedFoods.length} alimentos ? Isso irá substituir a sua lista atual.`)) {
                     this.state.foods = importedFoods;
                     this.saveState();
                     this.renderContent();
@@ -2007,7 +1944,7 @@ Bons treinos!`;
                 this.saveState();
                 this.refreshCategoriesModal();
             } else {
-                alert('Categoria ja existe.');
+                alert('Categoria já existe.');
             }
         }
     }
@@ -2017,7 +1954,7 @@ Bons treinos!`;
         const newName = prompt("Novo nome para a categoria:", oldName);
         if (newName && newName.trim() && newName !== oldName) {
             const finalName = newName.trim();
-            if (this.state.foodCategories.includes(finalName)) return alert('Nome ja existe.');
+            if (this.state.foodCategories.includes(finalName)) return alert('Nome já existe.');
 
             this.state.foodCategories[idx] = finalName;
 
@@ -2037,7 +1974,7 @@ Bons treinos!`;
             this.state.foodCategories.splice(idx, 1);
 
             // Reassign foods to 'Outros' (or just leave them, but safest to mark as Outros or let them fall to default)
-            // Let's explicitly set to 'Outros' so they don't get lost
+            // Let's explicitly set to 'Outros' só they don't get lost
             this.state.foods.forEach(f => {
                 if (f.category === catName) f.category = 'Outros';
             });
@@ -2158,7 +2095,7 @@ Bons treinos!`;
     renderTrainingView(container, clientId) {
         const c = this.state.clients.find(x => x.id == clientId);
         if (!c) {
-            container.innerHTML = '<p class="text-muted">Erro: Cliente nao encontrado.</p>';
+            container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
             return;
         }
 
@@ -2175,7 +2112,7 @@ Bons treinos!`;
                 </div>
                 <div class="header-actions">
                     <button class="btn btn-secondary btn-sm" onclick="app.downloadTrainingPDF('${clientId}')" title="Download PDF"><i class="fas fa-file-pdf"></i> <span class="hide-mobile">PDF</span></button>
-                    ${isClient ? `<button class="btn btn-secondary btn-sm" onclick="app.setView('training_history')"><i class="fas fa-history"></i> <span class="hide-mobile">Historico</span></button>` : ''}
+                    ${isClient ? `<button class="btn btn-secondary btn-sm" onclick="app.setView('training_history')"><i class="fas fa-history"></i> <span class="hide-mobile">Histórico</span></button>` : ''}
                     ${isTeacher ? `
                         <button class="btn btn-primary btn-sm" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-edit"></i> <span class="hide-mobile">Gerir</span></button>
                         <button class="btn btn-ghost btn-sm" style="color:var(--danger); border:1px solid rgba(220, 38, 38, 0.2);" onclick="app.deleteTrainingPlan('${clientId}')">
@@ -2187,14 +2124,14 @@ Bons treinos!`;
             </div>
 
             ${plans && plans.length ? plans.map((day, dIdx) => `
-                <div class="glass-panel training-day-panel" style="margin-bottom:1.5rem;">
+                <div class="glass-panel" style="padding:1.5rem; margin-bottom:1.5rem;">
                     <h3 style="color:var(--primary); margin-bottom:1.25rem; display:flex; align-items:center; gap:0.6rem; border-bottom:1px solid var(--surface-border); padding-bottom:0.75rem;">
                         <i class="fas fa-calendar-day"></i> ${day.title}
                     </h3>
                     <div style="display:grid; grid-template-columns: 1fr; gap:1.25rem;">
                         ${day.exercises.map((ex, exIdx) => {
             const numSets = parseInt(ex.sets) || 0;
-            // Busca robusta: primeiro por ID, fallback por nome se o ID nao encontrar
+            // Busca robusta: primeiro por ID, fallback por nome se o ID não encontrar
             let libEx = this.state.exercises.find(le => le.id == ex.id);
             if (!libEx && ex.name) {
                 libEx = this.state.exercises.find(le => le.name.toLowerCase() === ex.name.toLowerCase());
@@ -2203,7 +2140,7 @@ Bons treinos!`;
             return `
                             <div class="glass-card" style="margin-bottom:0; background:rgba(255,255,255,0.02); padding: 1rem;">
                                 <div style="display:flex; align-items:center; gap:12px; margin-bottom:0.75rem;">
-                                    <!-- Miniatura do Exercicio -->
+                                    <!-- Miniatura do Exercício -->
                                     <div style="width:55px; height:55px; border-radius:10px; overflow:hidden; background:rgba(0,0,0,0.3); flex-shrink:0; display:flex; align-items:center; justify-content:center; border: 1px solid var(--surface-border); box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
                                         ${libEx && libEx.photoUrl ?
                     `<img src="${libEx.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` :
@@ -2212,10 +2149,10 @@ Bons treinos!`;
                                     </div>
 
                                     <div style="min-width: 0; flex: 1;">
-                                        <strong style="font-size:1rem; display:block; margin-bottom:2px; color: #fff; line-height:1.2;">${ex.name}</strong>
+                                        <strong style="font-size:1rem; display:block; margin-bottom:2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff;">${ex.name}</strong>
                                         <div style="color:var(--text-muted); font-size:0.85rem; font-weight: 600;">
                                             <span style="color: var(--primary);"><i class="fas fa-redo"></i> ${ex.sets} x ${ex.reps}</span>
-                                            ${ex.observations ? `<br><small style="color:var(--accent); font-size: 0.75rem; font-weight: 400; display:block; margin-top:2px;"><i class="fas fa-info-circle"></i> ${ex.observations}</small>` : ''}
+                                            ${ex.observations ? `<br><small style="color:var(--accent); font-size: 0.75rem; font-weight: 400;"><i class="fas fa-info-circle"></i> ${ex.observations}</small>` : ''}
                                         </div>
                                     </div>
 
@@ -2234,11 +2171,11 @@ Bons treinos!`;
                                             ${Array.from({ length: numSets }).map((_, sIdx) => {
                     const val = (ex.weightLog && ex.weightLog[sIdx]) || '';
                     return `
-                                                <div style="flex:1; min-width:38px; max-width:55px;">
+                                                <div style="flex:1; min-width:45px; max-width:60px;">
                                                     <small style="display:block; text-align:center; font-size:0.6rem; color:var(--text-muted); margin-bottom:1px;">S${sIdx + 1}</small>
                                                     <input type="number" value="${val}" placeholder="0" 
                                                         onblur="app.logWeight(${clientId}, ${dIdx}, ${exIdx}, ${sIdx}, this.value)"
-                                                        style="width:100%; height:32px; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:6px; color:#fff; text-align:center; font-size:0.85rem; padding:0;">
+                                                        style="width:100%; height:32px; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:6px; color:#fff; text-align:center; font-size:0.85rem;">
                                                 </div>
                                                 `;
                 }).join('')}
@@ -2262,7 +2199,7 @@ Bons treinos!`;
                                 <i class="fas fa-check-circle"></i> Concluir Treino (${day.title})
                             </button>
                             <p style="font-size:0.75rem; color:var(--text-muted); margin-top:10px;">
-                                Ao concluir, os pesos registados serao gravados no seu historico.
+                                Ao concluir, os pesos registados serao gravados no seu histórico.
                             </p>
                         </div>
                     ` : ''}
@@ -2270,7 +2207,7 @@ Bons treinos!`;
             `).join('') : `
                 <div class="glass-panel" style="padding:3rem 1rem; text-align:center;">
                     <i class="fas fa-dumbbell" style="font-size:3rem; color:var(--text-muted); opacity:0.3; margin-bottom:1rem;"></i>
-                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda nao tem plano de treino atribuido.</p>
+                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda não tem plano de treino atribuído.</p>
                     ${isTeacher ? `<button class="btn btn-primary" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-plus"></i> Criar Plano de Treino</button>` : ''}
                 </div>
             `}
@@ -2292,7 +2229,7 @@ Bons treinos!`;
         const cid = String(clientId);
         const days = this.getTrainingDays(cid);
         const day = days ? days[dayIdx] : null;
-        if (!day) { alert('Dia de treino nao encontrado. Tente recarregar a pagina.'); return; }
+        if (!day) { alert('Dia de treino não encontrado. Tente recarregar a página.'); return; }
 
         const hasWeights = day.exercises.some(ex => ex.weightLog && ex.weightLog.some(w => w !== '' && w !== null && w !== undefined));
 
@@ -2304,7 +2241,7 @@ Bons treinos!`;
                 <div class="modal-content" style="max-width:380px; text-align:center; padding:2rem;">
                     <div style="font-size:3rem; margin-bottom:1rem;"></div>
                     <h3 style="margin:0 0 0.75rem;">Sem cargas registadas</h3>
-                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Nao registou nenhuma carga neste treino. Deseja conclui-lo na mesma?</p>
+                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Não registou nenhuma carga neste treino. Deseja conclui-lo na mesma?</p>
                     <div style="display:flex; gap:1rem;">
                         <button class="btn btn-secondary" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">
                             <i class="fas fa-times"></i> Cancelar
@@ -2340,15 +2277,14 @@ Bons treinos!`;
                     name: ex.name,
                     sets: ex.sets,
                     reps: ex.reps,
-                    weights: [...(ex.weightLog || [])],
-                    notes: ex.clientNotes || ''
+                    weights: [...(ex.weightLog || [])]
                 }))
             };
 
             this.state.trainingHistory[cid].unshift(session);
             this.saveState();
 
-            this.showToast('Treino concluido!  As suas cargas foram gravadas no historico.');
+            this.showToast('Treino concluído!  As suas cargas foram gravadas no histórico.');
             setTimeout(() => this.setView('dashboard'), 1200);
         } catch (err) {
             console.error('Erro ao concluir treino:', err);
@@ -2357,7 +2293,7 @@ Bons treinos!`;
     }
 
     deleteTrainingSession(index) {
-        if (confirm('Tem a certeza que deseja eliminar este treino do historico?')) {
+        if (confirm('Tem a certeza que deseja eliminar este treino do histórico?')) {
             const history = this.state.trainingHistory[this.currentClientId];
             if (history) {
                 history.splice(index, 1);
@@ -2424,7 +2360,7 @@ Bons treinos!`;
         if (draft) {
             const draftData = JSON.parse(draft);
             if (draftData.clientId === clientId) {
-                if (confirm('Detetamos um rascunho nao guardado deste treino. Deseja recupera-lo?')) {
+                if (confirm('Detetamos um rascunho não guardado deste treino. Deseja recupera-lo?')) {
                     this.editingPlan = draftData.plan;
                     this.editingClientId = clientId;
                     this.setView('edit_training');
@@ -2518,16 +2454,16 @@ Bons treinos!`;
                                 <div class="glass-card" style="padding:1.5rem; margin-bottom:1.5rem; background:rgba(255,255,255,0.03); border-left:4px solid var(--secondary);">
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
                                         <div style="flex:1; margin-right:1rem;">
-                                            <label style="display:block; font-size:0.8rem; color:var(--accent); font-weight:600; text-transform:uppercase; margin-bottom:6px;">Exercicio Selecionado</label>
+                                            <label style="display:block; font-size:0.8rem; color:var(--accent); font-weight:600; text-transform:uppercase; margin-bottom:6px;">Exercício Selecionado</label>
                                             <button class="btn btn-secondary exercise-search-btn" onclick="app.showExerciseSelectionModal(${dIdx}, ${eIdx})" 
                                                 style="width:100%; height:45px; background:#1e293b; color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:10px; justify-content:flex-start;">
                                                 <i class="fas fa-search" style="color:var(--primary);"></i>
                                                 <span id="ex-name-display-${dIdx}-${eIdx}" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                                    ${ex.name || '-- Selecionar Exercicio --'}
+                                                    ${ex.name || '-- Selecionar Exercício --'}
                                                 </span>
                                             </button>
                                         </div>
-                                        <button class="btn btn-ghost" style="color:var(--danger); padding:0.5rem; align-self:flex-end;" onclick="app.removeExerciseFromEditor(${dIdx}, ${eIdx})" title="Remover Exercicio">
+                                        <button class="btn btn-ghost" style="color:var(--danger); padding:0.5rem; align-self:flex-end;" onclick="app.removeExerciseFromEditor(${dIdx}, ${eIdx})" title="Remover Exercício">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </div>
@@ -2544,7 +2480,7 @@ Bons treinos!`;
                                                 style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:600;">
                                         </div>
                                         <div>
-                                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Observacoes (opcional)</label>
+                                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Observações (opcional)</label>
                                             <input type="text" value="${ex.observations || ''}" placeholder="Ex: Foco na descida controlada" onchange="app.updateEditorExercise(${dIdx}, ${eIdx}, 'observations', this.value)"
                                                 style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 15px; font-size:1rem;">
                                         </div>
@@ -2553,7 +2489,7 @@ Bons treinos!`;
                             `).join('')}
                         </div>
                         <button class="btn btn-ghost btn-sm" style="color:var(--primary);" onclick="app.addExerciseToEditor(${dIdx})">
-                            <i class="fas fa-plus"></i> Adicionar Exercicio
+                            <i class="fas fa-plus"></i> Adicionar Exercício
                         </button>
                     </div>
                 `).join('')}
@@ -2568,7 +2504,7 @@ Bons treinos!`;
     }
 
     removeTrainingDay(idx) {
-        if (confirm('Deseja remover este dia de treino e todos os exercicios associados?')) {
+        if (confirm('Deseja remover este dia de treino e todos os exercícios associados?')) {
             this.editingPlan.splice(idx, 1);
             this.saveTrainingDraft();
             this.renderTrainingEditor();
@@ -2599,7 +2535,7 @@ Bons treinos!`;
     }
 
     saveTrainingPlan() {
-        // Filtrar exercicios sem ID (linhas em branco que o utilizador nao preencheu)
+        // Filtrar exercícios sem ID (linhas em branco que o utilizador não preencheu)
         const cleanDays = this.editingPlan
             .map(day => ({
                 ...day,
@@ -2621,7 +2557,8 @@ Bons treinos!`;
         this.addAppNotification(this.editingClientId, 'Novo Plano de Treino!', 'O seu professor atualizou o seu plano de treino.', null, 'notification', false);
 
         this.clearTrainingDraft();
-        this.showSharePlanModal(this.editingClientId, 'training');
+        alert('Plano de treino guardado com sucesso!');
+        this.setView('spy_view');
     }
 
     deleteTrainingPlan(clientId) {
@@ -2638,7 +2575,7 @@ Bons treinos!`;
         // Usar comparacao loosa (==) para garantir que encontra mesmo se for string vs number
         const c = this.state.clients.find(x => x.id == clientId);
         if (!c) {
-            container.innerHTML = '<p class="text-muted">Erro: Cliente nao encontrado.</p>';
+            container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
             return;
         }
         const cid = String(clientId); // Firebase normaliza chaves para string
@@ -2693,7 +2630,7 @@ Bons treinos!`;
                 }).join('') : `
                         <div style="text-align:center; padding:3rem 1rem;">
                             <i class="fas fa-utensils" style="font-size:3rem; color:var(--text-muted); opacity:0.3; margin-bottom:1rem;"></i>
-                            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda nao tem plano alimentar atribuido.</p>
+                            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda não tem plano alimentar atribuído.</p>
                             ${canEdit ? `<button class="btn btn-primary" onclick="app.openMealEditor('${c.id}')"><i class="fas fa-plus"></i> Criar Plano Alimentar</button>` : ''}
                         </div>
                     `;
@@ -2712,9 +2649,9 @@ Bons treinos!`;
     }
 
     openMealEditor(clientId) {
-        // Se o clientId vier vazio, tenta usar o currentClientId (o aluno que esta a ser visto)
+        // Se o clientId vier vazio, tenta usar o currentClientId (o aluno que está a ser visto)
         const finalId = clientId || this.currentClientId;
-        if (!finalId) return alert("Erro: Nao foi possivel identificar o aluno.");
+        if (!finalId) return alert("Erro: Não foi possível identificar o aluno.");
 
         const cid = String(finalId);
         this.editingClientId = Number(finalId);
@@ -2733,7 +2670,7 @@ Bons treinos!`;
         existing.meals.forEach(m => {
             m.items = m.items || '';
             m.time = m.time || '08:00';
-            m.name = m.name || 'Refeicao';
+            m.name = m.name || 'Refeição';
         });
 
         this.editingMeal = JSON.parse(JSON.stringify(existing));
@@ -2745,17 +2682,17 @@ Bons treinos!`;
         if (!container) return;
 
         try {
-            // Se o ID de edicao sumiu, tenta recuperar do ID atual da ficha
+            // Se o ID de edição sumiu, tenta recuperar do ID atual da ficha
             if (!this.editingClientId && this.currentClientId) {
                 this.editingClientId = this.currentClientId;
             }
 
             if (!this.editingClientId) {
-                throw new Error("ID do aluno nao identificado. Por favor, volte a ficha do aluno e tente novamente.");
+                throw new Error("ID do aluno não identificado. Por favor, volte a ficha do aluno e tente novamente.");
             }
 
             const c = this.state.clients.find(x => Number(x.id) === Number(this.editingClientId));
-            if (!c) throw new Error(`Aluno com ID ${this.editingClientId} nao encontrado.`);
+            if (!c) throw new Error(`Aluno com ID ${this.editingClientId} não encontrado.`);
 
             // Garantir que a estrutura basica existe
             if (!this.editingMeal.meals) this.editingMeal.meals = [];
@@ -2764,10 +2701,7 @@ Bons treinos!`;
 
             container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                <div>
-                    <h2 style="margin:0;">Editar Dieta: ${c.name}</h2>
-                    <p style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;"><i class="fas fa-info-circle"></i> Nota: 1ml é equivalente a 1gr para efeitos de cálculo.</p>
-                </div>
+                <h2 style="margin:0;">Editar Dieta: ${c.name}</h2>
                 <div style="display:flex; gap:0.5rem;">
                     <button class="btn btn-ghost" style="color:var(--danger);" onclick="app.deleteMealPlan(app.editingClientId)"><i class="fas fa-trash"></i> Eliminar</button>
                     <button class="btn btn-secondary" onclick="app.setView('spy_view')">Cancelar</button>
@@ -2819,7 +2753,7 @@ Bons treinos!`;
                                                 maxlength="5"
                                                 style="background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:8px; color:#fff; font-weight:600; width:100px; font-size:0.95rem; padding:8px 12px; outline:none; text-align:center; font-family: monospace;">
                                         </div>
-                                        <input type="text" value="${m.name}" placeholder="Nome (Ex: Pequeno Almoco)" oninput="app.editingMeal.meals[${idx}].name = this.value"
+                                        <input type="text" value="${m.name}" placeholder="Nome (Ex: Pequeno Almoço)" oninput="app.editingMeal.meals[${idx}].name = this.value"
                                             style="width:100%; max-width:400px; background:transparent; border:none; border-bottom:1px solid rgba(255,255,255,0.1); color:#fff; font-weight:700; font-size:1.15rem; padding:6px 0;">
                                     </div>
                                     <button class="btn btn-ghost" style="color:var(--danger); padding:8px;" onclick="app.removeMealFromEditor(${idx})">
@@ -2855,13 +2789,13 @@ Bons treinos!`;
                                         </div>
 
                                         <button class="btn btn-primary btn-sm" onclick="app.addSelectedFoodToMeal(${idx})" style="width:100%; height:40px; background:var(--success); border:none;">
-                                            <i class="fas fa-plus"></i> Adicionar a Refeicao
+                                            <i class="fas fa-plus"></i> Adicionar a Refeição
                                         </button>
                                     </div>
                                 </div>
                                 
                                 <div>
-                                    <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Resumo da Refeicao</label>
+                                    <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Resumo da Refeição</label>
                                     <textarea id="meal-items-${idx}" placeholder="Os alimentos inseridos aparecerao aqui..." oninput="app.editingMeal.meals[${idx}].items = this.value" onblur="app.renderMealEditor()"
                                         style="width:100%; min-height:120px; background:rgba(0,0,0,0.2); color:rgba(255,255,255,0.95); border:1px solid rgba(255,255,255,0.05); border-radius:12px; padding:15px; font-family:inherit; resize:vertical; line-height:1.6; font-size:0.95rem;">${m.items}</textarea>
                                 </div>
@@ -2879,7 +2813,7 @@ Bons treinos!`;
                 </div>
 
                 <button class="btn btn-ghost" style="color:var(--success); width:100%; border:1px dashed var(--success); padding:1rem;" onclick="app.addMealToEditor()">
-                    <i class="fas fa-plus"></i> Adicionar Refeicao
+                    <i class="fas fa-plus"></i> Adicionar Refeição
                 </button>
             </div>
         `;
@@ -2975,7 +2909,7 @@ Bons treinos!`;
         modal.innerHTML = `
             <div class="modal-content" style="max-width:800px; max-height:85vh; display:flex; flex-direction:column;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                    <h2 style="margin:0;"><i class="fas fa-dumbbell"></i> Selecionar Exercicio</h2>
+                    <h2 style="margin:0;"><i class="fas fa-dumbbell"></i> Selecionar Exercício</h2>
                     <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()" style="padding:8px;">
                         <i class="fas fa-times"></i>
                     </button>
@@ -2983,7 +2917,7 @@ Bons treinos!`;
 
                 <div class="search-container" style="margin-bottom:1.5rem;">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="exercise-search-input" placeholder="Pesquisar exercicio ou musculo..." 
+                    <input type="text" id="exercise-search-input" placeholder="Pesquisar exercício ou musculo..." 
                         oninput="app.filterExercisesInModal(this.value)"
                         class="search-bar" autofocus>
                 </div>
@@ -3015,7 +2949,7 @@ Bons treinos!`;
             return `
                 <div style="text-align:center; padding:3rem; color:var(--text-muted);">
                     <i class="fas fa-search" style="font-size:3rem; opacity:0.3; margin-bottom:1rem; display:block;"></i>
-                    <p>Nenhum exercicio encontrado</p>
+                    <p>Nenhum exercício encontrado</p>
                 </div>
             `;
         }
@@ -3197,9 +3131,10 @@ Bons treinos!`;
         this.saveState();
 
         // Notificar o aluno do novo plano de dieta
-        this.addAppNotification(this.editingClientId, 'Nova Dieta Disponivel!', 'O seu professor atualizou o seu plano alimentar.');
+        this.addAppNotification(this.editingClientId, 'Nova Dieta Disponível!', 'O seu professor atualizou o seu plano alimentar.');
 
-        this.showSharePlanModal(this.editingClientId, 'meal');
+        alert('Plano alimentar guardado com sucesso!');
+        this.setView('spy_view');
     }
 
     deleteMealPlan(clientId) {
@@ -3252,9 +3187,9 @@ Bons treinos!`;
         const key = event.key;
         const cursorPos = input.selectionStart;
 
-        // Permitir teclas de navegacao e controle
+        // Permitir teclas de navegação e controle
         if (['ArrowLeft', 'ArrowRight', 'Tab', 'Delete'].includes(key)) {
-            // Se tentar deletar os dois pontos, pular para o proximo caractere
+            // Se tentar deletar os dois pontos, pular para o próximo caractere
             if (key === 'Delete' && cursorPos === 2) {
                 event.preventDefault();
                 input.setSelectionRange(3, 3);
@@ -3262,7 +3197,7 @@ Bons treinos!`;
             return;
         }
 
-        // Backspace: nao permitir apagar os dois pontos
+        // Backspace: não permitir apagar os dois pontos
         if (key === 'Backspace') {
             if (cursorPos === 3) {
                 // Se estiver logo apos os dois pontos, voltar para antes
@@ -3281,7 +3216,7 @@ Bons treinos!`;
     renderEvaluationView(container, clientId) {
         const c = this.state.clients.find(x => x.id == clientId);
         if (!c) {
-            container.innerHTML = '<p class="text-muted">Erro: Cliente nao encontrado.</p>';
+            container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
             return;
         }
         const cid = String(clientId); // Firebase usa chaves de string
@@ -3291,7 +3226,7 @@ Bons treinos!`;
         container.innerHTML = `
             <div class="page-header" style="margin-bottom: 2rem;">
                 <div>
-                    <h2 style="margin:0;">Avaliação Fisica</h2>
+                    <h2 style="margin:0;">Avaliação Física</h2>
                     <h3 class="client-name">${c.name}</h3>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
@@ -3305,7 +3240,7 @@ Bons treinos!`;
                 ${evals.length ? evals.map((ev, idx) => this.renderEvaluationCard(ev, idx, clientId, isTeacher)).join('') : `
                     <div class="glass-panel" style="padding: 4rem 1rem; text-align: center; color: var(--text-muted);">
                         <i class="fas fa-chart-line" style="font-size: 3rem; opacity: 0.2; margin-bottom: 1.5rem; display: block;"></i>
-                        Ainda nao existem avaliacoes registadas.
+                        Ainda não existem avaliações registadas.
                     </div>
                 `}
             </div>
@@ -3327,20 +3262,20 @@ Bons treinos!`;
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <button class="btn btn-ghost btn-sm" style="color: var(--text-muted);" onclick="app.downloadEvaluationPDF(${clientId}, ${idx})" title="Exportar esta Avaliação">
+                        <button class="btn btn-ghost btn-sm" style="color: var(--text-muted);" onclick="app.downloadEvaluationPDF(${clientId}, ${idx})" title="Exportar está Avaliação">
                             <i class="fas fa-file-pdf"></i>
                         </button>
                         ${isTeacher ? `
                             <button class="btn btn-ghost btn-sm" style="color: var(--accent);" onclick="app.showEvaluationModal(${clientId}, ${idx})"><i class="fas fa-edit"></i></button>
                             <button class="btn btn-ghost btn-sm" style="color: var(--danger);" onclick="app.deleteEvaluation(${clientId}, ${idx})"><i class="fas fa-trash-alt"></i></button>
                         ` : ''}
-                        <span class="badge badge-blue">Bioimpedancia</span>
+                        <span class="badge badge-blue">Bioimpedância</span>
                     </div>
                 </div>
 
                 <div style="margin-bottom: 1.5rem;">
                     <h4 style="font-size: 0.8rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-bolt"></i> Bioimpedancia
+                        <i class="fas fa-bolt"></i> Bioimpedância
                     </h4>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); gap: 0.75rem;">
                         <div class="macro-box">
@@ -3360,11 +3295,11 @@ Bons treinos!`;
                             <strong style="color: var(--danger);">${ev.fatPercentage || '-'} <span style="font-size: 0.65rem; font-weight: normal; color: var(--text-muted);">%</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>Agua</small>
+                            <small>Água</small>
                             <strong style="color: #60a5fa;">${ev.water || '-'} <span style="font-size: 0.65rem; font-weight: normal; color: var(--text-muted);">%</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>Ossea</small>
+                            <small>Óssea</small>
                             <strong>${ev.boneMass || '-'}</strong>
                         </div>
                         <div class="macro-box">
@@ -3433,7 +3368,7 @@ Bons treinos!`;
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
                     <div>
                         <h2 style="margin: 0;">${index === null ? 'Nova Avaliação' : 'Editar Avaliação'}</h2>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px;">Registe os dados da bioimpedancia e medidas.</p>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px;">Registe os dados da bioimpedância e medidas.</p>
                     </div>
                     <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">
                         <i class="fas fa-times"></i>
@@ -3448,7 +3383,7 @@ Bons treinos!`;
 
                     <div>
                         <h4 style="font-size: 0.85rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 5px;">
-                            <i class="fas fa-bolt"></i> Bioimpedancia
+                            <i class="fas fa-bolt"></i> Bioimpedância
                         </h4>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div>
@@ -3468,11 +3403,11 @@ Bons treinos!`;
                                 <input type="number" id="ev-fat" step="0.1" value="${ev.fatPercentage || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Agua (%)</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Água (%)</label>
                                 <input type="number" id="ev-water" step="0.1" value="${ev.water || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Massa Ossea</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Massa Óssea</label>
                                 <input type="number" id="ev-bone" step="0.1" value="${ev.boneMass || ''}">
                             </div>
                             <div>
@@ -3480,7 +3415,7 @@ Bons treinos!`;
                                 <input type="number" id="ev-visceral" value="${ev.visceralFat || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Idade Metabolica</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Idade Metabólica</label>
                                 <input type="number" id="ev-metabolic-age" value="${ev.metabolicAge || ''}">
                             </div>
                             <div style="grid-column: span 2;">
@@ -3555,7 +3490,7 @@ Bons treinos!`;
         };
 
         if (!entry.weight) {
-            alert('O peso e obrigatorio para registar a Avaliação.');
+            alert('O peso e obrigatório para registar a Avaliação.');
             return;
         }
 
@@ -3568,7 +3503,7 @@ Bons treinos!`;
             this.state.evaluations[cid][index] = entry;
         }
 
-        // Atualizar o ultimo peso/data no perfil do cliente se necessario
+        // Atualizar o ultimo peso/data no perfil do cliente se necessário
         const client = this.state.clients.find(c => c.id == clientId);
         if (client) {
             client.lastEvaluation = dateRaw;
@@ -3602,10 +3537,7 @@ Bons treinos!`;
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
                 <div>
                     <h2 style="margin:0;">Ficha: ${c.name}</h2>
-                    ${c.birthDate ? `<small style="color:var(--text-muted); font-size:0.9rem;">${this.calculateAge(c.birthDate)} anos (${this.formatDate(c.birthDate)})` : ''}
-                    ${c.job ? ` &bull; <i class="fas fa-briefcase" style="font-size:0.8rem; opacity:0.7;"></i> ${c.job}` : ''}
-                    ${c.birthDate ? '</small>' : ''}
-                    ${(() => { const p = this.getPlanLabel(c.plan); return `<div style="display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,0.05); border:1px solid ${p.color}; color:${p.color}; border-radius:20px; padding:3px 10px; font-size:0.75rem; font-weight:700; margin-top:6px;"><i class="fas ${p.icon}" style="font-size:0.65rem;"></i> ${p.label}</div>`; })()}
+                    ${c.birthDate ? `<small style="color:var(--text-muted); font-size:0.9rem;">${this.calculateAge(c.birthDate)} anos (${this.formatDate(c.birthDate)})</small>` : ''}
                     <div style="font-size:0.85rem; color:var(--primary); margin-top:5px; font-weight:500;">
                         <i class="fas fa-user-tie" style="font-size:0.8rem; margin-right:5px;"></i> 
                         ${(() => {
@@ -3614,21 +3546,13 @@ Bons treinos!`;
             })()}
                     </div>
                 </div>
-                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+                <div style="display:flex; gap:0.5rem;">
                     ${(this.role === 'teacher' || this.role === 'admin') ? `
-                        <button class="btn btn-ghost btn-sm" style="color:var(--accent); font-size: 1.1rem; padding: 0.5rem 0.8rem;" onclick="app.showManualNotificationModal(${c.id})" title="Enviar Notificacao Direta">
+                        <button class="btn btn-ghost btn-sm" style="color:var(--accent); font-size: 1.1rem; padding: 0.5rem 0.8rem;" onclick="app.showManualNotificationModal(${c.id})" title="Enviar Notificação Direta">
                             <i class="fas fa-bell"></i>
                         </button>
                     ` : ''}
                     ${this.role === 'teacher' ? `<button class="btn btn-primary btn-sm" onclick="app.showTransferClientModal(${c.id})"><i class="fas fa-exchange-alt"></i> Transferir</button>` : ''}
-                    ${this.role === 'admin' ? `
-                        <select onchange="app.updateClientPlan(${c.id}, this.value)" style="height:36px; font-size:0.8rem; padding:0 10px; border-radius:8px; background:rgba(255,255,255,0.07); border:1px solid var(--surface-border); color:#fff;" title="Mudar Plano de Acesso">
-                            <option value="total" ${(c.plan || 'total') === 'total' ? 'selected' : ''}>Total</option>
-                            <option value="musculacao" ${c.plan === 'musculacao' ? 'selected' : ''}>Musculacao</option>
-                            <option value="aulas" ${c.plan === 'aulas' ? 'selected' : ''}>Aulas</option>
-                            <option value="pilates" ${c.plan === 'pilates' ? 'selected' : ''}>Pilates</option>
-                        </select>
-                    ` : ''}
                     <button class="btn btn-secondary" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')">
                         <i class="fas fa-arrow-left"></i> Voltar
                     </button>
@@ -3653,23 +3577,23 @@ Bons treinos!`;
                 </button>
             </div>
 
-            <div id="spy-content-area"></div>
+            <div id="spy-content-área"></div>
         `;
 
-        const area = document.getElementById('spy-content-area');
+        const área = document.getElementById('spy-content-área');
         if (this.spySubView === 'training') {
-            this.renderTrainingView(area, this.currentClientId);
+            this.renderTrainingView(área, this.currentClientId);
         } else if (this.spySubView === 'meal') {
-            this.renderMealView(area, this.currentClientId);
+            this.renderMealView(área, this.currentClientId);
         } else if (this.spySubView === 'evaluation') {
-            this.renderEvaluationView(area, this.currentClientId);
+            this.renderEvaluationView(área, this.currentClientId);
         } else if (this.spySubView === 'anamnesis') {
-            this.renderAnamnesisView(area, this.currentClientId);
+            this.renderAnamnesisView(área, this.currentClientId);
         } else {
-            this.renderClientNotificationsView(area, this.currentClientId);
+            this.renderClientNotificationsView(área, this.currentClientId);
         }
 
-        // O cabecalho agora e mantido para dar acesso ao botao de edicao
+        // O cabecalho agora e mantido para dar acesso ao botao de edição
     }
 
     renderClientNotificationsView(container, clientId) {
@@ -3677,7 +3601,7 @@ Bons treinos!`;
 
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                <h3 style="margin:0;"><i class="fas fa-comment-dots"></i> Historico de Mensagens</h3>
+                <h3 style="margin:0;"><i class="fas fa-comment-dots"></i> Histórico de Mensagens</h3>
                 <p style="margin:0; font-size:0.85rem; color:var(--text-muted);">${notifications.length} registos</p>
             </div>
             
@@ -3685,7 +3609,7 @@ Bons treinos!`;
                 ${notifications.length === 0 ? `
                     <div class="glass-card" style="text-align:center; padding:3rem; opacity:0.6;">
                         <i class="fas fa-bell-slash" style="font-size:3rem; margin-bottom:1rem; display:block;"></i>
-                        <p>Ainda nao foram enviadas notificacoes personalizadas para este aluno.</p>
+                        <p>Ainda não foram enviadas notificações personalizadas para este aluno.</p>
                     </div>
                 ` : notifications.map(n => `
                     <div class="glass-card animate-fade-in" style="border-left: 4px solid var(--accent);">
@@ -3701,7 +3625,7 @@ Bons treinos!`;
     }
 
     renderClientContent(container) {
-        // Mostrar loader apenas se nao houver dados nenhuns (nem cache nem servidor)
+        // Mostrar loader apenas se não houver dados nenhuns (nem cache nem servidor)
         const hasClients = this.state.clients && this.state.clients.length > 0;
         if (!this.hasLoadedData && !hasClients) {
             container.innerHTML = `
@@ -3719,8 +3643,8 @@ Bons treinos!`;
         if (!c) {
             container.innerHTML = `<div style="padding:4rem 2rem; text-align:center;">
                 <i class="fas fa-user-slash" style="font-size:3rem; color:var(--danger); opacity:0.5; margin-bottom:1.5rem;"></i>
-                <h3 style="color:#fff;">Utilizador nao encontrado.</h3>
-                <p style="color:var(--text-muted); margin-bottom:2rem;">O seu perfil (ID: ${this.currentClientId}) nao existe na base de dados.</p>
+                <h3 style="color:#fff;">Utilizador não encontrado.</h3>
+                <p style="color:var(--text-muted); margin-bottom:2rem;">O seu perfil (ID: ${this.currentClientId}) não existe na base de dados.</p>
                 <button class="btn btn-primary" onclick="app.handleLogout()">Sair e Tentar Novamente</button>
             </div>`;
             return;
@@ -3754,7 +3678,7 @@ Bons treinos!`;
                         <div class="glass-card" onclick="app.setView('training')" style="cursor:pointer;">
                             <i class="fas fa-dumbbell" style="font-size:1.5rem; color:var(--primary); margin-bottom:1rem;"></i>
                             <h3>O Meu Treino</h3>
-                            <small>Ver exercicios e series</small>
+                            <small>Ver exercícios e series</small>
                         </div>
                         <div class="glass-card" onclick="app.setView('meal')" style="cursor:pointer;">
                             <i class="fas fa-apple-alt" style="font-size:1.5rem; color:var(--success); margin-bottom:1rem;"></i>
@@ -3763,7 +3687,7 @@ Bons treinos!`;
                         </div>
                         <div class="glass-card" onclick="app.setView('evaluation')" style="cursor:pointer;">
                             <i class="fas fa-chart-line" style="font-size:1.5rem; color:var(--accent); margin-bottom:1rem;"></i>
-                            <h3>Avaliação Fisica</h3>
+                            <h3>Avaliação Física</h3>
                             <small>Ver peso e medidas</small>
                         </div>
                     </div>
@@ -3783,14 +3707,14 @@ Bons treinos!`;
 
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                <h2 style="margin:0;"><i class="fas fa-history"></i> Historico de Treinos</h2>
+                <h2 style="margin:0;"><i class="fas fa-history"></i> Histórico de Treinos</h2>
                 <button class="btn btn-secondary" onclick="app.setView('training')">Voltar</button>
             </div>
 
             ${history.length === 0 ? `
                 <div class="glass-panel" style="padding:3rem; text-align:center; color:var(--text-muted);">
                     <i class="fas fa-calendar-times" style="font-size:3rem; opacity:0.2; margin-bottom:1rem; display:block;"></i>
-                    Ainda nao concluiu nenhum treino.
+                    Ainda não concluiu nenhum treino.
                 </div>
             ` : history.map(session => `
                 <div class="glass-panel" style="padding:1.5rem; margin-bottom:1.5rem; border-left:4px solid var(--accent); position:relative;">
@@ -3805,22 +3729,19 @@ Bons treinos!`;
                         </button>
                     </div>
                     <div style="display:grid; grid-template-columns: 1fr; gap:0.75rem;">
-                        ${(session.exercises || []).map(ex => `
+                        ${session.exercises.map(ex => `
                             <div style="padding:10px; background:rgba(255,255,255,0.03); border-radius:10px;">
                                 <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
                                     <strong style="font-size:0.9rem;">${ex.name}</strong>
                                     <small style="color:var(--text-muted);">${ex.sets}x${ex.reps}</small>
                                 </div>
-                                <div style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom: 5px;">
-                                    ${(ex.weights || []).map((w, idx) => `
+                                <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                                    ${ex.weights.map((w, idx) => `
                                         <div style="font-size:0.75rem; background:rgba(0,0,0,0.2); padding:3px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.05);">
                                             S${idx + 1}: <span style="color:var(--accent); font-weight:bold;">${w || '-'}kg</span>
                                         </div>
                                     `).join('')}
                                 </div>
-                                ${ex.notes ? `<div style="font-size:0.8rem; color:var(--text-muted); font-style: italic; border-top: 1px solid rgba(255,255,255,0.05); padding-top:5px; margin-top:5px;">
-                                    <i class="fas fa-comment-dots" style="font-size:0.75rem; margin-right:4px; color:var(--accent);"></i> ${ex.notes}
-                                </div>` : ''}
                             </div>
                         `).join('')}
                     </div>
@@ -3868,14 +3789,6 @@ Bons treinos!`;
 
                 ${this.role === 'client' ? `
                 <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Profissao</label>
-                    <input type="text" id="edit-job" value="${user.job || ''}" placeholder="Ex: Engenheiro, Professor..."
-                        style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
-                </div>
-                ` : ''}
-
-                ${this.role === 'client' ? `
-                <div style="margin-bottom:1.5rem;">
                     <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Data de Nascimento</label>
                     <input type="date" id="edit-dob" value="${user.birthDate || ''}" 
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px; color-scheme:dark;">
@@ -3893,12 +3806,9 @@ Bons treinos!`;
                     <small style="color:var(--text-muted);">Mantenha ou altere para uma nova.</small>
                 </div>
 
-                ${(() => {
-                const qrInfo = (this.state.qrClients || []).find(q => q.clientId === user.id && q.type === this.role);
-                const displayId = qrInfo ? qrInfo.id : (this.role === 'client' ? "K" + user.id : null);
-
-                if (!displayId && !qrInfo) return '';
-
+                ${this.role === 'client' ? (() => {
+                const qrInfo = (this.state.qrClients || []).find(q => q.clientId === user.id || q.nome === user.name);
+                const displayId = qrInfo ? qrInfo.id : "K" + user.id;
                 return `
                     <div class="glass-card" style="margin-top:2rem; padding:1.5rem; text-align:center; border: 1px dashed var(--accent); background: rgba(196, 162, 77, 0.05);">
                         <h4 style="margin-bottom:1rem; color:var(--accent);"><i class="fas fa-qrcode"></i> O Meu Codigo de Acesso</h4>
@@ -3907,23 +3817,22 @@ Bons treinos!`;
                         <div style="font-size: 0.7rem; color: var(--accent); opacity: 0.8; font-family: monospace; font-weight: 700;">ID: ${displayId}</div>
                     </div>
                 `;
-            })()}
+            })() : ''}
 
                 <button class="btn btn-primary" onclick="app.updateProfile()" style="width:100%; height:50px; font-size:1.1rem; margin-top:2rem;">
-                    <i class="fas fa-save"></i> Guardar Alteracoes
+                    <i class="fas fa-save"></i> Guardar Alterações
                 </button>
             </div>
         `;
 
-        // Gerar o QR Code para qualquer utilizador que tenha acesso QR ativo
-        setTimeout(() => {
-            const qrContainer = document.getElementById('profile-qr-container');
-            if (qrContainer) {
-                qrContainer.innerHTML = "";
-                const qrInfo = (this.state.qrClients || []).find(q => q.clientId === user.id && q.type === this.role);
-                const textId = qrInfo ? qrInfo.id : (this.role === 'client' ? "K" + user.id : null);
-
-                if (textId) {
+        // Gerar o QR Code se for aluno
+        if (this.role === 'client') {
+            setTimeout(() => {
+                const qrContainer = document.getElementById('profile-qr-container');
+                if (qrContainer) {
+                    qrContainer.innerHTML = "";
+                    const qrInfo = (this.state.qrClients || []).find(q => q.clientId === user.id || q.nome === user.name);
+                    const textId = qrInfo ? qrInfo.id : "K" + user.id;
                     new QRCode(qrContainer, {
                         text: textId,
                         width: 180,
@@ -3933,8 +3842,8 @@ Bons treinos!`;
                         correctLevel: QRCode.CorrectLevel.H
                     });
                 }
-            }
-        }, 100);
+            }, 100);
+        }
     }
 
     processImage(file, maxSize, quality, callback) {
@@ -3992,13 +3901,11 @@ Bons treinos!`;
         const name = document.getElementById('edit-name').value.trim();
         const email = document.getElementById('edit-email').value.trim();
         const phone = document.getElementById('edit-phone').value.trim();
-        const jobInput = document.getElementById('edit-job');
-        const job = jobInput ? jobInput.value.trim() : '';
         const pass = document.getElementById('edit-pass').value;
         const btn = document.querySelector('button[onclick="app.updateProfile()"]');
 
-        if (!name || !email || !pass || (this.role === 'client' && !job)) {
-            return alert('Nome, Email, Palavra-passe' + (this.role === 'client' ? ' e Profissao' : '') + ' sao obrigatorios.');
+        if (!name || !email || !pass) {
+            return alert('Nome, Email e Palavra-passe sao obrigatorios.');
         }
 
         if (btn) {
@@ -4016,9 +3923,6 @@ Bons treinos!`;
                 user.name = name;
                 user.email = email;
                 user.phone = phone;
-                if (this.role === 'client') {
-                    user.job = job;
-                }
                 user.password = pass;
 
                 const dobInput = document.getElementById('edit-dob');
@@ -4029,7 +3933,7 @@ Bons treinos!`;
                     user.photoUrl = this.currentUser.photoUrl;
                 }
 
-                // Atualizar utilizador atual na sessao
+                // Atualizar utilizador atual na sessão
                 this.currentUser = { ...user };
                 await this.saveState();
                 this.persistLogin();
@@ -4044,7 +3948,7 @@ Bons treinos!`;
         } finally {
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-save"></i> Guardar Alteracoes';
+                btn.innerHTML = '<i class="fas fa-save"></i> Guardar Alterações';
             }
         }
     }
@@ -4072,36 +3976,6 @@ Bons treinos!`;
             if (tabC) tabC.style.borderBottom = "2px solid var(--secondary)";
             listContainer.innerHTML = `<div class="client-list animate-fade-in">${(this.state.clients || []).map(c => this.renderUserCard(c, 'client')).join('')}</div>`;
         }
-    }
-
-    getPlanLabel(plan) {
-        const plans = {
-            total: { label: 'Plano Total', color: 'var(--accent)', icon: 'fa-star' },
-            musculacao: { label: 'Musculacao', color: '#4A90E2', icon: 'fa-dumbbell' },
-            aulas: { label: 'Aulas Gerais', color: 'var(--success)', icon: 'fa-calendar-check' },
-            pilates: { label: 'Pilates', color: '#9B59B6', icon: 'fa-spa' }
-        };
-        return plans[plan] || plans['total'];
-    }
-
-    canClientEnrollInClass(client, cls) {
-        const plan = client.plan || 'total';
-        const className = (cls.name || '').toLowerCase();
-        const isPilates = className.includes('pilates');
-
-        if (plan === 'total') return { allowed: true };
-        if (plan === 'musculacao') return { allowed: false, reason: 'O seu plano é de Musculacao e nao inclui reserva de aulas.' };
-        if (plan === 'pilates') {
-            return isPilates
-                ? { allowed: true }
-                : { allowed: false, reason: 'O seu plano só permite reservar aulas de Pilates.' };
-        }
-        if (plan === 'aulas') {
-            return isPilates
-                ? { allowed: false, reason: 'O seu plano nao inclui aulas de Pilates. Contacte a recepçao para fazer upgrade.' }
-                : { allowed: true };
-        }
-        return { allowed: true };
     }
 
     renderUserCard(user, type) {
@@ -4143,12 +4017,6 @@ Bons treinos!`;
                             </div>
                         ` : ''}
                         <div style="font-size: 0.8rem; color: var(--text-muted);">${user.phone || 'Sem contacto'}</div>
-                        ${isClient && user.job ? `
-                            <div style="font-size: 0.75rem; color: var(--accent); font-weight: 500; margin-top:2px;">
-                                <i class="fas fa-briefcase" style="font-size:0.7rem;"></i> ${user.job}
-                            </div>
-                        ` : ''}
-                        ${isClient ? (() => { const p = this.getPlanLabel(user.plan); return `<div style="font-size:0.7rem; font-weight:600; margin-top:4px; color:${p.color};"><i class="fas ${p.icon}" style="font-size:0.6rem;"></i> ${p.label}</div>`; })() : ''}
                         <div style="margin-top:5px;"><span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted);"></span></div>
                     </div>
                 </div>
@@ -4173,7 +4041,7 @@ Bons treinos!`;
 
         // 1. Adicionar contatos proativos baseados no papel (role)
         if (this.role === 'client') {
-            // Aluno: Sempre ter o seu professor disponivel
+            // Aluno: Sempre ter o seu professor disponível
             const tid = this.currentUser.teacherId;
             if (tid) {
                 const teacher = this.state.teachers.find(t => t.id === tid);
@@ -4181,7 +4049,7 @@ Bons treinos!`;
                     threads[tid] = { id: tid, messages: [], user: teacher, lastMsg: { body: 'Sem mensagens anteriores.', createdAt: new Date(0).toISOString() } };
                 }
             }
-            // Tambem incluir Admin se houve conversas
+            // Também incluir Admin se houve conversas
         } else if (this.role === 'teacher') {
             // Professor: Ver todos os seus alunos por omissao
             const myClients = this.state.clients.filter(c => c.teacherId === myId);
@@ -4293,13 +4161,13 @@ Bons treinos!`;
             return `
                 <div class="chat-empty-state">
                     <i class="far fa-comments" style="font-size:4rem; margin-bottom:1rem; opacity:0.3;"></i>
-                    <p>Selecione uma conversa para comecar.</p>
+                    <p>Selecione uma conversa para começar.</p>
                 </div>
             `;
         }
 
         let thread = threads.find(t => t.id == activeChatId);
-        // Fallback: se a thread nao existe (ex: aluno <-> professor novo), cria objeto temporario
+        // Fallback: se a thread não existe (ex: aluno <-> professor novo), cria objeto temporario
         if (!thread) {
             // Tentar encontrar user info
             const uid = Number(activeChatId);
@@ -4310,7 +4178,7 @@ Bons treinos!`;
             if (user) {
                 thread = { id: uid, user: user, messages: [] };
             } else {
-                return '<div class="chat-empty-state">Utilizador nao encontrado.</div>';
+                return '<div class="chat-empty-state">Utilizador não encontrado.</div>';
             }
         }
 
@@ -4329,9 +4197,7 @@ Bons treinos!`;
                     </div>
                     <strong>${thread.user.name}</strong>
                 </div>
-                <button class="btn btn-ghost btn-sm" onclick="app.deleteAllMessagesInChat('${activeChatId}')" style="color:var(--danger); font-size:0.75rem;" title="Limpar conversa">
-                    <i class="fas fa-trash-alt"></i> <span class="desktop-only" style="margin-left:5px;">Limpar</span>
-                </button>
+                <!-- Actions could go here -->
             </div>
 
             <div class="chat-messages">
@@ -4339,235 +4205,31 @@ Bons treinos!`;
                 ${msgs.map(m => {
                         const isMe = m.senderId === Number(this.currentUser.id);
                         const isSystem = !m.senderId;
-                        const isDeleted = m.deleted;
                         const bubbleClass = isSystem ? 'message-received' : (isMe ? 'message-sent' : 'message-received');
 
                         return `
-                        <div class="message-bubble ${bubbleClass}" style="${isSystem ? 'background: #334155; width:100%; max-width:100%; text-align:center; font-size:0.85rem;' : ''} ${isDeleted ? 'font-style: italic; opacity: 0.7;' : ''}">
-                            ${m.replyTo ? `
-                                <div class="reply-quote" style="background: rgba(0,0,0,0.1); border-left: 3px solid var(--accent); padding: 5px 8px; border-radius: 4px; margin-bottom: 8px; font-size: 0.75rem; cursor: pointer;" onclick="app.jumpToMessage('${m.replyTo.id}')">
-                                    <div style="font-weight: bold; color: var(--accent); margin-bottom: 2px;">${m.replyTo.senderName}</div>
-                                    <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.8;">${m.replyTo.body}</div>
-                                </div>
-                            ` : ''}
+                        <div class="message-bubble ${bubbleClass}" style="${isSystem ? 'background: #334155; width:100%; max-width:100%; text-align:center; font-size:0.85rem;' : ''}">
                             ${isSystem ? `<strong style="display:block; margin-bottom:4px; color:var(--accent);">${m.title}</strong>` : ''}
-                            ${!isSystem && !isMe && !isDeleted ? `<div style="font-size:0.7rem; color:var(--primary); font-weight:bold; margin-bottom:2px;">${thread.user.name}</div>` : ''}
-                            <div id="msg-${m.id}">${m.body}</div>
-                             <div style="display:flex; justify-content:space-between; align-items:flex-end; gap:10px; margin-top:4px;">
-                                <span class="message-time" style="margin:0;">
-                                    ${new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                                 <div class="msg-actions-container" style="display: flex; gap: 8px; align-items: center;">
-                                    ${!isDeleted ? `
-                                         <div class="desktop-only" style="display: flex; gap: 10px;">
-                                            <i class="fas fa-reply" style="font-size:0.7rem; cursor:pointer; opacity:0.3;" 
-                                            onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.3'"
-                                            onclick="app.prepareReply('${activeChatId}', '${m.createdAt}')" title="Responder"></i>
-                                            ${(isMe || activeChatId === 'system') ? `
-                                            <i class="fas fa-trash-alt" style="font-size:0.7rem; cursor:pointer; opacity:0.3;" 
-                                            onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.3'"
-                                            onclick="app.deleteMessage('${activeChatId}', '${m.createdAt}')" title="Eliminar mensagem"></i>
-                                            ` : ''}
-                                        </div>
-                                        <i class="fas fa-ellipsis-v mobile-only msg-more-btn" 
-                                           onclick="app.showMessageMenu(event, '${activeChatId}', '${m.createdAt}', ${isMe || activeChatId === 'system'})"></i>
-                                    ` : ''}
-                                </div>
-                            </div>
+                            ${!isSystem && !isMe ? `<div style="font-size:0.7rem; color:var(--primary); font-weight:bold; margin-bottom:2px;">${thread.user.name}</div>` : ''}
+                            ${m.body}
+                            <span class="message-time">
+                                ${new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
                         </div>
                     `;
                     }).join('')}
             </div>
 
             ${activeChatId !== 'system' ? `
-            <div id="reply-preview-container" style="display:none; background: rgba(0,0,0,0.2); padding: 10px 15px; border-top: 1px solid rgba(255,255,255,0.05); border-left: 4px solid var(--accent);">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                    <div style="flex:1;">
-                        <div id="reply-preview-user" style="font-weight:bold; font-size:0.8rem; color:var(--accent); margin-bottom:2px;"></div>
-                        <div id="reply-preview-text" style="font-size:0.75rem; opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:250px;"></div>
-                    </div>
-                    <i class="fas fa-times" style="cursor:pointer; opacity:0.5; font-size:0.9rem;" onclick="app.cancelReply()"></i>
-                </div>
-            </div>
-            <div class="chat-input-area">
+            <div class="chat-input-área">
                 <input type="text" id="chat-input-text" placeholder="Escreva uma mensagem..." onkeypress="app.handleChatInput(event, '${activeChatId}')">
                 <button class="btn btn-primary btn-sm" style="border-radius:50%; width:40px; height:40px; padding:0; display:flex; align-items:center; justify-content:center;" 
                     onclick="app.sendMessageInChat('${activeChatId}')">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
-            ` : '<div style="padding:1rem; text-align:center; color:var(--text-muted); background:rgba(0,0,0,0.2);">Este e um canal de notificacoes do sistema.</div>'}
+            ` : '<div style="padding:1rem; text-align:center; color:var(--text-muted); background:rgba(0,0,0,0.2);">Este e um canal de notificações do sistema.</div>'}
         `;
-    }
-
-    deleteMessage(chatId, createdAt) {
-        if (!confirm('Eliminar esta mensagem?')) return;
-        
-        const myId = Number(this.currentUser.id);
-        const idx = (this.state.notifications || []).findIndex(n => {
-            const isTarget = (n.targetUserId == myId && n.senderId == chatId) || (n.targetUserId == chatId && n.senderId == myId) || (chatId === 'system' && n.targetUserId == myId && !n.senderId);
-            return isTarget && n.createdAt === createdAt;
-        });
-
-        if (idx !== -1) {
-            // Se ja estiver apagada, removemos de vez
-            if (this.state.notifications[idx].deleted) {
-                this.state.notifications.splice(idx, 1);
-                this.showToast('Mensagem removida permanentemente.');
-            } else {
-                this.state.notifications[idx].deleted = true;
-                this.state.notifications[idx].body = "🚫 Esta mensagem foi apagada.";
-                this.showToast('Mensagem apagada.');
-            }
-            this.saveState();
-            this.renderContent();
-        }
-    }
-
-    showMessageMenu(event, chatId, createdAt, canDelete) {
-        event.stopPropagation();
-        
-        // Find message to get body and sender using common login
-        const myId = Number(this.currentUser.id);
-        const msg = (this.state.notifications || []).find(n => {
-            const isTarget = (n.targetUserId == myId && n.senderId == chatId) || (n.targetUserId == chatId && n.senderId == myId) || (chatId === 'system' && n.targetUserId == myId && !n.senderId);
-            return isTarget && n.createdAt === createdAt;
-        });
-        if (!msg) return;
-
-        // Remove existing menu if any
-        const existing = document.querySelector('.msg-context-menu');
-        if (existing) existing.remove();
-
-        const menu = document.createElement('div');
-        menu.className = 'msg-context-menu animate-fade-in';
-        menu.style.cssText = `
-            position: fixed;
-            top: ${event.clientY}px;
-            right: 20px;
-            background: rgba(30, 41, 59, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            z-index: 9999;
-            min-width: 150px;
-            overflow: hidden;
-        `;
-
-        menu.innerHTML = `
-            <div style="padding: 14px 20px; cursor: pointer; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); user-select: none;" 
-                 onclick="event.stopPropagation(); app.prepareReply('${chatId}', '${createdAt}'); document.querySelector('.msg-context-menu')?.remove();">
-                <i class="fas fa-reply" style="color: var(--accent); font-size: 1rem;"></i> <strong>Responder</strong>
-            </div>
-            ${canDelete ? `
-            <div style="padding: 14px 20px; cursor: pointer; display: flex; align-items: center; gap: 12px; color: #ff4444; user-select: none;" 
-                 onclick="event.stopPropagation(); app.deleteMessage('${chatId}', '${createdAt}'); document.querySelector('.msg-context-menu')?.remove();">
-                <i class="fas fa-trash-alt" style="font-size: 1rem;"></i> <strong>Apagar</strong>
-            </div>
-            ` : ''}
-        `;
-
-        document.body.appendChild(menu);
-
-        // Click outside to close (usando timeout maior para evitar conflitos no mobile)
-        const closeMenu = (e) => {
-            const m = document.querySelector('.msg-context-menu');
-            if (m && !m.contains(e.target)) {
-                m.remove();
-                document.removeEventListener('click', closeMenu);
-                document.removeEventListener('touchstart', closeMenu);
-            }
-        };
-        setTimeout(() => {
-            document.addEventListener('click', closeMenu);
-            document.addEventListener('touchstart', closeMenu, { passive: true });
-        }, 100);
-    }
-
-    prepareReply(chatId, createdAt) {
-        try {
-            if (!this.currentUser) return;
-            const myId = Number(this.currentUser.id);
-            
-            // Find message to get body and sender
-            const msg = (this.state.notifications || []).find(n => {
-                const sameTime = n.createdAt === createdAt;
-                if (!sameTime) return false;
-                
-                if (chatId === 'system') {
-                    return !n.senderId && n.targetUserId == myId;
-                }
-                return (n.targetUserId == myId && n.senderId == chatId) || (n.targetUserId == chatId && n.senderId == myId);
-            });
-
-            if (!msg) {
-                console.warn("Mensagem nao encontrada para resposta.");
-                return;
-            }
-
-            let senderName = "Utilizador";
-            if (!msg.senderId) {
-                senderName = "Sistema";
-            } else {
-                const uid = Number(msg.senderId);
-                const user = (this.state.clients || []).find(c => c.id === uid) || 
-                             (this.state.teachers || []).find(t => t.id === uid) || 
-                             (this.state.admins || []).find(a => a.id === uid);
-                if (user) senderName = user.name;
-            }
-
-            this.replyContext = { id: msg.id || msg.createdAt, senderName, body: msg.body };
-            
-            const preview = document.getElementById('reply-preview-container');
-            const userEl = document.getElementById('reply-preview-user');
-            const textEl = document.getElementById('reply-preview-text');
-            const input = document.getElementById('chat-input-text');
-            
-            if (preview && userEl && textEl) {
-                userEl.innerText = `A responder a ${senderName}`;
-                textEl.innerText = msg.body;
-                preview.style.display = 'block';
-                if (input) {
-                    input.focus();
-                }
-            }
-        } catch (err) {
-            console.error("Erro no prepareReply:", err);
-        }
-    }
-
-    cancelReply() {
-        this.replyContext = null;
-        const preview = document.getElementById('reply-preview-container');
-        if (preview) preview.style.display = 'none';
-    }
-
-    jumpToMessage(msgId) {
-        const el = document.getElementById(`msg-${msgId}`);
-        if (el) {
-            el.closest('.message-bubble').style.transition = 'background 0.5s';
-            el.closest('.message-bubble').style.background = 'rgba(255,255,255,0.2)';
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            setTimeout(() => {
-                if (el) el.closest('.message-bubble').style.background = '';
-            }, 2000);
-        }
-    }
-
-    deleteAllMessagesInChat(chatId) {
-        if (!confirm('Tem a certeza que deseja apagar TODA a conversa? Esta acao nao pode ser revertida.')) return;
-
-        const myId = Number(this.currentUser.id);
-        this.state.notifications = (this.state.notifications || []).filter(n => {
-            const isSystemChat = chatId === 'system' && n.targetUserId == myId && !n.senderId;
-            const isUserChat = (n.targetUserId == myId && n.senderId == chatId) || (n.targetUserId == chatId && n.senderId == myId);
-            return !(isSystemChat || isUserChat);
-        });
-
-        this.saveState();
-        this.renderContent();
-        this.showToast('Conversa limpa.');
     }
 
     openChat(userId) {
@@ -4591,11 +4253,8 @@ Bons treinos!`;
         const text = input.value.trim();
         if (!text) return;
 
-        // Add message with optional reply context
-        this.addAppNotification(targetId, `Nova mensagem`, text, this.currentUser.id, 'message', true, this.replyContext);
-
-        // Reset context
-        this.cancelReply();
+        // Add message
+        this.addAppNotification(targetId, `Nova mensagem`, text, this.currentUser.id, 'message');
 
         // Refresh view
         input.value = ''; // Clean input first to feel responsive
@@ -4604,15 +4263,7 @@ Bons treinos!`;
         // Timeout to ensure scroll happens after render
         setTimeout(() => {
             const msgsContainer = document.querySelector('.chat-messages');
-            if (msgsContainer) {
-                // For novos envios, usamos smooth scroll para uma experiencia fluida
-                msgsContainer.style.scrollBehavior = 'smooth';
-                msgsContainer.scrollTop = msgsContainer.scrollHeight;
-                // Reset scroll behavior back to auto after scroll finishes
-                setTimeout(() => {
-                    if (msgsContainer) msgsContainer.style.scrollBehavior = 'auto';
-                }, 500);
-            }
+            if (msgsContainer) msgsContainer.scrollTop = msgsContainer.scrollHeight;
         }, 50);
     }
 
@@ -4661,7 +4312,7 @@ Bons treinos!`;
         const teacherId = this.currentUser.teacherId;
         const teacher = this.state.teachers.find(t => t.id === teacherId);
 
-        if (!teacher) return alert('Nao tem professor atribuido.');
+        if (!teacher) return alert('Não tem professor atribuído.');
 
         this.showModal(`
             <h3 style="margin-top:0;">Nova Mensagem</h3>
@@ -4670,7 +4321,7 @@ Bons treinos!`;
             <div style="display:flex; flex-direction:column; gap:1rem;">
                 <div>
                     <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Assunto</label>
-                    <input type="text" id="msg-subject" class="search-bar" placeholder="Ex: Duvida no treino...">
+                    <input type="text" id="msg-subject" class="search-bar" placeholder="Ex: Dúvida no treino...">
                 </div>
                 <div>
                     <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Mensagem</label>
@@ -4689,7 +4340,7 @@ Bons treinos!`;
 
         if (!subject || !body) return alert('Preencha o assunto e a mensagem.');
 
-        // Enviar notificacao para o professor
+        // Enviar notificação para o professor
         this.addAppNotification(teacherId, `Mensagem de ${this.currentUser.name}`, `${subject}\n\n${body}`, this.currentUser.id, 'message');
 
         this.closeModal();
@@ -4697,7 +4348,7 @@ Bons treinos!`;
     }
 
     deleteNotification(createdAt, userId) {
-        if (!confirm('Eliminar esta mensagem?')) return;
+        if (!confirm('Eliminar está mensagem?')) return;
 
         // Encontrar indice (usar == para garantir que string vs number timestamp funciona)
         const idx = this.state.notifications.findIndex(n => n.targetUserId == userId && n.createdAt == createdAt);
@@ -4745,36 +4396,16 @@ Bons treinos!`;
         if (client) {
             client.teacherId = Number(teacherId);
             this.saveState();
-            alert('Professor atribuido com sucesso!');
+            alert('Professor atribuído com sucesso!');
             this.switchAdminTab('clients');
         }
     }
 
-    async updateClientPlan(clientId, plan) {
-        const client = this.state.clients.find(c => Number(c.id) === Number(clientId));
-        if (!client) return;
-        client.plan = plan;
-        await this.saveState();
-        const p = this.getPlanLabel(plan);
-        this.showToast(`Plano alterado para: ${p.label}`);
-        this.renderContent();
-    }
-
-    async updateClientPlanFromQR(clientId, plan) {
-        if (!clientId) return;
-        const client = this.state.clients.find(c => Number(c.id) === Number(clientId));
-        if (!client) return;
-        client.plan = plan;
-        await this.saveState();
-        const p = this.getPlanLabel(plan);
-        this.showToast(`${client.name}: Mensalidade alterada para ${p.label}`);
-    }
-
     deleteUser(type, id, name) {
-        if (confirm(`Tem a certeza que deseja eliminar o utilizador ${name}?\nAVISO: Todos os planos, historico e avaliacoes associados serao removidos permanentemente.`)) {
+        if (confirm(`Tem a certeza que deseja eliminar o utilizador ${name}?\nAVISO: Todos os planos, histórico e avaliações associados serao removidos permanentemente.`)) {
             if (type === 'admin') {
-                if (id === 1) return alert('O administrador principal nao pode ser removido.');
-                if (id === this.currentUser.id) return alert('Nao pode remover a sua propria conta enquanto estiver logado.');
+                if (id === 1) return alert('O administrador principal não pode ser removido.');
+                if (id === this.currentUser.id) return alert('Não pode remover a sua propria conta enquanto estiver logado.');
                 this.state.admins = this.state.admins.filter(u => u.id !== id);
             } else if (type === 'teacher') {
                 this.state.teachers = this.state.teachers.filter(u => u.id !== id);
@@ -4813,7 +4444,7 @@ Bons treinos!`;
         // Filter teachers, exclude current one
         const otherTeachers = this.state.teachers.filter(t => t.id !== this.currentUser.id);
 
-        if (otherTeachers.length === 0) return alert('Nao existem outros professores para transferir.');
+        if (otherTeachers.length === 0) return alert('Não existem outros professores para transferir.');
 
         const options = otherTeachers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
 
@@ -4829,12 +4460,12 @@ Bons treinos!`;
                 </select>
 
                 <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">
-                    <i class="fas fa-info-circle"></i> O historico, planos e avaliacoes serao mantidos. Os administradores serao notificados desta transferencia.
+                    <i class="fas fa-info-circle"></i> O histórico, planos e avaliações serao mantidos. Os administradores serao notificados desta transferência.
                 </p>
 
                 <div style="display:flex; justify-content:flex-end; gap:10px;">
                     <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-                    <button class="btn btn-primary" onclick="app.transferClient(${clientId})">Confirmar Transferencia</button>
+                    <button class="btn btn-primary" onclick="app.transferClient(${clientId})">Confirmar Transferência</button>
                 </div>
             </div>
         `;
@@ -4853,7 +4484,7 @@ Bons treinos!`;
             client.teacherId = Number(newTeacherId);
 
             // Notify Admins
-            const msgText = ` TRANSFERENCIA DE ALUNO: O aluno ${client.name} foi transferido de ${oldTeacherName} para ${newTeacher.name} em ${new Date().toLocaleString()}.`;
+            const msgText = ` TRANSFERÊNCIA DE ALUNO: O aluno ${client.name} foi transferido de ${oldTeacherName} para ${newTeacher.name} em ${new Date().toLocaleString()}.`;
 
             // Allow storing admin notifications in messages or a separate log. 
             // Using 'messages' with specific 'to' for admin viewing if implemented, 
@@ -5029,14 +4660,14 @@ Bons treinos!`;
 
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                <h3 style="margin:0;"><i class="fas fa-history"></i> Historico de Anamneses</h3>
+                <h3 style="margin:0;"><i class="fas fa-history"></i> Histórico de Anamneses</h3>
                 ${isTeacher ? `<button class="btn btn-primary btn-sm" onclick="app.showAnamnesisModal(${clientId})"><i class="fas fa-plus"></i> Novo Registo</button>` : ''}
             </div>
             <div style="display: flex; flex-direction: column; gap: 1rem;">
                 ${entries.length === 0 ? `
                     <div class="glass-card animate-fade-in" style="text-align:center; padding:3rem; opacity: 0.7;">
                         <i class="fas fa-notes-medical" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
-                        <p style="margin:0;">Nenhum registo de anamnese disponivel.</p>
+                        <p style="margin:0;">Nenhum registo de anamnese disponível.</p>
                     </div>
                 ` :
                 entries.map((entry, idx) => `
@@ -5048,7 +4679,7 @@ Bons treinos!`;
                             <div>
                                 <div style="font-weight:700; font-size: 1.05rem;">${entry.date}</div>
                                 <div style="font-size:0.85rem; color:var(--text-muted); margin-top:2px;">
-                                    <span style="color: var(--primary); font-weight: 600;">Objetivo:</span> ${entry.objective || 'Nao definido'}
+                                    <span style="color: var(--primary); font-weight: 600;">Objetivo:</span> ${entry.objective || 'Não definido'}
                                 </div>
                             </div>
                         </div>
@@ -5067,7 +4698,7 @@ Bons treinos!`;
 
     showAddAnamnesisModal() {
         const myClients = this.state.clients.filter(c => c.teacherId === this.currentUser.id);
-        if (myClients.length === 0) return alert('Ainda nao tem alunos atribuidos.');
+        if (myClients.length === 0) return alert('Ainda não tem alunos atribuídos.');
 
         this.showModal(`
             <h3 style="margin-top:0;">Nova Anamnese</h3>
@@ -5089,7 +4720,7 @@ Bons treinos!`;
             date: new Date().toISOString().split('T')[0],
             objective: '',
             activityLevel: 'Sedentario',
-            isSmoker: 'Nao',
+            isSmoker: 'Não',
             healthHistory: '',
             medications: '',
             surgeriesInjuries: '',
@@ -5112,7 +4743,7 @@ Bons treinos!`;
 
         this.showModal(`
             <div class="modal-sidebar-layout">
-                <!-- Sidebar/Nav Area -->
+                <!-- Sidebar/Nav Área -->
                 <div class="modal-sidebar-nav">
                     <div>
                         <div style="width: 50px; height: 50px; border-radius: 12px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #fff; margin-bottom: 1rem; box-shadow: 0 8px 16px rgba(145, 27, 43, 0.3);">
@@ -5126,7 +4757,7 @@ Bons treinos!`;
                         <i class="fas fa-user-check" style="width: 20px;"></i> <span>Perfil & Objetivos</span>
                     </button>
                     <button class="btn btn-ghost btn-sm" style="justify-content: flex-start;" onclick="document.getElementById('anam-section-2').scrollIntoView({behavior:'smooth'})">
-                        <i class="fas fa-heartbeat" style="width: 20px;"></i> <span>Historico Saude</span>
+                        <i class="fas fa-heartbeat" style="width: 20px;"></i> <span>Histórico Saúde</span>
                     </button>
                     <button class="btn btn-ghost btn-sm" style="justify-content: flex-start;" onclick="document.getElementById('anam-section-3').scrollIntoView({behavior:'smooth'})">
                         <i class="fas fa-pills" style="width: 20px;"></i> <span>Meds & Outros</span>
@@ -5140,7 +4771,7 @@ Bons treinos!`;
                     </div>
                 </div>
 
-                <!-- Content Area -->
+                <!-- Content Área -->
                 <div class="modal-sidebar-content">
                     <div id="anam-section-1" style="margin-bottom: 4rem;">
                         <h3 style="color: var(--primary); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
@@ -5168,7 +4799,7 @@ Bons treinos!`;
                             <div class="input-group">
                                 <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Fumador?</label>
                                 <select id="anam-smoker" class="search-bar" style="background: #1e293b;">
-                                    <option ${anam.isSmoker === 'Nao' ? 'selected' : ''}>Nao</option>
+                                    <option ${anam.isSmoker === 'Não' ? 'selected' : ''}>Não</option>
                                     <option ${anam.isSmoker === 'Sim' ? 'selected' : ''}>Sim</option>
                                     <option ${anam.isSmoker === 'Ocasional' ? 'selected' : ''}>Ocasional</option>
                                 </select>
@@ -5179,11 +4810,11 @@ Bons treinos!`;
                     <div id="anam-section-2" style="margin-bottom: 4rem;">
                         <h3 style="color: var(--primary); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
                             <span style="width: 30px; height: 30px; border-radius: 50%; background: rgba(145, 27, 43, 0.1); display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">2</span>
-                            Historico de Saude
+                            Histórico de Saúde
                         </h3>
                         <div style="display: flex; flex-direction: column; gap: 2rem;">
                             <div class="input-group">
-                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Historico de Saude / Doencas</label>
+                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Histórico de Saúde / Doencas</label>
                                 <textarea id="anam-health" class="search-bar" placeholder="Ex: Hipertensao, Diabetes..." style="height:120px; padding: 15px; background: rgba(255,255,255,0.03);">${anam.healthHistory}</textarea>
                             </div>
                             <div class="input-group">
@@ -5209,12 +4840,12 @@ Bons treinos!`;
                                     <input type="text" id="anam-allergies" value="${anam.allergies}" class="search-bar" placeholder="Ex: Penicilina, Acaros..." style="background: rgba(255,255,255,0.03);">
                                 </div>
                                 <div>
-                                    <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Historico Familiar</label>
+                                    <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Histórico Familiar</label>
                                     <input type="text" id="anam-family" value="${anam.familyHistory}" class="search-bar" placeholder="Ex: Problemas cardiacos..." style="background: rgba(255,255,255,0.03);">
                                 </div>
                             </div>
                             <div class="input-group">
-                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Observacoes Adicionais</label>
+                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Observações Adicionais</label>
                                 <textarea id="anam-obs" class="search-bar" style="height:100px; padding: 15px; background: rgba(255,255,255,0.03);">${anam.observations}</textarea>
                             </div>
                         </div>
@@ -5385,7 +5016,7 @@ Bons treinos!`;
                     <h3 style="background: #911B2B; color: white; padding: 10px; margin-bottom: 0; font-size: 16px;">${day.title}</h3>
                     <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                         <tr style="background: #eee;">
-                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Exercicio</th>
+                            <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Exercício</th>
                             <th style="padding: 8px; text-align: center; border: 1px solid #ddd; width: 80px;">Series</th>
                             <th style="padding: 8px; text-align: center; border: 1px solid #ddd; width: 80px;">Reps</th>
                             <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Obs</th>
@@ -5519,7 +5150,7 @@ Bons treinos!`;
         const evals = this.state.evaluations[clientId] || [];
 
         if (!client || !evals.length) {
-            return alert('Ainda nao existem avaliacoes para exportar.');
+            return alert('Ainda não existem avaliações para exportar.');
         }
 
         const evalsToPrint = index !== null ? [evals[index]] : evals;
@@ -5527,12 +5158,12 @@ Bons treinos!`;
         let html = `
             <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #911B2B; padding-bottom: 10px;">
                 <h1 style="color: #911B2B; margin: 0;">KandalGym</h1>
-                <p style="color: #666; margin: 5px 0;">Relatorio de Avaliação Fisica</p>
+                <p style="color: #666; margin: 5px 0;">Relatório de Avaliação Física</p>
             </div>
 
             <div style="margin-bottom: 25px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
                 <h2 style="margin: 0; font-size: 18px; color: #333;">Aluno: ${client.name}</h2>
-                <p style="margin: 5px 0; font-size: 14px;"><strong>Data de Emissao:</strong> ${new Date().toLocaleDateString('pt-PT')}</p>
+                <p style="margin: 5px 0; font-size: 14px;"><strong>Data de Emissão:</strong> ${new Date().toLocaleDateString('pt-PT')}</p>
             </div>
         `;
 
@@ -5544,7 +5175,7 @@ Bons treinos!`;
                     </div>
                     
                     <div style="padding: 15px;">
-                        <h4 style="color: #911B2B; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 5px; text-transform: uppercase; font-size: 12px;">Bioimpedancia</h4>
+                        <h4 style="color: #911B2B; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 5px; text-transform: uppercase; font-size: 12px;">Bioimpedância</h4>
                         <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px;">
                             <tr>
                                 <td style="padding: 6px; border-bottom: 1px solid #f0f0f0; width: 33%;"><strong>Peso:</strong> ${ev.weight || '-'} kg</td>
@@ -5553,8 +5184,8 @@ Bons treinos!`;
                             </tr>
                             <tr>
                                 <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Gordura:</strong> ${ev.fatPercentage || '-'} %</td>
-                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Agua:</strong> ${ev.water || '-'} %</td>
-                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Massa Ossea:</strong> ${ev.boneMass || '-'}</td>
+                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Água:</strong> ${ev.water || '-'} %</td>
+                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Massa Óssea:</strong> ${ev.boneMass || '-'}</td>
                             </tr>
                             <tr>
                                 <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Gord. Visceral:</strong> ${ev.visceralFat || '-'}</td>
@@ -5569,7 +5200,7 @@ Bons treinos!`;
 
         // 3. Imprimir usando o navegador (Reset para nativo)
         const printWindow = window.open('', '_blank');
-        const docTitle = index !== null ? `Avaliação - ${client.name}` : `Historico de Avaliacoes - ${client.name}`;
+        const docTitle = index !== null ? `Avaliação - ${client.name}` : `Histórico de Avaliações - ${client.name}`;
         printWindow.document.write(`
             <html>
                 <head><title>${docTitle}</title></head>
@@ -5588,12 +5219,12 @@ Bons treinos!`;
         const entries = this.state.anamnesis[clientId] || [];
         const entry = entries[index];
 
-        if (!client || !entry) return alert('Registo nao encontrado.');
+        if (!client || !entry) return alert('Registo não encontrado.');
 
         const html = `
             <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #911B2B; padding-bottom: 10px;">
                 <h1 style="color: #911B2B; margin: 0;">KandalGym</h1>
-                <p style="color: #666; margin: 5px 0;">Relatorio de Anamnese Fisica</p>
+                <p style="color: #666; margin: 5px 0;">Relatório de Anamnese Física</p>
             </div>
 
             <div style="margin-bottom: 25px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
@@ -5614,12 +5245,12 @@ Bons treinos!`;
                 <div style="border:1px solid #eee; padding:15px; border-radius:8px;">
                      <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Dados Medicos</h4>
                      <p style="font-size:13px; margin:8px 0;"><strong>Alergias:</strong> ${entry.allergies || '-'}</p>
-                     <p style="font-size:13px; margin:8px 0;"><strong>Historico Familiar:</strong> ${entry.familyHistory || '-'}</p>
+                     <p style="font-size:13px; margin:8px 0;"><strong>Histórico Familiar:</strong> ${entry.familyHistory || '-'}</p>
                 </div>
             </div>
 
             <div style="margin-top:20px; border:1px solid #eee; padding:15px; border-radius:8px;">
-                <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Historico de Saude</h4>
+                <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Histórico de Saúde</h4>
                 <div style="font-size:13px; white-space:pre-wrap; line-height:1.5;">${entry.healthHistory || 'Sem dados registados.'}</div>
             </div>
 
@@ -5634,7 +5265,7 @@ Bons treinos!`;
             </div>
 
             <div style="margin-top:20px; border:1px solid #eee; padding:15px; border-radius:8px;">
-                <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Observacoes</h4>
+                <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Observações</h4>
                 <div style="font-size:13px; white-space:pre-wrap; line-height:1.5;">${entry.observations || '-'}</div>
             </div>
 
@@ -5660,338 +5291,167 @@ Bons treinos!`;
     // --- QR MANAGER FUNCTIONALITY ---
     renderQRManager(container) {
         if (!this.state.qrClients) this.state.qrClients = [];
-        if (this.role !== 'admin') return container.innerHTML = '<div class="glass-card">Acesso restrito a administradores.</div>';
 
         try {
             container.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-                    <div>
-                        <h2 style="margin: 0;"><i class="fas fa-qrcode"></i> Gestao de Entradas</h2>
-                        <p style="color:var(--text-muted); font-size:0.9rem; margin-top:5px;">Controle e validacao de acessos ao ginasio.</p>
-                    </div>
-                    <div>
-                        <button class="btn btn-secondary" onclick="app.syncStaffQR()" style="height:45px;">
-                            <i class="fas fa-user-shield"></i> Gerar QR Staff
-                        </button>
-                    </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                    <h2 style="margin: 0;"><i class="fas fa-qrcode"></i> Gestão de Entradas</h2>
                 </div>
 
-                <div class="stats-grid" style="margin-bottom: 2rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
-                    <div class="glass-panel" style="padding: 1.5rem; border-left: 4px solid var(--primary);">
-                        <h3 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 10px; font-size: 1.1rem; margin-bottom:1rem;">
-                            <i class="fas fa-camera"></i> Scanner em Tempo Real
+                <div class="dashboard" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; margin-top: 20px;">
+                    <div class="glass-panel" style="padding: 1.5rem;">
+                        <h3 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
+                            <i class="fas fa-camera"></i> Scanner de Entrada
                         </h3>
-                        <div id="video-container" class="qr-scanner-container" style="border: 2px solid var(--surface-border); border-radius:15px; overflow:hidden; position:relative; aspect-ratio: 4/3; background:#000; margin-bottom:1rem;">
-                            <video id="v-stream" class="qr-video" playsinline autoplay muted style="width:100%; height:100%; object-fit:cover;"></video>
-                            <div id="scan-overlay" style="position:absolute; top:0; left:0; right:0; bottom:0; border:2px solid var(--primary); opacity:0.3; pointer-events:none; margin:20%; border-radius:10px;"></div>
-                        </div>
-                        <button class="btn btn-primary" style="width: 100%;" id="btnCam" onclick="app.iniciarLeitorQR()">
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Aponte a camara para o codigo QR do aluno para validar a entrada.</p>
+                        <button class="btn btn-secondary" style="width: 100%; border: 1px solid var(--primary); color: var(--primary); background: rgba(145, 27, 43, 0.05);" id="btnCam" onclick="app.iniciarLeitorQR()">
                             <i class="fas fa-video"></i> Ativar Camara
                         </button>
-                        <div id="scan-status" style="margin-top: 15px; padding:10px; border-radius:10px; text-align:center; font-weight:600; font-size:0.9rem;"></div>
-                    </div>
+                        <div id="video-container" class="qr-scanner-container" style="border: 2px solid var(--surface-border); margin-top: 15px;">
+                            <video id="v-stream" class="qr-video" playsinline autoplay muted style="transform:none;"></video>
+                        </div>
+                        <div id="scan-status" style="margin-top: 15px; min-height: 50px;"></div>
+                        <canvas id="c-hidden" style="display:none;"></canvas>
 
-                    <div class="glass-panel" style="padding: 1.5rem; border-left: 4px solid var(--accent);">
-                        <h3 style="margin-top: 0; color: var(--accent); display: flex; align-items: center; gap: 10px; font-size: 1.1rem; margin-bottom:1.5rem;">
-                            <i class="fas fa-keyboard"></i> Entrada Manual & Info
-                        </h3>
-                        
-                        <div style="margin-bottom: 2rem;">
-                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Introduzir ID do Aluno</label>
+                        <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed var(--surface-border);">
+                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Entrada Manual (Backup)</label>
                             <div style="display:flex; gap:10px;">
-                                <input type="text" id="manual-qr-id" placeholder="Ex: K1" onkeyup="if(event.key==='Enter') app.processarManualQR()"
-                                    style="flex:1; height:45px; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:12px; color:#fff; padding:0 15px; font-weight:700;">
-                                <button class="btn btn-accent" onclick="app.processarManualQR()" style="padding: 0 20px;">
+                                <input type="text" id="manual-qr-id" placeholder="Ex: K1" 
+                                    style="flex:1; height:42px; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 12px; font-size:0.9rem;">
+                                <button class="btn btn-primary btn-sm" onclick="app.processarManualQR()" style="padding: 0 15px;">
                                     <i class="fas fa-check"></i>
                                 </button>
                             </div>
+                            <small style="color:var(--text-muted); font-size:0.7rem; margin-top:5px; display:block;">Use isto se a camara não estiver disponível.</small>
                         </div>
+                    </div>
 
-                        <div style="display: grid; gap: 12px;">
-                            <div style="display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: var(--text-muted);">
-                                <div style="width:24px; height:24px; border-radius:50%; background:rgba(16, 185, 129, 0.1); display:flex; align-items:center; justify-content:center; color:var(--success);"><i class="fas fa-check" style="font-size:0.7rem;"></i></div>
-                                <span>Conta deve estar <strong>Ativa</strong></span>
+                    <div class="glass-panel" style="padding: 1.5rem;">
+                        <h3 style="margin-top: 0; color: var(--accent); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
+                            <i class="fas fa-shield-alt"></i> Regras de Validação
+                        </h3>
+                        <div style="display: grid; gap: 10px; margin-top: 15px;">
+                            <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
+                                <i class="fas fa-user-check" style="color: var(--success); width: 20px;"></i> Conta deve estar Ativa.
                             </div>
-                            <div style="display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: var(--text-muted);">
-                                <div style="width:24px; height:24px; border-radius:50%; background:rgba(196, 162, 77, 0.1); display:flex; align-items:center; justify-content:center; color:var(--accent);"><i class="fas fa-calendar-alt" style="font-size:0.7rem;"></i></div>
-                                <span>Validade superior a <strong>Hoje</strong></span>
+                            <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
+                                <i class="fas fa-calendar-times" style="color: var(--accent); width: 20px;"></i> Data de validade superior a hoje.
                             </div>
-                            <div style="display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: var(--text-muted);">
-                                <div style="width:24px; height:24px; border-radius:50%; background:rgba(145, 27, 43, 0.1); display:flex; align-items:center; justify-content:center; color:var(--primary);"><i class="fas fa-ticket-alt" style="font-size:0.7rem;"></i></div>
-                                <span>Pelo menos <strong>1 Credito</strong></span>
+                            <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
+                                <i class="fas fa-ticket-alt" style="color: var(--danger); width: 20px;"></i> Deve ter pelo menos 1 credito.
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
+                                <i class="fas fa-clock" style="color: var(--primary); width: 20px;"></i> Cooldown de 2 min entre leituras.
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
+                                <i class="fas fa-ban" style="color: var(--accent); width: 20px;"></i> Maximo de 2 entradas por dia.
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="glass-panel" style="padding: 0.5rem; display:flex; gap:0.5rem; margin-bottom:1.5rem; background:rgba(255,255,255,0.03); border-radius:15px;">
-                    <button class="btn btn-sm ${this.qrActiveTab === 'clients' ? 'btn-primary' : 'btn-ghost'}" onclick="app.setQRTab('clients')" style="flex:1; border-radius:10px;">
-                        <i class="fas fa-users"></i> Clientes
-                    </button>
-                    <button class="btn btn-sm ${this.qrActiveTab === 'staff' ? 'btn-primary' : 'btn-ghost'}" onclick="app.setQRTab('staff')" style="flex:1; border-radius:10px;">
-                        <i class="fas fa-id-badge"></i> Admin & Staff
-                    </button>
-                </div>
-
-                ${this.selectedQRClients.length > 0 ? `
-                <div class="glass-panel animate-fade-in" style="margin-bottom: 1.5rem; padding: 1rem; border: 1px dashed var(--accent); background: rgba(196, 162, 77, 0.05); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <div style="background:var(--accent); color:#000; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.8rem;">${this.selectedQRClients.length}</div>
-                        <span style="font-weight:600; color:var(--accent);">Selecionados</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:15px;">
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;">Nova Validade:</span>
-                            <input type="date" id="bulk-qr-date" style="background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:5px 10px; font-size:0.85rem;">
-                        </div>
-                        <button class="btn btn-primary btn-sm" onclick="app.applyBulkQRDateUpdate()">
-                            <i class="fas fa-sync"></i> Atualizar Selecionados
-                        </button>
-                        <button class="btn btn-ghost btn-sm" onclick="app.clearQRSelection()" style="color:var(--text-muted);">
-                            Cancelar
-                        </button>
-                    </div>
-                </div>
-                ` : ''}
-
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                    <h3 style="font-weight: 700; margin:0; display:flex; align-items:center; gap:0.5rem;"><i class="fas fa-list" style="color:var(--primary);"></i> ${this.qrActiveTab === 'clients' ? 'Alunos Registados' : 'Staff Autorizado'}</h3>
-                    <div class="search-container" style="margin:0; width: 100%; max-width: 400px; height: 45px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 1rem;">
+                    <h3 style="font-weight: 700; font-size: 1.2rem; margin:0;"><i class="fas fa-list"></i> Lista de Alunos (${this.state.qrClients.length})</h3>
+                    <div class="search-container" style="margin:0; width: 300px; height: 40px;">
                         <i class="fas fa-search"></i>
-                        <input type="text" class="search-bar" placeholder="Pesquisar..." oninput="app.filterQRList(this.value)">
+                        <input type="text" class="search-bar" placeholder="Pesquisar aluno..." onkeyup="app.filterQRList(this.value)" style="height: 100% !important;">
                     </div>
                 </div>
                 
-                <div class="glass-panel" style="padding: 0; overflow:hidden; border-radius:20px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; min-width: 900px;">
-                            <thead>
-                                <tr style="text-align: left; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--surface-border);">
-                                    <th style="padding: 1.25rem 0.5rem; width:40px; text-align:center;">
-                                        <input type="checkbox" onclick="app.toggleAllQRSelections(this.checked)" 
-                                            style="width:16px; height:16px; cursor:pointer;" 
-                                            ${this.selectedQRClients.length > 0 && this.selectedQRClients.length === this.getCurrentQRListCount() ? 'checked' : ''}>
-                                    </th>
-                                    <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; width:70px;">ID</th>
-                                    <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; min-width:180px;">Aluno / Colaborador</th>
-                                    <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:center;">Status</th>
-                                    <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:center;">Creditos</th>
-                                    <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align:center;">Entradas Hoje</th>
-                                    <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Validade</th>
-                                    <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Mensalidade</th>
-                                    <th style="padding: 1.25rem 0.5rem; font-size: 0.72rem; color: var(--text-muted); text-transform:uppercase; letter-spacing:1px; text-align: right;">Acoes</th>
-                                </tr>
-                            </thead>
-                            <tbody id="gridQRClientes">
-                                ${this.renderQRClientCards()}
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="glass-panel" style="padding: 0; overflow-x: auto; background: rgba(255,255,255,0.03);">
+                    <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--surface-border); text-align: left; background: rgba(255,255,255,0.05);">
+                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Aluno</th>
+                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Estado</th>
+                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Creditos</th>
+                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Entradas (Hoje)</th>
+                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Validade</th>
+                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent); text-align: right;">Acoes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gridQRClientes">
+                            ${this.renderQRClientCards()}
+                        </tbody>
+                    </table>
                 </div>
-                <!-- canvas movido para renderQRManager principal -->
-                <canvas id="c-hidden" style="display:none;"></canvas>
             `;
         } catch (err) {
             console.error("Error in renderQRManager:", err);
-            container.innerHTML = `<div class="glass-card" style="color:var(--danger);">Erro ao carregar Gestao de Entradas: ${err.message}</div>`;
+            container.innerHTML = `<div class="glass-card" style="color:var(--danger);">Erro ao carregar Gestão de Entradas: ${err.message}</div>`;
         }
 
         // Reset scanner state when rendering
         this.qrScannerAtivo = false;
     }
 
-    setQRTab(tab) {
-        this.qrActiveTab = tab;
-        this.selectedQRClients = []; // Limpar selecao ao trocar aba
-        this.renderContent();
-    }
-
-    getCurrentQRListCount() {
-        const qrList = (this.state.qrClients || []).filter(c => {
-            if (this.qrActiveTab === 'clients' && (c.type === 'admin' || c.type === 'teacher')) return false;
-            if (this.qrActiveTab === 'staff' && (c.type !== 'admin' && c.type !== 'teacher')) return false;
-            return true;
-        });
-        return qrList.length;
-    }
-
-    toggleQRSelection(id, checked) {
-        if (checked) {
-            if (!this.selectedQRClients.includes(id)) this.selectedQRClients.push(id);
-        } else {
-            this.selectedQRClients = this.selectedQRClients.filter(i => i !== id);
-        }
-        this.renderContent();
-    }
-
-    toggleAllQRSelections(checked) {
-        if (checked) {
-            const qrList = (this.state.qrClients || []).filter(c => {
-                if (this.qrActiveTab === 'clients' && (c.type === 'admin' || c.type === 'teacher')) return false;
-                if (this.qrActiveTab === 'staff' && (c.type !== 'admin' && c.type !== 'teacher')) return false;
-                return true;
-            });
-            this.selectedQRClients = qrList.map(c => c.id);
-        } else {
-            this.selectedQRClients = [];
-        }
-        this.renderContent();
-    }
-
-    clearQRSelection() {
-        this.selectedQRClients = [];
-        this.renderContent();
-    }
-
-    applyBulkQRDateUpdate() {
-        const dateInput = document.getElementById('bulk-qr-date');
-        if (!dateInput || !dateInput.value) return alert('Por favor, selecione uma data de validade.');
-
-        const newDate = dateInput.value;
-        let updatedCount = 0;
-
-        this.state.qrClients.forEach(c => {
-            if (this.selectedQRClients.includes(c.id)) {
-                c.validade = newDate;
-                updatedCount++;
-            }
-        });
-
-        if (updatedCount > 0) {
-            this.saveState();
-            this.showToast(`${updatedCount} validades atualizadas com sucesso!`);
-            this.selectedQRClients = [];
-            this.renderContent();
-        }
-    }
-
     renderQRClientCards(filter = '') {
         const qrList = (this.state.qrClients || []).filter(c => {
-            const f = this.normalizeText(filter);
-            const nomeNormal = this.normalizeText(c.nome);
-            const telNormal = this.normalizeText(c.tel || "");
-            const idNormal = this.normalizeText(c.id);
+            const f = filter.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            const nomeNormal = c.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            const telNormal = (c.tel || "").toLowerCase();
+            const idNormal = c.id.toLowerCase();
 
-            // Filter by active tab
-            if (this.qrActiveTab === 'clients' && (c.type === 'admin' || c.type === 'teacher')) return false;
-            if (this.qrActiveTab === 'staff' && (c.type !== 'admin' && c.type !== 'teacher')) return false;
-
-            return nomeNormal.includes(f) || telNormal.includes(f) || idNormal.includes(f);
+            return nomeNormal.includes(f) ||
+                telNormal.includes(f) ||
+                idNormal.includes(f);
         });
 
         if (qrList.length === 0) {
-            return `<tr><td colspan="7" style="padding: 4rem; text-align: center; color: var(--text-muted);"><i class="fas fa-search" style="font-size:2rem; margin-bottom:1rem; opacity:0.3; display:block;"></i> Nenhum registo encontrado nesta categoria.</td></tr>`;
+            return `<tr><td colspan="6" style="padding: 3rem; text-align: center; color: var(--text-muted);"><i class="fas fa-info-circle"></i> Nenhum aluno encontrado.</td></tr>`;
         }
 
         const hoje = new Date().toISOString().split('T')[0];
 
         return qrList.map((c, idx) => {
-            const entHj = (c.historico || []).filter(h => {
-                const ts = typeof h === 'string' ? h : h.t;
-                const type = typeof h === 'string' ? 'entrada' : h.type;
-                return ts.startsWith(hoje) && type === 'entrada';
-            }).length;
-            const isInvalid = hoje > c.validade || !c.ativo;
-            const isStaff = c.type === 'admin' || c.type === 'teacher';
-            const isSelected = this.selectedQRClients.includes(c.id);
+            const entHj = (c.histórico || []).filter(h => h.startsWith(hoje)).length;
+            const statusColor = c.ativo ? 'var(--success)' : 'var(--danger)';
 
             return `
-                <tr style="border-bottom: 1px solid var(--surface-border); transition: background 0.3s; ${isSelected ? 'background: rgba(196, 162, 77, 0.08);' : ''}" 
-                    onmouseover="if(!this.dataset.selected) this.style.background='rgba(255,255,255,0.02)'" 
-                    onmouseout="if(!this.dataset.selected) this.style.background='transparent'"
-                    ${isSelected ? 'data-selected="true"' : ''}>
-                    <td style="padding: 0.75rem 0.5rem; text-align:center;">
-                        <input type="checkbox" ${isSelected ? 'checked' : ''} 
-                            onclick="app.toggleQRSelection('${c.id}', this.checked)"
-                            style="width:16px; height:16px; cursor:pointer;">
-                    </td>
-                    <td style="padding: 0.75rem 0.5rem;">
-                        <div style="background: ${c.type === 'admin' ? 'rgba(196,162,77,0.1)' : c.type === 'teacher' ? 'rgba(16,185,129,0.1)' : 'rgba(145,27,43,0.1)'}; 
-                             color: ${c.type === 'admin' ? 'var(--accent)' : c.type === 'teacher' ? 'var(--success)' : 'var(--primary)'}; 
-                             padding: 3px 8px; border-radius: 6px; font-weight: 700; font-family: monospace; display: inline-block; font-size: 0.85rem;">${c.id}</div>
-                    </td>
-                    <td style="padding: 0.75rem 0.5rem; min-width: 180px;">
-                        <div style="display:flex; align-items:center; gap:5px;">
-                            <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" 
-                                style="background:transparent; border:none; color:#fff; font-weight:600; font-size:0.9rem; width:auto; flex:1; border-bottom: 1px dashed rgba(255,255,255,0.05); padding: 2px 5px; margin-bottom:2px;">
-                            ${c.type === 'admin' ? '<span style="font-size:0.6rem; background:var(--accent); color:#000; padding:1px 4px; border-radius:4px; font-weight:700;">ADMIN</span>' : ''}
-                            ${c.type === 'teacher' ? '<span style="font-size:0.6rem; background:var(--success); color:#fff; padding:1px 4px; border-radius:4px; font-weight:700;">STAFF</span>' : ''}
-                        </div>
-                        <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" 
-                            style="background:transparent; border:none; color:var(--text-muted); font-size:0.7rem; width:100%; border-bottom: 1px dashed rgba(255,255,255,0.03); padding-left: 5px;">
-                    </td>
-                    <td style="padding: 0.75rem 0.5rem; text-align:center;">
-                        <div style="display:flex; justify-content:center;">
-                            <label class="switch" style="position:relative; display:inline-block; width:38px; height:20px;">
-                                <input type="checkbox" ${c.ativo ? 'checked' : ''} onchange="app.toggleQRClientStatus('${c.id}')" style="opacity:0; width:0; height:0;">
-                                <span style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background-color:${c.ativo ? 'var(--success)' : '#475569'}; border-radius:20px; transition:0.3s;">
-                                    <span style="position:absolute; content:''; height:14px; width:14px; left:3px; bottom:3px; background-color:white; border-radius:50%; transition:0.3s; transform:${c.ativo ? 'translateX(18px)' : 'translateX(0)'};"></span>
-                                </span>
-                            </label>
+                <tr style="border-bottom: 1px solid var(--surface-border); transition: background 0.2s;" class="qr-row">
+                    <td style="padding: 1rem;">
+                        <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" 
+                            style="background:transparent; border:none; color:#fff; font-weight:700; font-size:1rem; width:100%; border-bottom: 1px dashed rgba(255,255,255,0.1); padding: 2px 0;">
+                        <div style="display:flex; align-items:center; gap:5px; margin-top:5px;">
+                            <span style="font-size:0.75rem; color:var(--text-muted); opacity:0.7;"></span>
+                            <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" 
+                                style="background:transparent; border:none; color:var(--text-muted); font-size:0.75rem; width:80%; border-bottom: 1px dashed rgba(255,255,255,0.05);">
                         </div>
                     </td>
-                    <td style="padding: 0.75rem 0.5rem;">
-                        <div style="display: flex; align-items: center; justify-content:center; gap: 5px;">
-                            ${isStaff ?
-                    '<span style="color:var(--text-muted); font-size:0.8rem; font-weight:600;">Ilimitado</span>' :
-                    `<button class="btn-circular-sm" onclick="app.editQRCredit('${c.id}', -1)" style="width:24px; height:24px;"><i class="fas fa-minus" style="font-size:0.6rem;"></i></button>
-                                 <input type="number" value="${c.ent}" onchange="app.updateQRClientField('${c.id}', 'ent', parseInt(this.value) || 0)"
-                                    style="background:rgba(255,255,255,0.03); border:1px solid var(--surface-border); border-radius:6px; color:${c.ent <= 5 ? 'var(--danger)' : '#fff'}; font-weight:700; width:60px; text-align:center; outline:none; font-size:0.85rem; height:30px;">
-                                 <button class="btn-circular-sm" onclick="app.editQRCredit('${c.id}', 1)" style="width:24px; height:24px; color:var(--primary); background:rgba(145,27,43,0.1);"><i class="fas fa-plus" style="font-size:0.6rem;"></i></button>`
-                }
+                    <td style="padding: 1rem;">
+                        <input type="checkbox" ${c.ativo ? 'checked' : ''} onchange="app.toggleQRClientStatus('${c.id}')" style="accent-color: var(--primary); width:18px; height:18px; cursor:pointer;">
+                    </td>
+                    <td style="padding: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="qr-btn-circle-sm" onclick="app.editQRCredit('${c.id}', -1)">-</div>
+                            <input type="number" value="${c.ent}" onchange="app.updateQRClientField('${c.id}', 'ent', parseInt(this.value) || 0)"
+                                class="no-spin"
+                                style="background:transparent; border:none; color:inherit; font-weight:700; width:50px; text-align:center; outline:none;">
+                            <div class="qr-btn-circle-sm" onclick="app.editQRCredit('${c.id}', 1)">+</div>
                         </div>
                     </td>
-                    <td style="padding: 0.75rem 0.5rem; text-align:center;">
-                        <div style="display: flex; align-items: center; justify-content:center; gap: 8px;">
-                            ${isStaff ?
-                    `<div style="color:var(--success); font-weight:700; font-size:0.8rem;">Livre</div>` :
-                    `<button class="btn-circular-sm" onclick="app.editQREntryHj('${c.id}', -1)" style="width:22px; height:22px;"><i class="fas fa-minus" style="font-size:0.5rem;"></i></button>
-                                 <div style="color:${entHj >= 2 ? 'var(--danger)' : 'var(--accent)'}; font-weight:800; font-size:0.85rem; min-width:40px;">${entHj} / 2</div>
-                                 <button class="btn-circular-sm" onclick="app.editQREntryHj('${c.id}', 1)" style="width:22px; height:22px;"><i class="fas fa-plus" style="font-size:0.5rem;"></i></button>`
-                }
+                    <td style="padding: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="qr-btn-circle-sm" onclick="app.editQREntryHj('${c.id}', -1)">-</div>
+                            <span style="font-weight:700; color:var(--primary);">${entHj} / 2</span>
+                            <div class="qr-btn-circle-sm" onclick="app.editQREntryHj('${c.id}', 1)">+</div>
                         </div>
                     </td>
-                    <td style="padding: 0.75rem 0.5rem;">
-                        ${isStaff ?
-                    '<span style="color:var(--text-muted); font-size:0.8rem;">Vitalicia</span>' :
-                    `<input type="date" value="${c.validade}" onchange="app.updateQRClientField('${c.id}', 'validade', this.value)"
-                                style="background:rgba(255,255,255,0.03); border:1px solid var(--surface-border); border-radius:6px; color:${hoje > c.validade ? 'var(--danger)' : 'inherit'}; font-size:0.8rem; padding:4px 8px; cursor:pointer;">`
-                }
+                    <td style="padding: 1rem;">
+                        <input type="date" value="${c.validade}" onchange="app.updateQRClientField('${c.id}', 'validade', this.value)"
+                            style="background:transparent; border:none; color:${hoje > c.validade ? 'var(--danger)' : 'inherit'}; font-size:0.85rem; cursor:pointer;">
                     </td>
-                    <td style="padding: 0.75rem 0.5rem;">
-                        ${isStaff ? '<span style="color:var(--text-muted); font-size:0.8rem;">N/A</span>' : (() => {
-                            const clientData = (this.state.clients || []).find(cl => Number(cl.id) === Number(c.clientId));
-                            const currentPlan = clientData ? (clientData.plan || 'total') : 'total';
-                            const p = this.getPlanLabel(currentPlan);
-                            return `<select onchange="app.updateClientPlanFromQR(${c.clientId}, this.value)"
-                                style="height:28px; font-size:0.72rem; padding:0 6px; border-radius:6px; background:rgba(255,255,255,0.05); border:1px solid ${p.color}; color:${p.color}; font-weight:700; cursor:pointer;">
-                                <option value="total" ${currentPlan === 'total' ? 'selected' : ''}>&#11088; Total</option>
-                                <option value="musculacao" ${currentPlan === 'musculacao' ? 'selected' : ''}>&#128170; Musculacao</option>
-                                <option value="aulas" ${currentPlan === 'aulas' ? 'selected' : ''}>&#128197; Aulas</option>
-                                <option value="pilates" ${currentPlan === 'pilates' ? 'selected' : ''}>&#129472; Pilates</option>
-                            </select>`;
-                        })()}
-                    </td>
-                    <td style="padding: 0.75rem 0.5rem; text-align: right;">
+                    <td style="padding: 1rem; text-align: right;">
                         <div style="display: flex; gap: 5px; justify-content: flex-end;">
-                            <button class="btn btn-ghost btn-sm" onclick="app.showQRClientHistory('${c.id}')" style="background: rgba(255,255,255,0.05); border-radius:8px; height:34px; width:34px; color:var(--accent); font-size:0.8rem;" title="Ver Log de Entradas"><i class="fas fa-history"></i></button>
-                            <button class="btn btn-ghost btn-sm" onclick="app.toggleQRCodeDisplay('qr-row-area-${idx}', '${c.id}')" style="background: rgba(255,255,255,0.05); border-radius:8px; height:34px; width:34px; color:var(--text-main); font-size:0.8rem;" title="Ver Codigo QR"><i class="fas fa-qrcode"></i></button>
-                            <button class="btn btn-ghost btn-sm" onclick="app.deleteQRClient('${c.id}')" style="border-radius:8px; height:34px; width:34px; color:var(--danger); background:rgba(239, 68, 68, 0.05); font-size:0.8rem;" title="Eliminar"><i class="fas fa-trash"></i></button>
+                            <button class="btn-icon" onclick="app.toggleQRCodeDisplay('qr-row-área-${idx}', '${c.id}')" title="Gerar QR"><i class="fas fa-qrcode"></i></button>
+                            <button class="btn-icon danger" onclick="app.deleteQRClient('${c.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>
-                <tr id="qr-row-area-${idx}" style="display:none; background: rgba(0,0,0,0.2);">
-                    <td colspan="8" style="padding: 1.5rem 1rem; text-align: center;">
-                        <div style="display:inline-flex; flex-direction:column; align-items:center; gap:1.2rem; background:rgba(255,255,255,0.02); padding:1.5rem; border-radius:20px; border:1px solid var(--surface-border);">
-                            <div id="canvas-${idx}" style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></div>
-                            <div style="text-align:center;">
-                                <div style="font-weight: 800; color: var(--primary); font-family: monospace; font-size: 1.2rem; margin-bottom:3px;">${c.id}</div>
-                                <div style="color:var(--text-muted); font-size:0.8rem;">Nome: ${c.nome}</div>
-                            </div>
-                            <button class="btn btn-primary" onclick="app.downloadQRCode('canvas-${idx}', '${c.id}', '${c.nome}')" style="padding: 10px 20px; border-radius:12px; font-size:0.9rem; box-shadow: 0 5px 15px rgba(145,27,43,0.3);">
-                                <i class="fas fa-download"></i> Descarregar QR Code
-                            </button>
-                        </div>
+                <tr id="qr-row-área-${idx}" style="display:none; background: rgba(255,255,255,0.05);">
+                    <td colspan="6" style="padding: 1rem; text-align: center;">
+                        <div id="canvas-${idx}" style="background: white; padding: 10px; border-radius: 8px; display: inline-block; margin: 10px 0;"></div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">ID: ${c.id}</div>
                     </td>
                 </tr>
             `;
@@ -6009,17 +5469,17 @@ Bons treinos!`;
         const client = (this.state.clients || []).find(c => c.id === Number(clientId));
         if (!client) return;
 
-        // Verificar se ja tem ID curto para este cliente
+        // Verificar se já tem ID curto para este cliente
         const exists = this.state.qrClients.find(qc => qc.clientId === Number(clientId));
         if (exists) {
             if (autoRedirect) {
                 this.setView('qr_manager');
-                this.showToast('Este cliente ja tem acesso QR ativo.');
+                this.showToast('Este cliente já tem acesso QR ativo.');
             }
             return;
         }
 
-        // Encontrar proximo ID curto sequencial
+        // Encontrar próximo ID curto sequencial
         const usedIds = this.state.qrClients.map(c => {
             const m = c.id.match(/^K(\d+)$/);
             return m ? parseInt(m[1]) : 0;
@@ -6038,8 +5498,7 @@ Bons treinos!`;
             ativo: true,
             ent: 30,
             validade: validDate.toISOString().split('T')[0],
-            historico: [],
-            type: 'client'
+            histórico: []
         });
 
         if (autoRedirect) {
@@ -6048,68 +5507,6 @@ Bons treinos!`;
             if (this.activeView !== 'qr_manager' && this.activeView !== 'dashboard') {
                 this.setView('qr_manager');
             }
-        }
-    }
-
-    syncStaffQR() {
-        if (!this.state.qrClients) this.state.qrClients = [];
-
-        let changed = false;
-
-        // Admins
-        (this.state.admins || []).forEach(admin => {
-            let qc = this.state.qrClients.find(qc => qc.clientId === admin.id && qc.type === 'admin');
-            const expectedId = "A" + admin.id;
-
-            if (!qc) {
-                this.state.qrClients.push({
-                    id: expectedId,
-                    clientId: admin.id,
-                    nome: admin.name,
-                    tel: admin.email || "Admin",
-                    ativo: true,
-                    ent: 9999,
-                    validade: '2099-12-31',
-                    historico: [],
-                    type: 'admin'
-                });
-                changed = true;
-            } else if (qc.id !== expectedId) {
-                qc.id = expectedId;
-                changed = true;
-            }
-        });
-
-        // Teachers (P for Professor)
-        (this.state.teachers || []).sort((a, b) => a.id - b.id).forEach((t, idx) => {
-            let qc = this.state.qrClients.find(qc => qc.clientId === t.id && qc.type === 'teacher');
-            const expectedId = "P" + (idx + 1);
-
-            if (!qc) {
-                this.state.qrClients.push({
-                    id: expectedId,
-                    clientId: t.id,
-                    nome: t.name,
-                    tel: t.phone || "Professor",
-                    ativo: true,
-                    ent: 9999,
-                    validade: '2099-12-31',
-                    historico: [],
-                    type: 'teacher'
-                });
-                changed = true;
-            } else if (qc.id !== expectedId) {
-                qc.id = expectedId;
-                changed = true;
-            }
-        });
-
-        if (changed) {
-            this.saveState();
-            this.showToast("QR Codes de Staff atualizados!");
-            this.renderContent();
-        } else {
-            this.showToast("Os QR Codes do staff ja estao simplificados.");
         }
     }
 
@@ -6137,11 +5534,11 @@ Bons treinos!`;
 
         const hj = new Date().toISOString().split('T')[0];
         if (v === 1) {
-            if (!this.state.qrClients[idx].historico) this.state.qrClients[idx].historico = [];
-            this.state.qrClients[idx].historico.unshift(new Date().toISOString());
+            if (!this.state.qrClients[idx].histórico) this.state.qrClients[idx].histórico = [];
+            this.state.qrClients[idx].histórico.unshift(new Date().toISOString());
         } else {
-            const hIdx = (this.state.qrClients[idx].historico || []).findIndex(h => h.startsWith(hj));
-            if (hIdx !== -1) this.state.qrClients[idx].historico.splice(hIdx, 1);
+            const hIdx = (this.state.qrClients[idx].histórico || []).findIndex(h => h.startsWith(hj));
+            if (hIdx !== -1) this.state.qrClients[idx].histórico.splice(hIdx, 1);
         }
         this.saveState();
         this.renderContent();
@@ -6161,95 +5558,7 @@ Bons treinos!`;
     }
 
     editQRClientData(id) {
-        // Obsoleto - Usando edicao inline agora
-    }
-
-    showQRClientHistory(id) {
-        const c = this.state.qrClients.find(cli => cli.id === id);
-        if (!c) return;
-
-        const history = c.historico || [];
-        let html = `
-            <div style="padding:1.5rem;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                    <div>
-                        <h3 style="margin:0; color:var(--primary);"><i class="fas fa-history"></i> Log de Acessos</h3>
-                        <p style="margin:5px 0 0; color:var(--text-muted); font-size:0.85rem;">Historico para: <strong>${c.nome}</strong></p>
-                    </div>
-                    <div style="background:rgba(255,255,255,0.05); padding:8px 15px; border-radius:10px; font-size:0.8rem; border:1px solid var(--surface-border);">
-                        Total de Visitas: <span style="color:var(--primary); font-weight:800;">${history.filter(h => (typeof h === 'string' ? 'entrada' : h.type) === 'entrada').length}</span>
-                    </div>
-                </div>
-                
-                <div style="max-height: 400px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius:15px; border:1px solid var(--surface-border);">
-                    <table style="width:100%; border-collapse:collapse;">
-                        <thead>
-                            <tr style="text-align:left; background:rgba(255,255,255,0.03); border-bottom:1px solid var(--surface-border);">
-                                <th style="padding:10px 15px; font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Data / Hora</th>
-                                <th style="padding:10px 15px; font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; text-align:center;">Tipo</th>
-                                <th style="padding:10px 15px; font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; text-align:right;">Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-        `;
-
-        if (history.length === 0) {
-            html += `<tr><td colspan="3" style="padding:3rem; text-align:center; color:var(--text-muted);">Ainda nao existem registos de acesso.</td></tr>`;
-        } else {
-            history.forEach(h => {
-                const ts = typeof h === 'string' ? h : h.t;
-                const type = typeof h === 'string' ? 'entrada' : h.type;
-                const dateObj = new Date(ts);
-                const dateStr = dateObj.toLocaleDateString('pt-PT');
-                const timeStr = dateObj.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
-
-                html += `
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.02);">
-                        <td style="padding:12px 15px; font-size:0.85rem;">
-                            <div style="color:#fff; font-weight:600;">${dateStr}</div>
-                            <div style="font-size:0.7rem; color:var(--text-muted);">${timeStr}</div>
-                        </td>
-                        <td style="padding:12px 15px; text-align:center;">
-                            <span style="background:${type === 'entrada' ? 'rgba(16,185,129,0.1)' : 'rgba(145,27,43,0.1)'}; 
-                                         color:${type === 'entrada' ? 'var(--success)' : 'var(--primary)'}; 
-                                         padding:3px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; text-transform:uppercase;">
-                                ${type}
-                            </span>
-                        </td>
-                        <td style="padding:12px 15px; text-align:right;">
-                            <i class="fas fa-check-circle" style="color:var(--success); font-size:0.8rem;"></i>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        html += `
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div style="margin-top:1.5rem; display:flex; gap:10px;">
-                    <button class="btn btn-ghost" onclick="app.closeModal()" style="flex:1;">Fechar</button>
-                    <button class="btn btn-ghost" onclick="if(confirm('Limpar todo o historico deste cliente?')) { app.clearQRClientHistory('${c.id}'); }" style="color:var(--danger); font-size:0.8rem;">
-                        <i class="fas fa-trash-alt"></i> Limpar Log
-                    </button>
-                </div>
-            </div>
-        `;
-
-        this.showModal(html);
-    }
-
-    clearQRClientHistory(id) {
-        const c = this.state.qrClients.find(cli => cli.id === id);
-        if (c) {
-            c.historico = [];
-            this.saveState();
-            this.closeModal();
-            this.renderContent();
-            this.showToast("Historico limpo com sucesso!");
-        }
+        // Obsoleto - Usando edição inline agora
     }
 
     deleteQRClient(id) {
@@ -6260,65 +5569,26 @@ Bons treinos!`;
         }
     }
 
-    normalizeText(text) {
-        return (text || "").toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    }
-
-    downloadQRCode(canvasId, idCode, name) {
-        if (this.role !== 'admin') {
-            alert("Apenas administradores podem descarregar codigos QR.");
-            return;
-        }
-
-        const container = document.getElementById(canvasId);
-        const img = container.querySelector('img');
-        const canvas = container.querySelector('canvas');
-
-        let dataUrl = "";
-        if (img && img.src) {
-            dataUrl = img.src;
-        } else if (canvas) {
-            dataUrl = canvas.toDataURL("image/png");
-        }
-
-        if (!dataUrl) {
-            alert("Nao foi possivel gerar a imagem para download.");
-            return;
-        }
-
-        const link = document.createElement('a');
-        link.download = `QR_${idCode}_${name.replace(/\s+/g, '_')}.png`;
-        link.href = dataUrl;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        this.showToast("QR Code descarregado com sucesso!");
-    }
-
     toggleQRCodeDisplay(areaId, val) {
         const el = document.getElementById(areaId);
         const canvas = document.getElementById('canvas-' + areaId.split('-').pop());
 
-        if (el.style.display === 'table-row') {
-            el.style.display = 'none';
+        if (el.classList.contains('show')) {
+            el.classList.remove('show');
         } else {
             // Hide any other visible QR codes first
-            document.querySelectorAll('[id^="qr-row-area-"]').forEach(area => area.style.display = 'none');
+            document.querySelectorAll('.qr-área').forEach(área => área.classList.remove('show'));
 
             canvas.innerHTML = "";
             new QRCode(canvas, {
                 text: val,
-                width: 200,
-                height: 200,
+                width: 160,
+                height: 160,
                 colorDark: "#000000",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             });
-            el.style.display = 'table-row';
-
-            // Scroll to view
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('show');
         }
     }
 
@@ -6334,13 +5604,13 @@ Bons treinos!`;
             const btnCam = document.getElementById("btnCam");
 
             if (typeof jsQR === 'undefined') {
-                throw new Error("A biblioteca de leitura de QR nao foi carregada. Verifique a sua ligacao a internet.");
+                throw new Error("A biblioteca de leitura de QR não foi carregada. Verifique a sua ligação à internet.");
             }
 
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                let errorMsg = "O seu navegador nao suporta acesso a camara.";
+                let errorMsg = "O seu navegador não suporta acesso a camara.";
                 if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                    errorMsg = " ERRO DE SEGURANCA: O scanner live so funciona em ligacoes seguras (HTTPS disponivel em KandalGym.com). Sugerimos usar o botao 'Tirar Foto' ou 'Entrada Manual'.";
+                    errorMsg = " ERRO DE SEGURANCA: O scanner live só funciona em ligações seguras (HTTPS disponível em KandalGym.com). Sugerimos usar o botao 'Tirar Foto' ou 'Entrada Manual'.";
                 }
                 throw new Error(errorMsg);
             }
@@ -6359,7 +5629,7 @@ Bons treinos!`;
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
             } catch (err) {
                 console.warn("Falha ao tentar camara traseira, tentando qualquer camara...", err);
-                // Fallback para qualquer camara disponivel
+                // Fallback para qualquer camara disponível
                 stream = await navigator.mediaDevices.getUserMedia({ video: true });
             }
 
@@ -6379,20 +5649,13 @@ Bons treinos!`;
             this.qrScannerAtivo = true;
             this.qrRequestAnimationFrameId = requestAnimationFrame(() => this.loopLeitorQR(video));
 
-            scanStatus.innerHTML = `
-                <div style="display:flex; flex-direction:column; align-items:center; gap:5px; padding: 5px;">
-                    <span style="color: var(--success); font-weight: 800; display: flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-check-circle pulse"></i> Scanner Ativo
-                    </span>
-                    <span style="font-size: 0.8rem; opacity: 0.8;">Aponte para o QR Code</span>
-                </div>
-            `;
+            scanStatus.innerHTML = "<span style='color: var(--success)'> Scanner Ativo</span><br>Aponte para o QR Code";
             scanStatus.className = "";
         } catch (e) {
             console.error(e);
             let msg = "Erro ao aceder a camara: ";
-            if (e.name === 'NotAllowedError') msg = " Permissao Negada: Por favor, autorize o acesso a camara nas definicoes do seu navegador.";
-            else if (e.name === 'NotFoundError') msg = " Camara nao encontrada no dispositivo.";
+            if (e.name === 'NotAllowedError') msg = " Permissão Negada: Por favor, autorize o acesso a camara nas definições do seu navegador.";
+            else if (e.name === 'NotFoundError') msg = " Camara não encontrada no dispositivo.";
             else msg = e.message;
 
             this.showQRMsg(msg, "bg-qr-danger");
@@ -6402,7 +5665,7 @@ Bons treinos!`;
 
     escanearPorFoto() {
         if (typeof jsQR === 'undefined') {
-            return alert("A biblioteca de leitura de QR nao esta pronta. Tente novamente em instantes.");
+            return alert("A biblioteca de leitura de QR não está pronta. Tente novamente em instantes.");
         }
 
         const input = document.createElement('input');
@@ -6452,8 +5715,8 @@ Bons treinos!`;
                         if (code2) {
                             this.processarLeituraQR(code2.data);
                         } else {
-                            this.showQRMsg(" Nao detetado", "bg-qr-danger");
-                            alert("Nao foi possivel encontrar um codigo QR na foto. Certifique-se de que o codigo esta bem visivel, focado e iluminado.");
+                            this.showQRMsg(" Não detetado", "bg-qr-danger");
+                            alert("Não foi possível encontrar um codigo QR na foto. Certifique-se de que o codigo está bem visivel, focado e iluminado.");
                         }
                     }
                     if (document.body.contains(input)) document.body.removeChild(input);
@@ -6529,7 +5792,7 @@ Bons treinos!`;
         const c = this.state.qrClients.find(cli => cli.id === id);
 
         if (!c) {
-            this.showQRMsg(" Codigo nao reconhecido", "bg-qr-danger");
+            this.showQRMsg(" Codigo não reconhecido", "bg-qr-danger");
             this.lastProcessedQR = id;
             this.lastProcessedTime = Date.now();
             return;
@@ -6554,7 +5817,7 @@ Bons treinos!`;
         }
 
         // Validar creditos
-        if ((c.ent || 0) <= 0 && c.type !== 'admin' && c.type !== 'teacher') {
+        if ((c.ent || 0) <= 0) {
             this.showQRMsg(` ${c.nome}: Sem creditos`, "bg-qr-danger");
             this.lastProcessedQR = id;
             this.lastProcessedTime = Date.now();
@@ -6562,8 +5825,8 @@ Bons treinos!`;
         }
 
         // Validar cooldown (2 minutos)
-        if (c.historico && c.historico.length > 0) {
-            const lastEntry = new Date(c.historico[0]);
+        if (c.histórico && c.histórico.length > 0) {
+            const lastEntry = new Date(c.histórico[0]);
             const diffMin = (agora - lastEntry) / 1000 / 60;
             if (diffMin < 2) {
                 const waitSec = Math.ceil(120 - diffMin * 60);
@@ -6574,51 +5837,21 @@ Bons treinos!`;
             }
         }
 
-        // Validar limite diario (Apenas para clientes)
-        if (c.type !== 'admin' && c.type !== 'teacher') {
-            const entriesHj = (c.historico || []).filter(h => {
-                const ts = typeof h === 'string' ? h : h.t;
-                const type = typeof h === 'string' ? 'entrada' : h.type;
-                return ts.startsWith(hj) && type === 'entrada';
-            }).length;
-
-            if (entriesHj >= 2) {
-                this.showQRMsg(` ${c.nome}: Limite diario atingido`, "bg-qr-warning");
-                this.lastProcessedQR = id;
-                this.lastProcessedTime = Date.now();
-                return;
-            }
-        }
-
-        // Determinar se e Entrada ou Saida
-        if (!c.historico) c.historico = [];
-        let eventType = 'entrada';
-        const lastAccess = c.historico[0];
-        if (lastAccess) {
-            const lastDate = (typeof lastAccess === 'string' ? lastAccess : lastAccess.t).split('T')[0];
-            if (lastDate === hj) {
-                const lastType = (typeof lastAccess === 'string' ? 'entrada' : lastAccess.type);
-                eventType = (lastType === 'entrada') ? 'saída' : 'entrada';
-            }
+        // Validar limite diario
+        const entriesHj = (c.histórico || []).filter(h => h.startsWith(hj)).length;
+        if (entriesHj >= 2) {
+            this.showQRMsg(` ${c.nome}: Limite diario atingido`, "bg-qr-warning");
+            this.lastProcessedQR = id;
+            this.lastProcessedTime = Date.now();
+            return;
         }
 
         // Processar sucesso
-        if (c.type !== 'admin' && c.type !== 'teacher') {
-            if (eventType === 'entrada') c.ent--;
-        }
+        c.ent--;
+        if (!c.histórico) c.histórico = [];
+        c.histórico.unshift(agora.toISOString());
 
-        c.historico.unshift({
-            t: agora.toISOString(),
-            type: eventType
-        });
-
-        const welcomeMsg = (c.type === 'admin' || c.type === 'teacher')
-            ? ` Bem-vindo, ${c.nome}! Staff (${eventType.toUpperCase()})`
-            : (eventType === 'entrada' 
-                ? ` Bem-vindo, ${c.nome}! Entrada Validada.` 
-                : ` Obrigado pela visita, ${c.nome}, bom descanso. Saída Registada.`);
-
-        this.showQRMsg(welcomeMsg, eventType === 'entrada' ? "bg-qr-success" : "bg-qr-warning");
+        this.showQRMsg(` Bem - vindo, ${c.nome} !Entrada validada.`, "bg-qr-success");
         this.lastProcessedQR = id;
         this.lastProcessedTime = Date.now();
 
@@ -6667,7 +5900,7 @@ Bons treinos!`;
         if (!this.state.qrClients || this.state.qrClients.length === 0) return;
         let changed = false;
 
-        // 1. Garantir que todos os registos QR estao ligados a um ID de cliente interno (timestamp)
+        // 1. Garantir que todos os registos QR estão ligados a um ID de cliente interno (timestamp)
         this.state.qrClients.forEach(c => {
             if (!c.clientId) {
                 // Tentar extrair do ID antigo se for longo (K + timestamp)
@@ -6846,7 +6079,7 @@ Bons treinos!`;
         container.innerHTML = `
             <div class="page-header">
                 <div>
-                    <h2>Horario de Aulas</h2>
+                    <h2>Horário de Aulas</h2>
                     <p class="client-name">Consulte e inscreva-se nas aulas de grupo</p>
                 </div>
                 ${this.role === 'admin' ? `
@@ -6873,7 +6106,7 @@ Bons treinos!`;
             container.innerHTML = `
                 <div class="glass-card" style="text-align:center; padding:3rem;">
                     <i class="fas fa-calendar-times" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
-                    <p>Ainda nao foram criadas aulas.</p>
+                    <p>Ainda não foram criadas aulas.</p>
                     <button class="btn btn-primary btn-sm" onclick="app.showClassModal()" style="margin-top:1rem;">Criar Primeira Aula</button>
                 </div>
             `;
@@ -6920,10 +6153,9 @@ Bons treinos!`;
                                             </span>`
                 }
                                     </td>
-                                    <td style="padding:1rem; text-align:right; white-space:nowrap;">
-                                        <button class="btn btn-ghost btn-sm" onclick="app.showParticipantsList('${classIdStr}')" title="Ver Inscritos"><i class="fas fa-users"></i></button>
-                                        <button class="btn btn-ghost btn-sm" onclick="app.showClassModal(${c.id})" title="Editar"><i class="fas fa-edit"></i></button>
-                                        <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.deleteClass(${c.id})" title="Eliminar"><i class="fas fa-trash"></i></button>
+                                    <td style="padding:1rem; text-align:right;">
+                                        <button class="btn btn-ghost btn-sm" onclick="app.showClassModal(${c.id})"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.deleteClass(${c.id})"><i class="fas fa-trash"></i></button>
                                     </td>
                                 </tr>
                                 `;
@@ -6952,7 +6184,7 @@ Bons treinos!`;
             container.innerHTML = `
                 <div class="glass-card" style="text-align:center; padding:3rem;">
                     <i class="fas fa-calendar-day" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
-                    <p>Nao tem aulas atribuidas ao seu nome (ID: ${currentUserid}).</p>
+                    <p>Não tem aulas atribuidas ao seu nome (ID: ${currentUserid}).</p>
                 </div>
             `;
             return;
@@ -6994,116 +6226,35 @@ Bons treinos!`;
     showParticipantsList(classId) {
         const classIdStr = String(classId);
         const cls = this.state.classes.find(c => String(c.id) === classIdStr);
-        const enrolledIds = this.state.enrollments[classIdStr] || [];
-        const participants = enrolledIds.map(pid => {
-            return (this.state.clients || []).find(cl => Number(cl.id) === Number(pid));
+        const participantsIds = this.state.enrollments[classIdStr] || [];
+        const participants = participantsIds.map(pid => {
+            const clientId = Number(pid);
+            return (this.state.clients || []).find(cl => Number(cl.id) === clientId);
         }).filter(x => x);
 
-        let content = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                <h2 style="margin:0;"><i class="fas fa-users" style="color:var(--primary);"></i> Inscritos</h2>
+        const content = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h2 style="margin:0;">Alunos Inscritos</h2>
                 <button class="btn btn-ghost" onclick="app.closeModal()"><i class="fas fa-times"></i></button>
             </div>
-            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Aula: <strong style="color:#fff;">${cls ? cls.name : 'N/A'}</strong></p>
-
-            <!-- Pesquisa para adicionar novos alunos -->
-            <div style="margin-bottom:2rem; padding:1.2rem; background:rgba(196,162,77,0.05); border:1px dashed var(--accent); border-radius:15px; position:relative;">
-                <label style="display:block; font-size:0.7rem; color:var(--accent); font-weight:700; text-transform:uppercase; margin-bottom:8px; letter-spacing:1px;">Adicionar Aluno Manualmente</label>
-                <div class="search-container" style="margin:0; width:100%; height:45px; position:relative;">
-                    <i class="fas fa-search" style="position:absolute; left:15px; top:15px; color:var(--text-muted);"></i>
-                    <input type="text" class="search-bar" placeholder="Pesquisar por nome ou ID..." id="search-enroll-client" 
-                        style="width:100%; height:100%; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:10px; color:#fff; padding:0 15px 0 45px;"
-                        oninput="app.searchClientsForClass('${classIdStr}', this.value)">
-                    <div id="enroll-search-results" style="position:absolute; top:100%; left:0; right:0; background:var(--surface); border:1px solid var(--surface-border); border-radius:0 0 12px 12px; z-index:1000; max-height:200px; overflow-y:auto; display:none; box-shadow:0 10px 30px rgba(0,0,0,0.5);"></div>
-                </div>
-            </div>
-
-            <div style="display:flex; flex-direction:column; gap:0.8rem; max-height:40vh; overflow-y:auto; padding-right:5px;">
-                ${participants.length === 0 ? '<p style="text-align:center; color:var(--text-muted); padding:2rem; background:rgba(255,255,255,0.02); border-radius:12px;">Nenhum aluno inscrito ainda.</p>' :
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">Aula: <strong>${cls ? cls.name : 'N/A'}</strong></p>
+            <div style="display:flex; flex-direction:column; gap:0.8rem; max-height:60vh; overflow-y:auto;">
+                ${participants.length === 0 ? '<p style="text-align:center; color:var(--text-muted);">Nenhum aluno inscrito ainda.</p>' :
                 participants.map(p => `
-                    <div style="display:flex; align-items:center; gap:0.75rem; padding:0.8rem; background:rgba(255,255,255,0.03); border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
-                        <div style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:bold; color:#fff; border:1px solid var(--surface-border);">
+                    <div style="display:flex; align-items:center; gap:0.75rem; padding:0.8rem; background:rgba(255,255,255,0.03); border-radius:12px;">
+                        <div style="width:36px; height:36px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:bold;">
                             ${p.name.substring(0, 2).toUpperCase()}
                         </div>
                         <div style="flex:1;">
-                            <div style="font-size:0.95rem; font-weight:600; color:#fff;">${p.name}</div>
-                            <div style="font-size:0.75rem; color:var(--text-muted);">ID: ${p.id} ${p.phone ? '• ' + p.phone : ''}</div>
+                            <div style="font-size:0.95rem; font-weight:600;">${p.name}</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">${p.phone || 'Sem telefone'}</div>
                         </div>
-                        <div style="display:flex; gap:5px;">
-                            <button class="btn btn-ghost btn-sm" onclick="app.closeModal(); app.openChat(${p.id})" title="Enviar Mensagem"><i class="fas fa-comment-alt" style="color:var(--primary);"></i></button>
-                            <button class="btn btn-ghost btn-sm" onclick="app.removeFromClass('${classIdStr}', ${p.id})" title="Remover Aluno"><i class="fas fa-user-minus" style="color:var(--danger); font-size:0.8rem;"></i></button>
-                        </div>
+                        <button class="btn btn-ghost btn-sm" onclick="app.closeModal(); app.openChat(${p.id})"><i class="fas fa-comment-alt" style="color:var(--primary);"></i></button>
                     </div>
                 `).join('')}
             </div>
         `;
         this.showModal(content);
-    }
-
-    searchClientsForClass(classId, query) {
-        const resultsDiv = document.getElementById('enroll-search-results');
-        if (!resultsDiv) return;
-
-        if (!query || query.length < 2) {
-            resultsDiv.style.display = 'none';
-            return;
-        }
-
-        const q = this.normalizeText(query);
-        const enrolledIds = (this.state.enrollments[classId] || []).map(id => Number(id));
-
-        const matches = (this.state.clients || []).filter(c => {
-            const nameMatch = this.normalizeText(c.name || '').includes(q);
-            const idMatch = this.normalizeText(String(c.id)) === q;
-            return (nameMatch || idMatch) && !enrolledIds.includes(Number(c.id));
-        }).slice(0, 5);
-
-        if (matches.length === 0) {
-            resultsDiv.innerHTML = `<div style="padding:15px; font-size:0.8rem; color:var(--text-muted); text-align:center;">Nenhum aluno disponivel</div>`;
-            resultsDiv.style.display = 'block';
-            return;
-        }
-
-        resultsDiv.innerHTML = matches.map(m => `
-            <div onclick="app.manualEnrollInClass('${classId}', ${m.id})" 
-                style="padding:10px 15px; cursor:pointer; border-bottom:1px solid var(--surface-border); display:flex; align-items:center; gap:10px;" 
-                onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                <div style="width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:bold; color:#fff; border:1px solid var(--surface-border);">${m.name.substring(0, 2).toUpperCase()}</div>
-                <div style="flex:1;">
-                    <div style="font-size:0.85rem; font-weight:600; color:#fff;">${m.name}</div>
-                    <div style="font-size:0.7rem; color:var(--text-muted);">ID: ${m.id}</div>
-                </div>
-                <i class="fas fa-user-plus" style="color:var(--accent); font-size:0.8rem;"></i>
-            </div>
-        `).join('');
-        resultsDiv.style.display = 'block';
-    }
-
-    async manualEnrollInClass(classId, clientId) {
-        const classIdStr = String(classId);
-        if (!this.state.enrollments[classIdStr]) this.state.enrollments[classIdStr] = [];
-
-        const participants = this.state.enrollments[classIdStr];
-        if (!participants.map(id => Number(id)).includes(Number(clientId))) {
-            participants.push(Number(clientId));
-            await this.saveState();
-            this.showToast('Aluno adicionado!');
-            this.showParticipantsList(classId);
-            this.renderContent();
-        }
-    }
-
-    async removeFromClass(classId, clientId) {
-        if (!confirm('Deseja remover este aluno da aula?')) return;
-
-        const classIdStr = String(classId);
-        if (this.state.enrollments[classIdStr]) {
-            this.state.enrollments[classIdStr] = this.state.enrollments[classIdStr].filter(id => Number(id) !== Number(clientId));
-            await this.saveState();
-            this.showToast('Aluno removido.');
-            this.showParticipantsList(classId);
-            this.renderContent();
-        }
     }
 
     renderClientClasses(container) {
@@ -7112,7 +6263,7 @@ Bons treinos!`;
             container.innerHTML = `
                 <div class="glass-card" style="text-align:center; padding:3rem;">
                     <i class="fas fa-calendar-day" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
-                    <p>Nao existem aulas de grupo agendadas de momento.</p>
+                    <p>Não existem aulas de grupo agendadas de momento.</p>
                 </div>
             `;
             return;
@@ -7152,16 +6303,10 @@ Bons treinos!`;
                                                 <i class="fas fa-calendar-alt"></i> ${this.formatFullDate(c.day, c.date)}
                                             </div>
                                             <h4 style="margin-bottom:0.3rem; font-size:0.9rem; line-height:1.2; min-height:2.4em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${c.name}</h4>
-                                            <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.8rem; display:flex; align-items:center; gap:5px; justify-content:space-between;">
-                                                <div style="display:flex; align-items:center; gap:5px;">
-                                                    ${teacher && teacher.photoUrl ? 
-                                                        `<img src="${teacher.photoUrl}" style="width:20px; height:20px; border-radius:50%; object-fit:cover;">` : 
-                                                        `<i class="fas fa-user-tie"></i>`
-                                                    }
-                                                    <span>${teacher ? teacher.name : 'N/A'}</span>
-                                                </div>
-                                                <div><i class="fas fa-users"></i> ${participants.length} / ${c.capacity || 20}</div>
-                                            </div>
+                                            <p style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.8rem;">
+                                                <i class="fas fa-user-tie"></i> ${teacher ? teacher.name : 'N/A'}<br>
+                                                <i class="fas fa-users"></i> ${participants.length} / ${c.capacity || 20}
+                                            </p>
                                             
                                             <div style="margin-top:auto;">
                                                 ${this.isClassFinished(c) ? `
@@ -7249,12 +6394,11 @@ Bons treinos!`;
         const name = document.getElementById('cls-name').value.trim();
         const date = document.getElementById('cls-date').value;
         const time = document.getElementById('cls-time').value;
-        const teacherVal = document.getElementById('cls-teacher').value;
-        const teacherId = teacherVal ? Number(teacherVal) : null;
+        const teacherId = Number(document.getElementById('cls-teacher').value);
         const capacity = Number(document.getElementById('cls-capacity').value);
 
-        if (!name || !time || !date) {
-            return alert('Preencha os campos obrigatorios (Nome, Data e Hora).');
+        if (!name || !time || !teacherId || !date) {
+            return alert('Preencha os campos obrigatorios (Nome, Data, Hora e Professor).');
         }
 
         const isRecurring = document.getElementById('cls-recurring').checked;
@@ -7262,10 +6406,10 @@ Bons treinos!`;
         const now = new Date();
 
         if (classDate < now) {
-            return alert('Nao pode criar ou editar uma aula com uma data/hora que ja passou.');
+            return alert('Não pode criar ou editar uma aula com uma data/hora que já passou.');
         }
 
-        // Usar meio-dia para evitar desvios de fuso horario ao calcular o dia da semana
+        // Usar meio-dia para evitar desvios de fuso horário ao calcular o dia da semana
         const day = new Date(date + 'T12:00:00').getDay();
 
         if (!this.state.classes) this.state.classes = [];
@@ -7285,11 +6429,11 @@ Bons treinos!`;
         await this.saveState();
         this.closeModal();
         this.renderContent();
-        this.showToast('Horario atualizado com sucesso!');
+        this.showToast('Horário atualizado com sucesso!');
     }
 
     async deleteClass(classId) {
-        if (!confirm('Tem a certeza que deseja eliminar esta aula?')) return;
+        if (!confirm('Tem a certeza que deseja eliminar está aula?')) return;
 
         const idToDelete = Number(classId);
         this.state.classes = this.state.classes.filter(x => Number(x.id) !== idToDelete);
@@ -7301,14 +6445,14 @@ Bons treinos!`;
     }
 
     async enrollInClass(classId) {
-        console.log("Iniciando inscricao na aula:", classId);
+        console.log("Iniciando inscrição na aula:", classId);
         const actualClassId = Number(classId);
         const classIdStr = String(actualClassId);
 
         const cls = this.state.classes.find(x => Number(x.id) === actualClassId);
         if (cls && this.isClassFinished(cls)) {
-            console.warn("Inscricao recusada: Aula ja terminou.");
-            return alert('Esta aula ja terminou e nao aceita mais inscricoes.');
+            console.warn("Inscrição recusada: Aula já terminou.");
+            return alert('Está aula já terminou e não aceita mais inscricoes.');
         }
 
         if (!this.state.enrollments[classIdStr]) this.state.enrollments[classIdStr] = [];
@@ -7316,32 +6460,16 @@ Bons treinos!`;
         const participants = this.state.enrollments[classIdStr];
         const clientId = Number(this.currentClientId);
 
-        console.log("Client ID para inscricao:", clientId);
+        console.log("Client ID para inscrição:", clientId);
         if (!clientId) {
-            console.error("Erro: currentClientId nao encontrado.");
-            return alert("Sessao invalida. Por favor saia e entre novamente na conta.");
+            console.error("Erro: currentClientId não encontrado.");
+            return alert("Sessão invalida. Por favor saia e entre novamente na conta.");
         }
 
         if (participants.map(id => Number(id)).includes(clientId)) return;
 
-        // Verificar permissao do plano
-        const client = this.state.clients.find(cl => Number(cl.id) === clientId);
-        if (client && cls) {
-            const check = this.canClientEnrollInClass(client, cls);
-            if (!check.allowed) {
-                return this.showModal(`
-                    <div style="text-align:center; padding:1rem 0;">
-                        <div style="font-size:3rem; margin-bottom:1rem;">🔒</div>
-                        <h3 style="margin-bottom:0.5rem;">Acesso Restrito</h3>
-                        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">${check.reason}</p>
-                        <button class="btn btn-secondary" onclick="app.closeModal()">Fechar</button>
-                    </div>
-                `, '380px');
-            }
-        }
-
         if (cls && participants.length >= (cls.capacity || 20)) {
-            return alert('Esta aula ja atingiu a lotação maxima.');
+            return alert('Está aula já atingiu a lotação maxima.');
         }
 
         participants.push(clientId);
@@ -7369,7 +6497,7 @@ Bons treinos!`;
     }
 
     getDayName(dayIndex) {
-        const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+        const days = ['Domingo', 'Segunda-feira', 'terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'sábado'];
         return days[dayIndex];
     }
 

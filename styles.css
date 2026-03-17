@@ -29,8 +29,8 @@
     --danger: #ef4444;
     --glass: blur(12px);
     --shadow: 0 8px 32px 0 rgba(145, 27, 43, 0.15);
-    --safe-top: env(safe-area-inset-top, 0px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-área-inset-top, 0px);
+    --safe-bottom: env(safe-área-inset-bottom, 0px);
     color-scheme: dark;
 }
 
@@ -49,7 +49,6 @@ body {
     min-height: 100vh;
     min-height: 100dvh;
     overflow-x: hidden;
-    position: relative; /* Prevent fixed elements from causing scroll issues */
     background-image:
         linear-gradient(rgba(10, 12, 16, 0.94), rgba(10, 12, 16, 0.94)),
         url('hero1.png');
@@ -61,92 +60,34 @@ body {
 #app {
     max-width: 1400px;
     margin: 0 auto;
-    width: 100%;
     min-height: 100vh;
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
     padding: 0;
-    overflow-x: hidden; /* Prevent any internal element from causing horizontal scroll */
 }
 
 header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: calc(0.75rem + var(--safe-top)) 1.25rem 0.75rem;
-    background: rgba(10, 12, 16, 0.8);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    z-index: 1000;
-    border-bottom: 1px solid var(--surface-border);
-    position: sticky;
-    top: 0;
+    padding: calc(1rem + var(--safe-top)) 1.5rem 1rem;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 100;
 }
 
 .logo {
     display: flex;
     align-items: center;
     gap: 0.8rem;
-    flex-shrink: 0;
 }
 
 .logo img {
     height: 40px;
     width: auto;
     object-fit: contain;
-}
-
-.header-user-profile {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.header-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 0.9rem;
-    border: 2px solid var(--surface-border);
-    overflow: hidden;
-    flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.btn-header {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--surface-border);
-    color: var(--text-muted);
-    width: 36px;
-    height: 36px;
-    border-radius: 50%; /* Circular for premium look */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-header:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--accent);
-    transform: translateY(-2px);
-}
-
-.btn-header.logout:hover {
-    color: var(--danger);
 }
 
 main {
@@ -168,20 +109,15 @@ main {
 .sidebar .btn {
     width: 100%;
     justify-content: flex-start;
-    padding: 0.85rem 1rem;
+    padding: 1rem 1.25rem;
     font-size: 0.95rem;
     border: 1px solid transparent;
-    gap: 8px;
 }
 
 .sidebar i {
-    width: 22px;
+    width: 24px;
     font-size: 1.1rem;
     text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
 }
 
 .sidebar .glass-card {
@@ -191,7 +127,7 @@ main {
     color: var(--text-main);
 }
 
-.content-area {
+.content-área {
     overflow-y: auto;
     padding-bottom: 2rem;
     -webkit-overflow-scrolling: touch;
@@ -204,7 +140,6 @@ main {
     -webkit-backdrop-filter: var(--glass);
     border: 1px solid var(--surface-border);
     border-radius: 20px;
-    padding: 1.5rem;
 }
 
 .glass-card {
@@ -252,40 +187,15 @@ h3 {
     }
 
     header {
-        padding: calc(0.8rem + var(--safe-top)) 1rem 0.8rem !important;
-        background: rgba(10, 12, 16, 0.9) !important;
-        backdrop-filter: blur(25px) !important;
-        -webkit-backdrop-filter: blur(25px) !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        position: sticky !important;
-        top: 0 !important;
-        width: 100% !important;
-        z-index: 2000 !important;
+        padding: calc(0.75rem + var(--safe-top)) 1rem 0.75rem;
     }
 
-    .logo img {
-        height: 30px !important; /* Perfect balance for mobile */
-        width: auto;
+    .logo {
+        font-size: 1.1rem;
     }
 
-    .header-user-profile {
-        gap: 0.5rem !important;
-    }
-
-    .header-avatar {
-        width: 32px !important;
-        height: 32px !important;
-        border-width: 1.5px !important;
-    }
-
-    .btn-header {
-        width: 32px !important;
-        height: 32px !important;
-        border-radius: 8px !important;
-        background: rgba(255,255,255,0.08) !important;
+    .logo span {
+        font-size: 1.4rem;
     }
 
     .stats-grid {
@@ -306,11 +216,7 @@ h3 {
     }
 
     .glass-card {
-        padding: 0.75rem;
-    }
-    
-    .glass-panel {
-        padding: 1rem !important;
+        padding: 1rem;
     }
 
     .log-row {
@@ -322,21 +228,17 @@ h3 {
     .mobile-nav {
         display: flex !important;
         position: fixed;
-        bottom: 1.25rem;
-        left: 0.75rem;
-        right: 0.75rem;
-        background: rgba(15, 23, 42, 0.85);
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(10, 12, 16, 0.98);
         backdrop-filter: blur(25px);
         -webkit-backdrop-filter: blur(25px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 0.5rem;
-        gap: 2px;
-        justify-content: space-around;
+        border-top: 1px solid var(--surface-border);
+        padding: 0.5rem 0.2rem calc(0.5rem + var(--safe-bottom));
+        justify-content: space-between;
         z-index: 1000;
-        border-radius: 24px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-        max-width: 500px;
-        margin: 0 auto;
+        box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.5);
     }
 
     .mobile-nav-item {
@@ -345,15 +247,12 @@ h3 {
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 4px;
+        gap: 2px;
         color: var(--text-muted);
-        font-size: 0.55rem;
+        font-size: 0.6rem;
         text-decoration: none;
         text-align: center;
         min-width: 0;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 16px;
-        padding: 4px 0;
     }
 
     .mobile-nav-item span {
@@ -361,39 +260,16 @@ h3 {
         overflow: hidden;
         text-overflow: ellipsis;
         width: 100%;
-        font-weight: 600;
-        letter-spacing: -0.01em;
-        opacity: 0.7;
     }
 
     .mobile-nav-item.active {
-        color: var(--accent);
-    }
-
-    .mobile-nav-item.active span {
-        opacity: 1;
+        color: var(--primary);
+        font-weight: 600;
     }
 
     .mobile-nav-item i {
-        font-size: 1rem;
-        transition: all 0.3s ease;
-    }
-
-    .mobile-nav-item.active i {
-        transform: scale(1.1) translateY(-2px);
-        color: var(--accent);
-        text-shadow: 0 0 15px rgba(196, 162, 77, 0.4);
-    }
-
-    .mobile-nav-item.active i {
-        background: rgba(196, 162, 77, 0.15);
-        width: 38px;
-        height: 38px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 12px;
-        color: var(--accent);
+        font-size: 1.2rem;
+        margin-bottom: 2px;
     }
 }
 
@@ -474,7 +350,7 @@ select option {
     display: block;
 }
 
-.search-container > i {
+.search-container i {
     position: absolute;
     left: 15px;
     top: 50%;
@@ -575,7 +451,7 @@ option {
     }
 }
 
-.action-fab {
+.fab {
     position: fixed;
     bottom: calc(5.5rem + var(--safe-bottom));
     right: 1.5rem;
@@ -595,12 +471,12 @@ option {
     transition: transform 0.2s;
 }
 
-.action-fab:active {
+.fab:active {
     transform: scale(0.9);
 }
 
 @media (min-width: 901px) {
-    .action-fab {
+    .fab {
         bottom: 2.5rem;
         right: 2.5rem;
     }
@@ -914,20 +790,12 @@ option {
 /* Mobile Optimizations for Page Views */
 @media (max-width: 600px) {
     .page-header {
-        flex-direction: column;
         align-items: flex-start;
-        gap: 1rem;
     }
 
     .page-header h2 {
-        font-size: 1.2rem;
-        margin-bottom: 0.1rem;
-    }
-    
-    .header-actions {
-        width: 100%;
-        justify-content: flex-start;
-        flex-wrap: wrap;
+        font-size: 1.3rem;
+        margin-bottom: 0.25rem;
     }
 
     .client-name {
@@ -1307,27 +1175,9 @@ option {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    scroll-behavior: auto;
+    scroll-behavior: smooth;
     background: rgba(0, 0, 0, 0.05);
 }
-
-.msg-more-btn {
-    opacity: 0.3;
-    cursor: pointer;
-    transition: opacity 0.2s;
-    padding: 5px;
-}
-
-@media (max-width: 768px) {
-    .msg-more-btn {
-        opacity: 0.8; /* Mais visivel no telemovel */
-    }
-}
-
-.message-bubble:hover .msg-more-btn {
-    opacity: 1;
-}
-
 
 /* Bubbles Estilo Telegram */
 .message-bubble {
@@ -1365,7 +1215,7 @@ option {
     font-weight: 500;
 }
 
-.chat-input-area {
+.chat-input-área {
     padding: 1rem 1.5rem;
     border-top: 1px solid var(--surface-border);
     background: rgba(15, 23, 42, 0.9);
@@ -1375,7 +1225,7 @@ option {
     flex-shrink: 0;
 }
 
-.chat-input-area input {
+.chat-input-área input {
     flex: 1;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--surface-border);
@@ -1387,7 +1237,7 @@ option {
     transition: all 0.2s;
 }
 
-.chat-input-area input:focus {
+.chat-input-área input:focus {
     background: rgba(255, 255, 255, 0.08);
     border-color: var(--primary);
 }
@@ -1406,84 +1256,39 @@ option {
 @media (max-width: 768px) {
     .chat-container {
         display: block;
-        height: auto;
-        margin: 0;
-        padding: 0;
+        height: calc(100vh - 120px);
+        margin: -0.75rem;
+        border-radius: 0;
         border: none;
-        background: transparent;
     }
 
     .chat-sidebar {
-        height: auto;
-        background: transparent;
+        height: 100%;
+        background: var(--background);
     }
 
-    /* Radical Fix: The container itself becomes the full-screen overlay */
-    .chat-container.active-chat {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        height: 100dvh !important;
-        z-index: 10000 !important;
-        background: #0a0c10 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        display: block !important;
-        border: none !important;
-        border-radius: 0 !important;
-    }
-
-    .chat-container.active-chat .chat-sidebar {
-        display: none !important;
+    .chat-main {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 3000;
+        background: #0a0c10;
+        display: none;
     }
 
     .chat-container.active-chat .chat-main {
-        display: flex !important;
-        position: relative !important; /* No longer fixed as parent is fixed */
-        width: 100% !important;
-        height: 100% !important;
-        flex-direction: column !important;
-        animation: slideUpMobile 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-        top: 0 !important;
-        left: 0 !important;
+        display: flex;
     }
 
     .chat-header {
-        padding: calc(0.8rem + var(--safe-top)) 1.25rem 0.8rem !important;
-        background: rgba(22, 27, 34, 0.98) !important;
-        backdrop-filter: blur(20px);
-        border-bottom: 1px solid var(--surface-border) !important;
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        flex-shrink: 0 !important;
+        height: calc(60px + var(--safe-top));
+        padding-top: var(--safe-top);
     }
 
-    .chat-messages {
-        flex: 1 !important;
-        overflow-y: auto !important;
-        padding: 1.25rem !important;
-        background: transparent !important;
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 0.75rem !important;
-    }
-
-    .chat-input-area {
-        padding: 0.75rem 1.25rem calc(1.5rem + var(--safe-bottom)) !important;
-        background: rgba(22, 27, 34, 0.98) !important;
-        backdrop-filter: blur(20px);
-        border-top: 1px solid var(--surface-border) !important;
-        display: flex !important;
-        gap: 12px !important;
-        flex-shrink: 0 !important;
-    }
-
-    @keyframes slideUpMobile {
-        from { transform: translateY(30px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
+    .chat-input-área {
+        padding-bottom: calc(1rem + var(--safe-bottom));
     }
 }
 
@@ -1602,7 +1407,7 @@ option {
     background: rgba(255, 255, 255, 0.1);
 }
 
-.qr-area {
+.qr-área {
     display: none;
     padding: 20px;
     margin-top: 15px;
@@ -1613,7 +1418,7 @@ option {
     animation: slideDown 0.3s ease;
 }
 
-.qr-area.show {
+.qr-área.show {
     display: block;
 }
 
@@ -1699,7 +1504,7 @@ option {
     color: white;
 }
 
-.qr-area {
+.qr-área {
     display: none;
     padding: 1rem;
     background: rgba(255, 255, 255, 0.05);
@@ -1707,7 +1512,7 @@ option {
     text-align: center;
 }
 
-.qr-area.show {
+.qr-área.show {
     display: block;
     animation: slideDown 0.3s ease-out;
 }
@@ -1735,94 +1540,3 @@ option {
     -moz-appearance: textfield;
     appearance: textfield;
 }
-
-/* --- QR Manager & Utility Classes --- */
-.btn-accent {
-    background: var(--accent) !important;
-    color: #000 !important;
-}
-
-.btn-accent:hover {
-    background: #d4b25d !important;
-}
-
-.btn-circular-sm {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text-muted);
-}
-
-.btn-circular-sm:hover {
-    transform: scale(1.1);
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.qr-scanner-container {
-    position: relative;
-    border-radius: 16px;
-    overflow: hidden;
-    background: #000;
-}
-
-.qr-video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* Custom scrollbar for glass panels */
-.glass-panel::-webkit-scrollbar {
-    height: 6px;
-}
-
-.glass-panel::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-}
-
-.glass-panel::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-/* Visibility Helpers */
-@media (min-width: 769px) {
-    .mobile-only {
-        display: none !important;
-    }
-}
-
-@media (max-width: 768px) {
-    .desktop-only {
-        display: none !important;
-    }
-
-    .header-actions {
-        gap: 0.4rem;
-    }
-
-    .btn-header {
-        width: 32px;
-        height: 32px;
-        font-size: 0.85rem;
-    }
-
-    /* Hide scrollbars but keep functionality */
-    .tab-container::-webkit-scrollbar,
-    .scroll-x::-webkit-scrollbar {
-        display: none;
-    }
-    
-    .tab-container,
-    .scroll-x {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-}
