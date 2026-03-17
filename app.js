@@ -1446,7 +1446,7 @@ Bons treinos!`;
             return `
                 <div style="margin-bottom: 2rem;">
                     <h3 style="color:var(--primary); font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px; margin-bottom:15px;">${catName}</h3>
-                    <div class="vídeo-grid">
+                    <div class="video-grid">
                         ${exercises.map(ex => {
                 let cleanUrl = ex.videoUrl || '';
                 const hasVideo = cleanUrl && (cleanUrl.includes('youtube') || cleanUrl.includes('embed'));
@@ -1460,7 +1460,7 @@ Bons treinos!`;
                                     ${hasVideo ? `<iframe width="100%" height="150" src="${cleanUrl}" frameborder="0" allowfullscreen></iframe>` : `
                                         <div style="width:100%; height:150px; background:rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; flex-direction: column; gap: 10px;">
                                             ${ex.photoUrl ? `<img src="${ex.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : `
-                                                <i class="fas fa-vídeo-slash" style="font-size:1.5rem; opacity: 0.3;"></i>
+                                                <i class="fas fa-video-slash" style="font-size:1.5rem; opacity: 0.3;"></i>
                                                 <small style="color:var(--text-muted); font-size: 0.7rem;">Sem vídeo disponível</small>
                                             `}
                                         </div>
@@ -2159,7 +2159,7 @@ Bons treinos!`;
                                     ${libEx && libEx.videoUrl ? `
                                         <button class="btn btn-ghost btn-sm" onclick="app.viewExerciseVideo('${libEx.videoUrl}', '${ex.name}')" 
                                             style="color:var(--primary); background:rgba(145,27,43,0.1); padding: 8px 12px; font-size: 0.75rem; flex-shrink: 0; border-radius: 8px; border: 1px solid rgba(145,27,43,0.2);">
-                                            <i class="fas fa-vídeo"></i> <span class="hide-mobile" style="margin-left:4px;">Vídeo</span>
+                                            <i class="fas fa-video"></i> <span class="hide-mobile" style="margin-left:4px;">Vídeo</span>
                                         </button>
                                     ` : ''}
                                 </div>
@@ -5304,10 +5304,10 @@ Bons treinos!`;
                         </h3>
                         <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Aponte a câmara para o código QR do aluno para validar a entrada.</p>
                         <button class="btn btn-secondary" style="width: 100%; border: 1px solid var(--primary); color: var(--primary); background: rgba(145, 27, 43, 0.05);" id="btnCam" onclick="app.iniciarLeitorQR()">
-                            <i class="fas fa-vídeo"></i> Ativar Câmara
+                            <i class="fas fa-video"></i> Ativar Câmara
                         </button>
-                        <div id="vídeo-container" class="qr-scanner-container" style="border: 2px solid var(--surface-border); margin-top: 15px;">
-                            <vídeo id="v-stream" class="qr-vídeo" playsinline autoplay muted style="transform:none;"></vídeo>
+                        <div id="video-container" class="qr-scanner-container" style="border: 2px solid var(--surface-border); margin-top: 15px;">
+                            <video id="v-stream" class="qr-video" playsinline autoplay muted style="transform:none;"></video>
                         </div>
                         <div id="scan-status" style="margin-top: 15px; min-height: 50px;"></div>
                         <canvas id="c-hidden" style="display:none;"></canvas>
@@ -5597,8 +5597,8 @@ Bons treinos!`;
         if (this.qrScannerAtivo) return;
 
         try {
-            const vídeo = document.getElementById("v-stream");
-            const container = document.getElementById("vídeo-container");
+            const video = document.getElementById("v-stream");
+            const container = document.getElementById("video-container");
             const scanStatus = document.getElementById("scan-status");
             const btnCam = document.getElementById("btnCam");
 
@@ -5616,7 +5616,7 @@ Bons treinos!`;
 
             // Constraints mais flexiveis
             const constraints = {
-                vídeo: {
+                video: {
                     facingMode: "environment",
                     width: { ideal: 1280 },
                     height: { ideal: 720 }
@@ -5629,15 +5629,15 @@ Bons treinos!`;
             } catch (err) {
                 console.warn("Falha ao tentar câmara traseira, tentando qualquer câmara...", err);
                 // Fallback para qualquer câmara disponível
-                stream = await navigator.mediaDevices.getUserMedia({ vídeo: true });
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
             }
 
-            vídeo.srcObject = stream;
+            video.srcObject = stream;
 
             // Garantir que o vídeo carrega antes de iniciar o loop
             await new Promise((resolve) => {
-                vídeo.onloadedmetadata = () => {
-                    vídeo.play().then(resolve);
+                video.onloadedmetadata = () => {
+                    video.play().then(resolve);
                 };
             });
 
@@ -5646,7 +5646,7 @@ Bons treinos!`;
             btnCam.onclick = () => this.pararLeitorQR(stream);
 
             this.qrScannerAtivo = true;
-            this.qrRequestAnimationFrameId = requestAnimationFrame(() => this.loopLeitorQR(vídeo));
+            this.qrRequestAnimationFrameId = requestAnimationFrame(() => this.loopLeitorQR(video));
 
             scanStatus.innerHTML = "<span style='color: var(--success)'> Scanner Ativo</span><br>Aponte para o QR Code";
             scanStatus.className = "";
@@ -5730,25 +5730,25 @@ Bons treinos!`;
     pararLeitorQR(stream) {
         if (!this.qrScannerAtivo) return;
 
-        const vídeo = document.getElementById("v-stream");
-        const container = document.getElementById("vídeo-container");
+        const video = document.getElementById("v-stream");
+        const container = document.getElementById("video-container");
         const btnCam = document.getElementById("btnCam");
         const scanStatus = document.getElementById("scan-status");
 
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
-        } else if (vídeo && vídeo.srcObject) {
-            vídeo.srcObject.getTracks().forEach(track => track.stop());
+        } else if (video && video.srcObject) {
+            video.srcObject.getTracks().forEach(track => track.stop());
         }
 
-        if (vídeo) vídeo.srcObject = null;
+        if (video) video.srcObject = null;
         if (container) container.style.display = "none";
 
         this.qrScannerAtivo = false;
         cancelAnimationFrame(this.qrRequestAnimationFrameId);
 
         if (btnCam) {
-            btnCam.innerHTML = '<i class="fas fa-vídeo"></i> Ativar Câmara';
+            btnCam.innerHTML = '<i class="fas fa-video"></i> Ativar Câmara';
             btnCam.onclick = () => this.iniciarLeitorQR();
         }
 
@@ -5869,7 +5869,7 @@ Bons treinos!`;
         s.className = cls;
 
         // Visual feedback for scan
-        const container = document.getElementById("vídeo-container");
+        const container = document.getElementById("video-container");
         if (container) {
             container.style.boxShadow = `0 0 30px ${cls.includes('success') ? 'var(--success)' : cls.includes('warning') ? 'var(--accent)' : 'var(--danger)'} `;
             setTimeout(() => { if (container) container.style.boxShadow = 'none'; }, 1000);
@@ -6190,7 +6190,7 @@ Bons treinos!`;
         }
 
         container.innerHTML = `
-            <div class="vídeo-grid">
+            <div class="video-grid">
                 ${myClasses.map(c => {
             const classIdStr = String(c.id);
             const participantsIds = this.state.enrollments[classIdStr] || [];
