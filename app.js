@@ -2764,7 +2764,10 @@ Bons treinos!`;
 
             container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                <h2 style="margin:0;">Editar Dieta: ${c.name}</h2>
+                <div>
+                    <h2 style="margin:0;">Editar Dieta: ${c.name}</h2>
+                    <p style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;"><i class="fas fa-info-circle"></i> Nota: 1ml é equivalente a 1gr para efeitos de cálculo.</p>
+                </div>
                 <div style="display:flex; gap:0.5rem;">
                     <button class="btn btn-ghost" style="color:var(--danger);" onclick="app.deleteMealPlan(app.editingClientId)"><i class="fas fa-trash"></i> Eliminar</button>
                     <button class="btn btn-secondary" onclick="app.setView('spy_view')">Cancelar</button>
