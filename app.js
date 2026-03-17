@@ -815,7 +815,7 @@ Bons treinos!`;
         const name = document.getElementById('ex-name').value.trim();
         const url = document.getElementById('ex-url').value.trim();
         const cat = document.getElementById('ex-category').value;
-        if (!name) return alert('O nome do exercício e obrigatório.');
+        if (!name) return alert('O nome do exercício é obrigatório.');
 
         let finalUrl = "";
         if (url) {
@@ -1046,7 +1046,7 @@ Bons treinos!`;
                 <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:5rem; gap:1.5rem; text-align:center;">
                     <div class="loader"></div>
                     <p style="color:var(--text-muted); font-size:1.1rem;">Sincronizando com o servidor...</p>
-                    <small style="color:var(--text-muted); opacity:0.7;">Isto garante que ve as inscricoes e horarios mais recentes.</small>
+                    <small style="color:var(--text-muted); opacity:0.7;">Isto garante que vê as inscrições e horários mais recentes.</small>
                 </div>
             `;
             return;
@@ -1461,7 +1461,7 @@ Bons treinos!`;
                                         <div style="width:100%; height:150px; background:rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; flex-direction: column; gap: 10px;">
                                             ${ex.photoUrl ? `<img src="${ex.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : `
                                                 <i class="fas fa-video-slash" style="font-size:1.5rem; opacity: 0.3;"></i>
-                                                <small style="color:var(--text-muted); font-size: 0.7rem;">Sem video disponível</small>
+                                                <small style="color:var(--text-muted); font-size: 0.7rem;">Sem video disponivel</small>
                                             `}
                                         </div>
                                      `}
@@ -1711,7 +1711,7 @@ Bons treinos!`;
         const url = document.getElementById('edit-ex-url').value.trim();
         const cat = document.getElementById('edit-ex-category').value;
 
-        if (!name) return alert('O nome e obrigatório.');
+        if (!name) return alert('O nome é obrigatório.');
 
         const ex = this.state.exercises.find(e => e.id === id);
         if (ex) {
@@ -2112,7 +2112,7 @@ Bons treinos!`;
                 </div>
                 <div class="header-actions">
                     <button class="btn btn-secondary btn-sm" onclick="app.downloadTrainingPDF('${clientId}')" title="Download PDF"><i class="fas fa-file-pdf"></i> <span class="hide-mobile">PDF</span></button>
-                    ${isClient ? `<button class="btn btn-secondary btn-sm" onclick="app.setView('training_history')"><i class="fas fa-history"></i> <span class="hide-mobile">Histórico</span></button>` : ''}
+                    ${isClient ? `<button class="btn btn-secondary btn-sm" onclick="app.setView('training_history')"><i class="fas fa-history"></i> <span class="hide-mobile">Historico</span></button>` : ''}
                     ${isTeacher ? `
                         <button class="btn btn-primary btn-sm" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-edit"></i> <span class="hide-mobile">Gerir</span></button>
                         <button class="btn btn-ghost btn-sm" style="color:var(--danger); border:1px solid rgba(220, 38, 38, 0.2);" onclick="app.deleteTrainingPlan('${clientId}')">
@@ -2207,7 +2207,7 @@ Bons treinos!`;
             `).join('') : `
                 <div class="glass-panel" style="padding:3rem 1rem; text-align:center;">
                     <i class="fas fa-dumbbell" style="font-size:3rem; color:var(--text-muted); opacity:0.3; margin-bottom:1rem;"></i>
-                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda não tem plano de treino atribuído.</p>
+                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda nao tem plano de treino atribuido.</p>
                     ${isTeacher ? `<button class="btn btn-primary" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-plus"></i> Criar Plano de Treino</button>` : ''}
                 </div>
             `}
@@ -2489,7 +2489,7 @@ Bons treinos!`;
                             `).join('')}
                         </div>
                         <button class="btn btn-ghost btn-sm" style="color:var(--primary);" onclick="app.addExerciseToEditor(${dIdx})">
-                            <i class="fas fa-plus"></i> Adicionar Exercício
+                            <i class="fas fa-plus"></i> Adicionar Exercicio
                         </button>
                     </div>
                 `).join('')}
@@ -2630,7 +2630,7 @@ Bons treinos!`;
                 }).join('') : `
                         <div style="text-align:center; padding:3rem 1rem;">
                             <i class="fas fa-utensils" style="font-size:3rem; color:var(--text-muted); opacity:0.3; margin-bottom:1rem;"></i>
-                            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda não tem plano alimentar atribuído.</p>
+                            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda nao tem plano alimentar atribuido.</p>
                             ${canEdit ? `<button class="btn btn-primary" onclick="app.openMealEditor('${c.id}')"><i class="fas fa-plus"></i> Criar Plano Alimentar</button>` : ''}
                         </div>
                     `;
@@ -2753,7 +2753,7 @@ Bons treinos!`;
                                                 maxlength="5"
                                                 style="background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:8px; color:#fff; font-weight:600; width:100px; font-size:0.95rem; padding:8px 12px; outline:none; text-align:center; font-family: monospace;">
                                         </div>
-                                        <input type="text" value="${m.name}" placeholder="Nome (Ex: Pequeno Almoço)" oninput="app.editingMeal.meals[${idx}].name = this.value"
+                                        <input type="text" value="${m.name}" placeholder="Nome (Ex: Pequeno almoço)" oninput="app.editingMeal.meals[${idx}].name = this.value"
                                             style="width:100%; max-width:400px; background:transparent; border:none; border-bottom:1px solid rgba(255,255,255,0.1); color:#fff; font-weight:700; font-size:1.15rem; padding:6px 0;">
                                     </div>
                                     <button class="btn btn-ghost" style="color:var(--danger); padding:8px;" onclick="app.removeMealFromEditor(${idx})">
@@ -2789,13 +2789,13 @@ Bons treinos!`;
                                         </div>
 
                                         <button class="btn btn-primary btn-sm" onclick="app.addSelectedFoodToMeal(${idx})" style="width:100%; height:40px; background:var(--success); border:none;">
-                                            <i class="fas fa-plus"></i> Adicionar a Refeição
+                                            <i class="fas fa-plus"></i> Adicionar a Refeicao
                                         </button>
                                     </div>
                                 </div>
                                 
                                 <div>
-                                    <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Resumo da Refeição</label>
+                                    <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Resumo da Refeicao</label>
                                     <textarea id="meal-items-${idx}" placeholder="Os alimentos inseridos aparecerao aqui..." oninput="app.editingMeal.meals[${idx}].items = this.value" onblur="app.renderMealEditor()"
                                         style="width:100%; min-height:120px; background:rgba(0,0,0,0.2); color:rgba(255,255,255,0.95); border:1px solid rgba(255,255,255,0.05); border-radius:12px; padding:15px; font-family:inherit; resize:vertical; line-height:1.6; font-size:0.95rem;">${m.items}</textarea>
                                 </div>
@@ -3178,7 +3178,7 @@ Bons treinos!`;
 
         value = parts.join(':');
 
-        // Atualizar o input e o estado
+        // Atualizar o input é o estado
         input.value = value;
         this.editingMeal.meals[mealIdx].time = value;
     }
@@ -3262,7 +3262,7 @@ Bons treinos!`;
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <button class="btn btn-ghost btn-sm" style="color: var(--text-muted);" onclick="app.downloadEvaluationPDF(${clientId}, ${idx})" title="Exportar está Avaliação">
+                        <button class="btn btn-ghost btn-sm" style="color: var(--text-muted);" onclick="app.downloadEvaluationPDF(${clientId}, ${idx})" title="Exportar esta Avaliação">
                             <i class="fas fa-file-pdf"></i>
                         </button>
                         ${isTeacher ? `
@@ -3490,7 +3490,7 @@ Bons treinos!`;
         };
 
         if (!entry.weight) {
-            alert('O peso e obrigatório para registar a Avaliação.');
+            alert('O peso é obrigatório para registar a Avaliação.');
             return;
         }
 
@@ -3548,7 +3548,7 @@ Bons treinos!`;
                 </div>
                 <div style="display:flex; gap:0.5rem;">
                     ${(this.role === 'teacher' || this.role === 'admin') ? `
-                        <button class="btn btn-ghost btn-sm" style="color:var(--accent); font-size: 1.1rem; padding: 0.5rem 0.8rem;" onclick="app.showManualNotificationModal(${c.id})" title="Enviar Notificação Direta">
+                        <button class="btn btn-ghost btn-sm" style="color:var(--accent); font-size: 1.1rem; padding: 0.5rem 0.8rem;" onclick="app.showManualNotificationModal(${c.id})" title="Enviar Notificacao Direta">
                             <i class="fas fa-bell"></i>
                         </button>
                     ` : ''}
@@ -3577,7 +3577,7 @@ Bons treinos!`;
                 </button>
             </div>
 
-            <div id="spy-content-área"></div>
+            <div id="spy-content-area"></div>
         `;
 
         const área = document.getElementById('spy-content-área');
@@ -3653,7 +3653,7 @@ Bons treinos!`;
             case 'dashboard':
                 container.innerHTML = `
                     <h2 class="animate-fade-in">Bem-vindo, ${c.name} </h2>
-                    <p style="color:var(--text-muted); margin-bottom:1rem;">Este e o seu painel de acompanhamento KandalGym.</p>
+                    <p style="color:var(--text-muted); margin-bottom:1rem;">Este é o seu painel de acompanhamento KandalGym.</p>
                     
                     ${(() => {
                         const t = this.state.teachers.find(teacher => teacher.id === c.teacherId);
@@ -4221,14 +4221,14 @@ Bons treinos!`;
             </div>
 
             ${activeChatId !== 'system' ? `
-            <div class="chat-input-área">
+            <div class="chat-input-area">
                 <input type="text" id="chat-input-text" placeholder="Escreva uma mensagem..." onkeypress="app.handleChatInput(event, '${activeChatId}')">
                 <button class="btn btn-primary btn-sm" style="border-radius:50%; width:40px; height:40px; padding:0; display:flex; align-items:center; justify-content:center;" 
                     onclick="app.sendMessageInChat('${activeChatId}')">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
-            ` : '<div style="padding:1rem; text-align:center; color:var(--text-muted); background:rgba(0,0,0,0.2);">Este e um canal de notificações do sistema.</div>'}
+            ` : '<div style="padding:1rem; text-align:center; color:var(--text-muted); background:rgba(0,0,0,0.2);">Este é um canal de notificações do sistema.</div>'}
         `;
     }
 
@@ -4300,7 +4300,7 @@ Bons treinos!`;
         const subject = document.getElementById('reply-subject').value.trim();
         const body = document.getElementById('reply-body').value.trim();
 
-        if (!subject || !body) return alert('Preencha o assunto e a mensagem.');
+        if (!subject || !body) return alert('Preencha o assunto é a mensagem.');
 
         this.addAppNotification(targetId, subject, body, this.currentUser.id, 'message');
 
@@ -4321,7 +4321,7 @@ Bons treinos!`;
             <div style="display:flex; flex-direction:column; gap:1rem;">
                 <div>
                     <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Assunto</label>
-                    <input type="text" id="msg-subject" class="search-bar" placeholder="Ex: Dúvida no treino...">
+                    <input type="text" id="msg-subject" class="search-bar" placeholder="Ex: Duvida no treino...">
                 </div>
                 <div>
                     <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Mensagem</label>
@@ -4338,7 +4338,7 @@ Bons treinos!`;
         const subject = document.getElementById('msg-subject').value.trim();
         const body = document.getElementById('msg-body').value.trim();
 
-        if (!subject || !body) return alert('Preencha o assunto e a mensagem.');
+        if (!subject || !body) return alert('Preencha o assunto é a mensagem.');
 
         // Enviar notificação para o professor
         this.addAppNotification(teacherId, `Mensagem de ${this.currentUser.name}`, `${subject}\n\n${body}`, this.currentUser.id, 'message');
@@ -5448,7 +5448,7 @@ Bons treinos!`;
                         </div>
                     </td>
                 </tr>
-                <tr id="qr-row-área-${idx}" style="display:none; background: rgba(255,255,255,0.05);">
+                <tr id="qr-row-area-${idx}" style="display:none; background: rgba(255,255,255,0.05);">
                     <td colspan="6" style="padding: 1rem; text-align: center;">
                         <div id="canvas-${idx}" style="background: white; padding: 10px; border-radius: 8px; display: inline-block; margin: 10px 0;"></div>
                         <div style="font-size: 0.7rem; color: var(--text-muted);">ID: ${c.id}</div>
@@ -5604,13 +5604,13 @@ Bons treinos!`;
             const btnCam = document.getElementById("btnCam");
 
             if (typeof jsQR === 'undefined') {
-                throw new Error("A biblioteca de leitura de QR não foi carregada. Verifique a sua ligação à internet.");
+                throw new Error("A biblioteca de leitura de QR nao foi carregada. Verifique a sua ligacao a internet.");
             }
 
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                let errorMsg = "O seu navegador não suporta acesso a camara.";
+                let errorMsg = "O seu navegador nao suporta acesso a camara.";
                 if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                    errorMsg = " ERRO DE SEGURANCA: O scanner live só funciona em ligações seguras (HTTPS disponível em KandalGym.com). Sugerimos usar o botao 'Tirar Foto' ou 'Entrada Manual'.";
+                    errorMsg = " ERRO DE SEGURANCA: O scanner live so funciona em ligacoes seguras (HTTPS disponivel em KandalGym.com). Sugerimos usar o botao 'Tirar Foto' ou 'Entrada Manual'.";
                 }
                 throw new Error(errorMsg);
             }
@@ -5654,8 +5654,8 @@ Bons treinos!`;
         } catch (e) {
             console.error(e);
             let msg = "Erro ao aceder a camara: ";
-            if (e.name === 'NotAllowedError') msg = " Permissão Negada: Por favor, autorize o acesso a camara nas definições do seu navegador.";
-            else if (e.name === 'NotFoundError') msg = " Camara não encontrada no dispositivo.";
+            if (e.name === 'NotAllowedError') msg = " Permissao Negada: Por favor, autorize o acesso a camara nas definicoes do seu navegador.";
+            else if (e.name === 'NotFoundError') msg = " Camara nao encontrada no dispositivo.";
             else msg = e.message;
 
             this.showQRMsg(msg, "bg-qr-danger");
@@ -5665,7 +5665,7 @@ Bons treinos!`;
 
     escanearPorFoto() {
         if (typeof jsQR === 'undefined') {
-            return alert("A biblioteca de leitura de QR não está pronta. Tente novamente em instantes.");
+            return alert("A biblioteca de leitura de QR nao esta pronta. Tente novamente em instantes.");
         }
 
         const input = document.createElement('input');
@@ -5715,8 +5715,8 @@ Bons treinos!`;
                         if (code2) {
                             this.processarLeituraQR(code2.data);
                         } else {
-                            this.showQRMsg(" Não detetado", "bg-qr-danger");
-                            alert("Não foi possível encontrar um codigo QR na foto. Certifique-se de que o codigo está bem visivel, focado e iluminado.");
+                            this.showQRMsg(" Nao detetado", "bg-qr-danger");
+                            alert("Nao foi possivel encontrar um codigo QR na foto. Certifique-se de que o codigo esta bem visivel, focado e iluminado.");
                         }
                     }
                     if (document.body.contains(input)) document.body.removeChild(input);
@@ -5792,7 +5792,7 @@ Bons treinos!`;
         const c = this.state.qrClients.find(cli => cli.id === id);
 
         if (!c) {
-            this.showQRMsg(" Codigo não reconhecido", "bg-qr-danger");
+            this.showQRMsg(" Codigo nao reconhecido", "bg-qr-danger");
             this.lastProcessedQR = id;
             this.lastProcessedTime = Date.now();
             return;
@@ -6060,7 +6060,7 @@ Bons treinos!`;
             const start = new Date(`${c.date}T${c.time}:00`);
             if (isNaN(start.getTime())) return false; // Falha no parsing
 
-            // Bloquear inscricoes mal a hora passa (com 1 min de tolerancia apenas)
+            // Bloquear inscrições mal a hora passa (com 1 min de tolerancia apenas)
             return now.getTime() > (start.getTime() + 60000);
         } catch (e) {
             return false;
@@ -6445,14 +6445,14 @@ Bons treinos!`;
     }
 
     async enrollInClass(classId) {
-        console.log("Iniciando inscrição na aula:", classId);
+        console.log("Iniciando inscricao na aula:", classId);
         const actualClassId = Number(classId);
         const classIdStr = String(actualClassId);
 
         const cls = this.state.classes.find(x => Number(x.id) === actualClassId);
         if (cls && this.isClassFinished(cls)) {
-            console.warn("Inscrição recusada: Aula já terminou.");
-            return alert('Está aula já terminou e não aceita mais inscricoes.');
+            console.warn("Inscricao recusada: Aula ja terminou.");
+            return alert('Está aula já terminou e não aceita mais inscrições.');
         }
 
         if (!this.state.enrollments[classIdStr]) this.state.enrollments[classIdStr] = [];
@@ -6460,10 +6460,10 @@ Bons treinos!`;
         const participants = this.state.enrollments[classIdStr];
         const clientId = Number(this.currentClientId);
 
-        console.log("Client ID para inscrição:", clientId);
+        console.log("Client ID para inscricao:", clientId);
         if (!clientId) {
-            console.error("Erro: currentClientId não encontrado.");
-            return alert("Sessão invalida. Por favor saia e entre novamente na conta.");
+            console.error("Erro: currentClientId nao encontrado.");
+            return alert("Sessao invalida. Por favor saia e entre novamente na conta.");
         }
 
         if (participants.map(id => Number(id)).includes(clientId)) return;
