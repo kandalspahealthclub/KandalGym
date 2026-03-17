@@ -1140,7 +1140,7 @@ Bons treinos!`;
 
                         <div class="glass-panel" style="padding: 1.5rem;">
                             <h3 style="margin-top: 0; color: var(--secondary); display: flex; align-items: center; gap: 0.5rem;">
-                                <i class="fas fa-user-friends"></i> Ultimos Alunos Registados
+                                <i class="fas fa-user-friends"></i> Últimos Alunos Registados
                             </h3>
                             <div class="client-list">
                                 ${this.state.clients.slice(-3).reverse().map(c => `
@@ -1446,7 +1446,7 @@ Bons treinos!`;
             return `
                 <div style="margin-bottom: 2rem;">
                     <h3 style="color:var(--primary); font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px; margin-bottom:15px;">${catName}</h3>
-                    <div class="video-grid">
+                    <div class="vídeo-grid">
                         ${exercises.map(ex => {
                 let cleanUrl = ex.videoUrl || '';
                 const hasVideo = cleanUrl && (cleanUrl.includes('youtube') || cleanUrl.includes('embed'));
@@ -1460,8 +1460,8 @@ Bons treinos!`;
                                     ${hasVideo ? `<iframe width="100%" height="150" src="${cleanUrl}" frameborder="0" allowfullscreen></iframe>` : `
                                         <div style="width:100%; height:150px; background:rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; flex-direction: column; gap: 10px;">
                                             ${ex.photoUrl ? `<img src="${ex.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : `
-                                                <i class="fas fa-video-slash" style="font-size:1.5rem; opacity: 0.3;"></i>
-                                                <small style="color:var(--text-muted); font-size: 0.7rem;">Sem video disponivel</small>
+                                                <i class="fas fa-vídeo-slash" style="font-size:1.5rem; opacity: 0.3;"></i>
+                                                <small style="color:var(--text-muted); font-size: 0.7rem;">Sem vídeo disponível</small>
                                             `}
                                         </div>
                                      `}
@@ -1516,7 +1516,7 @@ Bons treinos!`;
         reader.onload = (e) => {
             try {
                 const imported = JSON.parse(e.target.result);
-                if (!Array.isArray(imported)) throw new Error("Formato invalido");
+                if (!Array.isArray(imported)) throw new Error("Formato inválido");
 
                 if (confirm(`Deseja importar ${imported.length} exercícios? Isso irá substituir a sua lista atual.`)) {
                     this.state.exercises = imported;
@@ -1884,7 +1884,7 @@ Bons treinos!`;
         reader.onload = (e) => {
             try {
                 const importedFoods = JSON.parse(e.target.result);
-                if (!Array.isArray(importedFoods)) throw new Error("Formato invalido");
+                if (!Array.isArray(importedFoods)) throw new Error("Formato inválido");
 
                 if (confirm(`Deseja importar ${importedFoods.length} alimentos ? Isso irá substituir a sua lista atual.`)) {
                     this.state.foods = importedFoods;
@@ -2112,7 +2112,7 @@ Bons treinos!`;
                 </div>
                 <div class="header-actions">
                     <button class="btn btn-secondary btn-sm" onclick="app.downloadTrainingPDF('${clientId}')" title="Download PDF"><i class="fas fa-file-pdf"></i> <span class="hide-mobile">PDF</span></button>
-                    ${isClient ? `<button class="btn btn-secondary btn-sm" onclick="app.setView('training_history')"><i class="fas fa-history"></i> <span class="hide-mobile">Historico</span></button>` : ''}
+                    ${isClient ? `<button class="btn btn-secondary btn-sm" onclick="app.setView('training_history')"><i class="fas fa-history"></i> <span class="hide-mobile">Histórico</span></button>` : ''}
                     ${isTeacher ? `
                         <button class="btn btn-primary btn-sm" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-edit"></i> <span class="hide-mobile">Gerir</span></button>
                         <button class="btn btn-ghost btn-sm" style="color:var(--danger); border:1px solid rgba(220, 38, 38, 0.2);" onclick="app.deleteTrainingPlan('${clientId}')">
@@ -2159,7 +2159,7 @@ Bons treinos!`;
                                     ${libEx && libEx.videoUrl ? `
                                         <button class="btn btn-ghost btn-sm" onclick="app.viewExerciseVideo('${libEx.videoUrl}', '${ex.name}')" 
                                             style="color:var(--primary); background:rgba(145,27,43,0.1); padding: 8px 12px; font-size: 0.75rem; flex-shrink: 0; border-radius: 8px; border: 1px solid rgba(145,27,43,0.2);">
-                                            <i class="fas fa-video"></i> <span class="hide-mobile" style="margin-left:4px;">Video</span>
+                                            <i class="fas fa-vídeo"></i> <span class="hide-mobile" style="margin-left:4px;">Vídeo</span>
                                         </button>
                                     ` : ''}
                                 </div>
@@ -2207,7 +2207,7 @@ Bons treinos!`;
             `).join('') : `
                 <div class="glass-panel" style="padding:3rem 1rem; text-align:center;">
                     <i class="fas fa-dumbbell" style="font-size:3rem; color:var(--text-muted); opacity:0.3; margin-bottom:1rem;"></i>
-                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda nao tem plano de treino atribuido.</p>
+                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda não tem plano de treino atribuído.</p>
                     ${isTeacher ? `<button class="btn btn-primary" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-plus"></i> Criar Plano de Treino</button>` : ''}
                 </div>
             `}
@@ -2489,7 +2489,7 @@ Bons treinos!`;
                             `).join('')}
                         </div>
                         <button class="btn btn-ghost btn-sm" style="color:var(--primary);" onclick="app.addExerciseToEditor(${dIdx})">
-                            <i class="fas fa-plus"></i> Adicionar Exercicio
+                            <i class="fas fa-plus"></i> Adicionar Exercício
                         </button>
                     </div>
                 `).join('')}
@@ -2630,7 +2630,7 @@ Bons treinos!`;
                 }).join('') : `
                         <div style="text-align:center; padding:3rem 1rem;">
                             <i class="fas fa-utensils" style="font-size:3rem; color:var(--text-muted); opacity:0.3; margin-bottom:1rem;"></i>
-                            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda nao tem plano alimentar atribuido.</p>
+                            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda não tem plano alimentar atribuído.</p>
                             ${canEdit ? `<button class="btn btn-primary" onclick="app.openMealEditor('${c.id}')"><i class="fas fa-plus"></i> Criar Plano Alimentar</button>` : ''}
                         </div>
                     `;
@@ -2664,7 +2664,7 @@ Bons treinos!`;
             existing = { title: 'Plano Alimentar', meals: [] };
         }
 
-        // Garantir estrutura minima para evitar erros de renderizacao
+        // Garantir estrutura mínima para evitar erros de renderizacao
         if (!existing.meals) existing.meals = [];
         existing.meals = existing.meals.filter(m => m !== null);
         existing.meals.forEach(m => {
@@ -2789,13 +2789,13 @@ Bons treinos!`;
                                         </div>
 
                                         <button class="btn btn-primary btn-sm" onclick="app.addSelectedFoodToMeal(${idx})" style="width:100%; height:40px; background:var(--success); border:none;">
-                                            <i class="fas fa-plus"></i> Adicionar a Refeicao
+                                            <i class="fas fa-plus"></i> Adicionar à Refeição
                                         </button>
                                     </div>
                                 </div>
                                 
                                 <div>
-                                    <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Resumo da Refeicao</label>
+                                    <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Resumo da Refeição</label>
                                     <textarea id="meal-items-${idx}" placeholder="Os alimentos inseridos aparecerao aqui..." oninput="app.editingMeal.meals[${idx}].items = this.value" onblur="app.renderMealEditor()"
                                         style="width:100%; min-height:120px; background:rgba(0,0,0,0.2); color:rgba(255,255,255,0.95); border:1px solid rgba(255,255,255,0.05); border-radius:12px; padding:15px; font-family:inherit; resize:vertical; line-height:1.6; font-size:0.95rem;">${m.items}</textarea>
                                 </div>
@@ -2993,7 +2993,7 @@ Bons treinos!`;
         const modal = document.querySelector('.modal-overlay');
         if (modal) modal.remove();
 
-        // Renderizar novamente para atualizar o nome no botao
+        // Renderizar novamente para atualizar o nome no botão
         this.renderTrainingEditor();
     }
 
@@ -3262,7 +3262,7 @@ Bons treinos!`;
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <button class="btn btn-ghost btn-sm" style="color: var(--text-muted);" onclick="app.downloadEvaluationPDF(${clientId}, ${idx})" title="Exportar esta Avaliação">
+                        <button class="btn btn-ghost btn-sm" style="color: var(--text-muted);" onclick="app.downloadEvaluationPDF(${clientId}, ${idx})" title="Exportar está Avaliação">
                             <i class="fas fa-file-pdf"></i>
                         </button>
                         ${isTeacher ? `
@@ -3356,7 +3356,7 @@ Bons treinos!`;
             let dateVal = entry.date;
             if (dateVal.includes('/')) {
                 const [d, m, y] = dateVal.split('/');
-                dateVal = `${y} -${m} -${d} `;
+                dateVal = `${y}-${m}-${d}`;
             }
             ev = { ...entry, date: dateVal };
         }
@@ -3468,7 +3468,7 @@ Bons treinos!`;
     saveEvaluation(clientId, index = null) {
         const dateRaw = document.getElementById('ev-date').value;
         const [y, m, d] = dateRaw.split('-');
-        const dateFormatted = `${d} /${m}/${y} `;
+        const dateFormatted = `${d}/${m}/${y}`;
 
         const entry = {
             date: dateFormatted,
@@ -3503,7 +3503,7 @@ Bons treinos!`;
             this.state.evaluations[cid][index] = entry;
         }
 
-        // Atualizar o ultimo peso/data no perfil do cliente se necessário
+        // Atualizar o último peso/data no perfil do cliente se necessário
         const client = this.state.clients.find(c => c.id == clientId);
         if (client) {
             client.lastEvaluation = dateRaw;
@@ -3512,7 +3512,7 @@ Bons treinos!`;
         this.saveState();
         document.querySelector('.modal-overlay').remove();
         this.renderContent();
-        alert(index === null ? 'Avaliação registada com sucesso! ' : 'Avaliação atualizada com sucesso! ');
+        alert(index === null ? 'Avaliação registada com sucesso!' : 'Avaliação atualizada com sucesso!');
     }
 
     deleteEvaluation(clientId, index) {
@@ -3548,7 +3548,7 @@ Bons treinos!`;
                 </div>
                 <div style="display:flex; gap:0.5rem;">
                     ${(this.role === 'teacher' || this.role === 'admin') ? `
-                        <button class="btn btn-ghost btn-sm" style="color:var(--accent); font-size: 1.1rem; padding: 0.5rem 0.8rem;" onclick="app.showManualNotificationModal(${c.id})" title="Enviar Notificacao Direta">
+                        <button class="btn btn-ghost btn-sm" style="color:var(--accent); font-size: 1.1rem; padding: 0.5rem 0.8rem;" onclick="app.showManualNotificationModal(${c.id})" title="Enviar Notificação Direta">
                             <i class="fas fa-bell"></i>
                         </button>
                     ` : ''}
@@ -3577,7 +3577,7 @@ Bons treinos!`;
                 </button>
             </div>
 
-            <div id="spy-content-area"></div>
+            <div id="spy-content-área"></div>
         `;
 
         const área = document.getElementById('spy-content-área');
@@ -3593,7 +3593,7 @@ Bons treinos!`;
             this.renderClientNotificationsView(área, this.currentClientId);
         }
 
-        // O cabecalho agora e mantido para dar acesso ao botao de edição
+        // O cabecalho agora e mantido para dar acesso ao botão de edição
     }
 
     renderClientNotificationsView(container, clientId) {
@@ -3782,7 +3782,7 @@ Bons treinos!`;
                 </div>
 
                 <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Contacto Telefonico</label>
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Contacto Telefónico</label>
                     <input type="tel" id="edit-phone" value="${user.phone || ''}" placeholder="Ex: 912345678"
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
                 </div>
@@ -3811,9 +3811,9 @@ Bons treinos!`;
                 const displayId = qrInfo ? qrInfo.id : "K" + user.id;
                 return `
                     <div class="glass-card" style="margin-top:2rem; padding:1.5rem; text-align:center; border: 1px dashed var(--accent); background: rgba(196, 162, 77, 0.05);">
-                        <h4 style="margin-bottom:1rem; color:var(--accent);"><i class="fas fa-qrcode"></i> O Meu Codigo de Acesso</h4>
+                        <h4 style="margin-bottom:1rem; color:var(--accent);"><i class="fas fa-qrcode"></i> O Meu Código de Acesso</h4>
                         <div id="profile-qr-container" style="background: white; padding: 12px; border-radius: 12px; display: inline-block; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2);"></div>
-                        <p style="font-size:0.8rem; color:var(--text-muted);">Apresente este codigo na rececao para registar a sua entrada.</p>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Apresente este código na receção para registar a sua entrada.</p>
                         <div style="font-size: 0.7rem; color: var(--accent); opacity: 0.8; font-family: monospace; font-weight: 700;">ID: ${displayId}</div>
                     </div>
                 `;
@@ -3849,7 +3849,7 @@ Bons treinos!`;
     processImage(file, maxSize, quality, callback) {
         if (!file) return;
         if (file.size > 5 * 1024 * 1024) {
-            alert("A imagem e demasiado grande (Max 5MB).");
+            alert("A imagem é demasiado grande (Max 5MB).");
             return;
         }
 
@@ -3905,7 +3905,7 @@ Bons treinos!`;
         const btn = document.querySelector('button[onclick="app.updateProfile()"]');
 
         if (!name || !email || !pass) {
-            return alert('Nome, Email e Palavra-passe sao obrigatorios.');
+            return alert('Nome, Email e Palavra-passe são obrigatórios.');
         }
 
         if (btn) {
@@ -3939,7 +3939,7 @@ Bons treinos!`;
                 this.persistLogin();
                 this.renderUserProfile(); // Atualizar avatar no topo
 
-                alert('Perfil atualizado com sucesso! ');
+                alert('Perfil atualizado com sucesso!');
                 this.setView('dashboard');
             }
         } catch (err) {
@@ -4221,7 +4221,7 @@ Bons treinos!`;
             </div>
 
             ${activeChatId !== 'system' ? `
-            <div class="chat-input-area">
+            <div class="chat-input-área">
                 <input type="text" id="chat-input-text" placeholder="Escreva uma mensagem..." onkeypress="app.handleChatInput(event, '${activeChatId}')">
                 <button class="btn btn-primary btn-sm" style="border-radius:50%; width:40px; height:40px; padding:0; display:flex; align-items:center; justify-content:center;" 
                     onclick="app.sendMessageInChat('${activeChatId}')">
@@ -4305,7 +4305,7 @@ Bons treinos!`;
         this.addAppNotification(targetId, subject, body, this.currentUser.id, 'message');
 
         this.closeModal();
-        alert('Resposta enviada com sucesso! ');
+        alert('Resposta enviada com sucesso!');
     }
 
     showSendMessageModal() {
@@ -4321,7 +4321,7 @@ Bons treinos!`;
             <div style="display:flex; flex-direction:column; gap:1rem;">
                 <div>
                     <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Assunto</label>
-                    <input type="text" id="msg-subject" class="search-bar" placeholder="Ex: Duvida no treino...">
+                    <input type="text" id="msg-subject" class="search-bar" placeholder="Ex: Dúvida no treino...">
                 </div>
                 <div>
                     <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:5px;">Mensagem</label>
@@ -4344,7 +4344,7 @@ Bons treinos!`;
         this.addAppNotification(teacherId, `Mensagem de ${this.currentUser.name}`, `${subject}\n\n${body}`, this.currentUser.id, 'message');
 
         this.closeModal();
-        alert('Mensagem enviada com sucesso! ');
+        alert('Mensagem enviada com sucesso!');
     }
 
     deleteNotification(createdAt, userId) {
@@ -4402,10 +4402,10 @@ Bons treinos!`;
     }
 
     deleteUser(type, id, name) {
-        if (confirm(`Tem a certeza que deseja eliminar o utilizador ${name}?\nAVISO: Todos os planos, histórico e avaliações associados serao removidos permanentemente.`)) {
+        if (confirm(`Tem a certeza que deseja eliminar o utilizador ${name}?\nAVISO: Todos os planos, histórico e avaliações associados serão removidos permanentemente.`)) {
             if (type === 'admin') {
                 if (id === 1) return alert('O administrador principal não pode ser removido.');
-                if (id === this.currentUser.id) return alert('Não pode remover a sua propria conta enquanto estiver logado.');
+                if (id === this.currentUser.id) return alert('Não pode remover a sua própria conta enquanto estiver logado.');
                 this.state.admins = this.state.admins.filter(u => u.id !== id);
             } else if (type === 'teacher') {
                 this.state.teachers = this.state.teachers.filter(u => u.id !== id);
@@ -4427,7 +4427,7 @@ Bons treinos!`;
                 }
             }
             this.saveState();
-            alert('Utilizador e todos os seus dados eliminados com sucesso! ');
+            alert('Utilizador e todos os seus dados eliminados com sucesso!');
 
             if (this.activeView === 'users') {
                 this.switchAdminTab(type === 'client' ? 'clients' : (type === 'admin' ? 'admins' : 'teachers'));
@@ -4460,7 +4460,7 @@ Bons treinos!`;
                 </select>
 
                 <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">
-                    <i class="fas fa-info-circle"></i> O histórico, planos e avaliações serao mantidos. Os administradores serao notificados desta transferência.
+                    <i class="fas fa-info-circle"></i> O histórico, planos e avaliações serão mantidos. Os administradores serão notificados desta transferência.
                 </p>
 
                 <div style="display:flex; justify-content:flex-end; gap:10px;">
@@ -4719,7 +4719,7 @@ Bons treinos!`;
         let anam = {
             date: new Date().toISOString().split('T')[0],
             objective: '',
-            activityLevel: 'Sedentario',
+            activityLevel: 'Sedentário',
             isSmoker: 'Não',
             healthHistory: '',
             medications: '',
@@ -4788,9 +4788,9 @@ Bons treinos!`;
                                 <input type="text" id="anam-objective" value="${anam.objective}" class="search-bar" placeholder="Ex: Perda de Peso..." style="background: rgba(255,255,255,0.03);">
                             </div>
                             <div class="input-group">
-                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Nivel Atividade</label>
+                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Nível Atividade</label>
                                 <select id="anam-activity" class="search-bar" style="background: #1e293b;">
-                                    <option ${anam.activityLevel === 'Sedentario' ? 'selected' : ''}>Sedentario</option>
+                                    <option ${anam.activityLevel === 'Sedentário' ? 'selected' : ''}>Sedentário</option>
                                     <option ${anam.activityLevel === 'Leve' ? 'selected' : ''}>Leve</option>
                                     <option ${anam.activityLevel === 'Moderado' ? 'selected' : ''}>Moderado</option>
                                     <option ${anam.activityLevel === 'Intenso' ? 'selected' : ''}>Intenso</option>
@@ -4814,12 +4814,12 @@ Bons treinos!`;
                         </h3>
                         <div style="display: flex; flex-direction: column; gap: 2rem;">
                             <div class="input-group">
-                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Histórico de Saúde / Doencas</label>
-                                <textarea id="anam-health" class="search-bar" placeholder="Ex: Hipertensao, Diabetes..." style="height:120px; padding: 15px; background: rgba(255,255,255,0.03);">${anam.healthHistory}</textarea>
+                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Histórico de Saúde / Doenças</label>
+                                <textarea id="anam-health" class="search-bar" placeholder="Ex: Hipertensão, Diabetes..." style="height:120px; padding: 15px; background: rgba(255,255,255,0.03);">${anam.healthHistory}</textarea>
                             </div>
                             <div class="input-group">
-                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Cirurgias ou Lesoes Recentes</label>
-                                <textarea id="anam-surgeries" class="search-bar" placeholder="Descreva problemas ortopedicos ou intervencoes..." style="height:100px; padding: 15px; background: rgba(255,255,255,0.03);">${anam.surgeriesInjuries}</textarea>
+                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Cirurgias ou Lesões Recentes</label>
+                                <textarea id="anam-surgeries" class="search-bar" placeholder="Descreva problemas ortopédicos ou intervenções..." style="height:100px; padding: 15px; background: rgba(255,255,255,0.03);">${anam.surgeriesInjuries}</textarea>
                             </div>
                         </div>
                     </div>
@@ -4827,21 +4827,21 @@ Bons treinos!`;
                     <div id="anam-section-3">
                         <h3 style="color: var(--primary); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
                             <span style="width: 30px; height: 30px; border-radius: 50%; background: rgba(145, 27, 43, 0.1); display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">3</span>
-                            Medicacao e Outros
+                            Medicação e Outros
                         </h3>
                         <div style="display: flex; flex-direction: column; gap: 2rem;">
                             <div class="input-group">
-                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Medicamentacao Atual</label>
+                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Medicação Atual</label>
                                 <input type="text" id="anam-meds" value="${anam.medications}" class="search-bar" placeholder="Liste medicamentos em uso..." style="background: rgba(255,255,255,0.03);">
                             </div>
                             <div class="input-group" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
                                 <div>
                                     <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Alergias</label>
-                                    <input type="text" id="anam-allergies" value="${anam.allergies}" class="search-bar" placeholder="Ex: Penicilina, Acaros..." style="background: rgba(255,255,255,0.03);">
+                                    <input type="text" id="anam-allergies" value="${anam.allergies}" class="search-bar" placeholder="Ex: Penicilina, Ácaros..." style="background: rgba(255,255,255,0.03);">
                                 </div>
                                 <div>
                                     <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Histórico Familiar</label>
-                                    <input type="text" id="anam-family" value="${anam.familyHistory}" class="search-bar" placeholder="Ex: Problemas cardiacos..." style="background: rgba(255,255,255,0.03);">
+                                    <input type="text" id="anam-family" value="${anam.familyHistory}" class="search-bar" placeholder="Ex: Problemas cardíacos..." style="background: rgba(255,255,255,0.03);">
                                 </div>
                             </div>
                             <div class="input-group">
@@ -4850,7 +4850,6 @@ Bons treinos!`;
                             </div>
                         </div>
                     </div>
-                </div>
 
                 <!-- Visible only on mobile -->
                 <div class="modal-mobile-footer" style="display: none;">
@@ -4904,7 +4903,7 @@ Bons treinos!`;
             this.saveState();
             this.closeModal();
             this.renderContent();
-            this.showToast('Anamnese guardada com sucesso! ');
+            this.showToast('Anamnese guardada com sucesso!');
         } catch (err) {
             console.error('Error saving anamnesis:', err);
             alert('Erro ao guardar os dados. Verifique a consola.');
@@ -4973,7 +4972,7 @@ Bons treinos!`;
     formatDate(dateString) {
         if (!dateString) return '';
         const [year, month, day] = dateString.split('-');
-        return `${day} /${month}/${year} `;
+        return `${day}/${month}/${year}`;
     }
 
     downloadTrainingPDF(clientId) {
@@ -5017,7 +5016,7 @@ Bons treinos!`;
                     <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                         <tr style="background: #eee;">
                             <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Exercício</th>
-                            <th style="padding: 8px; text-align: center; border: 1px solid #ddd; width: 80px;">Series</th>
+                            <th style="padding: 8px; text-align: center; border: 1px solid #ddd; width: 80px;">Séries</th>
                             <th style="padding: 8px; text-align: center; border: 1px solid #ddd; width: 80px;">Reps</th>
                             <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Obs</th>
                         </tr>
@@ -5180,7 +5179,7 @@ Bons treinos!`;
                             <tr>
                                 <td style="padding: 6px; border-bottom: 1px solid #f0f0f0; width: 33%;"><strong>Peso:</strong> ${ev.weight || '-'} kg</td>
                                 <td style="padding: 6px; border-bottom: 1px solid #f0f0f0; width: 33%;"><strong>Altura:</strong> ${ev.height || '-'} cm</td>
-                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0; width: 33%;"><strong>Musculo:</strong> ${ev.muscleMass || '-'} kg</td>
+                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0; width: 33%;"><strong>Músculo:</strong> ${ev.muscleMass || '-'} kg</td>
                             </tr>
                             <tr>
                                 <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Gordura:</strong> ${ev.fatPercentage || '-'} %</td>
@@ -5239,11 +5238,11 @@ Bons treinos!`;
                 <div style="border:1px solid #eee; padding:15px; border-radius:8px;">
                      <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Perfil Geral</h4>
                      <p style="font-size:13px; margin:8px 0;"><strong>Objetivo:</strong> ${entry.objective || '-'}</p>
-                     <p style="font-size:13px; margin:8px 0;"><strong>Nivel Atividade:</strong> ${entry.activityLevel || '-'}</p>
+                     <p style="font-size:13px; margin:8px 0;"><strong>Nível Atividade:</strong> ${entry.activityLevel || '-'}</p>
                      <p style="font-size:13px; margin:8px 0;"><strong>Fumador:</strong> ${entry.isSmoker || '-'}</p>
                 </div>
                 <div style="border:1px solid #eee; padding:15px; border-radius:8px;">
-                     <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Dados Medicos</h4>
+                     <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Dados Médicos</h4>
                      <p style="font-size:13px; margin:8px 0;"><strong>Alergias:</strong> ${entry.allergies || '-'}</p>
                      <p style="font-size:13px; margin:8px 0;"><strong>Histórico Familiar:</strong> ${entry.familyHistory || '-'}</p>
                 </div>
@@ -5255,12 +5254,12 @@ Bons treinos!`;
             </div>
 
             <div style="margin-top:20px; border:1px solid #eee; padding:15px; border-radius:8px;">
-                <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Cirurgias e Lesoes</h4>
+                <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Cirurgias e Lesões</h4>
                 <div style="font-size:13px; white-space:pre-wrap; line-height:1.5;">${entry.surgeriesInjuries || 'Sem dados registados.'}</div>
             </div>
 
             <div style="margin-top:20px; border:1px solid #eee; padding:15px; border-radius:8px;">
-                <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Medicamentacao</h4>
+                <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Medicação</h4>
                 <div style="font-size:13px; line-height:1.5;">${entry.medications || 'Nenhuma.'}</div>
             </div>
 
@@ -5303,12 +5302,12 @@ Bons treinos!`;
                         <h3 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
                             <i class="fas fa-camera"></i> Scanner de Entrada
                         </h3>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Aponte a camara para o codigo QR do aluno para validar a entrada.</p>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Aponte a câmara para o código QR do aluno para validar a entrada.</p>
                         <button class="btn btn-secondary" style="width: 100%; border: 1px solid var(--primary); color: var(--primary); background: rgba(145, 27, 43, 0.05);" id="btnCam" onclick="app.iniciarLeitorQR()">
-                            <i class="fas fa-video"></i> Ativar Camara
+                            <i class="fas fa-vídeo"></i> Ativar Câmara
                         </button>
-                        <div id="video-container" class="qr-scanner-container" style="border: 2px solid var(--surface-border); margin-top: 15px;">
-                            <video id="v-stream" class="qr-video" playsinline autoplay muted style="transform:none;"></video>
+                        <div id="vídeo-container" class="qr-scanner-container" style="border: 2px solid var(--surface-border); margin-top: 15px;">
+                            <vídeo id="v-stream" class="qr-vídeo" playsinline autoplay muted style="transform:none;"></vídeo>
                         </div>
                         <div id="scan-status" style="margin-top: 15px; min-height: 50px;"></div>
                         <canvas id="c-hidden" style="display:none;"></canvas>
@@ -5322,7 +5321,7 @@ Bons treinos!`;
                                     <i class="fas fa-check"></i>
                                 </button>
                             </div>
-                            <small style="color:var(--text-muted); font-size:0.7rem; margin-top:5px; display:block;">Use isto se a camara não estiver disponível.</small>
+                            <small style="color:var(--text-muted); font-size:0.7rem; margin-top:5px; display:block;">Use isto se a câmara não estiver disponível.</small>
                         </div>
                     </div>
 
@@ -5338,13 +5337,13 @@ Bons treinos!`;
                                 <i class="fas fa-calendar-times" style="color: var(--accent); width: 20px;"></i> Data de validade superior a hoje.
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-ticket-alt" style="color: var(--danger); width: 20px;"></i> Deve ter pelo menos 1 credito.
+                                <i class="fas fa-ticket-alt" style="color: var(--danger); width: 20px;"></i> Deve ter pelo menos 1 crédito.
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
                                 <i class="fas fa-clock" style="color: var(--primary); width: 20px;"></i> Cooldown de 2 min entre leituras.
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-ban" style="color: var(--accent); width: 20px;"></i> Maximo de 2 entradas por dia.
+                                <i class="fas fa-ban" style="color: var(--accent); width: 20px;"></i> Máximo de 2 entradas por dia.
                             </div>
                         </div>
                     </div>
@@ -5364,10 +5363,10 @@ Bons treinos!`;
                             <tr style="border-bottom: 1px solid var(--surface-border); text-align: left; background: rgba(255,255,255,0.05);">
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Aluno</th>
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Estado</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Creditos</th>
+                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Créditos</th>
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Entradas (Hoje)</th>
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Validade</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent); text-align: right;">Acoes</th>
+                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent); text-align: right;">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="gridQRClientes">
@@ -5448,7 +5447,7 @@ Bons treinos!`;
                         </div>
                     </td>
                 </tr>
-                <tr id="qr-row-area-${idx}" style="display:none; background: rgba(255,255,255,0.05);">
+                <tr id="qr-row-área-${idx}" style="display:none; background: rgba(255,255,255,0.05);">
                     <td colspan="6" style="padding: 1rem; text-align: center;">
                         <div id="canvas-${idx}" style="background: white; padding: 10px; border-radius: 8px; display: inline-block; margin: 10px 0;"></div>
                         <div style="font-size: 0.7rem; color: var(--text-muted);">ID: ${c.id}</div>
@@ -5598,26 +5597,26 @@ Bons treinos!`;
         if (this.qrScannerAtivo) return;
 
         try {
-            const video = document.getElementById("v-stream");
-            const container = document.getElementById("video-container");
+            const vídeo = document.getElementById("v-stream");
+            const container = document.getElementById("vídeo-container");
             const scanStatus = document.getElementById("scan-status");
             const btnCam = document.getElementById("btnCam");
 
             if (typeof jsQR === 'undefined') {
-                throw new Error("A biblioteca de leitura de QR nao foi carregada. Verifique a sua ligacao a internet.");
+                throw new Error("A biblioteca de leitura de QR não foi carregada. Verifique a sua ligação à internet.");
             }
 
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                let errorMsg = "O seu navegador nao suporta acesso a camara.";
+                let errorMsg = "O seu navegador não suporta acesso à câmara.";
                 if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                    errorMsg = " ERRO DE SEGURANCA: O scanner live so funciona em ligacoes seguras (HTTPS disponivel em KandalGym.com). Sugerimos usar o botao 'Tirar Foto' ou 'Entrada Manual'.";
+                    errorMsg = "ERRO DE SEGURANÇA: O scanner live só funciona em ligações seguras (HTTPS disponível em KandalGym.com). Sugerimos usar o botão 'Tirar Foto' ou 'Entrada Manual'.";
                 }
                 throw new Error(errorMsg);
             }
 
             // Constraints mais flexiveis
             const constraints = {
-                video: {
+                vídeo: {
                     facingMode: "environment",
                     width: { ideal: 1280 },
                     height: { ideal: 720 }
@@ -5628,34 +5627,34 @@ Bons treinos!`;
             try {
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
             } catch (err) {
-                console.warn("Falha ao tentar camara traseira, tentando qualquer camara...", err);
-                // Fallback para qualquer camara disponível
-                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                console.warn("Falha ao tentar câmara traseira, tentando qualquer câmara...", err);
+                // Fallback para qualquer câmara disponível
+                stream = await navigator.mediaDevices.getUserMedia({ vídeo: true });
             }
 
-            video.srcObject = stream;
+            vídeo.srcObject = stream;
 
-            // Garantir que o video carrega antes de iniciar o loop
+            // Garantir que o vídeo carrega antes de iniciar o loop
             await new Promise((resolve) => {
-                video.onloadedmetadata = () => {
-                    video.play().then(resolve);
+                vídeo.onloadedmetadata = () => {
+                    vídeo.play().then(resolve);
                 };
             });
 
             container.style.display = "block";
-            btnCam.innerHTML = '<i class="fas fa-stop"></i> Parar Camara';
+            btnCam.innerHTML = '<i class="fas fa-stop"></i> Parar Câmara';
             btnCam.onclick = () => this.pararLeitorQR(stream);
 
             this.qrScannerAtivo = true;
-            this.qrRequestAnimationFrameId = requestAnimationFrame(() => this.loopLeitorQR(video));
+            this.qrRequestAnimationFrameId = requestAnimationFrame(() => this.loopLeitorQR(vídeo));
 
             scanStatus.innerHTML = "<span style='color: var(--success)'> Scanner Ativo</span><br>Aponte para o QR Code";
             scanStatus.className = "";
         } catch (e) {
             console.error(e);
-            let msg = "Erro ao aceder a camara: ";
-            if (e.name === 'NotAllowedError') msg = " Permissao Negada: Por favor, autorize o acesso a camara nas definicoes do seu navegador.";
-            else if (e.name === 'NotFoundError') msg = " Camara nao encontrada no dispositivo.";
+            let msg = "Erro ao aceder à câmara: ";
+            if (e.name === 'NotAllowedError') msg = " Permissão Negada: Por favor, autorize o acesso à câmara nas definições do seu navegador.";
+            else if (e.name === 'NotFoundError') msg = " Câmara não encontrada no dispositivo.";
             else msg = e.message;
 
             this.showQRMsg(msg, "bg-qr-danger");
@@ -5665,7 +5664,7 @@ Bons treinos!`;
 
     escanearPorFoto() {
         if (typeof jsQR === 'undefined') {
-            return alert("A biblioteca de leitura de QR nao esta pronta. Tente novamente em instantes.");
+            return alert("A biblioteca de leitura de QR não está pronta. Tente novamente em instantes.");
         }
 
         const input = document.createElement('input');
@@ -5708,15 +5707,15 @@ Bons treinos!`;
                     if (code) {
                         this.processarLeituraQR(code.data);
                     } else {
-                        // Tentar com inversao se falhar (para alguns codigos)
+                        // Tentar com inversao se falhar (para alguns códigos)
                         const code2 = jsQR(imageData.data, imageData.width, imageData.height, {
                             inversionAttempts: "attemptBoth",
                         });
                         if (code2) {
                             this.processarLeituraQR(code2.data);
                         } else {
-                            this.showQRMsg(" Nao detetado", "bg-qr-danger");
-                            alert("Nao foi possivel encontrar um codigo QR na foto. Certifique-se de que o codigo esta bem visivel, focado e iluminado.");
+                            this.showQRMsg(" Não detetado", "bg-qr-danger");
+                            alert("Não foi possível encontrar um código QR na foto. Certifique-se de que o código está bem visível, focado e iluminado.");
                         }
                     }
                     if (document.body.contains(input)) document.body.removeChild(input);
@@ -5731,25 +5730,25 @@ Bons treinos!`;
     pararLeitorQR(stream) {
         if (!this.qrScannerAtivo) return;
 
-        const video = document.getElementById("v-stream");
-        const container = document.getElementById("video-container");
+        const vídeo = document.getElementById("v-stream");
+        const container = document.getElementById("vídeo-container");
         const btnCam = document.getElementById("btnCam");
         const scanStatus = document.getElementById("scan-status");
 
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
-        } else if (video && video.srcObject) {
-            video.srcObject.getTracks().forEach(track => track.stop());
+        } else if (vídeo && vídeo.srcObject) {
+            vídeo.srcObject.getTracks().forEach(track => track.stop());
         }
 
-        if (video) video.srcObject = null;
+        if (vídeo) vídeo.srcObject = null;
         if (container) container.style.display = "none";
 
         this.qrScannerAtivo = false;
         cancelAnimationFrame(this.qrRequestAnimationFrameId);
 
         if (btnCam) {
-            btnCam.innerHTML = '<i class="fas fa-video"></i> Ativar Camara';
+            btnCam.innerHTML = '<i class="fas fa-vídeo"></i> Ativar Câmara';
             btnCam.onclick = () => this.iniciarLeitorQR();
         }
 
@@ -5792,7 +5791,7 @@ Bons treinos!`;
         const c = this.state.qrClients.find(cli => cli.id === id);
 
         if (!c) {
-            this.showQRMsg(" Codigo nao reconhecido", "bg-qr-danger");
+            this.showQRMsg(" Codigo não reconhecido", "bg-qr-danger");
             this.lastProcessedQR = id;
             this.lastProcessedTime = Date.now();
             return;
@@ -5816,9 +5815,9 @@ Bons treinos!`;
             return;
         }
 
-        // Validar creditos
+        // Validar créditos
         if ((c.ent || 0) <= 0) {
-            this.showQRMsg(` ${c.nome}: Sem creditos`, "bg-qr-danger");
+            this.showQRMsg(` ${c.nome}: Sem créditos`, "bg-qr-danger");
             this.lastProcessedQR = id;
             this.lastProcessedTime = Date.now();
             return;
@@ -5870,7 +5869,7 @@ Bons treinos!`;
         s.className = cls;
 
         // Visual feedback for scan
-        const container = document.getElementById("video-container");
+        const container = document.getElementById("vídeo-container");
         if (container) {
             container.style.boxShadow = `0 0 30px ${cls.includes('success') ? 'var(--success)' : cls.includes('warning') ? 'var(--accent)' : 'var(--danger)'} `;
             setTimeout(() => { if (container) container.style.boxShadow = 'none'; }, 1000);
@@ -5964,8 +5963,8 @@ Bons treinos!`;
                         <div style="font-size:3rem; margin-bottom:1rem;"></div>
                         <h3 style="margin:0 0 1rem; color:var(--primary);">Instalar no iPhone / iPad</h3>
                         <div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:1.2rem; text-align:left; line-height:2;">
-                            <p style="margin:0;"><strong>1.</strong> Toque no botao <strong>Partilhar</strong>  na barra do Safari</p>
-                            <p style="margin:0;"><strong>2.</strong> Toque em <strong>"Adicionar ao Ecra Principal"</strong> </p>
+                            <p style="margin:0;"><strong>1.</strong> Toque no botão <strong>Partilhar</strong>  na barra do Safari</p>
+                            <p style="margin:0;"><strong>2.</strong> Toque em <strong>"Adicionar ao ecrã Principal"</strong> </p>
                             <p style="margin:0;"><strong>3.</strong> Toque em <strong>"Adicionar"</strong> no canto superior direito</p>
                         </div>
                         <button class="btn btn-primary" onclick="app.closeModal()" style="width:100%; margin-top:1.5rem;">Entendido!</button>
@@ -5978,7 +5977,7 @@ Bons treinos!`;
                         <h3 style="margin:0 0 1rem; color:var(--primary);">Instalar no Android</h3>
                         <div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:1.2rem; text-align:left; line-height:2;">
                             <p style="margin:0;"><strong>1.</strong> Toque nos <strong>3 pontos</strong> no canto do Chrome </p>
-                            <p style="margin:0;"><strong>2.</strong> Toque em <strong>"Adicionar ao ecra principal"</strong></p>
+                            <p style="margin:0;"><strong>2.</strong> Toque em <strong>"Adicionar ao ecrã principal"</strong></p>
                             <p style="margin:0;"><strong>3.</strong> Confirme tocando em <strong>"Instalar"</strong></p>
                         </div>
                         <button class="btn btn-primary" onclick="app.closeModal()" style="width:100%; margin-top:1.5rem;">Entendido!</button>
@@ -6129,7 +6128,7 @@ Bons treinos!`;
                                 <th style="padding:1rem;">Classe</th>
                                 <th style="padding:1rem;">Professor</th>
                                 <th style="padding:1rem;">Inscritos</th>
-                                <th style="padding:1rem; text-align:right;">Acoes</th>
+                                <th style="padding:1rem; text-align:right;">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -6191,7 +6190,7 @@ Bons treinos!`;
         }
 
         container.innerHTML = `
-            <div class="video-grid">
+            <div class="vídeo-grid">
                 ${myClasses.map(c => {
             const classIdStr = String(c.id);
             const participantsIds = this.state.enrollments[classIdStr] || [];
@@ -6445,13 +6444,13 @@ Bons treinos!`;
     }
 
     async enrollInClass(classId) {
-        console.log("Iniciando inscricao na aula:", classId);
+        console.log("Iniciando inscrição na aula:", classId);
         const actualClassId = Number(classId);
         const classIdStr = String(actualClassId);
 
         const cls = this.state.classes.find(x => Number(x.id) === actualClassId);
         if (cls && this.isClassFinished(cls)) {
-            console.warn("Inscricao recusada: Aula ja terminou.");
+            console.warn("Inscrição recusada: Aula já terminou.");
             return alert('Está aula já terminou e não aceita mais inscrições.');
         }
 
@@ -6460,16 +6459,16 @@ Bons treinos!`;
         const participants = this.state.enrollments[classIdStr];
         const clientId = Number(this.currentClientId);
 
-        console.log("Client ID para inscricao:", clientId);
+        console.log("Client ID para inscrição:", clientId);
         if (!clientId) {
-            console.error("Erro: currentClientId nao encontrado.");
-            return alert("Sessao invalida. Por favor saia e entre novamente na conta.");
+            console.error("Erro: currentClientId não encontrado.");
+            return alert("Sessão inválida. Por favor saia e entre novamente na conta.");
         }
 
         if (participants.map(id => Number(id)).includes(clientId)) return;
 
         if (cls && participants.length >= (cls.capacity || 20)) {
-            return alert('Está aula já atingiu a lotação maxima.');
+            return alert('Está aula já atingiu a lotação máxima.');
         }
 
         participants.push(clientId);
