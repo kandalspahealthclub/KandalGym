@@ -5377,9 +5377,11 @@ Bons treinos!`;
                     <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
                         <thead>
                             <tr style="border-bottom: 1px solid var(--surface-border); text-align: left; background: rgba(255,255,255,0.05);">
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Aluno</th>
+                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent); width: 80px;">ID</th>
+                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent); min-width: 200px;">Aluno</th>
+                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Mensalidade</th>
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Estado</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Mensalidade (Créditos)</th>
+                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Créditos</th>
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Entradas (Hoje)</th>
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Validade / Vencimento</th>
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent); text-align: right;">Ações</th>
@@ -5413,7 +5415,7 @@ Bons treinos!`;
         });
 
         if (qrList.length === 0) {
-            return `<tr><td colspan="6" style="padding: 3rem; text-align: center; color: var(--text-muted);"><i class="fas fa-info-circle"></i> Nenhum aluno encontrado.</td></tr>`;
+            return `<tr><td colspan="8" style="padding: 3rem; text-align: center; color: var(--text-muted);"><i class="fas fa-info-circle"></i> Nenhum aluno encontrado.</td></tr>`;
         }
 
         const hoje = new Date().toISOString().split('T')[0];
@@ -5425,14 +5427,24 @@ Bons treinos!`;
             return `
                 <tr style="border-bottom: 1px solid var(--surface-border); transition: background 0.2s;" class="qr-row">
                     <td style="padding: 1rem;">
+                        <div style="font-weight:700; color:var(--accent); font-size:0.9rem;">${c.id}</div>
+                        <div style="font-size:0.65rem; color:var(--text-muted);">Ref: ${c.clientId || '-'}</div>
+                    </td>
+                    <td style="padding: 1rem;">
                         <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" 
-                            style="background:transparent; border:none; color:#fff; font-weight:700; font-size:1rem; width:100%; border-bottom: 1px dashed rgba(255,255,255,0.1); padding: 2px 0;">
-                        <div style="display:flex; align-items:center; gap:5px; margin-top:5px;">
-                            <span style="font-size:0.75rem; color:var(--text-muted); opacity:0.7;">ID: ${c.id}</span>
-                            <span style="color:var(--text-muted); opacity:0.3; font-size:0.6rem;">|</span>
-                            <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" 
-                                style="background:transparent; border:none; color:var(--text-muted); font-size:0.75rem; width:80%; border-bottom: 1px dashed rgba(255,255,255,0.05);">
-                        </div>
+                            style="background:transparent; border:none; color:#fff; font-weight:700; font-size:1rem; width:100%; min-width:180px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding: 2px 0;">
+                        <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" 
+                                style="background:transparent; border:none; color:var(--text-muted); font-size:0.75rem; width:100%; margin-top:5px; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                    </td>
+                    <td style="padding: 1rem;">
+                        <select onchange="app.updateQRClientField('${c.id}', 'plano', this.value)"
+                            style="background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); color:#fff; font-size:0.8rem; padding:4px 8px; border-radius:6px; outline:none; cursor:pointer;">
+                            <option value="Livre Trânsito" ${c.plano === 'Livre Trânsito' ? 'selected' : ''}>Livre Trânsito</option>
+                            <option value="3x Semana" ${c.plano === '3x Semana' ? 'selected' : ''}>3x Semana</option>
+                            <option value="2x Semana" ${c.plano === '2x Semana' ? 'selected' : ''}>2x Semana</option>
+                            <option value="Pontual" ${c.plano === 'Pontual' ? 'selected' : ''}>Pontual</option>
+                            <option value="Outro" ${!c.plano || (c.plano !== 'Livre Trânsito' && c.plano !== '3x Semana' && c.plano !== '2x Semana' && c.plano !== 'Pontual') ? 'selected' : ''}>Outro</option>
+                        </select>
                     </td>
                     <td style="padding: 1rem;">
                         <input type="checkbox" ${c.ativo ? 'checked' : ''} onchange="app.toggleQRClientStatus('${c.id}')" style="accent-color: var(--primary); width:18px; height:18px; cursor:pointer;">
@@ -5459,13 +5471,13 @@ Bons treinos!`;
                     </td>
                     <td style="padding: 1rem; text-align: right;">
                         <div style="display: flex; gap: 5px; justify-content: flex-end;">
-                            <button class="btn-icon" onclick="app.toggleQRCodeDisplay('qr-row-área-${idx}', '${c.id}')" title="Gerar QR"><i class="fas fa-qrcode"></i></button>
+                            <button class="btn-icon" onclick="app.toggleQRCodeDisplay('qr-row-area-${idx}', '${c.id}')" title="Gerar QR"><i class="fas fa-qrcode"></i></button>
                             <button class="btn-icon danger" onclick="app.deleteQRClient('${c.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>
-                <tr id="qr-row-área-${idx}" style="display:none; background: rgba(255,255,255,0.05);">
-                    <td colspan="6" style="padding: 1rem; text-align: center;">
+                <tr id="qr-row-area-${idx}" style="display:none; background: rgba(255,255,255,0.05);">
+                    <td colspan="8" style="padding: 1rem; text-align: center;">
                         <div id="canvas-${idx}" style="background: white; padding: 10px; border-radius: 8px; display: inline-block; margin: 10px 0;"></div>
                         <div style="font-size: 0.7rem; color: var(--text-muted);">ID: ${c.id}</div>
                     </td>
