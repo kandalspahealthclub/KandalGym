@@ -23,6 +23,7 @@ class FitnessApp {
         this.role = 'client';
         this.currentClientId = null;
         this.activeView = 'dashboard';
+        this.qrActiveTab = 'alunos';
         this.spySubView = 'training';
         this.dashboardMonth = new Date().toISOString().substring(0, 7);
         this.hasLoadedData = false; // Flag para evitar flickering de "Utilizador não encontrado"
@@ -5375,55 +5376,88 @@ Bons treinos!`;
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 1rem;">
-                    <h3 style="font-weight: 700; font-size: 1.2rem; margin:0;"><i class="fas fa-list"></i> Lista de Alunos (${this.state.qrClients.length})</h3>
-                    <div class="search-container" style="margin:0; width: 300px; height: 40px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.8rem;">
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn ${this.qrActiveTab === 'alunos' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('alunos')" style="padding: 6px 12px; font-size:0.8rem;">
+                            <i class="fas fa-user-friends"></i> Alunos
+                        </button>
+                        <button class="btn ${this.qrActiveTab === 'teachers' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('teachers')" style="padding: 6px 12px; font-size:0.8rem;">
+                            <i class="fas fa-user-tie"></i> Professores
+                        </button>
+                        <button class="btn ${this.qrActiveTab === 'config' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('config')" style="padding: 6px 12px; font-size:0.8rem;">
+                            <i class="fas fa-cog"></i> Configurar
+                        </button>
+                    </div>
+                    <div class="search-container" style="margin:0; width: 220px; height: 32px;">
                         <i class="fas fa-search"></i>
-                        <input type="text" class="search-bar" placeholder="Pesquisar aluno..." onkeyup="app.filterQRList(this.value)" style="height: 100% !important;">
+                        <input type="text" class="search-bar" placeholder="Pesquisar..." onkeyup="app.filterQRList(this.value)" style="height: 100% !important; font-size:0.8rem;">
                     </div>
                 </div>
                 
                 <div class="glass-panel" style="padding: 0; background: transparent; border:none; box-shadow:none;">
-                    <div class="section-divider">Gestão de Entradas (Acesso QR Ativo)</div>
-                    <table class="premium-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 80px;">ID</th>
-                                <th style="min-width: 200px;">Aluno</th>
-                                <th>Mensalidade</th>
-                                <th style="text-align:center;">Estado</th>
-                                <th style="text-align:center;">Créditos</th>
-                                <th style="text-align:center;">Entradas (Hoje)</th>
-                                <th style="text-align:center;">Validade</th>
-                                <th style="text-align:right;">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="gridQRClientes">
-                            ${this.renderQRClientCards()}
-                        </tbody>
-                    </table>
+                    ${this.qrActiveTab === 'alunos' || this.qrActiveTab === 'teachers' ? `
+                    <div style="overflow-x:auto;">
+                        <table class="premium-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">ID</th>
+                                    <th style="min-width: 140px;">${this.qrActiveTab === 'alunos' ? 'Aluno' : 'Professor'}</th>
+                                    <th style="width: 130px;">Plano</th>
+                                    <th style="text-align:center; width: 80px;">Estado</th>
+                                    <th style="text-align:center; width: 100px;">Créditos</th>
+                                    <th style="text-align:center; width: 80px;">Hoje</th>
+                                    <th style="text-align:center; width: 130px;">Validade</th>
+                                    <th style="text-align:right; width: 100px;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gridQRClientes">
+                                ${this.renderQRClientCards()}
+                            </tbody>
+                        </table>
+                    </div>
+                    ` : `
+                    <div class="glass-panel" style="padding: 1rem; background: rgba(255,255,255,0.02); border-radius:12px;">
+                        <h4 style="margin-top:0; font-size:0.95rem; color:var(--accent);">Ativar Acesso para Professores</h4>
+                        <div id="profs-sem-qr-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.6rem; margin-bottom: 2rem;">
+                            ${(() => {
+                const qrIds = (this.state.qrClients || []).map(qc => qc.clientId);
+                const candidates = (this.state.teachers || []).filter(t => !qrIds.includes(t.id));
+                if (candidates.length === 0) return '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); font-size:0.75rem;">Todos os professores têm acesso QR.</div>';
+                return candidates.map(t => `
+                                    <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05);">
+                                        <div>
+                                            <div style="font-weight: 700; font-size:0.8rem;">${t.name}</div>
+                                            <div style="font-size: 0.65rem; color: var(--text-muted);">ID: ${t.id}</div>
+                                        </div>
+                                        <button class="btn btn-primary btn-sm" onclick="app.enableQRForClient(${t.id}, false)" style="padding: 3px 8px; font-size:0.7rem;">
+                                            <i class="fas fa-plus"></i> Ativar
+                                        </button>
+                                    </div>
+                                `).join('');
+            })()}
+                        </div>
 
-                    <div class="section-divider">Outros Alunos Registados (Sem QR)</div>
-                    <div class="glass-panel" style="padding: 1.5rem; background: rgba(255,255,255,0.02);">
-                        <div id="alunos-sem-qr-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+                        <h4 style="margin-top:0; font-size:0.95rem; color:var(--accent);">Ativar Acesso para Alunos Registados</h4>
+                        <div id="alunos-sem-qr-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.6rem;">
                             ${(() => {
                 const qrIds = (this.state.qrClients || []).map(qc => qc.clientId);
                 const candidates = (this.state.clients || []).filter(c => !qrIds.includes(c.id));
-                if (candidates.length === 0) return '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">Todos os alunos já têm acesso QR configurado.</div>';
+                if (candidates.length === 0) return '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); font-size:0.75rem;">Todos os alunos têm acesso QR.</div>';
                 return candidates.map(c => `
-                                    <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(255,255,255,0.03);">
+                                    <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
                                         <div>
-                                            <div style="font-weight: 700;">${c.name}</div>
-                                            <div style="font-size: 0.75rem; color: var(--text-muted);">Ref: ${c.id}</div>
+                                            <div style="font-weight: 700; font-size:0.8rem;">${c.name}</div>
+                                            <div style="font-size: 0.65rem; color: var(--text-muted);">Ref: ${c.id}</div>
                                         </div>
-                                        <button class="btn btn-primary btn-sm" onclick="app.enableQRForClient(${c.id})" style="padding: 5px 15px;">
-                                            <i class="fas fa-plus"></i> Ativar QR
+                                        <button class="btn btn-primary btn-sm" onclick="app.enableQRForClient(${c.id})" style="padding: 3px 8px; font-size:0.7rem;">
+                                            <i class="fas fa-plus"></i> Ativar
                                         </button>
                                     </div>
                                 `).join('');
             })()}
                         </div>
                     </div>
+                    `}
                 </div>
             `;
         } catch (err) {
@@ -5437,6 +5471,10 @@ Bons treinos!`;
 
     renderQRClientCards(filter = '') {
         const qrList = (this.state.qrClients || []).filter(c => {
+            const isTeacher = (this.state.teachers || []).some(t => Number(t.id) === Number(c.clientId));
+            const matchesRole = this.qrActiveTab === 'teachers' ? isTeacher : !isTeacher;
+            if (!matchesRole) return false;
+
             const f = filter.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
             const nomeNormal = c.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
             const telNormal = (c.tel || "").toLowerCase();
@@ -5448,7 +5486,7 @@ Bons treinos!`;
         });
 
         if (qrList.length === 0) {
-            return `<tr><td colspan="8" style="padding: 3rem; text-align: center; color: var(--text-muted);"><i class="fas fa-info-circle"></i> Nenhum aluno encontrado.</td></tr>`;
+            return `<tr><td colspan="8" style="padding: 2rem; text-align: center; color: var(--text-muted); font-size:0.85rem;"><i class="fas fa-info-circle"></i> Nenhum registo encontrado nesta categoria.</td></tr>`;
         }
 
         const hoje = new Date().toISOString().split('T')[0];
@@ -5465,13 +5503,13 @@ Bons treinos!`;
                     </td>
                     <td>
                         <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" 
-                            style="background:transparent; border:none; color:#fff; font-weight:700; font-size:1.1rem; width:100%; min-width:180px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding: 2px 0;">
+                            style="background:transparent; border:none; color:#fff; font-weight:700; font-size:0.85rem; width:100%; min-width:120px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding: 2px 0;">
                         <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" 
-                                style="background:transparent; border:none; color:var(--text-muted); font-size:0.8rem; width:100%; margin-top:5px; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                                style="background:transparent; border:none; color:var(--text-muted); font-size:0.65rem; width:100%; margin-top:1px; border-bottom: 1px dashed rgba(255,255,255,0.05);">
                     </td>
                     <td>
                         <select onchange="app.updateQRClientField('${c.id}', 'plano', this.value)" class="plan-badge"
-                            style="background:rgba(0,0,0,0.3); outline:none; cursor:pointer;">
+                            style="background:rgba(0,0,0,0.3); outline:none; cursor:pointer; width:110px;">
                             <option value="Livre Trânsito" ${c.plano === 'Livre Trânsito' ? 'selected' : ''}>Livre Trânsito</option>
                             <option value="3x Semana" ${c.plano === '3x Semana' ? 'selected' : ''}>3x Semana</option>
                             <option value="2x Semana" ${c.plano === '2x Semana' ? 'selected' : ''}>2x Semana</option>
@@ -5487,7 +5525,7 @@ Bons treinos!`;
                             <div class="qr-btn-circle-sm" onclick="app.editQRCredit('${c.id}', -1)"><i class="fas fa-minus"></i></div>
                             <input type="number" value="${c.ent}" onchange="app.updateQRClientField('${c.id}', 'ent', parseInt(this.value) || 0)"
                                 class="no-spin"
-                                style="background:transparent; border:none; color:#fff; font-weight:800; width:45px; text-align:center; outline:none; font-size:1.1rem;">
+                                style="background:transparent; border:none; color:#fff; font-weight:700; width:35px; text-align:center; outline:none; font-size:0.95rem;">
                             <div class="qr-btn-circle-sm" onclick="app.editQRCredit('${c.id}', 1)"><i class="fas fa-plus"></i></div>
                         </div>
                     </td>
@@ -6561,6 +6599,12 @@ Bons treinos!`;
         return days[dayIndex];
     }
 
+    switchQRTab(tab) {
+        this.qrActiveTab = tab;
+        this.renderContent();
+    }
 }
+
+
 
 const app = new FitnessApp();

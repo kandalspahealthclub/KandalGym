@@ -1533,106 +1533,73 @@ option {
 .premium-table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 8px;
-    margin-top: -8px;
+    border-spacing: 0 4px;
+    margin-top: -4px;
 }
 
 .premium-table th {
     text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 1px;
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
     color: var(--accent);
-    padding: 1rem;
+    padding: 0.6rem 0.8rem;
     opacity: 0.8;
 }
 
-.premium-table tr.qr-row {
-    background: rgba(255, 255, 255, 0.03);
-    transition: all 0.3s ease;
-}
-
-.premium-table tr.qr-row:hover {
-    background: rgba(255, 255, 255, 0.07);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-
 .premium-table td {
-    padding: 1.2rem 1rem;
+    padding: 0.4rem 0.6rem;
     vertical-align: middle;
 }
 
-.premium-table tr td:first-child {
-    border-top-left-radius: 12px;
-    border-bottom-left-radius: 12px;
-}
-
-.premium-table tr td:last-child {
-    border-top-right-radius: 12px;
-    border-bottom-right-radius: 12px;
+.premium-table input, 
+.premium-table select {
+    height: 26px !important;
+    padding: 2px 6px !important;
+    font-size: 0.8rem !important;
+    border-radius: 4px;
 }
 
 .id-tag {
     background: linear-gradient(135deg, var(--accent), #d4af37);
     color: #000;
     font-weight: 800;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    box-shadow: 0 2px 5px rgba(196, 162, 77, 0.3);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.7rem;
     display: inline-block;
 }
 
 .number-circle {
     background: rgba(145, 27, 43, 0.1);
     color: var(--primary);
-    width: 35px;
-    height: 35px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    font-size: 1.1rem;
+    font-size: 0.85rem;
     border: 1px solid rgba(145, 27, 43, 0.2);
 }
 
 .plan-badge {
     background: rgba(255,255,255,0.05);
     border: 1px solid var(--surface-border);
-    padding: 4px 12px;
+    padding: 2px 8px;
     border-radius: 20px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     color: var(--text-muted);
-}
-
-.section-divider {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin: 2.5rem 0 1.5rem 0;
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-}
-
-.section-divider::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, var(--surface-border), transparent);
 }
 
 .qr-qty-controls {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
     background: rgba(0,0,0,0.2);
-    padding: 4px;
-    border-radius: 30px;
+    padding: 2px;
+    border-radius: 20px;
     border: 1px solid var(--surface-border);
 }
 
