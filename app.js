@@ -24,8 +24,15 @@ class FitnessApp {
         this.currentClientId = null;
         this.activeView = 'dashboard';
         this.qrActiveTab = 'alunos';
+        this.adminTab = 'teachers';
         this.spySubView = 'training';
         this.dashboardMonth = new Date().toISOString().substring(0, 7);
+        this.planRestrictions = {
+             'Musculação': { allowClasses: false },
+             'Pilates': { allowClasses: true, filter: 'Pilates' },
+             'Aulas Geral': { allowClasses: true, exclude: ['Pilates', 'Dance Kids'] },
+             'Dance Kids': { allowClasses: true, filter: 'Dance Kids' }
+        };
         this.hasLoadedData = false; // Flag para evitar flickering de "Utilizador não encontrado"
         this.isCheckingClasses = false;
         this.checkInterval = null;
@@ -1169,6 +1176,9 @@ Bons treinos!`;
                         </button>
                         <button class="btn btn-ghost" id="tab-admins" onclick="app.switchAdminTab('admins')" style="color: var(--accent); font-weight: 600;">
                             <i class="fas fa-user-shield"></i> Gestores (${(this.state.admins || []).length})
+                        </button>
+                        <button class="btn btn-ghost" id="tab-plans" onclick="app.switchAdminTab('plans')" style="color: #f1c40f; font-weight: 600;">
+                            <i class="fas fa-file-invoice-dollar"></i> Mensalidades (Regras)
                         </button>
                     </div>
 
@@ -3977,27 +3987,121 @@ Bons treinos!`;
 
     switchAdminTab(tab) {
         const listContainer = document.getElementById('admin-user-list');
-        const tabT = document.getElementById('tab-teachers');
-        const tabC = document.getElementById('tab-clients');
-        const tabA = document.getElementById('tab-admins');
-
         if (!listContainer) return;
 
-        // Reset borders
-        if (tabT) tabT.style.borderBottom = "none";
-        if (tabC) tabC.style.borderBottom = "none";
-        if (tabA) tabA.style.borderBottom = "none";
+        // Reset all tabs style
+        const tabs = ['teachers', 'clients', 'admins', 'plans'];
+        tabs.forEach(t => {
+             const btn = document.getElementById('tab-' + t);
+             if (btn) btn.style.borderBottom = 'none';
+        });
+
+        const activeBtn = document.getElementById('tab-' + tab);
+        if (activeBtn) {
+            activeBtn.style.borderBottom = '2px solid ' + (tab === 'teachers' ? 'var(--primary)' : tab === 'clients' ? 'var(--secondary)' : tab === 'admins' ? 'var(--accent)' : '#f1c40f');
+        }
 
         if (tab === 'teachers') {
-            if (tabT) tabT.style.borderBottom = "2px solid var(--primary)";
             listContainer.innerHTML = `<div class="client-list animate-fade-in">${(this.state.teachers || []).map(t => this.renderUserCard(t, 'teacher')).join('')}</div>`;
         } else if (tab === 'admins') {
-            if (tabA) tabA.style.borderBottom = "2px solid var(--accent)";
             listContainer.innerHTML = `<div class="client-list animate-fade-in">${(this.state.admins || []).map(a => this.renderUserCard(a, 'admin')).join('')}</div>`;
-        } else {
-            if (tabC) tabC.style.borderBottom = "2px solid var(--secondary)";
+        } else if (tab === 'clients') {
             listContainer.innerHTML = `<div class="client-list animate-fade-in">${(this.state.clients || []).map(c => this.renderUserCard(c, 'client')).join('')}</div>`;
+        } else if (tab === 'plans') {
+            this.renderPlanRestrictions(listContainer);
         }
+    }
+
+    renderPlanRestrictions(container) {
+        if (!this.state.planRestrictions) {
+             this.state.planRestrictions = JSON.parse(JSON.stringify(this.planRestrictions));
+        }
+        
+        const plans = Object.keys(this.state.planRestrictions);
+        
+        container.innerHTML = `
+            <div class="glass-panel" style="padding: 1.5rem; border-radius: 12px; border: 1px solid var(--surface-border); background:rgba(255,b255,255,0.02);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 2rem;">
+                    <div>
+                        <h3 style="margin:0;"><i class="fas fa-lock"></i> Restrições por Mensalidade</h3>
+                        <p style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Defina quais as aulas que cada plano pode reservar.</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.addNewPlanRestriction()" style="font-size:0.8rem;"><i class="fas fa-plus"></i> Novo Plano</button>
+                </div>
+
+                <div style="overflow-x:auto;">
+                    <table class="premium-table">
+                        <thead>
+                            <tr>
+                                <th>Mensalidade</th>
+                                <th style="text-align:center;">Permite Aulas?</th>
+                                <th>Aulas Permitidas (Contém)</th>
+                                <th>Excluir Aulas (Contém)</th>
+                                <th style="text-align:center;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${plans.map(p => {
+                                const r = this.state.planRestrictions[p];
+                                return `
+                                    <tr>
+                                        <td><strong>${p}</strong></td>
+                                        <td style="text-align:center;">
+                                            <input type="checkbox" ${r.allowClasses ? 'checked' : ''} onchange="app.updatePlanRestriction('${p}', 'allowClasses', this.checked)">
+                                        </td>
+                                        <td>
+                                            <input type="text" value="${r.filter || ''}" placeholder="Ex: Pilates" 
+                                                onchange="app.updatePlanRestriction('${p}', 'filter', this.value)"
+                                                style="background:rgba(0,0,0,0.2); border:1px solid #444; color:#fff; padding:4px 8px; border-radius:4px; font-size:0.8rem; width:100%; min-width:120px;">
+                                        </td>
+                                        <td>
+                                            <input type="text" value="${(r.exclude || []).join(', ')}" placeholder="Ex: Pilates, Dance Kids" 
+                                                onchange="app.updatePlanRestriction('${p}', 'exclude', this.value)"
+                                                style="background:rgba(0,0,0,0.2); border:1px solid #444; color:#fff; padding:4px 8px; border-radius:4px; font-size:0.8rem; width:100%; min-width:150px;">
+                                        </td>
+                                        <td style="text-align:center;">
+                                            <button class="btn-icon danger" onclick="app.deletePlanRestriction('${p}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top:1.5rem; padding:1rem; background:rgba(38,222,129,0.05); border-radius:8px; border:1px dashed rgba(38,222,129,0.2);">
+                    <small style="color: #26de81;"><i class="fas fa-info-circle"></i> Os filtros e exclusões funcionam verificando se o nome da aula contém o texto introduzido (sem distinção entre maiúsculas e minúsculas).</small>
+                </div>
+            </div>
+        `;
+    }
+
+    updatePlanRestriction(plan, field, value) {
+        if (!this.state.planRestrictions) this.state.planRestrictions = {};
+        if (!this.state.planRestrictions[plan]) return;
+        
+        if (field === 'exclude') {
+             this.state.planRestrictions[plan][field] = value.split(',').map(s => s.trim()).filter(s => s);
+        } else {
+             this.state.planRestrictions[plan][field] = value;
+        }
+        this.saveState();
+        this.showToast('Regra do plano guardada.');
+    }
+
+    addNewPlanRestriction() {
+        const name = prompt('Nome da nova Mensalidade (exatamente como aparece no QR):');
+        if (!name) return;
+        if (!this.state.planRestrictions) this.state.planRestrictions = {};
+        this.state.planRestrictions[name] = { allowClasses: true, filter: '', exclude: [] };
+        this.saveState();
+        this.switchAdminTab('plans');
+    }
+
+    deletePlanRestriction(plan) {
+        if (!confirm(`Deseja eliminar as regras para o plano "${plan}"?`)) return;
+        delete this.state.planRestrictions[plan];
+        this.saveState();
+        this.switchAdminTab('plans');
     }
 
     renderUserCard(user, type) {
@@ -6594,6 +6698,23 @@ Bons treinos!`;
 
         if (cls && participants.length >= (cls.capacity || 20)) {
             return alert('Está aula já atingiu a lotação máxima.');
+        }
+
+        // VALIDAR RESTRIÇÕES DE PLANO
+        const qrInfo = (this.state.qrClients || []).find(q => Number(q.clientId) === Number(clientId));
+        const plano = qrInfo ? qrInfo.plano : 'Livre Trânsito';
+        const restrictions = (this.state.planRestrictions || {})[plano];
+        
+        if (restrictions) {
+             if (!restrictions.allowClasses) {
+                  return alert(`O plano ${plano} não permite a marcação de aulas.`);
+             }
+             if (restrictions.filter && !cls.name.toLowerCase().includes(restrictions.filter.toLowerCase())) {
+                  return alert(`O seu plano (${plano}) apenas permite reserva de aulas de ${restrictions.filter}.`);
+             }
+             if (restrictions.exclude && restrictions.exclude.some(ex => cls.name.toLowerCase().includes(ex.toLowerCase()))) {
+                  return alert(`O seu plano (${plano}) não permite a reserva desta aula específica.`);
+             }
         }
 
         participants.push(clientId);
