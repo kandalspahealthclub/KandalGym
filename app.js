@@ -964,11 +964,6 @@ Bons treinos!`;
                 <span>${item.label}</span>
             </a>
         `).join('') + `
-            <a href="#" class="mobile-nav-item" onclick="app.installPWA(); return false;" style="color:var(--primary); font-weight:bold; animation: pulse 2s infinite;">
-                <i class="fas fa-download"></i>
-                <span>App</span>
-            </a>
-        ` + `
             <a href="#" class="mobile-nav-item" onclick="app.handleLogout(); return false;">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Sair</span>
@@ -5369,6 +5364,7 @@ Bons treinos!`;
                             <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Entrada Manual (Backup)</label>
                             <div style="display:flex; gap:10px;">
                                 <input type="text" id="manual-qr-id" placeholder="Ex: K1" 
+                                    onkeyup="if(event.key === 'Enter') app.processarManualQR()"
                                     style="flex:1; height:42px; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 12px; font-size:0.9rem;">
                                 <button class="btn btn-primary btn-sm" onclick="app.processarManualQR()" style="padding: 0 15px;">
                                     <i class="fas fa-check"></i>
@@ -5926,22 +5922,23 @@ Bons treinos!`;
 
     processarLeituraQR(id) {
         const st = document.getElementById("scan-status");
+        const formattedId = String(id).trim().toUpperCase();
 
         // Prevent multiple processing of the same scan within 3 seconds
-        if (this.lastProcessedQR === id && (Date.now() - this.lastProcessedTime < 3000)) return;
+        if (this.lastProcessedQR === formattedId && (Date.now() - this.lastProcessedTime < 3000)) return;
 
-        const c = this.state.qrClients.find(cli => cli.id === id);
+        const c = this.state.qrClients.find(cli => String(cli.id).toUpperCase() === formattedId);
 
         if (!c) {
             this.showQRMsg(" Codigo não reconhecido", "bg-qr-danger");
-            this.lastProcessedQR = id;
+            this.lastProcessedQR = formattedId;
             this.lastProcessedTime = Date.now();
             return;
         }
 
         if (!c.ativo) {
             this.showQRMsg(` ${c.nome}: Conta Inativa`, "bg-qr-danger");
-            this.lastProcessedQR = id;
+            this.lastProcessedQR = formattedId;
             this.lastProcessedTime = Date.now();
             return;
         }
@@ -5952,7 +5949,7 @@ Bons treinos!`;
         // Validar data
         if (hj > c.validade) {
             this.showQRMsg(` ${c.nome}: Validade Expirada`, "bg-qr-warning");
-            this.lastProcessedQR = id;
+            this.lastProcessedQR = formattedId;
             this.lastProcessedTime = Date.now();
             return;
         }
@@ -5960,7 +5957,7 @@ Bons treinos!`;
         // Validar créditos
         if ((c.ent || 0) <= 0) {
             this.showQRMsg(` ${c.nome}: Sem créditos`, "bg-qr-danger");
-            this.lastProcessedQR = id;
+            this.lastProcessedQR = formattedId;
             this.lastProcessedTime = Date.now();
             return;
         }
@@ -5972,7 +5969,7 @@ Bons treinos!`;
             if (diffMin < 2) {
                 const waitSec = Math.ceil(120 - diffMin * 60);
                 this.showQRMsg(` ${c.nome}: Cooldown(${waitSec}s)`, "bg-qr-warning");
-                this.lastProcessedQR = id;
+                this.lastProcessedQR = formattedId;
                 this.lastProcessedTime = Date.now();
                 return;
             }
@@ -5982,7 +5979,7 @@ Bons treinos!`;
         const entriesHj = (c.histórico || []).filter(h => h.startsWith(hj)).length;
         if (entriesHj >= 2) {
             this.showQRMsg(` ${c.nome}: Limite diario atingido`, "bg-qr-warning");
-            this.lastProcessedQR = id;
+            this.lastProcessedQR = formattedId;
             this.lastProcessedTime = Date.now();
             return;
         }
@@ -5993,7 +5990,7 @@ Bons treinos!`;
         c.histórico.unshift(agora.toISOString());
 
         this.showQRMsg(` Bem - vindo, ${c.nome} !Entrada validada.`, "bg-qr-success");
-        this.lastProcessedQR = id;
+        this.lastProcessedQR = formattedId;
         this.lastProcessedTime = Date.now();
 
         this.saveState();
