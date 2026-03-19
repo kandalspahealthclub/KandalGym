@@ -3998,51 +3998,61 @@ Bons treinos!`;
         const initials = (user.name || '?').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
         return `
-            <div class="glass-card animate-fade-in" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; border-left: 3px solid ${color};">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <div style="color: ${color}; background: rgba(255,255,255,0.05); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--surface-border);">
-                        ${user.photoUrl ? `<img src="${user.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : `<i class="fas ${icon}"></i>`}
+            <div class="glass-card animate-fade-in" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; border-left: 4px solid ${color}; padding: 1.2rem; background: rgba(255,b255,255,0.02);">
+                <div style="display: flex; align-items: center; gap: 1.2rem;">
+                    <div style="position: relative;">
+                        <div style="color: ${color}; background: rgba(255,255,255,0.05); width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid ${color}33;">
+                            ${user.photoUrl ? `<img src="${user.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : `<i class="fas ${icon}" style="font-size:1.4rem;"></i>`}
+                        </div>
+                        <div style="position: absolute; bottom: -2px; right: -2px; width: 14px; height: 14px; border-radius: 50%; background: ${user.status === 'Ativo' ? '#26de81' : '#eb4d4b'}; border: 2px solid var(--background);"></div>
                     </div>
                     <div>
-                        <strong style="font-size: 1.1rem;">${user.name || 'Sem Nome'}</strong>
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">${user.email || ''}</div>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+                            <strong style="font-size: 1.15rem; color: #fff;">${user.name || 'Sem Nome'}</strong>
+                            <span class="id-tag" style="font-size: 0.65rem; padding: 2px 6px;">ID: ${user.id}</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted); opacity: 0.8; margin-bottom: 4px;">
+                            <i class="fas fa-envelope" style="font-size: 0.7rem; width: 15px;"></i> ${user.email || ''}
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted); opacity: 0.8;">
+                             <i class="fas fa-phone" style="font-size: 0.7rem; width: 15px;"></i> ${user.phone || 'Sem contacto'}
+                        </div>
+                        
                         ${isClient && this.role === 'admin' ? `
-                            <div class="teacher-assign-tag">
-                                <i class="fas fa-user-tie"></i>
-                                <select onchange="app.assignTeacher(${user.id}, this.value)">
-                                    <option value="">Sem Professor</option>
+                            <div class="teacher-assign-tag" style="margin-top: 8px; background: rgba(255,255,255,0.03); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                                <i class="fas fa-user-tie" style="font-size: 0.75rem; color: var(--primary);"></i>
+                                <select onchange="app.assignTeacher(${user.id}, this.value)" style="font-size: 0.8rem; background: transparent; border: none; color: var(--text-base); outline: none; cursor: pointer;">
+                                    <option value="">Sem Professor Tradicional</option>
                                     ${(this.state.teachers || []).map(t => `<option value="${t.id}" ${user.teacherId === t.id ? 'selected' : ''}>${t.name}</option>`).join('')}
                                 </select>
-                                <i class="fas fa-chevron-down" style="font-size:0.6rem; opacity:0.5; margin-left:-5px;"></i>
                             </div>
                         ` : ''}
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">${user.phone || 'Sem contacto'}</div>
-                        <div style="margin-top:5px; display:flex; gap:5px; flex-wrap:wrap;">
-                            <span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted);">ID: ${user.id}</span>
+
+                        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
                             ${isClient ? (() => {
                 const qr = (this.state.qrClients || []).find(q => q.clientId === user.id);
-                if (!qr) return '';
+                if (!qr) return '<span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px dashed #444;">Acesso QR Não Configurado</span>';
                 const hoje = new Date().toISOString().split('T')[0];
                 const expirado = hoje > qr.validade;
                 return `
-                                    <span class="badge" style="background: ${expirado ? 'rgba(214, 48, 49, 0.1)' : 'rgba(38, 222, 129, 0.1)'}; color: ${expirado ? 'var(--danger)' : 'var(--success)'};">
-                                        Vence: ${qr.validade}
+                                    <span class="badge" style="background: ${expirado ? 'rgba(214, 48, 49, 0.1)' : 'rgba(38, 222, 129, 0.1)'}; color: ${expirado ? 'var(--danger)' : '#26de81'}; border: 1px solid ${expirado ? 'var(--danger)33' : '#26de8133'}; font-weight:700;">
+                                        <i class="fas fa-calendar-alt"></i> Vence: ${qr.validade}
                                     </span>
-                                    <span class="badge" style="background: rgba(69, 170, 242, 0.1); color: #45aaf2;">
-                                        Entradas: ${qr.ent || 0}
+                                    <span class="badge" style="background: rgba(69, 170, 242, 0.1); color: #45aaf2; border: 1px solid #45aaf233; font-weight:700;">
+                                        <i class="fas fa-ticket-alt"></i> Créditos: ${qr.ent || 0}
                                     </span>
                                 `;
             })() : ''}
                         </div>
                     </div>
                 </div>
-                <div style="display:flex; gap:0.5rem;">
+                <div style="display:flex; gap:0.6rem;">
                     ${isClient ? `
-                        <button class="btn btn-ghost" style="color:var(--primary);" onclick="app.spyClient(${user.id})" title="Ver Plano"><i class="fas fa-eye"></i></button>
-                        <button class="btn btn-ghost" style="color:var(--accent);" onclick="app.enableQRForClient(${user.id})" title="Ativar/Ver QR"><i class="fas fa-qrcode"></i></button>
+                        <button class="btn-icon" style="color:var(--primary);" onclick="app.spyClient(${user.id})" title="Ver Ficha Completa"><i class="fas fa-user-edit"></i></button>
+                        <button class="btn-icon" style="color:var(--accent);" onclick="app.enableQRForClient(${user.id})" title="Gerir Acesso QR"><i class="fas fa-qrcode"></i></button>
                     ` : ''}
-                    <button class="btn btn-secondary btn-sm" onclick="app.resetPass('${type}', ${user.id}, '${user.name || ''}')"><i class="fas fa-key"></i></button>
-                    <button class="btn btn-secondary btn-sm" style="color:var(--danger);" onclick="app.deleteUser('${type}', ${user.id}, '${user.name || ''}')"><i class="fas fa-trash"></i></button>
+                    <button class="btn-icon" style="color:var(--text-muted);" onclick="app.resetPass('${type}', ${user.id}, '${user.name || ''}')" title="Reset Senha"><i class="fas fa-key"></i></button>
+                    <button class="btn-icon danger" onclick="app.deleteUser('${type}', ${user.id}, '${user.name || ''}')" title="Eliminar Conta"><i class="fas fa-trash-alt"></i></button>
                 </div>
             </div>
             `;
@@ -5373,24 +5383,47 @@ Bons treinos!`;
                     </div>
                 </div>
                 
-                <div class="glass-panel" style="padding: 0; overflow-x: auto; background: rgba(255,255,255,0.03);">
-                    <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                <div class="glass-panel" style="padding: 0; background: transparent; border:none; box-shadow:none;">
+                    <div class="section-divider">Gestão de Entradas (Acesso QR Ativo)</div>
+                    <table class="premium-table">
                         <thead>
-                            <tr style="border-bottom: 1px solid var(--surface-border); text-align: left; background: rgba(255,255,255,0.05);">
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent); width: 80px;">ID</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent); min-width: 200px;">Aluno</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Mensalidade</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Estado</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Créditos</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Entradas (Hoje)</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Validade / Vencimento</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent); text-align: right;">Ações</th>
+                            <tr>
+                                <th style="width: 80px;">ID</th>
+                                <th style="min-width: 200px;">Aluno</th>
+                                <th>Mensalidade</th>
+                                <th style="text-align:center;">Estado</th>
+                                <th style="text-align:center;">Créditos</th>
+                                <th style="text-align:center;">Entradas (Hoje)</th>
+                                <th style="text-align:center;">Validade</th>
+                                <th style="text-align:right;">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="gridQRClientes">
                             ${this.renderQRClientCards()}
                         </tbody>
                     </table>
+
+                    <div class="section-divider">Outros Alunos Registados (Sem QR)</div>
+                    <div class="glass-panel" style="padding: 1.5rem; background: rgba(255,255,255,0.02);">
+                        <div id="alunos-sem-qr-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+                            ${(() => {
+                const qrIds = (this.state.qrClients || []).map(qc => qc.clientId);
+                const candidates = (this.state.clients || []).filter(c => !qrIds.includes(c.id));
+                if (candidates.length === 0) return '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">Todos os alunos já têm acesso QR configurado.</div>';
+                return candidates.map(c => `
+                                    <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(255,255,255,0.03);">
+                                        <div>
+                                            <div style="font-weight: 700;">${c.name}</div>
+                                            <div style="font-size: 0.75rem; color: var(--text-muted);">Ref: ${c.id}</div>
+                                        </div>
+                                        <button class="btn btn-primary btn-sm" onclick="app.enableQRForClient(${c.id})" style="padding: 5px 15px;">
+                                            <i class="fas fa-plus"></i> Ativar QR
+                                        </button>
+                                    </div>
+                                `).join('');
+            })()}
+                        </div>
+                    </div>
                 </div>
             `;
         } catch (err) {
@@ -5425,20 +5458,20 @@ Bons treinos!`;
             const statusColor = c.ativo ? 'var(--success)' : 'var(--danger)';
 
             return `
-                <tr style="border-bottom: 1px solid var(--surface-border); transition: background 0.2s;" class="qr-row">
-                    <td style="padding: 1rem;">
-                        <div style="font-weight:700; color:var(--accent); font-size:0.9rem;">${c.id}</div>
-                        <div style="font-size:0.65rem; color:var(--text-muted);">Ref: ${c.clientId || '-'}</div>
+                <tr class="qr-row">
+                    <td>
+                        <span class="id-tag">${c.id}</span>
+                        <div style="font-size:0.6rem; color:var(--text-muted); margin-top:4px;">Ref: ${c.clientId || '-'}</div>
                     </td>
-                    <td style="padding: 1rem;">
+                    <td>
                         <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" 
-                            style="background:transparent; border:none; color:#fff; font-weight:700; font-size:1rem; width:100%; min-width:180px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding: 2px 0;">
+                            style="background:transparent; border:none; color:#fff; font-weight:700; font-size:1.1rem; width:100%; min-width:180px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding: 2px 0;">
                         <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" 
-                                style="background:transparent; border:none; color:var(--text-muted); font-size:0.75rem; width:100%; margin-top:5px; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                                style="background:transparent; border:none; color:var(--text-muted); font-size:0.8rem; width:100%; margin-top:5px; border-bottom: 1px dashed rgba(255,255,255,0.05);">
                     </td>
-                    <td style="padding: 1rem;">
-                        <select onchange="app.updateQRClientField('${c.id}', 'plano', this.value)"
-                            style="background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); color:#fff; font-size:0.8rem; padding:4px 8px; border-radius:6px; outline:none; cursor:pointer;">
+                    <td>
+                        <select onchange="app.updateQRClientField('${c.id}', 'plano', this.value)" class="plan-badge"
+                            style="background:rgba(0,0,0,0.3); outline:none; cursor:pointer;">
                             <option value="Livre Trânsito" ${c.plano === 'Livre Trânsito' ? 'selected' : ''}>Livre Trânsito</option>
                             <option value="3x Semana" ${c.plano === '3x Semana' ? 'selected' : ''}>3x Semana</option>
                             <option value="2x Semana" ${c.plano === '2x Semana' ? 'selected' : ''}>2x Semana</option>
@@ -5446,40 +5479,39 @@ Bons treinos!`;
                             <option value="Outro" ${!c.plano || (c.plano !== 'Livre Trânsito' && c.plano !== '3x Semana' && c.plano !== '2x Semana' && c.plano !== 'Pontual') ? 'selected' : ''}>Outro</option>
                         </select>
                     </td>
-                    <td style="padding: 1rem;">
-                        <input type="checkbox" ${c.ativo ? 'checked' : ''} onchange="app.toggleQRClientStatus('${c.id}')" style="accent-color: var(--primary); width:18px; height:18px; cursor:pointer;">
+                    <td style="text-align:center;">
+                        <input type="checkbox" ${c.ativo ? 'checked' : ''} onchange="app.toggleQRClientStatus('${c.id}')" style="accent-color: var(--primary); width:20px; height:20px; cursor:pointer;">
                     </td>
-                    <td style="padding: 1rem;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div class="qr-btn-circle-sm" onclick="app.editQRCredit('${c.id}', -1)">-</div>
+                    <td>
+                        <div class="qr-qty-controls" style="justify-content:center;">
+                            <div class="qr-btn-circle-sm" onclick="app.editQRCredit('${c.id}', -1)"><i class="fas fa-minus"></i></div>
                             <input type="number" value="${c.ent}" onchange="app.updateQRClientField('${c.id}', 'ent', parseInt(this.value) || 0)"
                                 class="no-spin"
-                                style="background:transparent; border:none; color:inherit; font-weight:700; width:50px; text-align:center; outline:none;">
-                            <div class="qr-btn-circle-sm" onclick="app.editQRCredit('${c.id}', 1)">+</div>
+                                style="background:transparent; border:none; color:#fff; font-weight:800; width:45px; text-align:center; outline:none; font-size:1.1rem;">
+                            <div class="qr-btn-circle-sm" onclick="app.editQRCredit('${c.id}', 1)"><i class="fas fa-plus"></i></div>
                         </div>
                     </td>
-                    <td style="padding: 1rem;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div class="qr-btn-circle-sm" onclick="app.editQREntryHj('${c.id}', -1)">-</div>
-                            <span style="font-weight:700; color:var(--primary);">${entHj} / 2</span>
-                            <div class="qr-btn-circle-sm" onclick="app.editQREntryHj('${c.id}', 1)">+</div>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px; justify-content:center;">
+                            <div class="number-circle" style="${entHj >= 2 ? 'color:var(--danger); background:rgba(214, 48, 49, 0.1); border-color:var(--danger);' : ''}">${entHj}</div>
+                            <span style="font-weight:700; color:var(--text-muted); font-size:0.9rem;">/ 2</span>
                         </div>
                     </td>
-                    <td style="padding: 1rem;">
+                    <td style="text-align:center;">
                         <input type="date" value="${c.validade}" onchange="app.updateQRClientField('${c.id}', 'validade', this.value)"
-                            style="background:transparent; border:none; color:${hoje > c.validade ? 'var(--danger)' : 'inherit'}; font-size:0.85rem; cursor:pointer;">
+                            style="background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:6px; padding:4px 8px; color:${hoje > c.validade ? 'var(--danger)' : '#fff'}; font-size:0.85rem; cursor:pointer; font-weight:600;">
                     </td>
-                    <td style="padding: 1rem; text-align: right;">
-                        <div style="display: flex; gap: 5px; justify-content: flex-end;">
+                    <td style="text-align: right;">
+                        <div style="display: flex; gap: 8px; justify-content: flex-end;">
                             <button class="btn-icon" onclick="app.toggleQRCodeDisplay('qr-row-area-${idx}', '${c.id}')" title="Gerar QR"><i class="fas fa-qrcode"></i></button>
                             <button class="btn-icon danger" onclick="app.deleteQRClient('${c.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>
-                <tr id="qr-row-area-${idx}" style="display:none; background: rgba(255,255,255,0.05);">
-                    <td colspan="8" style="padding: 1rem; text-align: center;">
-                        <div id="canvas-${idx}" style="background: white; padding: 10px; border-radius: 8px; display: inline-block; margin: 10px 0;"></div>
-                        <div style="font-size: 0.7rem; color: var(--text-muted);">ID: ${c.id}</div>
+                <tr id="qr-row-area-${idx}" style="display:none;">
+                    <td colspan="8" style="padding: 1.5rem; text-align: center; border-radius: 12px; background: rgba(0,0,0,0.2);">
+                        <div id="canvas-${idx}" style="background: white; padding: 15px; border-radius: 12px; display: inline-block; margin: 10px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></div>
+                        <div style="font-size: 0.8rem; font-weight:700; color: var(--accent);">Código de Acesso: ${c.id}</div>
                     </td>
                 </tr>
             `;
