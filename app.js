@@ -3538,11 +3538,14 @@ Bons treinos!`;
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
                 <div>
                     <h2 style="margin:0;">Ficha: ${c.name}</h2>
-                    ${c.birthDate ? `<small style="color:var(--text-muted); font-size:0.9rem;">${this.calculateAge(c.birthDate)} anos (${this.formatDate(c.birthDate)})</small>` : ''}
-                    <div style="font-size:0.85rem; color:var(--primary); margin-top:5px; font-weight:500;">
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;">
+                        ${c.birthDate ? `<small style="color:var(--text-muted); font-size:0.85rem;"><i class="fas fa-birthday-cake"></i> ${this.calculateAge(c.birthDate)} anos</small>` : ''}
+                        ${c.profession ? `<small style="color:var(--accent); font-size:0.85rem; font-weight:600;"><i class="fas fa-briefcase"></i> ${c.profession}</small>` : ''}
+                    </div>
+                    <div style="font-size:0.8rem; color:var(--primary); margin-top:5px; font-weight:500;">
                         <i class="fas fa-user-tie" style="font-size:0.8rem; margin-right:5px;"></i> 
                         ${(() => {
-                const t = this.state.teachers.find(teacher => teacher.id === c.teacherId);
+                const t = this.state.teachers.find(teacher => teacher.id === Number(c.teacherId));
                 return t ? `Professor: ${t.name}` : 'Sem Professor Associado';
             })()}
                     </div>
@@ -3794,6 +3797,11 @@ Bons treinos!`;
                     <input type="date" id="edit-dob" value="${user.birthDate || ''}" 
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px; color-scheme:dark;">
                 </div>
+                <div style="margin-bottom:1.5rem;">
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Profissão</label>
+                    <input type="text" id="edit-profession" value="${user.profession || ''}" placeholder="Ex: Engenheiro, Professor, etc."
+                        style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
+                </div>
                 ` : ''}
 
                 <div style="margin-top:2rem; padding-top:1rem; border-top:1px dashed var(--surface-border);">
@@ -3943,6 +3951,10 @@ Bons treinos!`;
                 const dobInput = document.getElementById('edit-dob');
                 if (dobInput) {
                     user.birthDate = dobInput.value;
+                }
+                const profInput = document.getElementById('edit-profession');
+                if (profInput) {
+                    user.profession = profInput.value;
                 }
                 if (this.currentUser.photoUrl) {
                     user.photoUrl = this.currentUser.photoUrl;
