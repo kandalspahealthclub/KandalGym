@@ -3534,7 +3534,7 @@ Bons treinos!`;
                 <div>
                     <h2 style="margin:0;">Ficha: ${c.name}</h2>
                     <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:5px;">
-                        ${c.birthDate ? `<small style="color:var(--text-muted); font-size:0.85rem;"><i class="fas fa-birthday-cake"></i> ${this.calculateAge(c.birthDate)} anos</small>` : ''}
+                        ${c.birthDate ? `<small style="color:var(--text-muted); font-size:0.85rem;"><i class="fas fa-birthday-cake"></i> ${this.calculateAge(c.birthDate)} anos (${this.formatDate(c.birthDate)})</small>` : ''}
                         ${c.profession ? `<small style="color:var(--accent); font-size:0.85rem; font-weight:600;"><i class="fas fa-briefcase"></i> ${c.profession}</small>` : ''}
                     </div>
                     <div style="font-size:0.8rem; color:var(--primary); margin-top:5px; font-weight:500;">
@@ -4051,20 +4051,6 @@ Bons treinos!`;
                         ` : ''}
 
                         <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
-                            ${isClient ? (() => {
-                const qr = (this.state.qrClients || []).find(q => q.clientId === user.id);
-                if (!qr) return '<span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px dashed #444;">Acesso QR Não Configurado</span>';
-                const hoje = new Date().toISOString().split('T')[0];
-                const expirado = hoje > qr.validade;
-                return `
-                                    <span class="badge" style="background: ${expirado ? 'rgba(214, 48, 49, 0.1)' : 'rgba(38, 222, 129, 0.1)'}; color: ${expirado ? 'var(--danger)' : '#26de81'}; border: 1px solid ${expirado ? 'var(--danger)33' : '#26de8133'}; font-weight:700;">
-                                        <i class="fas fa-calendar-alt"></i> Vence: ${qr.validade}
-                                    </span>
-                                    <span class="badge" style="background: rgba(69, 170, 242, 0.1); color: #45aaf2; border: 1px solid #45aaf233; font-weight:700;">
-                                        <i class="fas fa-ticket-alt"></i> Créditos: ${qr.ent || 0}
-                                    </span>
-                                `;
-            })() : ''}
                         </div>
                     </div>
                 </div>
