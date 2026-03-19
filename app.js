@@ -171,8 +171,13 @@ class FitnessApp {
             const collections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes'];
             collections.forEach(coll => { if (!this.state[coll]) this.state[coll] = []; });
 
-            const dictCollections = ['trainingPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments'];
+            const dictCollections = ['trainingPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments', 'planRestrictions'];
             dictCollections.forEach(coll => { if (!this.state[coll]) this.state[coll] = {}; });
+            
+            // Integridade das restrições (Garantir que os planos padrão existem pelo menos uma vez)
+            if (Object.keys(this.state.planRestrictions).length === 0) {
+                 this.state.planRestrictions = JSON.parse(JSON.stringify(this.planRestrictions));
+            }
 
             // 2. Conta mestre garantida
             if (!this.state.admins.some(a => a.email === 'admin@kandalgym.com')) {
@@ -4045,6 +4050,8 @@ Bons treinos!`;
                             ${plans.map(p => {
                                 const r = this.state.planRestrictions[p];
                                 if (typeof r.filter === 'string') r.filter = r.filter ? [r.filter] : [];
+                                if (!r.exclude) r.exclude = [];
+                                if (typeof r.exclude === 'string') r.exclude = r.exclude ? [r.exclude] : [];
                                 
                                 return `
                                     <tr>
@@ -5630,13 +5637,20 @@ Bons treinos!`;
                     <td>
                         <select onchange="app.updateQRClientField('${c.id}', 'plano', this.value)" class="plan-badge"
                             style="background:rgba(0,0,0,0.3); outline:none; cursor:pointer; width:110px;">
-                            ${isStaff ? '<option value="Staff">Staff / Vitalício</option>' : `
-                            <option value="Livre Trânsito" ${c.plano === 'Livre Trânsito' ? 'selected' : ''}>Livre Trânsito</option>
-                            <option value="3x Semana" ${c.plano === '3x Semana' ? 'selected' : ''}>3x Semana</option>
-                            <option value="2x Semana" ${c.plano === '2x Semana' ? 'selected' : ''}>2x Semana</option>
-                            <option value="Pontual" ${c.plano === 'Pontual' ? 'selected' : ''}>Pontual</option>
-                            <option value="Outro" ${!c.plano || (c.plano !== 'Livre Trânsito' && c.plano !== '3x Semana' && c.plano !== '2x Semana' && c.plano !== 'Pontual') ? 'selected' : ''}>Outro</option>
-                            `}
+                            ${isStaff ? '<option value="Staff">Staff / Vitalício</option>' : (() => {
+                                const plans = Object.keys(this.state.planRestrictions || {});
+                                if (plans.length === 0) {
+                                     // Fallback se não estiver carregado
+                                     return `
+                                        <option value="Livre Trânsito" ${c.plano === 'Livre Trânsito' ? 'selected' : ''}>Livre Trânsito</option>
+                                        <option value="3x Semana" ${c.plano === '3x Semana' ? 'selected' : ''}>3x Semana</option>
+                                        <option value="2x Semana" ${c.plano === '2x Semana' ? 'selected' : ''}>2x Semana</option>
+                                        <option value="Pontual" ${c.plano === 'Pontual' ? 'selected' : ''}>Pontual</option>
+                                     `;
+                                }
+                                return plans.map(p => `<option value="${p}" ${c.plano === p ? 'selected' : ''}>${p}</option>`).join('') + 
+                                       `<option value="Outro" ${!plans.includes(c.plano) ? 'selected' : ''}>Outro</option>`;
+                            })()}
                         </select>
                     </td>
                     <td style="text-align:center;">
