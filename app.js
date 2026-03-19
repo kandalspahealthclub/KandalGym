@@ -4060,16 +4060,10 @@ Bons treinos!`;
                                             <input type="checkbox" ${r.allowClasses ? 'checked' : ''} onchange="app.updatePlanRestriction('${p}', 'allowClasses', this.checked)">
                                         </td>
                                         <td>
-                                            <select multiple style="background:rgba(0,0,0,0.3); border:1px solid #444; color:#fff; padding:6px; border-radius:4px; font-size:0.8rem; width:100%; min-width:150px; height:80px; scrollbar-width:thin;"
-                                                onchange="app.updatePlanRestriction('${p}', 'filter', Array.from(this.selectedOptions).map(o => o.value))">
-                                                ${uniqueClasses.map(name => `<option value="${name}" ${r.filter && r.filter.includes(name) ? 'selected' : ''}>${name}</option>`).join('')}
-                                            </select>
+                                            ${this.renderMultiSelectCheckboxes(p, 'filter', r.filter, uniqueClasses)}
                                         </td>
                                         <td>
-                                            <select multiple style="background:rgba(0,0,0,0.3); border:1px solid #444; color:#fff; padding:6px; border-radius:4px; font-size:0.8rem; width:100%; min-width:150px; height:80px; scrollbar-width:thin;"
-                                                onchange="app.updatePlanRestriction('${p}', 'exclude', Array.from(this.selectedOptions).map(o => o.value))">
-                                                ${uniqueClasses.map(name => `<option value="${name}" ${r.exclude && r.exclude.includes(name) ? 'selected' : ''}>${name}</option>`).join('')}
-                                            </select>
+                                            ${this.renderMultiSelectCheckboxes(p, 'exclude', r.exclude, uniqueClasses)}
                                         </td>
                                         <td style="text-align:center;">
                                             <button class="btn-icon danger" onclick="app.deletePlanRestriction('${p}')" title="Eliminar"><i class="fas fa-trash"></i></button>
@@ -4097,6 +4091,38 @@ Bons treinos!`;
         this.state.planRestrictions[plan][field] = value;
         this.saveState();
         this.showToast('Regra guardada.');
+    }
+
+    renderMultiSelectCheckboxes(plan, field, selected = [], allClasses = []) {
+        if (allClasses.length === 0) return '<small style="color:var(--text-muted); opacity:0.6;">(Sem aulas agendadas)</small>';
+        
+        return `
+            <div class="glass-inset" style="max-height: 120px; overflow-y: auto; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); min-width: 160px; scrollbar-width: thin;">
+                ${allClasses.map(name => `
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: #fff; cursor: pointer; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.02);">
+                        <input type="checkbox" value="${name}" ${selected.includes(name) ? 'checked' : ''} 
+                            onchange="app.togglePlanClassRestriction('${plan}', '${field}', this.value, this.checked)"
+                            style="width: 14px; height: 14px; accent-color: var(--primary);">
+                        <span>${name}</span>
+                    </label>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    togglePlanClassRestriction(plan, field, className, isChecked) {
+        if (!this.state.planRestrictions[plan]) return;
+        if (!this.state.planRestrictions[plan][field]) this.state.planRestrictions[plan][field] = [];
+        
+        const current = this.state.planRestrictions[plan][field];
+        if (isChecked) {
+            if (!current.includes(className)) current.push(className);
+        } else {
+            this.state.planRestrictions[plan][field] = current.filter(c => c !== className);
+        }
+        this.saveState();
+        // Não renderizar tudo de novo para não perder o scroll, mas salvamos o estado.
+        // Opcional: mostrar toast.
     }
 
     addNewPlanRestriction() {
