@@ -29,8 +29,8 @@
     --danger: #ef4444;
     --glass: blur(12px);
     --shadow: 0 8px 32px 0 rgba(145, 27, 43, 0.15);
-    --safe-top: env(safe-área-inset-top, 0px);
-    --safe-bottom: env(safe-área-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
     color-scheme: dark;
 }
 
@@ -127,7 +127,7 @@ main {
     color: var(--text-main);
 }
 
-.content-área {
+.content-area {
     overflow-y: auto;
     padding-bottom: 2rem;
     -webkit-overflow-scrolling: touch;
@@ -1215,7 +1215,7 @@ option {
     font-weight: 500;
 }
 
-.chat-input-área {
+.chat-input-area {
     padding: 1rem 1.5rem;
     border-top: 1px solid var(--surface-border);
     background: rgba(15, 23, 42, 0.9);
@@ -1225,7 +1225,7 @@ option {
     flex-shrink: 0;
 }
 
-.chat-input-área input {
+.chat-input-area input {
     flex: 1;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--surface-border);
@@ -1237,7 +1237,7 @@ option {
     transition: all 0.2s;
 }
 
-.chat-input-área input:focus {
+.chat-input-area input:focus {
     background: rgba(255, 255, 255, 0.08);
     border-color: var(--primary);
 }
@@ -1287,7 +1287,7 @@ option {
         padding-top: var(--safe-top);
     }
 
-    .chat-input-área {
+    .chat-input-area {
         padding-bottom: calc(1rem + var(--safe-bottom));
     }
 }
@@ -1407,7 +1407,7 @@ option {
     background: rgba(255, 255, 255, 0.1);
 }
 
-.qr-área {
+.qr-area {
     display: none;
     padding: 20px;
     margin-top: 15px;
@@ -1418,7 +1418,7 @@ option {
     animation: slideDown 0.3s ease;
 }
 
-.qr-área.show {
+.qr-area.show {
     display: block;
 }
 
@@ -1504,7 +1504,7 @@ option {
     color: white;
 }
 
-.qr-área {
+.qr-area {
     display: none;
     padding: 1rem;
     background: rgba(255, 255, 255, 0.05);
@@ -1512,7 +1512,7 @@ option {
     text-align: center;
 }
 
-.qr-área.show {
+.qr-area.show {
     display: block;
     animation: slideDown 0.3s ease-out;
 }

@@ -4017,7 +4017,23 @@ Bons treinos!`;
                             </div>
                         ` : ''}
                         <div style="font-size: 0.8rem; color: var(--text-muted);">${user.phone || 'Sem contacto'}</div>
-                        <div style="margin-top:5px;"><span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted);"></span></div>
+                        <div style="margin-top:5px; display:flex; gap:5px; flex-wrap:wrap;">
+                            <span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-muted);">ID: ${user.id}</span>
+                            ${isClient ? (() => {
+                const qr = (this.state.qrClients || []).find(q => q.clientId === user.id);
+                if (!qr) return '';
+                const hoje = new Date().toISOString().split('T')[0];
+                const expirado = hoje > qr.validade;
+                return `
+                                    <span class="badge" style="background: ${expirado ? 'rgba(214, 48, 49, 0.1)' : 'rgba(38, 222, 129, 0.1)'}; color: ${expirado ? 'var(--danger)' : 'var(--success)'};">
+                                        Vence: ${qr.validade}
+                                    </span>
+                                    <span class="badge" style="background: rgba(69, 170, 242, 0.1); color: #45aaf2;">
+                                        Entradas: ${qr.ent || 0}
+                                    </span>
+                                `;
+            })() : ''}
+                        </div>
                     </div>
                 </div>
                 <div style="display:flex; gap:0.5rem;">
@@ -5363,9 +5379,9 @@ Bons treinos!`;
                             <tr style="border-bottom: 1px solid var(--surface-border); text-align: left; background: rgba(255,255,255,0.05);">
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Aluno</th>
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Estado</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Créditos</th>
+                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Mensalidade (Créditos)</th>
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Entradas (Hoje)</th>
-                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Validade</th>
+                                <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent);">Validade / Vencimento</th>
                                 <th style="padding: 1rem; font-size: 0.85rem; color: var(--accent); text-align: right;">Ações</th>
                             </tr>
                         </thead>
@@ -5412,7 +5428,8 @@ Bons treinos!`;
                         <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" 
                             style="background:transparent; border:none; color:#fff; font-weight:700; font-size:1rem; width:100%; border-bottom: 1px dashed rgba(255,255,255,0.1); padding: 2px 0;">
                         <div style="display:flex; align-items:center; gap:5px; margin-top:5px;">
-                            <span style="font-size:0.75rem; color:var(--text-muted); opacity:0.7;"></span>
+                            <span style="font-size:0.75rem; color:var(--text-muted); opacity:0.7;">ID: ${c.id}</span>
+                            <span style="color:var(--text-muted); opacity:0.3; font-size:0.6rem;">|</span>
                             <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" 
                                 style="background:transparent; border:none; color:var(--text-muted); font-size:0.75rem; width:80%; border-bottom: 1px dashed rgba(255,255,255,0.05);">
                         </div>
