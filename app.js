@@ -4077,7 +4077,7 @@ Bons treinos!`;
                 <div style="margin-top:1.5rem; padding:1rem; background:rgba(38,222,129,0.05); border-radius:8px; border:1px dashed rgba(38,222,129,0.2);">
                     <small style="color: #26de81;">
                         <i class="fas fa-info-circle"></i> 
-                        <strong>Dica:</strong> Mantenha pressionada a tecla <strong>Ctrl</strong> (ou Command no Mac) para selecionar/desmarcar várias opções.
+                        <strong>Gestão de Aulas:</strong> Selecione as aulas permitidas ou excluídas para cada plano. O sistema valida automaticamente no momento da reserva.
                     </small>
                 </div>
             </div>
