@@ -29,9 +29,9 @@ class FitnessApp {
         this.dashboardMonth = new Date().toISOString().substring(0, 7);
         this.planRestrictions = {
              'Musculação': { allowClasses: false },
-             'Pilates': { allowClasses: true, filter: 'Pilates' },
+             'Pilates': { allowClasses: true, filter: ['Pilates'] },
              'Aulas Geral': { allowClasses: true, exclude: ['Pilates', 'Dance Kids'] },
-             'Dance Kids': { allowClasses: true, filter: 'Dance Kids' }
+             'Dance Kids': { allowClasses: true, filter: ['Dance Kids'] }
         };
         this.hasLoadedData = false; // Flag para evitar flickering de "Utilizador não encontrado"
         this.isCheckingClasses = false;
@@ -4018,13 +4018,14 @@ Bons treinos!`;
         }
         
         const plans = Object.keys(this.state.planRestrictions);
+        const uniqueClasses = [...new Set((this.state.classes || []).map(c => c.name).filter(n => n))].sort();
         
         container.innerHTML = `
-            <div class="glass-panel" style="padding: 1.5rem; border-radius: 12px; border: 1px solid var(--surface-border); background:rgba(255,b255,255,0.02);">
+            <div class="glass-panel" style="padding: 1.5rem; border-radius: 12px; border: 1px solid var(--surface-border); background:rgba(255,255,255,0.02);">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 2rem;">
                     <div>
                         <h3 style="margin:0;"><i class="fas fa-lock"></i> Restrições por Mensalidade</h3>
-                        <p style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Defina quais as aulas que cada plano pode reservar.</p>
+                        <p style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Defina as aulas permitidas para cada plano.</p>
                     </div>
                     <button class="btn btn-primary" onclick="app.addNewPlanRestriction()" style="font-size:0.8rem;"><i class="fas fa-plus"></i> Novo Plano</button>
                 </div>
@@ -4035,14 +4036,16 @@ Bons treinos!`;
                             <tr>
                                 <th>Mensalidade</th>
                                 <th style="text-align:center;">Permite Aulas?</th>
-                                <th>Aulas Permitidas (Contém)</th>
-                                <th>Excluir Aulas (Contém)</th>
+                                <th>Aulas Permitidas</th>
+                                <th>Aulas Excluídas</th>
                                 <th style="text-align:center;">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${plans.map(p => {
                                 const r = this.state.planRestrictions[p];
+                                if (typeof r.filter === 'string') r.filter = r.filter ? [r.filter] : [];
+                                
                                 return `
                                     <tr>
                                         <td><strong>${p}</strong></td>
@@ -4050,14 +4053,16 @@ Bons treinos!`;
                                             <input type="checkbox" ${r.allowClasses ? 'checked' : ''} onchange="app.updatePlanRestriction('${p}', 'allowClasses', this.checked)">
                                         </td>
                                         <td>
-                                            <input type="text" value="${r.filter || ''}" placeholder="Ex: Pilates" 
-                                                onchange="app.updatePlanRestriction('${p}', 'filter', this.value)"
-                                                style="background:rgba(0,0,0,0.2); border:1px solid #444; color:#fff; padding:4px 8px; border-radius:4px; font-size:0.8rem; width:100%; min-width:120px;">
+                                            <select multiple style="background:rgba(0,0,0,0.3); border:1px solid #444; color:#fff; padding:6px; border-radius:4px; font-size:0.8rem; width:100%; min-width:150px; height:80px; scrollbar-width:thin;"
+                                                onchange="app.updatePlanRestriction('${p}', 'filter', Array.from(this.selectedOptions).map(o => o.value))">
+                                                ${uniqueClasses.map(name => `<option value="${name}" ${r.filter && r.filter.includes(name) ? 'selected' : ''}>${name}</option>`).join('')}
+                                            </select>
                                         </td>
                                         <td>
-                                            <input type="text" value="${(r.exclude || []).join(', ')}" placeholder="Ex: Pilates, Dance Kids" 
-                                                onchange="app.updatePlanRestriction('${p}', 'exclude', this.value)"
-                                                style="background:rgba(0,0,0,0.2); border:1px solid #444; color:#fff; padding:4px 8px; border-radius:4px; font-size:0.8rem; width:100%; min-width:150px;">
+                                            <select multiple style="background:rgba(0,0,0,0.3); border:1px solid #444; color:#fff; padding:6px; border-radius:4px; font-size:0.8rem; width:100%; min-width:150px; height:80px; scrollbar-width:thin;"
+                                                onchange="app.updatePlanRestriction('${p}', 'exclude', Array.from(this.selectedOptions).map(o => o.value))">
+                                                ${uniqueClasses.map(name => `<option value="${name}" ${r.exclude && r.exclude.includes(name) ? 'selected' : ''}>${name}</option>`).join('')}
+                                            </select>
                                         </td>
                                         <td style="text-align:center;">
                                             <button class="btn-icon danger" onclick="app.deletePlanRestriction('${p}')" title="Eliminar"><i class="fas fa-trash"></i></button>
@@ -4069,7 +4074,10 @@ Bons treinos!`;
                     </table>
                 </div>
                 <div style="margin-top:1.5rem; padding:1rem; background:rgba(38,222,129,0.05); border-radius:8px; border:1px dashed rgba(38,222,129,0.2);">
-                    <small style="color: #26de81;"><i class="fas fa-info-circle"></i> Os filtros e exclusões funcionam verificando se o nome da aula contém o texto introduzido (sem distinção entre maiúsculas e minúsculas).</small>
+                    <small style="color: #26de81;">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>Dica:</strong> Mantenha pressionada a tecla <strong>Ctrl</strong> (ou Command no Mac) para selecionar/desmarcar várias opções.
+                    </small>
                 </div>
             </div>
         `;
@@ -4079,13 +4087,9 @@ Bons treinos!`;
         if (!this.state.planRestrictions) this.state.planRestrictions = {};
         if (!this.state.planRestrictions[plan]) return;
         
-        if (field === 'exclude') {
-             this.state.planRestrictions[plan][field] = value.split(',').map(s => s.trim()).filter(s => s);
-        } else {
-             this.state.planRestrictions[plan][field] = value;
-        }
+        this.state.planRestrictions[plan][field] = value;
         this.saveState();
-        this.showToast('Regra do plano guardada.');
+        this.showToast('Regra guardada.');
     }
 
     addNewPlanRestriction() {
@@ -6709,11 +6713,21 @@ Bons treinos!`;
              if (!restrictions.allowClasses) {
                   return alert(`O plano ${plano} não permite a marcação de aulas.`);
              }
-             if (restrictions.filter && !cls.name.toLowerCase().includes(restrictions.filter.toLowerCase())) {
-                  return alert(`O seu plano (${plano}) apenas permite reserva de aulas de ${restrictions.filter}.`);
+             
+             // Validar Filtro (Apenas pode estas)
+             if (restrictions.filter && restrictions.filter.length > 0) {
+                  const isAllowed = restrictions.filter.some(f => cls.name.toLowerCase().includes(f.toLowerCase()));
+                  if (!isAllowed) {
+                      return alert(`O seu plano (${plano}) apenas permite reserva das aulas: ${restrictions.filter.join(', ')}.`);
+                  }
              }
-             if (restrictions.exclude && restrictions.exclude.some(ex => cls.name.toLowerCase().includes(ex.toLowerCase()))) {
-                  return alert(`O seu plano (${plano}) não permite a reserva desta aula específica.`);
+             
+             // Validar Exclusão (Não pode estas)
+             if (restrictions.exclude && restrictions.exclude.length > 0) {
+                  const isExcluded = restrictions.exclude.some(ex => cls.name.toLowerCase().includes(ex.toLowerCase()));
+                  if (isExcluded) {
+                      return alert(`O seu plano (${plano}) não permite a reserva de aulas desta categoria.`);
+                  }
              }
         }
 
