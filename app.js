@@ -6462,7 +6462,11 @@ Bons treinos!`;
             }
         }
 
-        const isStaffMember = c.plano === 'Staff';
+        // Determinar se é Staff (Teacher ou Admin) para ignorar limites
+        const isStaffMember = (this.state.teachers || []).some(t => Number(t.id) === Number(c.clientId)) ||
+                              (this.state.admins || []).some(a => Number(a.id) === Number(c.clientId)) ||
+                              c.plano === 'Staff';
+
 
         // Validar cooldown (20 segundos) - Para operações consecutivas
         if (lastLog) {
@@ -6489,17 +6493,20 @@ Bons treinos!`;
 
         } else {
             // --- LOGICA DE ENTRADA ---
-            // Validar data
-            if (hj > c.validade) {
-                this.showQRMsg(`${c.nome}: Validade Expirada`, "bg-qr-warning");
-                return;
+            if (!isStaffMember) {
+                // Validar data
+                if (hj > (c.validade || '')) {
+                    this.showQRMsg(`${c.nome}: Validade Expirada`, "bg-qr-warning");
+                    return;
+                }
+
+                // Validar créditos
+                if ((c.ent || 0) <= 0) {
+                    this.showQRMsg(`${c.nome}: Sem créditos`, "bg-qr-danger");
+                    return;
+                }
             }
 
-            // Validar créditos
-            if ((c.ent || 0) <= 0) {
-                this.showQRMsg(`${c.nome}: Sem créditos`, "bg-qr-danger");
-                return;
-            }
 
             // Validar limite diario - Apenas para Alunos
             if (!isStaffMember) {
