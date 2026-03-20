@@ -6516,8 +6516,9 @@ Bons treinos!`;
                 }
                                     </td>
                                     <td style="padding:1rem; text-align:right;">
-                                        <button class="btn btn-ghost btn-sm" onclick="app.showClassModal(${c.id})"><i class="fas fa-edit"></i></button>
-                                        <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.deleteClass(${c.id})"><i class="fas fa-trash"></i></button>
+                                        <button class="btn btn-ghost btn-sm" onclick="app.showParticipantsList('${c.id}')" title="Ver Lista / Inscritos"><i class="fas fa-users"></i></button>
+                                        <button class="btn btn-ghost btn-sm" onclick="app.showClassModal(${c.id})" title="Editar"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.deleteClass(${c.id})" title="Apagar"><i class="fas fa-trash"></i></button>
                                     </td>
                                 </tr>
                                 `;
@@ -6600,7 +6601,22 @@ Bons treinos!`;
                 <button class="btn btn-ghost" onclick="app.closeModal()"><i class="fas fa-times"></i></button>
             </div>
             <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">Aula: <strong>${cls ? cls.name : 'N/A'}</strong></p>
-            <div style="display:flex; flex-direction:column; gap:0.8rem; max-height:60vh; overflow-y:auto;">
+            
+            ${this.role !== 'client' ? `
+                <div style="margin-bottom: 1rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Adicionar aluno manualmente:</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="manualEnrollSearch" placeholder="Pesquisar..." onkeyup="app.filterManualEnrollSearch()" style="width: 100px; background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); border-radius: 6px; padding: 6px 10px; color: #fff; font-size: 0.85rem;">
+                        <select id="manualEnrollSelect" style="flex: 1; min-width: 0; background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); border-radius: 6px; padding: 6px 10px; color: #fff; font-size: 0.85rem;">
+                            <option value="">Selecione um aluno...</option>
+                            ${(this.state.clients || []).filter(c => !participantsIds.includes(String(c.id)) && !participantsIds.includes(c.id)).sort((a,b) => a.name.localeCompare(b.name)).map(c => `<option value="${c.id}">${c.name} (Ref: ${c.id})</option>`).join('')}
+                        </select>
+                        <button class="btn btn-primary btn-sm" onclick="app.enrollManualStudent('${classIdStr}')" style="white-space: nowrap;"><i class="fas fa-plus"></i> Ingresso</button>
+                    </div>
+                </div>
+            ` : ''}
+
+            <div style="display:flex; flex-direction:column; gap:0.8rem; max-height:45vh; overflow-y:auto;">
                 ${participants.length === 0 ? '<p style="text-align:center; color:var(--text-muted);">Nenhum aluno inscrito ainda.</p>' :
                 participants.map(p => `
                     <div style="display:flex; align-items:center; gap:0.75rem; padding:0.8rem; background:rgba(255,255,255,0.03); border-radius:12px;">
@@ -6611,12 +6627,70 @@ Bons treinos!`;
                             <div style="font-size:0.95rem; font-weight:600;">${p.name}</div>
                             <div style="font-size:0.8rem; color:var(--text-muted);">${p.phone || 'Sem telefone'}</div>
                         </div>
-                        <button class="btn btn-ghost btn-sm" onclick="app.closeModal(); app.openChat(${p.id})"><i class="fas fa-comment-alt" style="color:var(--primary);"></i></button>
+                        <button class="btn btn-ghost btn-sm" onclick="app.closeModal(); app.openChat(${p.id})" title="Enviar Mensagem"><i class="fas fa-comment-alt" style="color:var(--primary);"></i></button>
+                        ${this.role !== 'client' ? `
+                           <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.removeManualStudent('${classIdStr}', ${p.id})" title="Remover da aula"><i class="fas fa-times"></i></button>
+                        ` : ''}
                     </div>
                 `).join('')}
             </div>
         `;
         this.showModal(content);
+    }
+
+    enrollManualStudent(classId) {
+        const select = document.getElementById('manualEnrollSelect');
+        if (!select || !select.value) return alert('Por favor, selecione um aluno da lista.');
+        
+        const clientId = Number(select.value);
+        const classIdStr = String(classId);
+        
+        if (!this.state.enrollments[classIdStr]) this.state.enrollments[classIdStr] = [];
+        const participants = this.state.enrollments[classIdStr];
+        
+        if (participants.includes(String(clientId)) || participants.includes(clientId)) {
+            return alert('O aluno já está inscrito nesta aula.');
+        }
+        
+        const cls = this.state.classes.find(x => String(x.id) === classIdStr);
+        if (cls && participants.length >= (cls.capacity || 20)) {
+             if(!confirm('A aula já está na capacidade máxima. Tem a certeza que pretende forçar a inscrição?')) return;
+        }
+        
+        participants.push(clientId);
+        this.saveState();
+        this.showToast('Aluno inscrito manualmente com sucesso!', 'success');
+        this.showParticipantsList(classId); 
+        
+        if (this.role === 'admin') this.renderAdminClasses(document.getElementById('main-content'));
+        else if (this.role === 'teacher') this.renderTeacherClasses(document.getElementById('main-content'));
+    }
+
+    filterManualEnrollSearch() {
+        const input = document.getElementById('manualEnrollSearch');
+        const select = document.getElementById('manualEnrollSelect');
+        if (!input || !select) return;
+        
+        const filterStr = input.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        Array.from(select.options).forEach(opt => {
+            if (opt.value === "") return;
+            const text = opt.text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            opt.style.display = text.includes(filterStr) ? "" : "none";
+        });
+        select.value = "";
+    }
+
+    removeManualStudent(classId, clientId) {
+        if (!confirm('Deseja realmente remover o aluno desta aula?')) return;
+        const classIdStr = String(classId);
+        if (this.state.enrollments[classIdStr]) {
+            this.state.enrollments[classIdStr] = this.state.enrollments[classIdStr].filter(id => Number(id) !== Number(clientId));
+            this.saveState();
+            this.showToast('Aluno removido com sucesso!', 'success');
+            this.showParticipantsList(classId);
+            if (this.role === 'admin') this.renderAdminClasses(document.getElementById('main-content'));
+            else if (this.role === 'teacher') this.renderTeacherClasses(document.getElementById('main-content'));
+        }
     }
 
     renderClientClasses(container) {
