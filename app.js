@@ -5765,8 +5765,7 @@ Bons treinos!`;
                                         <option value="Pontual" ${c.plano === 'Pontual' ? 'selected' : ''}>Pontual</option>
                                      `;
                                 }
-                                return plans.map(p => `<option value="${p}" ${c.plano === p ? 'selected' : ''}>${p}</option>`).join('') + 
-                                       `<option value="Outro" ${!plans.includes(c.plano) ? 'selected' : ''}>Outro</option>`;
+                                return plans.map(p => `<option value="${p}" ${c.plano === p ? 'selected' : ''}>${p}</option>`).join('');
                             })()}
                         </select>
                     </td>
