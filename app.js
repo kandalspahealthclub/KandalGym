@@ -4062,7 +4062,7 @@ Bons treinos!`;
                             </div>
 
                             ${r.allowClasses ? `
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; flex-grow: 1;">
+                                <div style="display: flex; flex-direction: column; gap: 1rem; flex-grow: 1;">
                                     <div style="background: rgba(38,222,129,0.05); padding: 1rem 0.5rem; border-radius: 12px; border: 1px solid rgba(38,222,129,0.1);">
                                         <h5 style="margin: 0 0 1rem 0.5rem; font-size: 0.85rem; color: var(--success); display: flex; align-items: center; gap: 6px;">
                                             <i class="fas fa-check-circle"></i> Permitidas
@@ -4113,7 +4113,7 @@ Bons treinos!`;
         const bgActive = theme === 'success' ? 'rgba(38,222,129,0.15)' : 'rgba(255,71,87,0.15)';
         
         return `
-            <div style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 0 0.5rem; scrollbar-width: thin; scrollbar-color: ${color} transparent;">
+            <div style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 0 0.5rem; scrollbar-width: thin; scrollbar-color: ${color} transparent;">
                 ${allClasses.map(name => {
                     const isChecked = selected.includes(name);
                     return `
