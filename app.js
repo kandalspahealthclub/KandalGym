@@ -4026,59 +4026,72 @@ Bons treinos!`;
         const uniqueClasses = [...new Set((this.state.classes || []).map(c => c.name).filter(n => n))].sort();
         
         container.innerHTML = `
-            <div class="glass-panel" style="padding: 1.5rem; border-radius: 12px; border: 1px solid var(--surface-border); background:rgba(255,255,255,0.02);">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 2rem;">
-                    <div>
-                        <h3 style="margin:0;"><i class="fas fa-lock"></i> Restrições por Mensalidade</h3>
-                        <p style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Defina as aulas permitidas para cada plano.</p>
-                    </div>
-                    <button class="btn btn-primary" onclick="app.addNewPlanRestriction()" style="font-size:0.8rem;"><i class="fas fa-plus"></i> Novo Plano</button>
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 2rem;">
+                <div>
+                    <h3 style="margin:0;"><i class="fas fa-crown" style="color:#f1c40f;"></i> Regras de Mensalidades</h3>
+                    <p style="color:var(--text-muted); font-size:0.85rem; margin-top:5px;">Configure os acessos exclusivos de cada plano.</p>
                 </div>
+                <button class="btn btn-primary" onclick="app.addNewPlanRestriction()" style="font-size:0.85rem; padding: 0.6rem 1rem; height:fit-content;"><i class="fas fa-plus"></i> Novo Plano</button>
+            </div>
 
-                <div style="overflow-x:auto;">
-                    <table class="premium-table">
-                        <thead>
-                            <tr>
-                                <th>Mensalidade</th>
-                                <th style="text-align:center;">Permite Aulas?</th>
-                                <th>Aulas Permitidas</th>
-                                <th>Aulas Excluídas</th>
-                                <th style="text-align:center;">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${plans.map(p => {
-                                const r = this.state.planRestrictions[p];
-                                if (typeof r.filter === 'string') r.filter = r.filter ? [r.filter] : [];
-                                if (!r.exclude) r.exclude = [];
-                                if (typeof r.exclude === 'string') r.exclude = r.exclude ? [r.exclude] : [];
-                                
-                                return `
-                                    <tr>
-                                        <td><strong>${p}</strong></td>
-                                        <td style="text-align:center;">
-                                            <input type="checkbox" ${r.allowClasses ? 'checked' : ''} onchange="app.updatePlanRestriction('${p}', 'allowClasses', this.checked)">
-                                        </td>
-                                        <td>
-                                            ${this.renderMultiSelectCheckboxes(p, 'filter', r.filter, uniqueClasses)}
-                                        </td>
-                                        <td>
-                                            ${this.renderMultiSelectCheckboxes(p, 'exclude', r.exclude, uniqueClasses)}
-                                        </td>
-                                        <td style="text-align:center;">
-                                            <button class="btn-icon danger" onclick="app.deletePlanRestriction('${p}')" title="Eliminar"><i class="fas fa-trash"></i></button>
-                                        </td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                </div>
-                <div style="margin-top:1.5rem; padding:1rem; background:rgba(38,222,129,0.05); border-radius:8px; border:1px dashed rgba(38,222,129,0.2);">
-                    <small style="color: #26de81;">
-                        <i class="fas fa-info-circle"></i> 
-                        <strong>Gestão de Aulas:</strong> Selecione as aulas permitidas ou excluídas para cada plano. O sistema valida automaticamente no momento da reserva.
-                    </small>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.5rem;">
+                ${plans.map(p => {
+                    const r = this.state.planRestrictions[p];
+                    if (typeof r.filter === 'string') r.filter = r.filter ? [r.filter] : [];
+                    if (!r.exclude) r.exclude = [];
+                    if (typeof r.exclude === 'string') r.exclude = r.exclude ? [r.exclude] : [];
+                    
+                    return `
+                        <div class="glass-card animate-fade-in" style="padding: 1.5rem; position: relative; display: flex; flex-direction: column; gap: 1.2rem; border-top: 4px solid var(--accent);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4 style="margin: 0; font-size: 1.3rem; display: flex; align-items: center; gap: 8px;">
+                                    <i class="fas fa-id-card" style="color: var(--accent); opacity: 0.8;"></i> ${p}
+                                </h4>
+                                <button class="btn-icon danger" style="background: rgba(255,71,87,0.1);" onclick="app.deletePlanRestriction('${p}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                            </div>
+
+                            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                                <div>
+                                    <span style="font-weight: 600; display: block; margin-bottom: 3px;">Permite Aulas?</span>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Acesso geral a reservas</span>
+                                </div>
+                                <label class="switch" style="margin: 0;">
+                                    <input type="checkbox" ${r.allowClasses ? 'checked' : ''} onchange="app.updatePlanRestriction('${p}', 'allowClasses', this.checked); app.switchAdminTab('plans')">
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+
+                            ${r.allowClasses ? `
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; flex-grow: 1;">
+                                    <div style="background: rgba(38,222,129,0.05); padding: 1rem 0.5rem; border-radius: 12px; border: 1px solid rgba(38,222,129,0.1);">
+                                        <h5 style="margin: 0 0 1rem 0.5rem; font-size: 0.85rem; color: var(--success); display: flex; align-items: center; gap: 6px;">
+                                            <i class="fas fa-check-circle"></i> Permitidas
+                                        </h5>
+                                        ${this.renderMultiSelectCheckboxes(p, 'filter', r.filter, uniqueClasses, 'success')}
+                                    </div>
+                                    <div style="background: rgba(255,71,87,0.05); padding: 1rem 0.5rem; border-radius: 12px; border: 1px solid rgba(255,71,87,0.1);">
+                                        <h5 style="margin: 0 0 1rem 0.5rem; font-size: 0.85rem; color: var(--danger); display: flex; align-items: center; gap: 6px;">
+                                            <i class="fas fa-times-circle"></i> Excluídas
+                                        </h5>
+                                        ${this.renderMultiSelectCheckboxes(p, 'exclude', r.exclude, uniqueClasses, 'danger')}
+                                    </div>
+                                </div>
+                            ` : `
+                                <div style="text-align: center; padding: 2rem 1rem; color: var(--text-muted); background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1); flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                    <i class="fas fa-ban" style="font-size: 2.5rem; opacity: 0.5; margin-bottom: 1rem;"></i>
+                                    <span style="font-size: 0.9rem;">Este plano não tem permissão para usar o sistema de reservas online.</span>
+                                </div>
+                            `}
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+
+            <div style="margin-top:2.5rem; padding:1.2rem 1.5rem; background:rgba(38,222,129,0.05); border-radius:12px; border:1px solid rgba(38,222,129,0.2); display: flex; align-items: flex-start; gap: 1.2rem;">
+                <i class="fas fa-lightbulb" style="color: #26de81; font-size: 1.5rem; margin-top: 2px;"></i> 
+                <div>
+                    <strong style="color: #26de81; display: block; margin-bottom: 6px;">Como funciona a gestão inteligente?</strong>
+                    <small style="color: var(--text-muted); font-size:0.85rem; line-height: 1.4;">As regras são aplicadas no momento exato em que o aluno tenta marcar a aula. Pode configurar planos exclusivos para Pilates ou impedir a marcação de aulas Premium num plano Básico, bloqueando automaticamente a app do cliente.</small>
                 </div>
             </div>
         `;
@@ -4093,19 +4106,49 @@ Bons treinos!`;
         this.showToast('Regra guardada.');
     }
 
-    renderMultiSelectCheckboxes(plan, field, selected = [], allClasses = []) {
-        if (allClasses.length === 0) return '<small style="color:var(--text-muted); opacity:0.6;">(Sem aulas agendadas)</small>';
+    renderMultiSelectCheckboxes(plan, field, selected = [], allClasses = [], theme = 'success') {
+        if (allClasses.length === 0) return '<small style="color:var(--text-muted); opacity:0.6; display:block; text-align:center; padding: 1rem 0;">(Vazio)</small>';
+        
+        const color = theme === 'success' ? '#26de81' : '#ff4757'; // Success or Danger explicitly defined
+        const bgActive = theme === 'success' ? 'rgba(38,222,129,0.15)' : 'rgba(255,71,87,0.15)';
         
         return `
-            <div class="glass-inset" style="max-height: 120px; overflow-y: auto; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); min-width: 160px; scrollbar-width: thin;">
-                ${allClasses.map(name => `
-                    <label style="display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: #fff; cursor: pointer; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.02);">
-                        <input type="checkbox" value="${name}" ${selected.includes(name) ? 'checked' : ''} 
-                            onchange="app.togglePlanClassRestriction('${plan}', '${field}', this.value, this.checked)"
-                            style="width: 14px; height: 14px; accent-color: var(--primary);">
-                        <span>${name}</span>
-                    </label>
-                `).join('')}
+            <div style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 0 0.5rem; scrollbar-width: thin; scrollbar-color: ${color} transparent;">
+                ${allClasses.map(name => {
+                    const isChecked = selected.includes(name);
+                    return `
+                        <label style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: ${isChecked ? bgActive : 'rgba(0,0,0,0.2)'}; border: 1px solid ${isChecked ? color : 'rgba(255,255,255,0.05)'}; border-radius: 8px; cursor: pointer; transition: all 0.25s ease; margin:0;" class="hover-scale-sm">
+                            <span style="font-size: 0.8rem; color: ${isChecked ? '#fff' : 'var(--text-muted)'}; font-weight: ${isChecked ? '600' : '400'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;" title="${name}">${name}</span>
+                            <input type="checkbox" value="${name}" ${isChecked ? 'checked' : ''} 
+                                onchange="
+                                    app.togglePlanClassRestriction('${plan}', '${field}', this.value, this.checked);
+                                    let label = this.parentElement;
+                                    let icon = label.querySelector('i');
+                                    let text = label.querySelector('span');
+                                    if(this.checked) {
+                                        label.style.background = '${bgActive}';
+                                        label.style.borderColor = '${color}';
+                                        text.style.color = '#fff';
+                                        text.style.fontWeight = '600';
+                                        icon.className = 'fas fa-check-circle';
+                                        icon.style.color = '${color}';
+                                        icon.style.transform = 'scale(1.2)';
+                                    } else {
+                                        label.style.background = 'rgba(0,0,0,0.2)';
+                                        label.style.borderColor = 'rgba(255,255,255,0.05)';
+                                        text.style.color = 'var(--text-muted)';
+                                        text.style.fontWeight = '400';
+                                        icon.className = 'fas fa-circle';
+                                        icon.style.color = 'rgba(255,255,255,0.1)';
+                                        icon.style.transform = 'scale(1)';
+                                    }
+                                    setTimeout(() => { icon.style.transform = ''; }, 200);
+                                "
+                                style="display: none;">
+                            <i class="fas ${isChecked ? 'fa-check-circle' : 'fa-circle'}" style="color: ${isChecked ? color : 'rgba(255,255,255,0.1)'}; font-size: 1rem; transition: all 0.2s ease;"></i>
+                        </label>
+                    `;
+                }).join('')}
             </div>
         `;
     }
@@ -4121,8 +4164,7 @@ Bons treinos!`;
             this.state.planRestrictions[plan][field] = current.filter(c => c !== className);
         }
         this.saveState();
-        // Não renderizar tudo de novo para não perder o scroll, mas salvamos o estado.
-        // Opcional: mostrar toast.
+        // UI is handled inline inside the label onchange attributes for instant slick feedback.
     }
 
     addNewPlanRestriction() {
