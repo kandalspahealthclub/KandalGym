@@ -159,13 +159,13 @@ class FitnessApp {
             // Se entrou no listener, já temos resposta do servidor
             this.hasLoadedData = true;
 
-            // Não processar se for uma gravação nossa (evita loops e cintilação)
-            if (this.isSaving) return;
-
             const data = snapshot.val();
-            if (data) {
+            // Só sobrescreve o estado local se não estivermos no meio de uma gravação nossa
+            // para evitar conflitos de latência (compensation)
+            if (data && !this.isSaving) {
                 this.state = data;
             }
+
 
             // 1. Integridade local
             const collections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes'];
