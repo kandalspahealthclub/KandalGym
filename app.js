@@ -6019,7 +6019,12 @@ Bons treinos!`;
                     </td>
                     <td style="text-align: right;">
                         <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                            <button class="btn-icon" onclick="app.toggleQRCodeDisplay('qr-row-area-${idx}', '${c.id}')" title="Gerar QR"><i class="fas fa-qrcode"></i></button>
+                            <button class="btn-icon" onclick="app.showUserQRLogs('${c.id}')" title="Ver Histórico de Acessos" style="background:rgba(255,255,255,0.05); color:var(--text-muted);">
+                                <i class="fas fa-history"></i>
+                            </button>
+                            <button class="btn-icon" onclick="app.toggleQRCodeDisplay('qr-row-area-${idx}', '${c.id}')" title="Gerar QR">
+                                <i class="fas fa-qrcode"></i>
+                            </button>
                             <button class="btn-icon danger" onclick="app.deleteQRClient('${c.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
