@@ -2149,68 +2149,105 @@ Bons treinos!`;
             }
 
             return `
-                            <div class="glass-card" style="margin-bottom:0; background:rgba(255,255,255,0.02); padding: 1rem;">
-                                <div style="display:flex; align-items:center; gap:12px; margin-bottom:0.75rem;">
+                            <div class="glass-card" style="margin-bottom:0.5rem; background:rgba(255,255,255,0.03); padding: 1.25rem; border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
+                                <div style="display:flex; align-items:flex-start; gap:14px; margin-bottom:1rem;">
                                     <!-- Miniatura do Exercício -->
-                                    <div style="width:55px; height:55px; border-radius:10px; overflow:hidden; background:rgba(0,0,0,0.3); flex-shrink:0; display:flex; align-items:center; justify-content:center; border: 1px solid var(--surface-border); box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                                    <div style="width:65px; height:65px; border-radius:16px; overflow:hidden; background:rgba(0,0,0,0.4); flex-shrink:0; display:flex; align-items:center; justify-content:center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
                                         ${libEx && libEx.photoUrl ?
                     `<img src="${libEx.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` :
-                    `<div style="font-size:1.5rem; opacity:0.6;">${this.getExerciseIcon(libEx ? libEx.muscle : '')}</div>`
+                    `<div style="font-size:1.8rem; opacity:0.7;">${this.getExerciseIcon(libEx ? libEx.muscle : '')}</div>`
                 }
                                     </div>
-
+                                    
                                     <div style="min-width: 0; flex: 1;">
-                                        <strong style="font-size:1rem; display:block; margin-bottom:2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff;">${ex.name}</strong>
-                                        <div style="color:var(--text-muted); font-size:0.85rem; font-weight: 600;">
-                                            <span style="color: var(--primary);"><i class="fas fa-redo"></i> ${ex.sets} x ${ex.reps}</span>
-                                            ${ex.observations ? `<br><small style="color:var(--accent); font-size: 0.75rem; font-weight: 400;"><i class="fas fa-info-circle"></i> ${ex.observations}</small>` : ''}
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                                            <strong style="font-size:1.05rem; display:block; color: #fff; line-height: 1.3;">${ex.name}</strong>
+                                            ${libEx && libEx.videoUrl ? `
+                                                <button class="btn btn-ghost" onclick="app.viewExerciseVideo('${libEx.videoUrl}', '${ex.name}')" 
+                                                    style="color:var(--primary); background:rgba(var(--primary-rgb),0.15); width: 32px; height: 32px; padding: 0; border-radius: 50%; border: 1px solid rgba(var(--primary-rgb),0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                                    <i class="fas fa-play" style="font-size: 0.75rem; margin-left: 2px;"></i>
+                                                </button>
+                                            ` : ''}
+                                        </div>
+                                        <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 10px;">
+                                            <div style="font-size:0.8rem; font-weight: 700; color: var(--primary); background: rgba(var(--primary-rgb),0.1); padding: 2px 8px; border-radius: 6px;">
+                                                <i class="fas fa-redo-alt" style="font-size: 0.7rem;"></i> ${ex.sets} x ${ex.reps}
+                                            </div>
+                                            ${libEx && libEx.muscle ? `
+                                                <div style="font-size:0.75rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 6px;">
+                                                    ${libEx.muscle}
+                                                </div>
+                                            ` : ''}
                                         </div>
                                     </div>
-
-                                    ${libEx && libEx.videoUrl ? `
-                                        <button class="btn btn-ghost btn-sm" onclick="app.viewExerciseVideo('${libEx.videoUrl}', '${ex.name}')" 
-                                            style="color:var(--primary); background:rgba(145,27,43,0.1); padding: 8px 12px; font-size: 0.75rem; flex-shrink: 0; border-radius: 8px; border: 1px solid rgba(145,27,43,0.2);">
-                                            <i class="fas fa-video"></i> <span class="hide-mobile" style="margin-left:4px;">Vídeo</span>
-                                        </button>
-                                    ` : ''}
                                 </div>
 
+                                ${ex.observations ? `
+                                    <div style="background: rgba(var(--accent-rgb),0.05); padding: 8px 12px; border-radius: 12px; margin-bottom: 1rem; border-left: 3px solid var(--accent);">
+                                        <small style="color:var(--accent); font-size: 0.75rem; font-weight: 500; display: block; line-height: 1.4;">
+                                            <i class="fas fa-quote-left" style="opacity:0.5; font-size: 0.6rem; vertical-align: top;"></i> 
+                                            ${ex.observations}
+                                        </small>
+                                    </div>
+                                ` : ''}
+
                                 ${isClient ? `
-                                    <div style="margin-top:0.75rem; padding-top:0.75rem; border-top:1px dashed rgba(255,255,255,0.08);">
-                                        <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">Cargas (kg)</label>
-                                        <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
+                                    <div style="background: rgba(0,0,0,0.15); padding: 1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
+                                        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                            <label style="font-size:0.7rem; color:var(--text-muted); font-weight: 700; text-transform:uppercase; letter-spacing:0.8px;">Registo de Cargas (kg)</label>
+                                            <i class="fas fa-weight-hanging" style="font-size: 0.8rem; color: var(--primary); opacity: 0.6;"></i>
+                                        </div>
+                                        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap:0.5rem; margin-bottom: 1rem;">
                                             ${Array.from({ length: numSets }).map((_, sIdx) => {
                     const val = (ex.weightLog && ex.weightLog[sIdx]) || '';
                     return `
-                                                <div style="flex:1; min-width:45px; max-width:60px;">
-                                                    <small style="display:block; text-align:center; font-size:0.6rem; color:var(--text-muted); margin-bottom:1px;">S${sIdx + 1}</small>
-                                                    <input type="number" value="${val}" placeholder="0" 
+                                                <div style="text-align: center;">
+                                                    <input type="number" value="${val}" placeholder="S${sIdx + 1}" 
                                                         onblur="app.logWeight(${clientId}, ${dIdx}, ${exIdx}, ${sIdx}, this.value)"
-                                                        style="width:100%; height:32px; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:6px; color:#fff; text-align:center; font-size:0.85rem;">
+                                                        class="no-spin"
+                                                        style="width:100%; height:38px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:#fff; text-align:center; font-size:0.9rem; font-weight: 700; outline: none; transition: all 0.2s;"
+                                                        onfocus="this.style.borderColor='var(--primary)'; this.style.background='rgba(var(--primary-rgb),0.1)'">
                                                 </div>
                                                 `;
                 }).join('')}
                                         </div>
-                                        <div style="margin-top:0.75rem;">
+                                        
+                                        <div style="position: relative;">
                                             <textarea id="note-${clientId}-${dIdx}-${exIdx}" 
                                                 onblur="app.saveExerciseNote(${clientId}, ${dIdx}, ${exIdx}, this.value)"
-                                                placeholder="Notas (ex: senti leve...)"
-                                                style="width:100%; min-height:45px; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:8px; font-size:0.85rem; resize:vertical; font-family:inherit;">${ex.clientNotes || ''}</textarea>
+                                                placeholder="Notas do exercício..."
+                                                style="width:100%; min-height:50px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); border-radius:12px; color:#fff; padding:10px 10px 10px 32px; font-size:0.85rem; resize:vertical; font-family:inherit; outline:none; transition: all 0.2s;"
+                                                onfocus="this.style.borderColor='var(--accent)'">${ex.clientNotes || ''}</textarea>
+                                            <i class="fas fa-sticky-note" style="position:absolute; left:12px; top:14px; font-size:0.8rem; color:var(--text-muted);"></i>
                                         </div>
                                     </div>
                                 ` : ''}
                             </div>
                             `;
+
         }).join('')}
                     </div>
 
+                    <!-- Feedback Global do Treino -->
                     ${isClient ? `
-                        <div style="margin-top:2rem; text-align:center;">
-                            <button class="btn btn-primary" onclick="app.finishWorkout(${clientId}, ${dIdx})" style="width:100%; height:55px; font-size:1.1rem; box-shadow:0 4px 15px rgba(145,27,43,0.3);">
-                                <i class="fas fa-check-circle"></i> Concluir Treino (${day.title})
+                        <div class="glass-panel" style="background: rgba(var(--primary-rgb), 0.05); border: 1px solid rgba(var(--primary-rgb), 0.2); margin-top: 2rem; padding: 1.25rem;">
+                            <h4 style="margin: 0 0 1rem; font-size: 0.95rem; color: var(--primary); display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-comment-dots"></i> Feedback Geral do Treino
+                            </h4>
+                            <textarea id="workout-global-note-${clientId}-${dIdx}" 
+                                placeholder="Como correu o treino de hoje? (ex: senti-me com muita energia, dor no joelho direito...)"
+                                style="width:100%; min-height:80px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#fff; padding:12px; font-size:0.9rem; resize:vertical; font-family:inherit; outline:none; transition: border-color 0.3s;"
+                                onfocus="this.style.borderColor='var(--primary)'"
+                                onblur="this.style.borderColor='rgba(255,255,255,0.1)'"></textarea>
+                        </div>
+
+                        <div style="margin-top:2rem; text-align:center; padding-bottom: 2rem;">
+                            <button class="btn btn-primary" onclick="app.finishWorkout(${clientId}, ${dIdx})" 
+                                style="width:100%; height:60px; font-size:1.1rem; font-weight: 800; border-radius: 16px; background: linear-gradient(135deg, var(--primary), var(--accent)); border:none; box-shadow:0 8px 25px rgba(var(--primary-rgb),0.4); display: flex; align-items: center; justify-content: center; gap: 12px;">
+                                <i class="fas fa-check-double" style="font-size: 1.3rem;"></i> Finalizar Treino
                             </button>
-                            <p style="font-size:0.75rem; color:var(--text-muted); margin-top:10px;">
-                                Ao concluir, os pesos registados serao gravados no seu histórico.
+                            <p style="font-size:0.75rem; color:var(--text-muted); margin-top:12px; font-weight: 500;">
+                                <i class="fas fa-info-circle"></i> Os pesos e notas serão guardados no seu histórico pessoal.
                             </p>
                         </div>
                     ` : ''}
@@ -2280,15 +2317,20 @@ Bons treinos!`;
                 this.state.trainingHistory[cid] = [];
             }
 
+            const globalNoteEl = document.getElementById(`workout-global-note-${cid}-${dayIdx}`);
+            const globalNote = globalNoteEl ? globalNoteEl.value : '';
+
             const session = {
                 date: new Date().toLocaleDateString('pt-PT'),
                 time: new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }),
                 title: day.title,
+                globalNote: globalNote,
                 exercises: day.exercises.map(ex => ({
                     name: ex.name,
                     sets: ex.sets,
                     reps: ex.reps,
-                    weights: [...(ex.weightLog || [])]
+                    weights: [...(ex.weightLog || [])],
+                    clientNote: ex.clientNotes || ''
                 }))
             };
 
@@ -3726,36 +3768,63 @@ Bons treinos!`;
             </div>
 
             ${history.length === 0 ? `
-                <div class="glass-panel" style="padding:3rem; text-align:center; color:var(--text-muted);">
-                    <i class="fas fa-calendar-times" style="font-size:3rem; opacity:0.2; margin-bottom:1rem; display:block;"></i>
+                <div class="glass-panel" style="padding:4rem 1rem; text-align:center; color:var(--text-muted);">
+                    <div style="width:80px; height:80px; background:rgba(255,255,255,0.03); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
+                        <i class="fas fa-calendar-times" style="font-size:2rem; opacity:0.3;"></i>
+                    </div>
+                    <p style="font-size:1.1rem; font-weight:600; color:#fff; margin-bottom:0.5rem;">Sem Histórico</p>
                     Ainda não concluiu nenhum treino.
                 </div>
             ` : history.map(session => `
-                <div class="glass-panel" style="padding:1.5rem; margin-bottom:1.5rem; border-left:4px solid var(--accent); position:relative;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
+                <div class="glass-panel" style="padding:1.5rem; margin-bottom:1.5rem; border-left:4px solid var(--primary); position:relative; overflow:hidden;">
+                    <div style="position:absolute; right:-20px; top:-20px; font-size:6rem; color:var(--primary); opacity:0.03; pointer-events:none;">
+                        <i class="fas fa-dumbbell"></i>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem;">
                         <div>
-                            <strong style="color:var(--accent);">${session.date}</strong>
-                            <span style="color:var(--text-muted); font-size:0.8rem; margin-left:10px;">${session.time}</span>
-                            <h3 style="margin:5px 0 0 0; color:#fff;">${session.title}</h3>
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                                <span style="background:var(--primary); color:#fff; font-size:0.65rem; font-weight:800; padding:2px 8px; border-radius:4px; text-transform:uppercase;">${session.date}</span>
+                                <span style="color:var(--text-muted); font-size:0.75rem; font-weight:600;">${session.time}</span>
+                            </div>
+                            <h3 style="margin:0; color:#fff; font-weight:800; font-size:1.2rem;">${session.title}</h3>
                         </div>
-                        <button class="btn btn-ghost btn-sm" style="color:var(--danger); padding:5px 10px;" onclick="app.deleteTrainingSession(${history.indexOf(session)})">
-                            <i class="fas fa-trash-alt"></i>
+                        <button class="btn btn-ghost btn-sm" style="color:var(--danger); background:rgba(var(--danger-rgb),0.1); border-radius:8px; width:36px; height:36px; padding:0;" onclick="app.deleteTrainingSession(${history.indexOf(session)})">
+                            <i class="fas fa-trash-alt" style="font-size: 0.9rem;"></i>
                         </button>
                     </div>
+
+                    ${session.globalNote ? `
+                        <div style="background:rgba(var(--primary-rgb),0.05); padding:12px; border-radius:12px; margin-bottom:1.25rem; border:1px solid rgba(var(--primary-rgb),0.1); font-size:0.85rem; color:#e0e0e0; line-height:1.5;">
+                            <strong style="color:var(--primary); font-size:0.75rem; text-transform:uppercase; display:block; margin-bottom:4px;"><i class="fas fa-comment"></i> Feedback Global:</strong>
+                            ${session.globalNote}
+                        </div>
+                    ` : ''}
+
                     <div style="display:grid; grid-template-columns: 1fr; gap:0.75rem;">
                         ${session.exercises.map(ex => `
-                            <div style="padding:10px; background:rgba(255,255,255,0.03); border-radius:10px;">
-                                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                                    <strong style="font-size:0.9rem;">${ex.name}</strong>
-                                    <small style="color:var(--text-muted);">${ex.sets}x${ex.reps}</small>
+                            <div style="padding:14px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); border-radius:16px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                    <strong style="font-size:0.95rem; color:#fff;">${ex.name}</strong>
+                                    <div style="font-size:0.75rem; color:var(--primary); font-weight:700; background:rgba(var(--primary-rgb),0.1); padding:2px 8px; border-radius:6px;">
+                                        ${ex.sets}x${ex.reps}
+                                    </div>
                                 </div>
-                                <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                                
+                                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom: ${ex.clientNote ? '10px' : '0'};">
                                     ${ex.weights.map((w, idx) => `
-                                        <div style="font-size:0.75rem; background:rgba(0,0,0,0.2); padding:3px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.05);">
-                                            S${idx + 1}: <span style="color:var(--accent); font-weight:bold;">${w || '-'}kg</span>
+                                        <div style="font-size:0.75rem; background:rgba(0,0,0,0.3); padding:4px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.05); color:#fff;">
+                                            <span style="color:var(--text-muted); font-size:0.6rem;">S${idx + 1}</span> <span style="font-weight:800; margin-left:2px;">${w || '-'} <small>kg</small></span>
                                         </div>
                                     `).join('')}
                                 </div>
+
+                                ${ex.clientNote ? `
+                                    <div style="font-size:0.8rem; color:var(--accent); background:rgba(var(--accent-rgb),0.05); padding:8px 10px; border-radius:10px; display:flex; gap:8px; align-items:flex-start;">
+                                        <i class="fas fa-sticky-note" style="margin-top:2px; font-size:0.7rem; opacity:0.6;"></i>
+                                        <div style="font-style:italic;">${ex.clientNote}</div>
+                                    </div>
+                                ` : ''}
                             </div>
                         `).join('')}
                     </div>
