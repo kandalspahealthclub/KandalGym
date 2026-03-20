@@ -156,58 +156,66 @@ class FitnessApp {
         this.isInitialized = true;
 
         this.dbRef.on('value', (snapshot) => {
-            // Se entrou no listener, já temos resposta do servidor
-            this.hasLoadedData = true;
-
-            const data = snapshot.val();
-            // Só sobrescreve o estado local se não estivermos no meio de uma gravação nossa
-            // para evitar conflitos de latência (compensation)
-            if (data && !this.isSaving) {
-                this.state = data;
-            }
-
-
-            // 1. Integridade local
-            const collections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes'];
-            collections.forEach(coll => { if (!this.state[coll]) this.state[coll] = []; });
-
-            const dictCollections = ['trainingPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments', 'planRestrictions'];
-            dictCollections.forEach(coll => { if (!this.state[coll]) this.state[coll] = {}; });
-            
-            // Integridade das restrições (Garantir que os planos padrão existem pelo menos uma vez)
-            if (Object.keys(this.state.planRestrictions).length === 0) {
-                 this.state.planRestrictions = JSON.parse(JSON.stringify(this.planRestrictions));
-            }
-
-            // 2. Conta mestre garantida
-            if (!this.state.admins.some(a => a.email === 'admin@kandalgym.com')) {
-                this.state.admins.push({
-                    id: 1, name: 'KandalGym Master', email: 'admin@kandalgym.com', password: 'admin', role: 'admin'
-                });
-            }
-
-            // 3. Sincronização de Utilizadores QR (Garantir que todos têm acesso)
-            this.syncQRUsers();
-
-            // 4. Sincronização local e UI
-
             try {
-                localStorage.setItem('kandalgym_state', JSON.stringify(this.state));
-            } catch (e) { }
+                // Se entrou no listener, já temos resposta do servidor
+                this.hasLoadedData = true;
 
-            this.syncSessionWithState();
+                const data = snapshot.val();
+                // Só sobrescreve o estado local se não estivermos no meio de uma gravação nossa
+                // para evitar conflitos de latência (compensation)
+                if (data && !this.isSaving) {
+                    this.state = data;
+                }
 
-            // Atualizar UI apenas se logado e não houver modais abertas
-            if (this.isLoggedIn && !document.querySelector('.modal-overlay')) {
-                this.renderContent();
-            }
+                // 1. Integridade local
+                const collections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes'];
+                collections.forEach(coll => { if (!this.state[coll]) this.state[coll] = []; });
 
-            if (!this.checkInterval) {
-                setTimeout(() => this.checkFinishedClasses(), 2000);
-                this.checkInterval = setInterval(() => this.checkFinishedClasses(), 60000);
+                const dictCollections = ['trainingPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments', 'planRestrictions'];
+                dictCollections.forEach(coll => { if (!this.state[coll]) this.state[coll] = {}; });
+                
+                // Integridade das restrições
+                if (Object.keys(this.state.planRestrictions || {}).length === 0) {
+                     this.state.planRestrictions = JSON.parse(JSON.stringify(this.planRestrictions));
+                }
+
+                // 2. Conta mestre garantida
+                if (!this.state.admins.some(a => a.email === 'admin@kandalgym.com')) {
+                    this.state.admins.push({
+                        id: 1, name: 'KandalGym Master', email: 'admin@kandalgym.com', password: 'admin', role: 'admin'
+                    });
+                }
+
+                // 3. Sincronização de Utilizadores QR
+                if (this.isLoggedIn) {
+                    this.syncQRUsers();
+                }
+
+                // 4. Sincronização local e UI
+                try {
+                    localStorage.setItem('kandalgym_state', JSON.stringify(this.state));
+                } catch (e) { }
+
+                this.syncSessionWithState();
+
+                // Atualizar UI apenas se logado e não houver modais abertas
+                if (this.isLoggedIn && !document.querySelector('.modal-overlay')) {
+                    this.renderContent();
+                }
+
+                if (!this.checkInterval) {
+                    setTimeout(() => this.checkFinishedClasses(), 2000);
+                    this.checkInterval = setInterval(() => this.checkFinishedClasses(), 60000);
+                }
+            } catch (err) {
+                console.error("Critical error in Firebase listener:", err);
+                // Mesmo com erro, tentamos mostrar algo
+                this.hasLoadedData = true;
+                if (this.isLoggedIn) this.renderContent();
             }
         });
     }
+
 
     async backgroundSync() {
         // Agora o 'init' com dbRef.on('value') já faz a sincronização automática em tempo real.
