@@ -5769,20 +5769,18 @@ Bons treinos!`;
                         </h3>
                         <div style="display: grid; gap: 10px; margin-top: 15px;">
                             <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-user-check" style="color: var(--success); width: 20px;"></i> Conta deve estar Ativa.
+                                <i class="fas fa-sign-in-alt" style="color: var(--success); width: 20px;"></i> Entrada: Debita 1 crédito e inicia cooldown.
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-calendar-times" style="color: var(--accent); width: 20px;"></i> Data de validade superior a hoje.
+                                <i class="fas fa-sign-out-alt" style="color: var(--accent); width: 20px;"></i> Saída: Registo de saída (Não debita créditos).
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-ticket-alt" style="color: var(--danger); width: 20px;"></i> Deve ter pelo menos 1 crédito.
+                                <i class="fas fa-clock" style="color: var(--primary); width: 20px;"></i> Cooldown de 2 min entre operações.
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-clock" style="color: var(--primary); width: 20px;"></i> Cooldown de 2 min entre leituras.
+                                <i class="fas fa-ban" style="color: var(--accent); width: 20px;"></i> Regras de validade apenas na Entrada.
                             </div>
-                            <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-ban" style="color: var(--accent); width: 20px;"></i> Máximo de 2 entradas por dia.
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -6443,67 +6441,90 @@ Bons treinos!`;
         const agora = new Date();
         const hj = agora.toISOString().split('T')[0];
 
-        // Validar data
-        if (hj > c.validade) {
-            this.showQRMsg(` ${c.nome}: Validade Expirada`, "bg-qr-warning");
-            this.lastProcessedQR = formattedId;
-            this.lastProcessedTime = Date.now();
-            return;
-        }
-
-        // Validar créditos
-        if ((c.ent || 0) <= 0) {
-            this.showQRMsg(` ${c.nome}: Sem créditos`, "bg-qr-danger");
-            this.lastProcessedQR = formattedId;
-            this.lastProcessedTime = Date.now();
-            return;
+        // Determinar se é ENTRADA ou SAÍDA
+        const lastLog = (c.histórico && c.histórico.length > 0) ? c.histórico[0] : null;
+        let isExit = false;
+        
+        if (lastLog) {
+            const lastDateStr = typeof lastLog === 'string' ? lastLog : lastLog.d;
+            const lastEntry = new Date(lastDateStr);
+            const lastType = typeof lastLog === 'string' ? 'in' : lastLog.t;
+            
+            // Se foi hoje e a última foi Entrada, agora é Saída
+            if (lastEntry.toDateString() === agora.toDateString() && lastType === 'in') {
+                isExit = true;
+            }
         }
 
         const isStaffMember = c.plano === 'Staff';
 
-        // Validar cooldown (2 minutos) - Apenas para Alunos
-        if (!isStaffMember && c.histórico && c.histórico.length > 0) {
-            const lastEntry = new Date(c.histórico[0]);
+        // Validar cooldown (2 minutos) - Para operações consecutivas
+        if (lastLog) {
+            const lastDateStr = typeof lastLog === 'string' ? lastLog : lastLog.d;
+            const lastEntry = new Date(lastDateStr);
             const diffMin = (agora - lastEntry) / 1000 / 60;
             if (diffMin < 2) {
                 const waitSec = Math.ceil(120 - diffMin * 60);
-                this.showQRMsg(`${c.nome}: Cooldown(${waitSec}s)`, "bg-qr-warning");
+                this.showQRMsg(`${c.nome}: Aguarde ${waitSec}s`, "bg-qr-warning");
                 this.lastProcessedQR = formattedId;
                 this.lastProcessedTime = Date.now();
                 return;
             }
         }
 
-        // Validar limite diario - Apenas para Alunos
-        if (!isStaffMember) {
-            const entriesHj = (c.histórico || []).filter(h => h.startsWith(hj)).length;
-            if (entriesHj >= 2) {
-                this.showQRMsg(`${c.nome}: Limite diário atingido`, "bg-qr-warning");
-                this.lastProcessedQR = formattedId;
-                this.lastProcessedTime = Date.now();
+        if (isExit) {
+            // --- LOGICA DE SAÍDA ---
+            if (!c.histórico) c.histórico = [];
+            c.histórico.unshift({ d: agora.toISOString(), t: 'out' });
+            
+            this.showQRMsg(`Até logo, ${c.nome}! Saída registada.`, "bg-qr-warning");
+            this.showToast(`Saída registada: ${c.nome}`, "info");
+        } else {
+            // --- LOGICA DE ENTRADA ---
+            // Validar data
+            if (hj > c.validade) {
+                this.showQRMsg(`${c.nome}: Validade Expirada`, "bg-qr-warning");
                 return;
             }
+
+            // Validar créditos
+            if ((c.ent || 0) <= 0) {
+                this.showQRMsg(`${c.nome}: Sem créditos`, "bg-qr-danger");
+                return;
+            }
+
+            // Validar limite diario - Apenas para Alunos
+            if (!isStaffMember) {
+                const entriesHj = (c.histórico || []).filter(l => {
+                    const d = typeof l === 'string' ? l : l.d;
+                    const t = typeof l === 'string' ? 'in' : l.t;
+                    return d.startsWith(hj) && t === 'in';
+                }).length;
+
+                if (entriesHj >= 2) {
+                    this.showQRMsg(`${c.nome}: Limite diário atingido`, "bg-qr-warning");
+                    return;
+                }
+            }
+
+            // Processar sucesso Entrada
+            c.ent--;
+            if (!c.histórico) c.histórico = [];
+            c.histórico.unshift({ d: agora.toISOString(), t: 'in' });
+
+            this.showQRMsg(`Bem-vindo, ${c.nome}! Entrada validada.`, "bg-qr-success");
+            this.showToast(`Entrada validada: ${c.nome}`, "success");
         }
 
-
-        // Processar sucesso
-        c.ent--;
-        if (!c.histórico) c.histórico = [];
-        c.histórico.unshift(agora.toISOString());
-
-        this.showQRMsg(`Bem-vindo, ${c.nome}! Entrada validada.`, "bg-qr-success");
-        this.showToast(`Entrada validada: ${c.nome}`, "success");
         this.lastProcessedQR = formattedId;
         this.lastProcessedTime = Date.now();
-
-
-
         this.saveState();
 
         // Refresh markers or cards if they are visible
         const grid = document.getElementById("gridQRClientes");
         if (grid) grid.innerHTML = this.renderQRClientCards();
     }
+
 
     showUserQRLogs(id) {
         const client = (this.state.qrClients || []).find(c => c.id === id);
@@ -6529,7 +6550,11 @@ Bons treinos!`;
                         </thead>
                         <tbody>
                             ${logs.length === 0 ? '<tr><td colspan="2" style="padding: 4rem 2rem; text-align: center; color: var(--text-muted);"><i class="fas fa-ghost" style="font-size:2rem; display:block; margin-bottom:1rem; opacity:0.3;"></i> Sem registos de acesso para este utilizador.</td></tr>' : logs.map(l => {
-                                const d = new Date(l);
+                                const dateStr = typeof l === 'string' ? l : l.d;
+                                const type = typeof l === 'string' ? 'in' : l.t;
+                                const d = new Date(dateStr);
+                                const isIn = type === 'in';
+                                
                                 return `
                                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,185,255,0.02)'" onmouseout="this.style.background='transparent'">
                                         <td style="padding: 12px 15px;">
@@ -6537,13 +6562,14 @@ Bons treinos!`;
                                             <div style="font-size: 0.75rem; color:var(--text-muted);">${d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</div>
                                         </td>
                                         <td style="padding: 12px 15px; text-align:center;">
-                                            <span style="display:inline-flex; align-items:center; gap:6px; background: rgba(38,222,129, 0.1); color: #26de81; padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(38,222,129, 0.2);">
-                                                <i class="fas fa-sign-in-alt"></i> ENTRADA
+                                            <span style="display:inline-flex; align-items:center; gap:6px; background: ${isIn ? 'rgba(38,222,129, 0.1)' : 'rgba(255,159,67, 0.1)'}; color: ${isIn ? '#26de81' : '#ff9f43'}; padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; border: 1px solid ${isIn ? 'rgba(38,222,129, 0.2)' : 'rgba(255,159,67, 0.2)'};">
+                                                <i class="fas ${isIn ? 'fa-sign-in-alt' : 'fa-sign-out-alt'}"></i> ${isIn ? 'ENTRADA' : 'SAÍDA'}
                                             </span>
                                         </td>
                                     </tr>
                                 `;
                             }).join('')}
+
                         </tbody>
                     </table>
                 </div>
