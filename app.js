@@ -5600,18 +5600,57 @@ Bons treinos!`;
                         </div>
                     </div>
                     ` : ''}
-                    <div style="overflow-x:auto;">
-                        <table class="premium-table">
+                    <style>
+                        .qr-modern-table { width: 100%; border-collapse: separate; border-spacing: 0 0.8rem; text-align: left; }
+                        .qr-modern-table th { padding: 0 1rem 0.5rem; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600; border: none; letter-spacing: 0.5px; }
+                        .qr-modern-row { transition: all 0.3s ease; }
+                        .qr-modern-row:hover td { background: rgba(255,255,255,0.05); }
+                        .qr-modern-row td { 
+                            background: rgba(255,255,255,0.02); 
+                            padding: 1rem; 
+                            vertical-align: middle;
+                            border-top: 1px solid rgba(255,255,255,0.04);
+                            border-bottom: 1px solid rgba(255,255,255,0.04);
+                        }
+                        .qr-modern-row td:first-child { 
+                            border-left: 1px solid rgba(255,255,255,0.04); 
+                            border-top-left-radius: 12px; 
+                            border-bottom-left-radius: 12px; 
+                        }
+                        .qr-modern-row td:last-child { 
+                            border-right: 1px solid rgba(255,255,255,0.04); 
+                            border-top-right-radius: 12px; 
+                            border-bottom-right-radius: 12px; 
+                        }
+                        .qr-input-sleek {
+                            background: rgba(0,0,0,0.2) !important;
+                            border: 1px solid rgba(255,255,255,0.05) !important;
+                            border-radius: 6px !important;
+                            padding: 0.5rem 0.8rem !important;
+                            color: #fff !important;
+                            font-size: 0.85rem !important;
+                            transition: all 0.3s ease;
+                            width: 100%;
+                            box-sizing: border-box;
+                        }
+                        .qr-input-sleek:focus {
+                            border-color: var(--primary) !important;
+                            background: rgba(0,0,0,0.4) !important;
+                            outline: none;
+                            box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+                        }
+                    </style>
+                    <div style="overflow-x:auto; padding-top: 0.5rem;">
+                        <table class="qr-modern-table">
                             <thead>
                                 <tr>
-                                    ${this.qrActiveTab === 'alunos' ? '<th style="width: 40px; text-align:center;"><i class="fas fa-check-square" style="color:var(--text-muted);"></i></th>' : ''}
-                                    <th style="width: 60px;">ID</th>
-                                    <th style="min-width: 140px;">${this.qrActiveTab === 'alunos' ? 'Aluno' : 'Staff'}</th>
-                                    <th style="width: 130px;">Plano</th>
+                                    ${this.qrActiveTab === 'alunos' ? '<th style="width: 40px; text-align:center;"><i class="fas fa-check-square"></i></th>' : ''}
+                                    <th style="min-width: 200px;">${this.qrActiveTab === 'alunos' ? 'Aluno (Nome / Tel)' : 'Staff (Nome / Tel)'}</th>
+                                    <th style="width: 140px;">Plano</th>
                                     <th style="text-align:center; width: 80px;">Estado</th>
-                                    <th style="text-align:center; width: 100px;">Créditos</th>
+                                    <th style="text-align:center; width: 110px;">Créditos</th>
                                     <th style="text-align:center; width: 80px;">Hoje</th>
-                                    <th style="text-align:center; width: 130px;">Validade</th>
+                                    <th style="text-align:center; width: 140px;">Validade</th>
                                     <th style="text-align:right; width: 100px;">Ações</th>
                                 </tr>
                             </thead>
@@ -5734,30 +5773,39 @@ Bons treinos!`;
             const isStaff = (this.state.teachers || []).some(t => Number(t.id) === Number(c.clientId)) ||
                 (this.state.admins || []).some(a => Number(a.id) === Number(c.clientId));
 
+            const avatarLetra = c.nome ? c.nome.substring(0, 1).toUpperCase() : '?';
             return `
-                <tr class="qr-row">
+                <tr class="qr-modern-row">
                     ${this.qrActiveTab === 'alunos' && !isStaff ? `
                     <td style="text-align:center;">
-                        <input type="checkbox" class="qr-bulk-checkbox" value="${c.id}" style="width:16px; height:16px; accent-color: var(--primary); cursor:pointer;">
+                        <div style="display: flex; justify-content:center; align-items:center; height:100%;">
+                            <input type="checkbox" class="qr-bulk-checkbox" value="${c.id}" style="width:18px; height:18px; accent-color: var(--primary); cursor:pointer;">
+                        </div>
                     </td>
                     ` : (this.qrActiveTab === 'alunos' ? '<td></td>' : '')}
                     <td>
-                        <span class="id-tag">${c.id}</span>
-                        <div style="font-size:0.6rem; color:var(--text-muted); margin-top:4px;">Ref: ${c.clientId || '-'}</div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="position:relative;">
+                                <div style="width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, rgba(var(--primary-rgb),0.8), rgba(var(--accent-rgb),0.8)); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                                    ${avatarLetra}
+                                </div>
+                                <div style="position: absolute; bottom: -4px; right: -8px; background: #2a2a2a; border-radius: 6px; padding: 2px 4px; border: 1px solid rgba(255,255,255,0.1); font-size: 0.55rem; font-weight: 800; color: var(--accent); white-space: nowrap;">
+                                    ${c.id}
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
+                                <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" class="qr-input-sleek" style="font-weight:700; font-size:0.9rem; padding:0.4rem 0.6rem !important;">
+                                <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" class="qr-input-sleek" style="color:var(--text-muted); font-size:0.75rem; padding:0.3rem 0.6rem !important;" placeholder="Telemóvel...">
+                                <span style="font-size:0.6rem; color:var(--text-muted);">Ref: ${c.clientId || '-'}</span>
+                            </div>
+                        </div>
                     </td>
                     <td>
-                        <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" 
-                            style="background:transparent; border:none; color:#fff; font-weight:700; font-size:0.85rem; width:100%; min-width:120px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding: 2px 0;">
-                        <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" 
-                                style="background:transparent; border:none; color:var(--text-muted); font-size:0.65rem; width:100%; margin-top:1px; border-bottom: 1px dashed rgba(255,255,255,0.05);">
-                    </td>
-                    <td>
-                        <select onchange="app.updateQRClientField('${c.id}', 'plano', this.value)" class="plan-badge"
-                            style="background:rgba(0,0,0,0.3); outline:none; cursor:pointer; width:110px;">
+                        <select onchange="app.updateQRClientField('${c.id}', 'plano', this.value)"
+                            style="background:rgba(var(--primary-rgb), 0.1); color:var(--primary); font-weight:600; border:1px solid rgba(var(--primary-rgb), 0.3); border-radius:20px; padding:6px 12px; outline:none; cursor:pointer; width:100%; font-size:0.8rem; appearance:none; text-align:center;">
                             ${isStaff ? '<option value="Staff">Staff / Vitalício</option>' : (() => {
                                 const plans = Object.keys(this.state.planRestrictions || {});
                                 if (plans.length === 0) {
-                                     // Fallback se não estiver carregado
                                      return `
                                         <option value="Livre Trânsito" ${c.plano === 'Livre Trânsito' ? 'selected' : ''}>Livre Trânsito</option>
                                         <option value="3x Semana" ${c.plano === '3x Semana' ? 'selected' : ''}>3x Semana</option>
@@ -5770,31 +5818,35 @@ Bons treinos!`;
                         </select>
                     </td>
                     <td style="text-align:center;">
-                        <input type="checkbox" ${c.ativo ? 'checked' : ''} onchange="app.toggleQRClientStatus('${c.id}')" style="accent-color: var(--primary); width:20px; height:20px; cursor:pointer;">
+                        <label style="position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer;">
+                            <input type="checkbox" ${c.ativo ? 'checked' : ''} onchange="app.toggleQRClientStatus('${c.id}')" style="opacity: 0; width: 0; height: 0;">
+                            <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: ${c.ativo ? 'var(--success)' : 'rgba(255,255,255,0.1)'}; transition: .4s; border-radius: 24px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);"></span>
+                            <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transform: ${c.ativo ? 'translateX(20px)' : 'translateX(0)'};"></span>
+                        </label>
                     </td>
                     <td>
-                        ${isStaff ? '<div style="text-align:center; font-weight:800; color:var(--accent);">∞</div>' : `
-                        <div class="qr-qty-controls" style="justify-content:center;">
-                            <div class="qr-btn-circle-sm" onclick="app.editQRCredit('${c.id}', -1)"><i class="fas fa-minus"></i></div>
-                            <input type="number" value="${c.ent}" onchange="app.updateQRClientField('${c.id}', 'ent', parseInt(this.value) || 0)"
-                                class="no-spin"
-                                style="background:transparent; border:none; color:#fff; font-weight:700; width:35px; text-align:center; outline:none; font-size:0.95rem;">
-                            <div class="qr-btn-circle-sm" onclick="app.editQRCredit('${c.id}', 1)"><i class="fas fa-plus"></i></div>
+                        ${isStaff ? '<div style="text-align:center; font-weight:800; color:var(--accent); font-size:1.5rem;">∞</div>' : `
+                        <div style="background:rgba(0,0,0,0.2); border-radius:8px; display:flex; align-items:center; justify-content:space-between; padding:4px; border:1px solid rgba(255,255,255,0.05);">
+                            <button onclick="app.editQRCredit('${c.id}', -1)" style="width:28px; height:28px; border-radius:6px; border:none; background:rgba(255,255,255,0.05); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;"><i class="fas fa-minus"></i></button>
+                            <input type="number" value="${c.ent}" onchange="app.updateQRClientField('${c.id}', 'ent', parseInt(this.value) || 0)" class="no-spin" style="background:transparent; border:none; color:#fff; font-weight:800; width:35px; text-align:center; outline:none; font-size:1rem; padding:0;">
+                            <button onclick="app.editQRCredit('${c.id}', 1)" style="width:28px; height:28px; border-radius:6px; border:none; background:var(--primary); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s; box-shadow:0 2px 8px rgba(var(--primary-rgb),0.4);"><i class="fas fa-plus"></i></button>
                         </div>
                         `}
                     </td>
                     <td>
-                        ${isStaff ? '<div style="text-align:center; font-weight:800; color:var(--primary);"><i class="fas fa-infinity"></i></div>' : `
-                        <div style="display: flex; align-items: center; gap: 8px; justify-content:center;">
-                            <div class="number-circle" style="${entHj >= 2 ? 'color:var(--danger); background:rgba(214, 48, 49, 0.1); border-color:var(--danger);' : ''}">${entHj}</div>
-                            <span style="font-weight:700; color:var(--text-muted); font-size:0.9rem;">/ 2</span>
+                        ${isStaff ? '<div style="text-align:center; color:var(--primary);"><i class="fas fa-infinity"></i></div>' : `
+                        <div style="display: flex; align-items: center; justify-content:center; gap: 6px;">
+                            <div style="background:${entHj >= 2 ? 'rgba(var(--danger-rgb),0.2)' : 'rgba(255,255,255,0.05)'}; color:${entHj >= 2 ? 'var(--danger)' : '#fff'}; width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.9rem; border:1px solid ${entHj >= 2 ? 'var(--danger)' : 'transparent'};">
+                                ${entHj}
+                            </div>
+                            <span style="font-weight:700; color:var(--text-muted); font-size:0.75rem;">/ 2</span>
                         </div>
                         `}
                     </td>
                     <td style="text-align:center;">
-                        ${isStaff ? '<span style="font-weight:800; color:var(--accent); font-size:0.75rem;">VITALICIO</span>' : `
-                        <input type="date" value="${c.validade}" onchange="app.updateQRClientField('${c.id}', 'validade', this.value)"
-                            style="background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:6px; padding:4px 8px; color:${hoje > c.validade ? 'var(--danger)' : '#fff'}; font-size:0.85rem; cursor:pointer; font-weight:600;">
+                        ${isStaff ? '<span style="font-weight:800; color:var(--accent); font-size:0.7rem; background:rgba(var(--accent-rgb),0.1); padding:4px 8px; border-radius:4px;">VITALÍCIO</span>' : `
+                        <input type="date" value="${c.validade}" onchange="app.updateQRClientField('${c.id}', 'validade', this.value)" class="qr-input-sleek"
+                            style="color:${hoje > c.validade ? 'var(--danger)' : '#fff'} !important; border-color:${hoje > c.validade ? 'rgba(var(--danger-rgb),0.5)' : ''} !important;">
                         `}
                     </td>
                     <td style="text-align: right;">
