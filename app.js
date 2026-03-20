@@ -5775,11 +5775,12 @@ Bons treinos!`;
                                 <i class="fas fa-sign-out-alt" style="color: var(--accent); width: 20px;"></i> Saída: Registo de saída (Não debita créditos).
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-clock" style="color: var(--primary); width: 20px;"></i> Cooldown de 2 min entre operações.
+                                <i class="fas fa-clock" style="color: var(--primary); width: 20px;"></i> Cooldown de 20 segundos entre operações.
                             </div>
                             <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
                                 <i class="fas fa-ban" style="color: var(--accent); width: 20px;"></i> Regras de validade apenas na Entrada.
                             </div>
+
 
                         </div>
                     </div>
@@ -6458,13 +6459,13 @@ Bons treinos!`;
 
         const isStaffMember = c.plano === 'Staff';
 
-        // Validar cooldown (2 minutos) - Para operações consecutivas
+        // Validar cooldown (20 segundos) - Para operações consecutivas
         if (lastLog) {
             const lastDateStr = typeof lastLog === 'string' ? lastLog : lastLog.d;
             const lastEntry = new Date(lastDateStr);
-            const diffMin = (agora - lastEntry) / 1000 / 60;
-            if (diffMin < 2) {
-                const waitSec = Math.ceil(120 - diffMin * 60);
+            const diffSec = (agora - lastEntry) / 1000;
+            if (diffSec < 20) {
+                const waitSec = Math.ceil(20 - diffSec);
                 this.showQRMsg(`${c.nome}: Aguarde ${waitSec}s`, "bg-qr-warning");
                 this.lastProcessedQR = formattedId;
                 this.lastProcessedTime = Date.now();
@@ -6472,13 +6473,15 @@ Bons treinos!`;
             }
         }
 
+
         if (isExit) {
             // --- LOGICA DE SAÍDA ---
             if (!c.histórico) c.histórico = [];
             c.histórico.unshift({ d: agora.toISOString(), t: 'out' });
             
-            this.showQRMsg(`Até logo, ${c.nome}! Saída registada.`, "bg-qr-warning");
+            this.showQRMsg(`Até amanhã, ${c.nome}! Saída registada.`, "bg-qr-warning");
             this.showToast(`Saída registada: ${c.nome}`, "info");
+
         } else {
             // --- LOGICA DE ENTRADA ---
             // Validar data
