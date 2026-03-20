@@ -186,7 +186,11 @@ class FitnessApp {
                 });
             }
 
-            // 3. Sincronização local e UI
+            // 3. Sincronização de Utilizadores QR (Garantir que todos têm acesso)
+            this.syncQRUsers();
+
+            // 4. Sincronização local e UI
+
             try {
                 localStorage.setItem('kandalgym_state', JSON.stringify(this.state));
             } catch (e) { }
