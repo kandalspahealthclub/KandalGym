@@ -6481,28 +6481,111 @@ Bons treinos!`;
         if (grid) grid.innerHTML = this.renderQRClientCards();
     }
 
+    showUserQRLogs(id) {
+        const client = (this.state.qrClients || []).find(c => c.id === id);
+        if (!client) return;
+        
+        const logs = client.histórico || [];
+        const content = `
+            <div style="padding: 0.5rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
+                    <h3 style="margin:0; display:flex; align-items:center; gap:10px;">
+                        <i class="fas fa-history" style="color:var(--accent);"></i> Histórico: ${client.nome}
+                    </h3>
+                    <button class="btn-icon" onclick="app.closeModal()"><i class="fas fa-times"></i></button>
+                </div>
+                
+                <div style="max-height: 50vh; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); scrollbar-width: thin;">
+                    <table style="width:100%; border-collapse: collapse;">
+                        <thead style="position: sticky; top: 0; background: #222; z-index: 10;">
+                            <tr>
+                                <th style="text-align:left; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Data e Hora</th>
+                                <th style="text-align:center; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Tipo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${logs.length === 0 ? '<tr><td colspan="2" style="padding: 4rem 2rem; text-align: center; color: var(--text-muted);"><i class="fas fa-ghost" style="font-size:2rem; display:block; margin-bottom:1rem; opacity:0.3;"></i> Sem registos de acesso para este utilizador.</td></tr>' : logs.map(l => {
+                                const d = new Date(l);
+                                return `
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,185,255,0.02)'" onmouseout="this.style.background='transparent'">
+                                        <td style="padding: 12px 15px;">
+                                            <div style="font-weight:600; font-size:0.9rem; color:#fff;">${d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })}</div>
+                                            <div style="font-size: 0.75rem; color:var(--text-muted);">${d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</div>
+                                        </td>
+                                        <td style="padding: 12px 15px; text-align:center;">
+                                            <span style="display:inline-flex; align-items:center; gap:6px; background: rgba(38,222,129, 0.1); color: #26de81; padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(38,222,129, 0.2);">
+                                                <i class="fas fa-sign-in-alt"></i> ENTRADA
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="margin-top: 1.5rem; text-align: center;">
+                    <p style="font-size:0.7rem; color:var(--text-muted); margin-bottom: 1rem;">Mostrando os últimos ${logs.length} acessos.</p>
+                    <button class="btn btn-primary" style="width:100%;" onclick="app.closeModal()">Fechar Histórico</button>
+                </div>
+            </div>
+        `;
+        this.showModal(content, '450px');
+    }
+
+
     showQRMsg(text, cls) {
         const s = document.getElementById("scan-status");
         if (!s) return;
 
-        s.innerHTML = text;
+        let bg = 'rgba(255,255,255,0.05)';
+        let color = '#fff';
+        let icon = 'fa-info-circle';
+        
+        if (cls.includes('success')) { 
+            bg = 'rgba(38,222,129,0.15)'; 
+            color = '#26de81'; 
+            icon = 'fa-check-circle';
+        } else if (cls.includes('warning')) { 
+            bg = 'rgba(255,159,67,0.15)'; 
+            color = '#ff9f43'; 
+            icon = 'fa-exclamation-triangle';
+        } else if (cls.includes('danger')) { 
+            bg = 'rgba(235,77,75,0.15)'; 
+            color = '#eb4d4b'; 
+            icon = 'fa-times-circle';
+        }
+
+        s.innerHTML = `
+            <div class="glass-card animate-scale-in" style="padding: 1rem; background:${bg}; color:${color}; border: 1px solid ${color}44; text-align:center; font-weight:700; display:flex; align-items:center; justify-content:center; gap:10px; border-radius:12px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
+                <i class="fas ${icon}" style="font-size:1.2rem;"></i>
+                <span>${text}</span>
+            </div>
+        `;
         s.className = cls;
 
         // Visual feedback for scan
         const container = document.getElementById("video-container");
         if (container) {
-            container.style.boxShadow = `0 0 30px ${cls.includes('success') ? 'var(--success)' : cls.includes('warning') ? 'var(--accent)' : 'var(--danger)'} `;
-            setTimeout(() => { if (container) container.style.boxShadow = 'none'; }, 1000);
+            container.style.border = `2px solid ${color}`;
+            container.style.boxShadow = `0 0 20px ${color}44`;
+            setTimeout(() => { 
+                if (container) {
+                    container.style.border = '2px solid var(--surface-border)';
+                    container.style.boxShadow = 'none'; 
+                }
+            }, 1000);
         }
 
         // Clear message after 4 seconds
         setTimeout(() => {
             if (s && s.className === cls) {
-                s.innerHTML = "Pronto para ler codigo...";
+                s.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding:1rem; opacity:0.5;"><i class="fas fa-qrcode"></i> Pronto para ler código...</div>';
                 s.className = "";
             }
         }, 4000);
     }
+
 
     processarManualQR() {
         const input = document.getElementById('manual-qr-id');
