@@ -6705,8 +6705,33 @@ Bons treinos!`;
         }
         
         const cls = this.state.classes.find(x => String(x.id) === classIdStr);
+
+        // Validate plan restrictions
+        const qrInfo = (this.state.qrClients || []).find(q => Number(q.clientId) === clientId);
+        const plano = qrInfo ? qrInfo.plano : null;
+        const restrictions = plano ? (this.state.planRestrictions || {})[plano] : null;
+
+        if (restrictions) {
+            if (!restrictions.allowClasses) {
+                const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno não permite a marcação de aulas.\n\nDeseja inscrever mesmo assim?`);
+                if (!force) return;
+            } else if (restrictions.filter && restrictions.filter.length > 0) {
+                const isAllowed = restrictions.filter.some(f => cls && cls.name.toLowerCase().includes(f.toLowerCase()));
+                if (!isAllowed) {
+                    const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno apenas permite: ${restrictions.filter.join(', ')}.\n\nDeseja inscrever mesmo assim?`);
+                    if (!force) return;
+                }
+            } else if (restrictions.exclude && restrictions.exclude.length > 0) {
+                const isExcluded = restrictions.exclude.some(ex => cls && cls.name.toLowerCase().includes(ex.toLowerCase()));
+                if (isExcluded) {
+                    const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno não permite reservar aulas desta categoria.\n\nDeseja inscrever mesmo assim?`);
+                    if (!force) return;
+                }
+            }
+        }
+
         if (cls && participants.length >= (cls.capacity || 20)) {
-             if(!confirm('A aula já está na capacidade máxima. Tem a certeza que pretende forçar a inscrição?')) return;
+             if (!confirm('A aula já está na capacidade máxima. Tem a certeza que pretende forçar a inscrição?')) return;
         }
         
         participants.push(clientId);
