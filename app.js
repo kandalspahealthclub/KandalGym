@@ -5587,10 +5587,33 @@ Bons treinos!`;
                 
                 <div class="glass-panel" style="padding: 0; background: transparent; border:none; box-shadow:none;">
                     ${this.qrActiveTab === 'alunos' || this.qrActiveTab === 'teachers' ? `
+                    ${this.qrActiveTab === 'alunos' ? `
+                    <div style="background: rgba(255,255,255,0.02); padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <input type="checkbox" id="selectAllQR" onchange="app.toggleAllQRSelection(this.checked)" style="width:16px; height:16px; accent-color: var(--primary); cursor:pointer;">
+                            <label for="selectAllQR" style="font-size: 0.85rem; cursor: pointer; color: var(--text-muted); font-weight:600;">Selecionar Todos Visíveis</label>
+                        </div>
+                        <div style="margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                            <select id="bulkActionType" style="background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); border-radius: 6px; padding: 6px 8px; color: #fff; font-size: 0.85rem; outline:none;" onchange="if(this.value==='custom') document.getElementById('bulkCustomDate').style.display='block'; else document.getElementById('bulkCustomDate').style.display='none';">
+                                <option value="">+ Prolongar Validade</option>
+                                <option value="1">Mais 1 Dia</option>
+                                <option value="7">Mais 7 Dias</option>
+                                <option value="15">Mais 15 Dias</option>
+                                <option value="30">Mais 30 Dias (Mês)</option>
+                                <option value="180">Mais 180 Dias (Semestre)</option>
+                                <option value="365">Mais 365 Dias (Ano)</option>
+                                <option value="custom">Definir Data Exata...</option>
+                            </select>
+                            <input type="date" id="bulkCustomDate" style="display:none; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:6px; padding:4px 8px; color:#fff; font-size:0.85rem; cursor:pointer; font-weight:600;">
+                            <button class="btn btn-primary btn-sm" onclick="app.applyBulkValidity()" style="padding: 6px 12px; font-size: 0.8rem; background: var(--success);"><i class="fas fa-check"></i> Aplicar</button>
+                        </div>
+                    </div>
+                    ` : ''}
                     <div style="overflow-x:auto;">
                         <table class="premium-table">
                             <thead>
                                 <tr>
+                                    ${this.qrActiveTab === 'alunos' ? '<th style="width: 40px; text-align:center;"><i class="fas fa-check-square" style="color:var(--text-muted);"></i></th>' : ''}
                                     <th style="width: 60px;">ID</th>
                                     <th style="min-width: 140px;">${this.qrActiveTab === 'alunos' ? 'Aluno' : 'Staff'}</th>
                                     <th style="width: 130px;">Plano</th>
@@ -5660,6 +5683,61 @@ Bons treinos!`;
         this.qrScannerAtivo = false;
     }
 
+    toggleAllQRSelection(isChecked) {
+        document.querySelectorAll('.qr-bulk-checkbox').forEach(cb => {
+            cb.checked = isChecked;
+        });
+    }
+
+    applyBulkValidity() {
+        const select = document.getElementById('bulkActionType');
+        const customDateInput = document.getElementById('bulkCustomDate');
+        const action = select.value;
+        
+        if (!action) return alert('Por favor, selecione a ação desejada no menu.');
+
+        const checkboxes = document.querySelectorAll('.qr-bulk-checkbox:checked');
+        if (checkboxes.length === 0) return alert('Por favor selecione pelo menos um aluno (caixa à esquerda do ID).');
+
+        let isCustomDate = (action === 'custom');
+        let newDateStr = customDateInput.value;
+        let daysToExtend = parseInt(action);
+
+        if (isCustomDate && !newDateStr) {
+             return alert('Por favor, escolha uma data no calendário.');
+        }
+
+        let confirmMsg = isCustomDate 
+             ? `Tem a certeza que deseja mudar a validade para ${newDateStr} em ${checkboxes.length} alunos?`
+             : `Tem a certeza que deseja prolongar a validade em ${daysToExtend} dias para os ${checkboxes.length} alunos selecionados?`;
+
+        if (!confirm(confirmMsg)) return;
+
+        checkboxes.forEach(cb => {
+            const qrId = cb.value;
+            const client = this.state.qrClients.find(q => q.id === qrId);
+            if (client) {
+                if (isCustomDate) {
+                     client.validade = newDateStr;
+                } else {
+                     const currentDate = new Date(client.validade);
+                     if (isNaN(currentDate.getTime())) {
+                          const now = new Date();
+                          now.setDate(now.getDate() + daysToExtend);
+                          client.validade = now.toISOString().split('T')[0];
+                     } else {
+                          currentDate.setDate(currentDate.getDate() + daysToExtend);
+                          client.validade = currentDate.toISOString().split('T')[0];
+                     }
+                }
+            }
+        });
+
+        this.saveState();
+        this.renderQRManager(document.getElementById('main-content'));
+        this.showToast(`Atualização concluída em ${checkboxes.length} alunos!`);
+    }
+
     renderQRClientCards(filter = '') {
         const qrList = (this.state.qrClients || []).filter(c => {
             const isStaff = (this.state.teachers || []).some(t => Number(t.id) === Number(c.clientId)) ||
@@ -5692,6 +5770,11 @@ Bons treinos!`;
 
             return `
                 <tr class="qr-row">
+                    ${this.qrActiveTab === 'alunos' && !isStaff ? `
+                    <td style="text-align:center;">
+                        <input type="checkbox" class="qr-bulk-checkbox" value="${c.id}" style="width:16px; height:16px; accent-color: var(--primary); cursor:pointer;">
+                    </td>
+                    ` : (this.qrActiveTab === 'alunos' ? '<td></td>' : '')}
                     <td>
                         <span class="id-tag">${c.id}</span>
                         <div style="font-size:0.6rem; color:var(--text-muted); margin-top:4px;">Ref: ${c.clientId || '-'}</div>
