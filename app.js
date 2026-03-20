@@ -2610,14 +2610,12 @@ Bons treinos!`;
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
                 <h2 style="margin:0;">Editar Treino: ${c.name}</h2>
                 <div style="display:flex; gap:0.5rem; align-items:center;">
-                    <div id="notif-training-plan" style="margin-right:1rem;">
-                        ${this.renderNotificationSelector('training')}
-                    </div>
                     <button class="btn btn-ghost" style="color:var(--danger);" onclick="app.deleteTrainingPlan(app.editingClientId)"><i class="fas fa-trash"></i> Eliminar</button>
                     <button class="btn btn-secondary" onclick="app.clearTrainingDraft(); app.setView('spy_view')">Cancelar</button>
                     <button class="btn btn-primary" onclick="app.saveTrainingPlan()"><i class="fas fa-save"></i> Guardar Plano</button>
                 </div>
             </div>
+
 
 
             <div style="margin-bottom:1.5rem; display:flex; gap:1rem; align-items:center; flex-wrap: wrap;">
@@ -2750,16 +2748,17 @@ Bons treinos!`;
         this.state.trainingPlans[this.editingClientId] = planObject;
         this.saveState();
 
-        // Notificar o aluno do novo plano de treino (sem gravar novamente)
-        this.addAppNotification(this.editingClientId, 'Novo Plano de Treino!', 'O seu professor atualizou o seu plano de treino.', null, 'notification', false);
+        // Notificar o aluno do novo plano de treino (App)
+        this.addAppNotification(this.editingClientId, 'Novo Plano de Treino!', 'O seu professor atualizou o seu plano de treino.');
         
-        // Notificação externa (WhatsApp/Email)
-        this.handleExternalNotification(this.editingClientId, 'Plano de Treino', 'training');
+        // Perguntar método de notificação externa
+        this.askNotificationMethod(this.editingClientId, 'Plano de Treino');
+
 
         this.clearTrainingDraft();
-        alert('Plano de treino guardado com sucesso!');
         this.setView('spy_view');
     }
+
 
 
     deleteTrainingPlan(clientId) {
@@ -2904,12 +2903,10 @@ Bons treinos!`;
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
                 <h2 style="margin:0;">Editar Dieta: ${c.name}</h2>
                 <div style="display:flex; gap:0.5rem; align-items:center;">
-                    <div id="notif-meal-plan" style="margin-right:1rem;">
-                        ${this.renderNotificationSelector('meal')}
-                    </div>
                     <button class="btn btn-secondary" onclick="app.setView('spy_view')">Cancelar</button>
                     <button class="btn btn-primary" onclick="app.saveMealPlan()"><i class="fas fa-save"></i> Guardar Dieta</button>
                 </div>
+
 
             </div>
 
@@ -3331,18 +3328,20 @@ Bons treinos!`;
     saveMealPlan() {
         this.editingMeal.author = this.currentUser.name;
         this.editingMeal.updatedAt = new Date().toLocaleDateString('pt-PT');
-        this.state.mealPlans[this.editingClientId] = this.editingMeal;
+        const cid = String(this.editingClientId);
+        this.state.mealPlans[cid] = this.editingMeal;
         this.saveState();
 
-        // Notificar o aluno do novo plano de dieta
+        // Notificar o aluno
         this.addAppNotification(this.editingClientId, 'Nova Dieta Disponível!', 'O seu professor atualizou o seu plano alimentar.');
         
-        // Notificação externa (WhatsApp/Email)
-        this.handleExternalNotification(this.editingClientId, 'Plano Alimentar', 'meal');
+        // Perguntar método de notificação externa
+        this.askNotificationMethod(this.editingClientId, 'Plano Alimentar');
 
-        alert('Plano alimentar guardado com sucesso!');
+
         this.setView('spy_view');
     }
+
 
 
     deleteMealPlan(clientId) {
@@ -3662,14 +3661,12 @@ Bons treinos!`;
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; align-items: center;">
-                        <div id="notif-eval" style="grid-column: span 2;">
-                            ${this.renderNotificationSelector('evaluation')}
-                        </div>
                         <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
                         <button class="btn btn-primary" onclick="app.saveEvaluation(${clientId}, ${index})">
                             ${index === null ? 'Guardar Avaliação' : 'Atualizar Dados'}
                         </button>
                     </div>
+
 
                 </div>
             </div>
@@ -3722,17 +3719,18 @@ Bons treinos!`;
         }
 
         this.saveState();
-        
-        // Notificação App Interna
+
+        // Notificar aluno (App interna)
         this.addAppNotification(clientId, 'Nova Avaliação Física!', 'A sua avaliação física foi atualizada.', null, 'evaluation', false);
 
-        // Notificação externa (WhatsApp/Email)
-        this.handleExternalNotification(clientId, 'Avaliação Física', 'evaluation');
 
-        document.querySelector('.modal-overlay').remove();
+        // Perguntar método de notificação externa
+        this.askNotificationMethod(clientId, 'Avaliação Física');
+
+        this.closeModal();
         this.renderContent();
-        alert(index === null ? 'Avaliação registada com sucesso!' : 'Avaliação atualizada com sucesso!');
     }
+
 
 
     async deleteEvaluation(clientId, index) {
@@ -5215,20 +5213,13 @@ Bons treinos!`;
                     <button class="btn btn-ghost btn-sm" style="justify-content: flex-start;" onclick="document.getElementById('anam-section-2').scrollIntoView({behavior:'smooth'})">
                         <i class="fas fa-heartbeat" style="width: 20px;"></i> <span>Histórico Saúde</span>
                     </button>
-                    <button class="btn btn-ghost btn-sm" style="justify-content: flex-start;" onclick="document.getElementById('anam-section-3').scrollIntoView({behavior:'smooth'})">
-                        <i class="fas fa-pills" style="width: 20px;"></i> <span>Meds & Outros</span>
-                    </button>
-                    
-                    <div id="notif-anam" style="margin-top: 1rem; border-top: 1px dashed var(--surface-border); padding-top: 1rem;">
-                        ${this.renderNotificationSelector('anam')}
-                    </div>
-                    
                     <div style="margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--surface-border);">
                          <button class="btn btn-primary" style="width:100%; height: 50px; font-size: 1rem;" onclick="app.saveAnamnesis(${clientId}, ${index})">
                             <i class="fas fa-save"></i> GRAVAR
                         </button>
                         <button class="btn btn-ghost" style="width:100%; margin-top: 0.5rem;" onclick="app.closeModal()">Cancelar</button>
                     </div>
+
 
                 </div>
 
@@ -5366,12 +5357,13 @@ Bons treinos!`;
             // Notificação App Interna
             this.addAppNotification(clientId, 'Resumo Clínico!', 'A sua anamnese foi atualizada.', null, 'notes-medical', false);
 
-            // Notificação externa (WhatsApp/Email)
-            this.handleExternalNotification(clientId, 'Resumo Clínico (Anamnese)', 'anam');
+            // Perguntar método de notificação externa
+            this.askNotificationMethod(clientId, 'Anamnese / Resumo Clínico');
 
             this.closeModal();
             this.renderContent();
             this.showToast('Anamnese guardada com sucesso!');
+
 
         } catch (err) {
             console.error('Error saving anamnesis:', err);
@@ -7522,30 +7514,38 @@ Bons treinos!`;
             };
         });
     }
-    renderNotificationSelector(prefix) {
-        return `
-            <div style="display: flex; gap: 0.5rem; align-items: center; background: rgba(255,255,255,0.03); padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                <label style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-right: 4px; font-weight: 700;"><i class="fas fa-bell"></i> Notificar via:</label>
-                <div style="display: flex; gap: 8px;">
-                    <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 0.75rem;">
-                        <input type="radio" name="notif-${prefix}" value="none" checked title="Não Notificar"> <i class="fas fa-slash" style="font-size:0.6rem; opacity:0.5;"></i>
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 0.75rem; color: #25D366;">
-                        <input type="radio" name="notif-${prefix}" value="whatsapp" title="WhatsApp"> <i class="fab fa-whatsapp"></i>
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 0.75rem; color: #60a5fa;">
-                        <input type="radio" name="notif-${prefix}" value="email" title="Email"> <i class="fas fa-envelope"></i>
-                    </label>
+    askNotificationMethod(clientId, topic) {
+        const c = this.state.clients.find(cl => cl.id == clientId);
+        if (!c) return;
+
+        this.showModal(`
+            <div style="text-align: center; padding: 1.5rem 0.5rem;">
+                <div style="width: 80px; height: 80px; background: rgba(var(--primary-rgb), 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; color: var(--primary);">
+                    <i class="fas fa-check-circle" style="font-size: 3rem;"></i>
+                </div>
+                <h2 style="margin-bottom: 0.5rem;">Guardado com Sucesso!</h2>
+                <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem;">Pretende alertar o cliente <strong>${c.name}</strong> sobre esta atualização?</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                    <button class="btn btn-primary" style="padding: 1rem; border-radius: 12px; background: #25D366; border:none; display:flex; align-items:center; justify-content:center; gap:10px; font-weight:700;" 
+                        onclick="app.closeModal(); app.sendExternalNotification(${clientId}, '${topic}', 'whatsapp')">
+                        <i class="fab fa-whatsapp" style="font-size:1.4rem;"></i> Enviar via WhatsApp
+                    </button>
+                    
+                    <button class="btn btn-primary" style="padding: 1rem; border-radius: 12px; background: #60a5fa; border:none; display:flex; align-items:center; justify-content:center; gap:10px; font-weight:700;" 
+                        onclick="app.closeModal(); app.sendExternalNotification(${clientId}, '${topic}', 'email')">
+                        <i class="fas fa-envelope" style="font-size:1.2rem;"></i> Enviar via E-mail
+                    </button>
+                    
+                    <button class="btn btn-ghost" style="padding: 1rem; font-weight:600; color:var(--text-muted);" onclick="app.closeModal()">
+                        Não notificar agora
+                    </button>
                 </div>
             </div>
-        `;
+        `, '400px');
     }
 
-    handleExternalNotification(clientId, topic, prefix) {
-        const selector = document.querySelector(`input[name="notif-${prefix}"]:checked`);
-        if (!selector || selector.value === 'none') return;
-
-        const type = selector.value;
+    sendExternalNotification(clientId, topic, type) {
         const c = this.state.clients.find(cl => cl.id == clientId);
         if (!c) return;
 
@@ -7557,7 +7557,7 @@ Bons treinos!`;
             if (!phone) return alert('O cliente não tem telemóvel registado!');
             
             // Adicionar prefixo PT se estiver em falta
-            if (phone.length === 9) {
+            if (phone.length === 9 && (phone.startsWith('91') || phone.startsWith('92') || phone.startsWith('93') || phone.startsWith('96'))) {
                 phone = '351' + phone;
             }
 
@@ -7570,6 +7570,7 @@ Bons treinos!`;
             window.location.href = mailUrl;
         }
     }
+
 }
 
 
