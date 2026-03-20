@@ -391,10 +391,12 @@ class FitnessApp {
         const newId = Date.now();
         const newClient = { id: newId, name, email, phone, password: pass, status: 'Ativo', lastEvaluation: '-', goal: 'Novo Aluno' };
         this.state.clients.push(newClient);
+        this.enableQRForClient(newId, false);
         this.state.trainingPlans[newId] = [];
         this.state.mealPlans[newId] = { title: 'Plano Alimentar', meals: [] };
         this.state.evaluations[newId] = [];
         this.state.trainingHistory[newId] = [];
+
 
         this.saveState();
         alert('Conta criada com sucesso! Já pode entrar.');
@@ -643,9 +645,12 @@ class FitnessApp {
             const newId = Date.now();
             if (type === 'admin') {
                 this.state.admins.push({ id: newId, name, email, phone, password: pass });
+                this.enableQRForClient(newId, false, true);
             } else if (type === 'teacher') {
                 this.state.teachers.push({ id: newId, name, email, phone, password: pass });
+                this.enableQRForClient(newId, false, true);
             } else {
+
                 const teacherId = document.getElementById('new-user-teacher').value;
                 const newClient = {
                     id: newId,
@@ -5726,46 +5731,6 @@ Bons treinos!`;
                     </div>
                     </div>
 
-                    <!-- Secção de Ativação Manual (Candidatos) -->
-                    <div style="margin-top: 3rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 2rem;">
-                        <h4 style="margin-top:0; font-size:0.9rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom: 1rem;">
-                            <i class="fas fa-plus-circle"></i> Ativar Acesso Individual (Sem QR Ativo)
-                        </h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.8rem;">
-                            ${(() => {
-                                const qrIds = (this.state.qrClients || []).map(qc => qc.clientId);
-                                if (this.qrActiveTab === 'teachers') {
-                                    const candidatesStaff = [...(this.state.teachers || []), ...(this.state.admins || [])].filter(t => !qrIds.includes(t.id));
-                                    if (candidatesStaff.length === 0) return '<div style="grid-column: 1/-1; padding: 1rem; text-align: center; color: var(--text-muted); font-size:0.75rem; background:rgba(255,b255,255,0.02); border-radius:8px;">Todo o staff tem acesso QR ativo.</div>';
-                                    return candidatesStaff.map(t => `
-                                        <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; background: rgba(var(--primary-rgb),0.05); border: 1px solid rgba(var(--primary-rgb),0.1);">
-                                            <div>
-                                                <div style="font-weight: 700; font-size:0.85rem;">${t.name}</div>
-                                                <div style="font-size: 0.65rem; color: var(--text-muted);">Cargo: ${t.role || 'Staff'}</div>
-                                            </div>
-                                            <button class="btn btn-primary btn-sm" onclick="app.enableQRForClient(${t.id}, false, true)" style="padding: 5px 12px; font-size:0.75rem;">
-                                                Ativar
-                                            </button>
-                                        </div>
-                                    `).join('');
-                                } else {
-                                    const candidates = (this.state.clients || []).filter(c => !qrIds.includes(c.id));
-                                    if (candidates.length === 0) return '<div style="grid-column: 1/-1; padding: 1rem; text-align: center; color: var(--text-muted); font-size:0.75rem; background:rgba(255,255,255,0.02); border-radius:8px;">Todos os alunos têm acesso QR ativo.</div>';
-                                    return candidates.map(c => `
-                                        <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; background: rgba(var(--accent-rgb),0.05); border: 1px solid rgba(var(--accent-rgb),0.1);">
-                                            <div>
-                                                <div style="font-weight: 700; font-size:0.85rem;">${c.name}</div>
-                                                <div style="font-size: 0.65rem; color: var(--text-muted);">ID: ${c.id}</div>
-                                            </div>
-                                            <button class="btn btn-primary btn-sm" onclick="app.enableQRForClient(${c.id})" style="padding: 5px 12px; font-size:0.75rem; background: var(--accent);">
-                                                Ativar
-                                            </button>
-                                        </div>
-                                    `).join('');
-                                }
-                            })()}
-                        </div>
-                    </div>
 
                 </div>
             `;
