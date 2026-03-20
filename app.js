@@ -75,6 +75,9 @@ class FitnessApp {
         try {
             firebase.initializeApp(this.firebaseAppConfig);
             this.db = firebase.database();
+            this.currentQRMsg = null;
+
+            // 1. Carregar do LocalStorage imediatamente (Cache Offline)
             this.dbRef = this.db.ref('kandalGymState');
             console.log("Firebase inicializado.");
         } catch (fbErr) {
@@ -5741,9 +5744,10 @@ Bons treinos!`;
                             <video id="v-stream" class="qr-video" playsinline autoplay muted style="transform:none;"></video>
                         </div>
                         <div id="scan-status" style="margin-top: 15px; min-height: 50px;">
-                            ${prevHTML || '<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding:1rem; opacity:0.5;"><i class="fas fa-qrcode"></i> Pronto para ler código...</div>'}
+                            ${this.renderQRMsgHTML()}
                         </div>
                         <canvas id="c-hidden" style="display:none;"></canvas>
+
 
                         <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed var(--surface-border);">
                             <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Entrada Manual (Backup)</label>
@@ -6488,8 +6492,10 @@ Bons treinos!`;
         c.histórico.unshift(agora.toISOString());
 
         this.showQRMsg(`Bem-vindo, ${c.nome}! Entrada validada.`, "bg-qr-success");
+        this.showToast(`Entrada validada: ${c.nome}`, "success");
         this.lastProcessedQR = formattedId;
         this.lastProcessedTime = Date.now();
+
 
 
         this.saveState();
@@ -6552,57 +6558,60 @@ Bons treinos!`;
     }
 
 
-    showQRMsg(text, cls) {
-        const s = document.getElementById("scan-status");
-        if (!s) return;
+    renderQRMsgHTML() {
+        if (!this.currentQRMsg) {
+            return '<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding:1rem; opacity:0.5;"><i class="fas fa-qrcode"></i> Pronto para ler código...</div>';
+        }
 
-        let bg = 'rgba(255,255,255,0.05)';
+        const { text, cls } = this.currentQRMsg;
+        let bg = 'rgba(255,b255,255,0.05)';
         let color = '#fff';
         let icon = 'fa-info-circle';
         
-        if (cls.includes('success')) { 
-            bg = 'rgba(38,222,129,0.15)'; 
-            color = '#26de81'; 
-            icon = 'fa-check-circle';
-        } else if (cls.includes('warning')) { 
-            bg = 'rgba(255,159,67,0.15)'; 
-            color = '#ff9f43'; 
-            icon = 'fa-exclamation-triangle';
-        } else if (cls.includes('danger')) { 
-            bg = 'rgba(235,77,75,0.15)'; 
-            color = '#eb4d4b'; 
-            icon = 'fa-times-circle';
-        }
+        if (cls.includes('success')) { bg = 'rgba(38,222,129,0.15)'; color = '#26de81'; icon = 'fa-check-circle'; }
+        else if (cls.includes('warning')) { bg = 'rgba(255,159,67,0.15)'; color = '#ff9f43'; icon = 'fa-exclamation-triangle'; }
+        else if (cls.includes('danger')) { bg = 'rgba(235,77,75,0.15)'; color = '#eb4d4b'; icon = 'fa-times-circle'; }
 
-        s.innerHTML = `
+        return `
             <div class="glass-card animate-scale-in" style="padding: 1rem; background:${bg}; color:${color}; border: 1px solid ${color}44; text-align:center; font-weight:700; display:flex; align-items:center; justify-content:center; gap:10px; border-radius:12px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
                 <i class="fas ${icon}" style="font-size:1.2rem;"></i>
                 <span>${text}</span>
             </div>
         `;
-        s.className = cls;
+    }
+
+    showQRMsg(text, cls) {
+        const timestamp = Date.now();
+        this.currentQRMsg = { text, cls, timestamp };
+
+        const s = document.getElementById("scan-status");
+        if (s) {
+            s.innerHTML = this.renderQRMsgHTML();
+            s.className = cls;
+        }
 
         // Visual feedback for scan
+        const color = cls.includes('success') ? '#26de81' : (cls.includes('warning') ? '#ff9f43' : '#eb4d4b');
         const container = document.getElementById("video-container");
         if (container) {
             container.style.border = `2px solid ${color}`;
             container.style.boxShadow = `0 0 20px ${color}44`;
-            setTimeout(() => { 
-                if (container) {
-                    container.style.border = '2px solid var(--surface-border)';
-                    container.style.boxShadow = 'none'; 
-                }
-            }, 1000);
+            setTimeout(() => { if (container) { container.style.border = '2px solid var(--surface-border)'; container.style.boxShadow = 'none'; } }, 1000);
         }
 
-        // Clear message after 4 seconds
+        // Clear message after 4.5 seconds only if it's the same message
         setTimeout(() => {
-            if (s && s.className === cls) {
-                s.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding:1rem; opacity:0.5;"><i class="fas fa-qrcode"></i> Pronto para ler código...</div>';
-                s.className = "";
+            if (this.currentQRMsg && this.currentQRMsg.timestamp === timestamp) {
+                this.currentQRMsg = null;
+                const sRefresh = document.getElementById("scan-status");
+                if (sRefresh) {
+                    sRefresh.innerHTML = this.renderQRMsgHTML();
+                    sRefresh.className = "";
+                }
             }
-        }, 4000);
+        }, 4500);
     }
+
 
 
     processarManualQR() {
