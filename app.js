@@ -5637,17 +5637,14 @@ Bons treinos!`;
                 </div>
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.8rem;">
-                    <div style="display:flex; gap:8px;">
                         <button class="btn ${this.qrActiveTab === 'alunos' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('alunos')" style="padding: 6px 12px; font-size:0.8rem;">
                             <i class="fas fa-user-friends"></i> Alunos
                         </button>
                         <button class="btn ${this.qrActiveTab === 'teachers' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('teachers')" style="padding: 6px 12px; font-size:0.8rem;">
                             <i class="fas fa-user-tie"></i> Staff (Adm/Prof)
                         </button>
-                        <button class="btn ${this.qrActiveTab === 'config' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('config')" style="padding: 6px 12px; font-size:0.8rem;">
-                            <i class="fas fa-cog"></i> Configurar
-                        </button>
                     </div>
+
                     <div class="search-container" style="margin:0; width: 220px; height: 32px;">
                         <i class="fas fa-search"></i>
                         <input type="text" class="search-bar" placeholder="Pesquisar..." onkeyup="app.filterQRList(this.value)" style="height: 100% !important; font-size:0.8rem;">
@@ -5655,7 +5652,6 @@ Bons treinos!`;
                 </div>
                 
                 <div class="glass-panel" style="padding: 0; background: transparent; border:none; box-shadow:none;">
-                    ${this.qrActiveTab === 'alunos' || this.qrActiveTab === 'teachers' ? `
                     ${this.qrActiveTab === 'alunos' ? `
                     <div style="background: rgba(255,255,255,0.02); padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; border: 1px solid rgba(255,255,255,0.05);">
                         <div style="display:flex; align-items:center; gap:8px;">
@@ -5728,49 +5724,49 @@ Bons treinos!`;
                             </tbody>
                         </table>
                     </div>
-                    ` : `
-                    <div class="glass-panel" style="padding: 1rem; background: rgba(255,255,255,0.02); border-radius:12px;">
-                        <h4 style="margin-top:0; font-size:0.95rem; color:var(--accent);">Ativar Acesso para Staff (Admin/Prof)</h4>
-                        <div id="profs-sem-qr-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.6rem; margin-bottom: 2rem;">
-                            ${(() => {
-                const qrIds = (this.state.qrClients || []).map(qc => qc.clientId);
-                const candidatesStaff = [...(this.state.teachers || []), ...(this.state.admins || [])].filter(t => !qrIds.includes(t.id));
-                if (candidatesStaff.length === 0) return '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); font-size:0.75rem;">Todo o staff tem acesso QR.</div>';
-                return candidatesStaff.map(t => `
-                                    <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem; background: rgba(255,b255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
-                                        <div>
-                                            <div style="font-weight: 700; font-size:0.8rem;">${t.name}</div>
-                                            <div style="font-size: 0.65rem; color: var(--text-muted);">ID: ${t.id}</div>
-                                        </div>
-                                        <button class="btn btn-primary btn-sm" onclick="app.enableQRForClient(${t.id}, false, true)" style="padding: 3px 8px; font-size:0.7rem;">
-                                            <i class="fas fa-plus"></i> Ativar
-                                        </button>
-                                    </div>
-                                `).join('');
-            })()}
-                        </div>
+                    </div>
 
-                        <h4 style="margin-top:0; font-size:0.95rem; color:var(--accent);">Ativar Acesso para Alunos Registados</h4>
-                        <div id="alunos-sem-qr-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.6rem;">
+                    <!-- Secção de Ativação Manual (Candidatos) -->
+                    <div style="margin-top: 3rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 2rem;">
+                        <h4 style="margin-top:0; font-size:0.9rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom: 1rem;">
+                            <i class="fas fa-plus-circle"></i> Ativar Acesso Individual (Sem QR Ativo)
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.8rem;">
                             ${(() => {
-                const qrIds = (this.state.qrClients || []).map(qc => qc.clientId);
-                const candidates = (this.state.clients || []).filter(c => !qrIds.includes(c.id));
-                if (candidates.length === 0) return '<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); font-size:0.75rem;">Todos os alunos têm acesso QR.</div>';
-                return candidates.map(c => `
-                                    <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; padding: 0.6rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
-                                        <div>
-                                            <div style="font-weight: 700; font-size:0.8rem;">${c.name}</div>
-                                            <div style="font-size: 0.65rem; color: var(--text-muted);">Ref: ${c.id}</div>
+                                const qrIds = (this.state.qrClients || []).map(qc => qc.clientId);
+                                if (this.qrActiveTab === 'teachers') {
+                                    const candidatesStaff = [...(this.state.teachers || []), ...(this.state.admins || [])].filter(t => !qrIds.includes(t.id));
+                                    if (candidatesStaff.length === 0) return '<div style="grid-column: 1/-1; padding: 1rem; text-align: center; color: var(--text-muted); font-size:0.75rem; background:rgba(255,b255,255,0.02); border-radius:8px;">Todo o staff tem acesso QR ativo.</div>';
+                                    return candidatesStaff.map(t => `
+                                        <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; background: rgba(var(--primary-rgb),0.05); border: 1px solid rgba(var(--primary-rgb),0.1);">
+                                            <div>
+                                                <div style="font-weight: 700; font-size:0.85rem;">${t.name}</div>
+                                                <div style="font-size: 0.65rem; color: var(--text-muted);">Cargo: ${t.role || 'Staff'}</div>
+                                            </div>
+                                            <button class="btn btn-primary btn-sm" onclick="app.enableQRForClient(${t.id}, false, true)" style="padding: 5px 12px; font-size:0.75rem;">
+                                                Ativar
+                                            </button>
                                         </div>
-                                        <button class="btn btn-primary btn-sm" onclick="app.enableQRForClient(${c.id})" style="padding: 3px 8px; font-size:0.7rem;">
-                                            <i class="fas fa-plus"></i> Ativar
-                                        </button>
-                                    </div>
-                                `).join('');
-            })()}
+                                    `).join('');
+                                } else {
+                                    const candidates = (this.state.clients || []).filter(c => !qrIds.includes(c.id));
+                                    if (candidates.length === 0) return '<div style="grid-column: 1/-1; padding: 1rem; text-align: center; color: var(--text-muted); font-size:0.75rem; background:rgba(255,255,255,0.02); border-radius:8px;">Todos os alunos têm acesso QR ativo.</div>';
+                                    return candidates.map(c => `
+                                        <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; background: rgba(var(--accent-rgb),0.05); border: 1px solid rgba(var(--accent-rgb),0.1);">
+                                            <div>
+                                                <div style="font-weight: 700; font-size:0.85rem;">${c.name}</div>
+                                                <div style="font-size: 0.65rem; color: var(--text-muted);">ID: ${c.id}</div>
+                                            </div>
+                                            <button class="btn btn-primary btn-sm" onclick="app.enableQRForClient(${c.id})" style="padding: 5px 12px; font-size:0.75rem; background: var(--accent);">
+                                                Ativar
+                                            </button>
+                                        </div>
+                                    `).join('');
+                                }
+                            })()}
                         </div>
                     </div>
-                    `}
+
                 </div>
             `;
         } catch (err) {
@@ -5928,9 +5924,18 @@ Bons treinos!`;
                 <tr id="qr-row-area-${idx}" style="display:none;">
                     <td colspan="8" style="padding: 1.5rem; text-align: center; border-radius: 12px; background: rgba(0,0,0,0.2);">
                         <div id="canvas-${idx}" style="background: white; padding: 15px; border-radius: 12px; display: inline-block; margin: 10px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></div>
-                        <div style="font-size: 0.8rem; font-weight:700; color: var(--accent);">Código de Acesso: ${c.id}</div>
+                        <div style="font-size: 0.85rem; font-weight:700; color: var(--accent); margin-bottom: 12px;">Código de Acesso: ${c.id}</div>
+                        <div style="display: flex; justify-content: center; gap: 10px;">
+                            <button class="btn btn-secondary btn-sm" onclick="app.downloadQRCode('canvas-${idx}', '${c.nome.replace(/'/g, "\\'")}_QR')" style="background: white; color: black; border-color: #ddd;">
+                                <i class="fas fa-download"></i> Descarregar Imagem para Imprimir
+                            </button>
+                            <button class="btn btn-ghost btn-sm" onclick="app.toggleQRCodeDisplay('qr-row-area-${idx}', '${c.id}')">
+                                <i class="fas fa-times"></i> Fechar
+                            </button>
+                        </div>
                     </td>
                 </tr>
+
             `;
         }).join('');
     }
@@ -6053,26 +6058,49 @@ Bons treinos!`;
 
     toggleQRCodeDisplay(areaId, val) {
         const el = document.getElementById(areaId);
-        const canvas = document.getElementById('canvas-' + areaId.split('-').pop());
+        const suffix = areaId.split('-').pop();
+        const canvas = document.getElementById('canvas-' + suffix);
 
-        if (el.classList.contains('show')) {
-            el.classList.remove('show');
+        if (el.style.display !== 'none') {
+            el.style.display = 'none';
         } else {
             // Hide any other visible QR codes first
-            document.querySelectorAll('.qr-área').forEach(área => área.classList.remove('show'));
+            document.querySelectorAll('[id^="qr-row-area-"]').forEach(área => área.style.display = 'none');
 
             canvas.innerHTML = "";
             new QRCode(canvas, {
                 text: val,
-                width: 160,
-                height: 160,
+                width: 256,
+                height: 256,
                 colorDark: "#000000",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             });
-            el.classList.add('show');
+            el.style.display = 'table-row';
         }
     }
+
+    downloadQRCode(containerId, filename) {
+        const container = document.getElementById(containerId);
+        // QRCodejs creates a canvas inside the container
+        const canvas = container.querySelector('canvas');
+        if (canvas) {
+            const link = document.createElement('a');
+            link.download = filename + '.png';
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        } else {
+            // Backup for browsers where QRCodejs creates an img instead (some situations)
+            const img = container.querySelector('img');
+            if (img) {
+                const link = document.createElement('a');
+                link.download = filename + '.png';
+                link.href = img.src;
+                link.click();
+            }
+        }
+    }
+
 
     // --- LEITOR QR SCANNER ---
 
