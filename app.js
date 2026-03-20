@@ -1518,7 +1518,8 @@ Bons treinos!`;
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
     }
-\ importExerciseDatabase(input) {
+
+    importExerciseDatabase(input) {
         const file = input.files[0];
         if (!file) return;
 
@@ -1528,7 +1529,7 @@ Bons treinos!`;
                 const imported = JSON.parse(e.target.result);
                 if (!Array.isArray(imported)) throw new Error("Formato inválido");
 
-                if (await app.customConfirm(`Deseja importar ${imported.length} exercícios? Isso irá substituir a sua lista atual.`)) {
+                if (confirm(`Deseja importar ${imported.length} exercícios? Isso irá substituir a sua lista atual.`)) {
                     this.state.exercises = imported;
                     this.saveState();
                     this.renderContent();
@@ -1543,7 +1544,7 @@ Bons treinos!`;
     }
 
     async importLocalBaseExercicios() {
-        if (!await app.customConfirm('Deseja importar a base de exercícios local (base_exercicios.json)? Novos exercícios serao adicionados aos existentes (sem duplicar nomes).')) return;
+        if (!confirm('Deseja importar a base de exercícios local (base_exercicios.json)? Novos exercícios serao adicionados aos existentes (sem duplicar nomes).')) return;
 
         try {
             const res = await fetch('base_exercicios.json');
@@ -1637,9 +1638,10 @@ Bons treinos!`;
             `).join('');
         }
     }
-\ editExerciseCategory(idx) {
+
+    editExerciseCategory(idx) {
         const oldName = this.state.exerciseCategories[idx];
-        const newName = await app.customPrompt('Novo nome para a categoria:', oldName);
+        const newName = prompt('Novo nome para a categoria:', oldName);
         if (newName && newName !== oldName) {
             this.state.exerciseCategories[idx] = newName;
             // Update exercises with this category
@@ -1654,7 +1656,7 @@ Bons treinos!`;
 
     async deleteExerciseCategory(idx) {
         const name = this.state.exerciseCategories[idx];
-        if (await app.customConfirm(`Tem a certeza que deseja eliminar a categoria "${name}"? Exercícios nesta categoria serao movidos para "Geral".`)) {
+        if (confirm(`Tem a certeza que deseja eliminar a categoria "${name}"? Exercícios nesta categoria serao movidos para "Geral".`)) {
             this.state.exerciseCategories.splice(idx, 1);
             this.state.exercises.forEach(ex => {
                 if (ex.category === name) ex.category = 'Geral';
@@ -1745,7 +1747,7 @@ Bons treinos!`;
     }
 
     async deleteExercise(id) {
-        if (await app.customConfirm('Tem a certeza que deseja eliminar este exercício da biblioteca?')) {
+        if (confirm('Tem a certeza que deseja eliminar este exercício da biblioteca?')) {
             this.state.exercises = this.state.exercises.filter(e => e.id !== id);
             this.saveState();
             this.renderContent();
@@ -1868,7 +1870,7 @@ Bons treinos!`;
     }
 
     async deleteFood(id) {
-        if (await app.customConfirm('Apagar este alimento?')) {
+        if (confirm('Apagar este alimento?')) {
             this.state.foods = this.state.foods.filter(f => f.id !== id);
             this.saveState();
             this.renderContent();
@@ -1884,7 +1886,8 @@ Bons treinos!`;
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
     }
-\ importFoodDatabase(input) {
+
+    importFoodDatabase(input) {
         const file = input.files[0];
         if (!file) return;
 
@@ -1894,7 +1897,7 @@ Bons treinos!`;
                 const importedFoods = JSON.parse(e.target.result);
                 if (!Array.isArray(importedFoods)) throw new Error("Formato inválido");
 
-                if (await app.customConfirm(`Deseja importar ${importedFoods.length} alimentos ? Isso irá substituir a sua lista atual.`)) {
+                if (confirm(`Deseja importar ${importedFoods.length} alimentos ? Isso irá substituir a sua lista atual.`)) {
                     this.state.foods = importedFoods;
                     this.saveState();
                     this.renderContent();
@@ -1942,8 +1945,9 @@ Bons treinos!`;
         `;
         document.body.appendChild(modal);
     }
-\ addCategoryFromModal() {
-        const newCat = await app.customPrompt("Nome da nova categoria:");
+
+    addCategoryFromModal() {
+        const newCat = prompt("Nome da nova categoria:");
         if (newCat && newCat.trim()) {
             const catName = newCat.trim();
             if (!this.state.foodCategories.includes(catName)) {
@@ -1955,9 +1959,10 @@ Bons treinos!`;
             }
         }
     }
-\ editCategory(idx) {
+
+    editCategory(idx) {
         const oldName = this.state.foodCategories[idx];
-        const newName = await app.customPrompt("Novo nome para a categoria:", oldName);
+        const newName = prompt("Novo nome para a categoria:", oldName);
         if (newName && newName.trim() && newName !== oldName) {
             const finalName = newName.trim();
             if (this.state.foodCategories.includes(finalName)) return alert('Nome já existe.');
@@ -1973,9 +1978,10 @@ Bons treinos!`;
             this.refreshCategoriesModal();
         }
     }
-\ deleteCategory(idx) {
+
+    deleteCategory(idx) {
         const catName = this.state.foodCategories[idx];
-        if (await app.customConfirm(`Tem a certeza que deseja eliminar a categoria "${catName}"? Os alimentos ficarao como "Outros".`)) {
+        if (confirm(`Tem a certeza que deseja eliminar a categoria "${catName}"? Os alimentos ficarao como "Outros".`)) {
             this.state.foodCategories.splice(idx, 1);
 
             // Reassign foods to 'Outros' (or just leave them, but safest to mark as Outros or let them fall to default)
@@ -2239,7 +2245,7 @@ Bons treinos!`;
         const hasWeights = day.exercises.some(ex => ex.weightLog && ex.weightLog.some(w => w !== '' && w !== null && w !== undefined));
 
         if (!hasWeights) {
-            // Usar modal customizado  await app.customConfirm() e bloqueado em PWA/standalone iOS
+            // Usar modal customizado  confirm() e bloqueado em PWA/standalone iOS
             const modal = document.createElement('div');
             modal.className = 'modal-overlay';
             modal.innerHTML = `
@@ -2296,8 +2302,9 @@ Bons treinos!`;
             alert('Ocorreu um erro ao guardar. Por favor tente novamente.');
         }
     }
-\ deleteTrainingSession(index) {
-        if (await app.customConfirm('Tem a certeza que deseja eliminar este treino do histórico?')) {
+
+    deleteTrainingSession(index) {
+        if (confirm('Tem a certeza que deseja eliminar este treino do histórico?')) {
             const history = this.state.trainingHistory[this.currentClientId];
             if (history) {
                 history.splice(index, 1);
@@ -2356,14 +2363,15 @@ Bons treinos!`;
             `;
         document.body.appendChild(modal);
     }
-\ openTrainingEditor(clientId) {
+
+    openTrainingEditor(clientId) {
         clientId = Number(clientId);
         // Verificar se existe um rascunho pendente
         const draft = localStorage.getItem('kandalgym_training_draft');
         if (draft) {
             const draftData = JSON.parse(draft);
             if (draftData.clientId === clientId) {
-                if (await app.customConfirm('Detetamos um rascunho não guardado deste treino. Deseja recupera-lo?')) {
+                if (confirm('Detetamos um rascunho não guardado deste treino. Deseja recupera-lo?')) {
                     this.editingPlan = draftData.plan;
                     this.editingClientId = clientId;
                     this.setView('edit_training');
@@ -2505,8 +2513,9 @@ Bons treinos!`;
         this.saveTrainingDraft();
         this.renderTrainingEditor();
     }
-\ removeTrainingDay(idx) {
-        if (await app.customConfirm('Deseja remover este dia de treino e todos os exercícios associados?')) {
+
+    removeTrainingDay(idx) {
+        if (confirm('Deseja remover este dia de treino e todos os exercícios associados?')) {
             this.editingPlan.splice(idx, 1);
             this.saveTrainingDraft();
             this.renderTrainingEditor();
@@ -2562,8 +2571,9 @@ Bons treinos!`;
         alert('Plano de treino guardado com sucesso!');
         this.setView('spy_view');
     }
-\ deleteTrainingPlan(clientId) {
-        if (await app.customConfirm('Tem a certeza que deseja eliminar todo o plano de treino deste aluno?')) {
+
+    deleteTrainingPlan(clientId) {
+        if (confirm('Tem a certeza que deseja eliminar todo o plano de treino deste aluno?')) {
             this.state.trainingPlans[clientId] = [];
             this.saveState();
             this.clearTrainingDraft();
@@ -3137,8 +3147,9 @@ Bons treinos!`;
         alert('Plano alimentar guardado com sucesso!');
         this.setView('spy_view');
     }
-\ deleteMealPlan(clientId) {
-        if (await app.customConfirm('Tem a certeza que deseja eliminar toda a dieta deste aluno?')) {
+
+    deleteMealPlan(clientId) {
+        if (confirm('Tem a certeza que deseja eliminar toda a dieta deste aluno?')) {
             const cid = String(clientId);
             this.state.mealPlans[cid] = { title: 'Plano Alimentar', meals: [], author: this.currentUser.name, updatedAt: new Date().toLocaleDateString('pt-PT') };
             this.saveState();
@@ -3516,7 +3527,7 @@ Bons treinos!`;
     }
 
     async deleteEvaluation(clientId, index) {
-        if (await app.customConfirm('Tem a certeza que deseja eliminar este registo de Avaliação?')) {
+        if (confirm('Tem a certeza que deseja eliminar este registo de Avaliação?')) {
             this.state.evaluations[String(clientId)].splice(index, 1);
             this.saveState();
             this.renderContent();
@@ -4155,16 +4166,18 @@ Bons treinos!`;
         this.saveState();
         // UI is handled inline inside the label onchange attributes for instant slick feedback.
     }
-\ addNewPlanRestriction() {
-        const name = await app.customPrompt('Nome da nova Mensalidade (exatamente como aparece no QR):');
+
+    addNewPlanRestriction() {
+        const name = prompt('Nome da nova Mensalidade (exatamente como aparece no QR):');
         if (!name) return;
         if (!this.state.planRestrictions) this.state.planRestrictions = {};
         this.state.planRestrictions[name] = { allowClasses: true, filter: '', exclude: [] };
         this.saveState();
         this.switchAdminTab('plans');
     }
-\ deletePlanRestriction(plan) {
-        if (!await app.customConfirm(`Deseja eliminar as regras para o plano "${plan}"?`)) return;
+
+    deletePlanRestriction(plan) {
+        if (!confirm(`Deseja eliminar as regras para o plano "${plan}"?`)) return;
         delete this.state.planRestrictions[plan];
         this.saveState();
         this.switchAdminTab('plans');
@@ -4550,8 +4563,9 @@ Bons treinos!`;
         this.closeModal();
         alert('Mensagem enviada com sucesso!');
     }
-\ deleteNotification(createdAt, userId) {
-        if (!await app.customConfirm('Eliminar está mensagem?')) return;
+
+    deleteNotification(createdAt, userId) {
+        if (!confirm('Eliminar está mensagem?')) return;
 
         // Encontrar indice (usar == para garantir que string vs number timestamp funciona)
         const idx = this.state.notifications.findIndex(n => n.targetUserId == userId && n.createdAt == createdAt);
@@ -4561,16 +4575,18 @@ Bons treinos!`;
             this.renderChat(document.getElementById('main-content'));
         }
     }
-\ clearAllNotifications() {
-        if (!await app.customConfirm('Tem a certeza que deseja apagar todas as mensagens?')) return;
+
+    clearAllNotifications() {
+        if (!confirm('Tem a certeza que deseja apagar todas as mensagens?')) return;
 
         const userId = this.currentUser.id;
         this.state.notifications = (this.state.notifications || []).filter(n => n.targetUserId != userId);
         this.saveState();
         this.renderChat(document.getElementById('main-content'));
     }
-\ resetPass(type, id, name) {
-        const newPass = await app.customPrompt(`Nova password para ${name}: `, "123");
+
+    resetPass(type, id, name) {
+        const newPass = prompt(`Nova password para ${name}: `, "123");
         if (newPass) {
             let list = this.state.clients;
             if (type === 'teacher') list = this.state.teachers;
@@ -4603,7 +4619,7 @@ Bons treinos!`;
     }
 
     async deleteUser(type, id, name) {
-        if (await app.customConfirm(`Tem a certeza que deseja eliminar o utilizador ${name}?\nAVISO: Todos os planos, histórico e avaliações associados serão removidos permanentemente.`)) {
+        if (confirm(`Tem a certeza que deseja eliminar o utilizador ${name}?\nAVISO: Todos os planos, histórico e avaliações associados serão removidos permanentemente.`)) {
             if (type === 'admin') {
                 if (id === 1) return alert('O administrador principal não pode ser removido.');
                 if (id === this.currentUser.id) return alert('Não pode remover a sua própria conta enquanto estiver logado.');
@@ -5112,7 +5128,7 @@ Bons treinos!`;
     }
 
     async deleteAnamnesis(clientId, index) {
-        if (!await app.customConfirm('Tem a certeza que deseja remover este registo de anamnese?')) return;
+        if (!confirm('Tem a certeza que deseja remover este registo de anamnese?')) return;
         this.state.anamnesis[String(clientId)].splice(index, 1);
         this.saveState();
         this.renderContent();
@@ -5712,7 +5728,7 @@ Bons treinos!`;
         const checkboxes = document.querySelectorAll('.qr-bulk-checkbox:checked');
         if (checkboxes.length === 0) return alert('Por favor selecione pelo menos um aluno (caixa à esquerda do ID).');
 
-        if (!await app.customConfirm(`Tem a certeza que deseja definir a validade para o dia ${newDateStr} de forma permanente aos ${checkboxes.length} alunos selecionados?`)) return;
+        if (!confirm(`Tem a certeza que deseja definir a validade para o dia ${newDateStr} de forma permanente aos ${checkboxes.length} alunos selecionados?`)) return;
 
         checkboxes.forEach(cb => {
             const qrId = cb.value;
@@ -5959,7 +5975,7 @@ Bons treinos!`;
     }
 
     async deleteQRClient(id) {
-        if (await app.customConfirm("Deseja eliminar este cliente QR permanentemente?")) {
+        if (confirm("Deseja eliminar este cliente QR permanentemente?")) {
             this.state.qrClients = this.state.qrClients.filter(c => c.id !== id);
             this.saveState();
             this.renderContent();
@@ -6690,7 +6706,7 @@ Bons treinos!`;
         
         const cls = this.state.classes.find(x => String(x.id) === classIdStr);
         if (cls && participants.length >= (cls.capacity || 20)) {
-             if(!await app.customConfirm('A aula já está na capacidade máxima. Tem a certeza que pretende forçar a inscrição?')) return;
+             if(!confirm('A aula já está na capacidade máxima. Tem a certeza que pretende forçar a inscrição?')) return;
         }
         
         participants.push(clientId);
@@ -6717,7 +6733,7 @@ Bons treinos!`;
     }
 
     async removeManualStudent(classId, clientId) {
-        if (!await app.customConfirm('Deseja realmente remover o aluno desta aula?')) return;
+        if (!confirm('Deseja realmente remover o aluno desta aula?')) return;
         const classIdStr = String(classId);
         if (this.state.enrollments[classIdStr]) {
             this.state.enrollments[classIdStr] = this.state.enrollments[classIdStr].filter(id => Number(id) !== Number(clientId));
@@ -6905,7 +6921,7 @@ Bons treinos!`;
     }
 
     async deleteClass(classId) {
-        if (!await app.customConfirm('Tem a certeza que deseja eliminar está aula?')) return;
+        if (!confirm('Tem a certeza que deseja eliminar está aula?')) return;
 
         const idToDelete = Number(classId);
         this.state.classes = this.state.classes.filter(x => Number(x.id) !== idToDelete);
@@ -6984,7 +7000,7 @@ Bons treinos!`;
     }
 
     async leaveClass(classId) {
-        if (!await app.customConfirm('Deseja cancelar a sua Inscrição nesta aula?')) return;
+        if (!confirm('Deseja cancelar a sua Inscrição nesta aula?')) return;
         const classIdStr = String(classId);
 
         if (this.state.enrollments[classIdStr]) {
