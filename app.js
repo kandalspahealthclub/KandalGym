@@ -1518,8 +1518,7 @@ Bons treinos!`;
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
     }
-
-    importExerciseDatabase(input) {
+\ importExerciseDatabase(input) {
         const file = input.files[0];
         if (!file) return;
 
@@ -1529,7 +1528,7 @@ Bons treinos!`;
                 const imported = JSON.parse(e.target.result);
                 if (!Array.isArray(imported)) throw new Error("Formato inválido");
 
-                if (confirm(`Deseja importar ${imported.length} exercícios? Isso irá substituir a sua lista atual.`)) {
+                if (await app.customConfirm(`Deseja importar ${imported.length} exercícios? Isso irá substituir a sua lista atual.`)) {
                     this.state.exercises = imported;
                     this.saveState();
                     this.renderContent();
@@ -1544,7 +1543,7 @@ Bons treinos!`;
     }
 
     async importLocalBaseExercicios() {
-        if (!confirm('Deseja importar a base de exercícios local (base_exercicios.json)? Novos exercícios serao adicionados aos existentes (sem duplicar nomes).')) return;
+        if (!await app.customConfirm('Deseja importar a base de exercícios local (base_exercicios.json)? Novos exercícios serao adicionados aos existentes (sem duplicar nomes).')) return;
 
         try {
             const res = await fetch('base_exercicios.json');
@@ -1638,10 +1637,9 @@ Bons treinos!`;
             `).join('');
         }
     }
-
-    editExerciseCategory(idx) {
+\ editExerciseCategory(idx) {
         const oldName = this.state.exerciseCategories[idx];
-        const newName = prompt('Novo nome para a categoria:', oldName);
+        const newName = await app.customPrompt('Novo nome para a categoria:', oldName);
         if (newName && newName !== oldName) {
             this.state.exerciseCategories[idx] = newName;
             // Update exercises with this category
@@ -1654,9 +1652,9 @@ Bons treinos!`;
         }
     }
 
-    deleteExerciseCategory(idx) {
+    async deleteExerciseCategory(idx) {
         const name = this.state.exerciseCategories[idx];
-        if (confirm(`Tem a certeza que deseja eliminar a categoria "${name}"? Exercícios nesta categoria serao movidos para "Geral".`)) {
+        if (await app.customConfirm(`Tem a certeza que deseja eliminar a categoria "${name}"? Exercícios nesta categoria serao movidos para "Geral".`)) {
             this.state.exerciseCategories.splice(idx, 1);
             this.state.exercises.forEach(ex => {
                 if (ex.category === name) ex.category = 'Geral';
@@ -1746,8 +1744,8 @@ Bons treinos!`;
         }
     }
 
-    deleteExercise(id) {
-        if (confirm('Tem a certeza que deseja eliminar este exercício da biblioteca?')) {
+    async deleteExercise(id) {
+        if (await app.customConfirm('Tem a certeza que deseja eliminar este exercício da biblioteca?')) {
             this.state.exercises = this.state.exercises.filter(e => e.id !== id);
             this.saveState();
             this.renderContent();
@@ -1869,8 +1867,8 @@ Bons treinos!`;
         container.innerHTML = this.renderFoodListGrouped(searchQuery);
     }
 
-    deleteFood(id) {
-        if (confirm('Apagar este alimento?')) {
+    async deleteFood(id) {
+        if (await app.customConfirm('Apagar este alimento?')) {
             this.state.foods = this.state.foods.filter(f => f.id !== id);
             this.saveState();
             this.renderContent();
@@ -1886,8 +1884,7 @@ Bons treinos!`;
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
     }
-
-    importFoodDatabase(input) {
+\ importFoodDatabase(input) {
         const file = input.files[0];
         if (!file) return;
 
@@ -1897,7 +1894,7 @@ Bons treinos!`;
                 const importedFoods = JSON.parse(e.target.result);
                 if (!Array.isArray(importedFoods)) throw new Error("Formato inválido");
 
-                if (confirm(`Deseja importar ${importedFoods.length} alimentos ? Isso irá substituir a sua lista atual.`)) {
+                if (await app.customConfirm(`Deseja importar ${importedFoods.length} alimentos ? Isso irá substituir a sua lista atual.`)) {
                     this.state.foods = importedFoods;
                     this.saveState();
                     this.renderContent();
@@ -1945,9 +1942,8 @@ Bons treinos!`;
         `;
         document.body.appendChild(modal);
     }
-
-    addCategoryFromModal() {
-        const newCat = prompt("Nome da nova categoria:");
+\ addCategoryFromModal() {
+        const newCat = await app.customPrompt("Nome da nova categoria:");
         if (newCat && newCat.trim()) {
             const catName = newCat.trim();
             if (!this.state.foodCategories.includes(catName)) {
@@ -1959,10 +1955,9 @@ Bons treinos!`;
             }
         }
     }
-
-    editCategory(idx) {
+\ editCategory(idx) {
         const oldName = this.state.foodCategories[idx];
-        const newName = prompt("Novo nome para a categoria:", oldName);
+        const newName = await app.customPrompt("Novo nome para a categoria:", oldName);
         if (newName && newName.trim() && newName !== oldName) {
             const finalName = newName.trim();
             if (this.state.foodCategories.includes(finalName)) return alert('Nome já existe.');
@@ -1978,10 +1973,9 @@ Bons treinos!`;
             this.refreshCategoriesModal();
         }
     }
-
-    deleteCategory(idx) {
+\ deleteCategory(idx) {
         const catName = this.state.foodCategories[idx];
-        if (confirm(`Tem a certeza que deseja eliminar a categoria "${catName}"? Os alimentos ficarao como "Outros".`)) {
+        if (await app.customConfirm(`Tem a certeza que deseja eliminar a categoria "${catName}"? Os alimentos ficarao como "Outros".`)) {
             this.state.foodCategories.splice(idx, 1);
 
             // Reassign foods to 'Outros' (or just leave them, but safest to mark as Outros or let them fall to default)
@@ -2245,7 +2239,7 @@ Bons treinos!`;
         const hasWeights = day.exercises.some(ex => ex.weightLog && ex.weightLog.some(w => w !== '' && w !== null && w !== undefined));
 
         if (!hasWeights) {
-            // Usar modal customizado  confirm() e bloqueado em PWA/standalone iOS
+            // Usar modal customizado  await app.customConfirm() e bloqueado em PWA/standalone iOS
             const modal = document.createElement('div');
             modal.className = 'modal-overlay';
             modal.innerHTML = `
@@ -2302,9 +2296,8 @@ Bons treinos!`;
             alert('Ocorreu um erro ao guardar. Por favor tente novamente.');
         }
     }
-
-    deleteTrainingSession(index) {
-        if (confirm('Tem a certeza que deseja eliminar este treino do histórico?')) {
+\ deleteTrainingSession(index) {
+        if (await app.customConfirm('Tem a certeza que deseja eliminar este treino do histórico?')) {
             const history = this.state.trainingHistory[this.currentClientId];
             if (history) {
                 history.splice(index, 1);
@@ -2363,15 +2356,14 @@ Bons treinos!`;
             `;
         document.body.appendChild(modal);
     }
-
-    openTrainingEditor(clientId) {
+\ openTrainingEditor(clientId) {
         clientId = Number(clientId);
         // Verificar se existe um rascunho pendente
         const draft = localStorage.getItem('kandalgym_training_draft');
         if (draft) {
             const draftData = JSON.parse(draft);
             if (draftData.clientId === clientId) {
-                if (confirm('Detetamos um rascunho não guardado deste treino. Deseja recupera-lo?')) {
+                if (await app.customConfirm('Detetamos um rascunho não guardado deste treino. Deseja recupera-lo?')) {
                     this.editingPlan = draftData.plan;
                     this.editingClientId = clientId;
                     this.setView('edit_training');
@@ -2513,9 +2505,8 @@ Bons treinos!`;
         this.saveTrainingDraft();
         this.renderTrainingEditor();
     }
-
-    removeTrainingDay(idx) {
-        if (confirm('Deseja remover este dia de treino e todos os exercícios associados?')) {
+\ removeTrainingDay(idx) {
+        if (await app.customConfirm('Deseja remover este dia de treino e todos os exercícios associados?')) {
             this.editingPlan.splice(idx, 1);
             this.saveTrainingDraft();
             this.renderTrainingEditor();
@@ -2571,9 +2562,8 @@ Bons treinos!`;
         alert('Plano de treino guardado com sucesso!');
         this.setView('spy_view');
     }
-
-    deleteTrainingPlan(clientId) {
-        if (confirm('Tem a certeza que deseja eliminar todo o plano de treino deste aluno?')) {
+\ deleteTrainingPlan(clientId) {
+        if (await app.customConfirm('Tem a certeza que deseja eliminar todo o plano de treino deste aluno?')) {
             this.state.trainingPlans[clientId] = [];
             this.saveState();
             this.clearTrainingDraft();
@@ -3147,9 +3137,8 @@ Bons treinos!`;
         alert('Plano alimentar guardado com sucesso!');
         this.setView('spy_view');
     }
-
-    deleteMealPlan(clientId) {
-        if (confirm('Tem a certeza que deseja eliminar toda a dieta deste aluno?')) {
+\ deleteMealPlan(clientId) {
+        if (await app.customConfirm('Tem a certeza que deseja eliminar toda a dieta deste aluno?')) {
             const cid = String(clientId);
             this.state.mealPlans[cid] = { title: 'Plano Alimentar', meals: [], author: this.currentUser.name, updatedAt: new Date().toLocaleDateString('pt-PT') };
             this.saveState();
@@ -3526,8 +3515,8 @@ Bons treinos!`;
         alert(index === null ? 'Avaliação registada com sucesso!' : 'Avaliação atualizada com sucesso!');
     }
 
-    deleteEvaluation(clientId, index) {
-        if (confirm('Tem a certeza que deseja eliminar este registo de Avaliação?')) {
+    async deleteEvaluation(clientId, index) {
+        if (await app.customConfirm('Tem a certeza que deseja eliminar este registo de Avaliação?')) {
             this.state.evaluations[String(clientId)].splice(index, 1);
             this.saveState();
             this.renderContent();
@@ -4166,18 +4155,16 @@ Bons treinos!`;
         this.saveState();
         // UI is handled inline inside the label onchange attributes for instant slick feedback.
     }
-
-    addNewPlanRestriction() {
-        const name = prompt('Nome da nova Mensalidade (exatamente como aparece no QR):');
+\ addNewPlanRestriction() {
+        const name = await app.customPrompt('Nome da nova Mensalidade (exatamente como aparece no QR):');
         if (!name) return;
         if (!this.state.planRestrictions) this.state.planRestrictions = {};
         this.state.planRestrictions[name] = { allowClasses: true, filter: '', exclude: [] };
         this.saveState();
         this.switchAdminTab('plans');
     }
-
-    deletePlanRestriction(plan) {
-        if (!confirm(`Deseja eliminar as regras para o plano "${plan}"?`)) return;
+\ deletePlanRestriction(plan) {
+        if (!await app.customConfirm(`Deseja eliminar as regras para o plano "${plan}"?`)) return;
         delete this.state.planRestrictions[plan];
         this.saveState();
         this.switchAdminTab('plans');
@@ -4563,9 +4550,8 @@ Bons treinos!`;
         this.closeModal();
         alert('Mensagem enviada com sucesso!');
     }
-
-    deleteNotification(createdAt, userId) {
-        if (!confirm('Eliminar está mensagem?')) return;
+\ deleteNotification(createdAt, userId) {
+        if (!await app.customConfirm('Eliminar está mensagem?')) return;
 
         // Encontrar indice (usar == para garantir que string vs number timestamp funciona)
         const idx = this.state.notifications.findIndex(n => n.targetUserId == userId && n.createdAt == createdAt);
@@ -4575,18 +4561,16 @@ Bons treinos!`;
             this.renderChat(document.getElementById('main-content'));
         }
     }
-
-    clearAllNotifications() {
-        if (!confirm('Tem a certeza que deseja apagar todas as mensagens?')) return;
+\ clearAllNotifications() {
+        if (!await app.customConfirm('Tem a certeza que deseja apagar todas as mensagens?')) return;
 
         const userId = this.currentUser.id;
         this.state.notifications = (this.state.notifications || []).filter(n => n.targetUserId != userId);
         this.saveState();
         this.renderChat(document.getElementById('main-content'));
     }
-
-    resetPass(type, id, name) {
-        const newPass = prompt(`Nova password para ${name}: `, "123");
+\ resetPass(type, id, name) {
+        const newPass = await app.customPrompt(`Nova password para ${name}: `, "123");
         if (newPass) {
             let list = this.state.clients;
             if (type === 'teacher') list = this.state.teachers;
@@ -4618,8 +4602,8 @@ Bons treinos!`;
         }
     }
 
-    deleteUser(type, id, name) {
-        if (confirm(`Tem a certeza que deseja eliminar o utilizador ${name}?\nAVISO: Todos os planos, histórico e avaliações associados serão removidos permanentemente.`)) {
+    async deleteUser(type, id, name) {
+        if (await app.customConfirm(`Tem a certeza que deseja eliminar o utilizador ${name}?\nAVISO: Todos os planos, histórico e avaliações associados serão removidos permanentemente.`)) {
             if (type === 'admin') {
                 if (id === 1) return alert('O administrador principal não pode ser removido.');
                 if (id === this.currentUser.id) return alert('Não pode remover a sua própria conta enquanto estiver logado.');
@@ -5127,8 +5111,8 @@ Bons treinos!`;
         }
     }
 
-    deleteAnamnesis(clientId, index) {
-        if (!confirm('Tem a certeza que deseja remover este registo de anamnese?')) return;
+    async deleteAnamnesis(clientId, index) {
+        if (!await app.customConfirm('Tem a certeza que deseja remover este registo de anamnese?')) return;
         this.state.anamnesis[String(clientId)].splice(index, 1);
         this.saveState();
         this.renderContent();
@@ -5719,7 +5703,7 @@ Bons treinos!`;
         });
     }
 
-    applyBulkValidity() {
+    async applyBulkValidity() {
         const customDateInput = document.getElementById('bulkCustomDate');
         const newDateStr = customDateInput ? customDateInput.value : '';
         
@@ -5728,7 +5712,7 @@ Bons treinos!`;
         const checkboxes = document.querySelectorAll('.qr-bulk-checkbox:checked');
         if (checkboxes.length === 0) return alert('Por favor selecione pelo menos um aluno (caixa à esquerda do ID).');
 
-        if (!confirm(`Tem a certeza que deseja definir a validade para o dia ${newDateStr} de forma permanente aos ${checkboxes.length} alunos selecionados?`)) return;
+        if (!await app.customConfirm(`Tem a certeza que deseja definir a validade para o dia ${newDateStr} de forma permanente aos ${checkboxes.length} alunos selecionados?`)) return;
 
         checkboxes.forEach(cb => {
             const qrId = cb.value;
@@ -5974,8 +5958,8 @@ Bons treinos!`;
         // Obsoleto - Usando edição inline agora
     }
 
-    deleteQRClient(id) {
-        if (confirm("Deseja eliminar este cliente QR permanentemente?")) {
+    async deleteQRClient(id) {
+        if (await app.customConfirm("Deseja eliminar este cliente QR permanentemente?")) {
             this.state.qrClients = this.state.qrClients.filter(c => c.id !== id);
             this.saveState();
             this.renderContent();
@@ -6690,7 +6674,7 @@ Bons treinos!`;
         this.showModal(content);
     }
 
-    enrollManualStudent(classId) {
+    async enrollManualStudent(classId) {
         const select = document.getElementById('manualEnrollSelect');
         if (!select || !select.value) return alert('Por favor, selecione um aluno da lista.');
         
@@ -6706,7 +6690,7 @@ Bons treinos!`;
         
         const cls = this.state.classes.find(x => String(x.id) === classIdStr);
         if (cls && participants.length >= (cls.capacity || 20)) {
-             if(!confirm('A aula já está na capacidade máxima. Tem a certeza que pretende forçar a inscrição?')) return;
+             if(!await app.customConfirm('A aula já está na capacidade máxima. Tem a certeza que pretende forçar a inscrição?')) return;
         }
         
         participants.push(clientId);
@@ -6732,8 +6716,8 @@ Bons treinos!`;
         select.value = "";
     }
 
-    removeManualStudent(classId, clientId) {
-        if (!confirm('Deseja realmente remover o aluno desta aula?')) return;
+    async removeManualStudent(classId, clientId) {
+        if (!await app.customConfirm('Deseja realmente remover o aluno desta aula?')) return;
         const classIdStr = String(classId);
         if (this.state.enrollments[classIdStr]) {
             this.state.enrollments[classIdStr] = this.state.enrollments[classIdStr].filter(id => Number(id) !== Number(clientId));
@@ -6921,7 +6905,7 @@ Bons treinos!`;
     }
 
     async deleteClass(classId) {
-        if (!confirm('Tem a certeza que deseja eliminar está aula?')) return;
+        if (!await app.customConfirm('Tem a certeza que deseja eliminar está aula?')) return;
 
         const idToDelete = Number(classId);
         this.state.classes = this.state.classes.filter(x => Number(x.id) !== idToDelete);
@@ -7000,7 +6984,7 @@ Bons treinos!`;
     }
 
     async leaveClass(classId) {
-        if (!confirm('Deseja cancelar a sua Inscrição nesta aula?')) return;
+        if (!await app.customConfirm('Deseja cancelar a sua Inscrição nesta aula?')) return;
         const classIdStr = String(classId);
 
         if (this.state.enrollments[classIdStr]) {
@@ -7019,6 +7003,87 @@ Bons treinos!`;
     switchQRTab(tab) {
         this.qrActiveTab = tab;
         this.renderContent();
+    }
+
+    customConfirm(msg) {
+        return new Promise(resolve => {
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.zIndex = '9999999';
+            overlay.style.opacity = '0';
+            overlay.style.transition = 'opacity 0.3s ease';
+            
+            overlay.innerHTML = `
+                <div class="modal-content" style="text-align: center; max-width: 400px; padding: 2rem 1.5rem;">
+                    <div style="width: 64px; height: 64px; background: linear-gradient(135deg, rgba(var(--danger-rgb), 0.2), rgba(var(--accent-rgb), 0.2)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; border: 1px solid rgba(var(--danger-rgb), 0.4); box-shadow: 0 8px 20px rgba(var(--danger-rgb), 0.15);">
+                        <i class="fas fa-question-circle" style="font-size: 2.2rem; color: var(--danger);"></i>
+                    </div>
+                    <h3 style="margin-bottom: 1rem; color: #fff; font-size: 1.25rem; font-weight: 800;">Confirmação</h3>
+                    <p style="color: #e0e0e0; font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem; font-weight: 400;">${msg.replace(/\n/g, '<br>')}</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <button id="btn-custom-cancel" class="btn btn-secondary" style="border-radius: 12px; font-weight: 600;">Cancelar</button>
+                        <button id="btn-custom-confirm" class="btn btn-primary" style="border-radius: 12px; font-weight: 700; background: linear-gradient(135deg, var(--danger), #b33939); border: none; box-shadow: 0 4px 15px rgba(var(--danger-rgb), 0.4);">Confirmar</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            setTimeout(() => overlay.style.opacity = '1', 10);
+            
+            document.getElementById('btn-custom-cancel').onclick = () => {
+                overlay.style.opacity = '0';
+                setTimeout(() => { overlay.remove(); resolve(false); }, 300);
+            };
+            document.getElementById('btn-custom-confirm').onclick = () => {
+                overlay.style.opacity = '0';
+                setTimeout(() => { overlay.remove(); resolve(true); }, 300);
+            };
+        });
+    }
+
+    customPrompt(msg, defaultVal = '') {
+        return new Promise(resolve => {
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.zIndex = '9999999';
+            overlay.style.opacity = '0';
+            overlay.style.transition = 'opacity 0.3s ease';
+            
+            const dv = defaultVal || '';
+            overlay.innerHTML = `
+                <div class="modal-content" style="max-width: 400px; padding: 2rem 1.5rem;">
+                    <div style="width: 50px; height: 50px; background: rgba(var(--primary-rgb), 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto; border: 1px solid rgba(var(--primary-rgb), 0.4);">
+                        <i class="fas fa-keyboard" style="font-size: 1.5rem; color: var(--primary);"></i>
+                    </div>
+                    <h3 style="margin-top:0; margin-bottom: 1rem; color: #fff; font-size: 1.2rem; font-weight: 800; text-align:center;">Entrada de Dados</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; text-align:center;">${msg}</p>
+                    <input type="text" id="custom-prompt-input" value="${dv}" style="width:100%; margin-bottom: 1.5rem; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:10px; color:#fff;" autocomplete="off">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <button id="btn-prompt-cancel" class="btn btn-secondary" style="border-radius: 12px;">Cancelar</button>
+                        <button id="btn-prompt-confirm" class="btn btn-primary" style="border-radius: 12px; box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.4);">Confirmar</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            setTimeout(() => { 
+                overlay.style.opacity = '1';
+                document.getElementById('custom-prompt-input').focus();
+            }, 10);
+            
+            document.getElementById('btn-prompt-cancel').onclick = () => {
+                overlay.style.opacity = '0';
+                setTimeout(() => { overlay.remove(); resolve(null); }, 300);
+            };
+            document.getElementById('btn-prompt-confirm').onclick = () => {
+                const val = document.getElementById('custom-prompt-input').value;
+                overlay.style.opacity = '0';
+                setTimeout(() => { overlay.remove(); resolve(val); }, 300);
+            };
+            document.getElementById('custom-prompt-input').onkeyup = (e) => {
+                if (e.key === 'Enter') document.getElementById('btn-prompt-confirm').click();
+            };
+        });
     }
 }
 
