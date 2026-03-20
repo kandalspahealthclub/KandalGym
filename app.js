@@ -5950,7 +5950,12 @@ Bons treinos!`;
         const hoje = new Date().toISOString().split('T')[0];
 
         return qrList.map((c, idx) => {
-            const entHj = (c.histórico || []).filter(h => h.startsWith(hoje)).length;
+            const entHj = (c.histórico || []).filter(l => {
+                const dateStr = typeof l === 'string' ? l : l.d;
+                const type = typeof l === 'string' ? 'in' : l.t;
+                return dateStr.startsWith(hoje) && type === 'in';
+            }).length;
+
             const statusColor = c.ativo ? 'var(--success)' : 'var(--danger)';
 
             const isStaff = (this.state.teachers || []).some(t => Number(t.id) === Number(c.clientId)) ||
