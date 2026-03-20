@@ -101,7 +101,20 @@ class FitnessApp {
 
         // 2. Iniciar escuta do Firebase em segundo plano
         this.init();
+
+        // 3. Failsafe: Se após 8 segundos ainda estiver "Sincronizando", forçamos o carregamento
+        // para não bloquear o utilizador, usando os dados do cache local se necessário.
+        setTimeout(() => {
+            if (!this.hasLoadedData) {
+                console.warn("Failsafe: Forçando carregamento após timeout de sincronização.");
+                this.hasLoadedData = true;
+                if (this.isLoggedIn) {
+                    this.renderContent();
+                }
+            }
+        }, 8000);
     }
+
 
 
     renderAppInterface() {
@@ -606,6 +619,109 @@ class FitnessApp {
         `;
         document.body.appendChild(modal);
     }
+
+    showEditUserModal(type, id) {
+        const list = type === 'teacher' ? this.state.teachers : (type === 'admin' ? this.state.admins : this.state.clients);
+        const user = list.find(u => String(u.id) == String(id));
+        if (!user) return;
+
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h2 style="margin-top:0;">Editar ${type === 'teacher' ? 'Professor' : (type === 'admin' ? 'Gestor' : 'Aluno')}</h2>
+                <div style="display:flex; flex-direction:column; gap:1.25rem;">
+                    <div>
+                        <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Nome</label>
+                        <input type="text" id="edit-user-name" value="${user.name || ''}" placeholder="Nome">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Email</label>
+                        <input type="email" id="edit-user-email" value="${user.email || ''}" placeholder="Email">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Telemóvel</label>
+                        <input type="tel" id="edit-user-phone" value="${user.phone || ''}" placeholder="Telemóvel">
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
+                        <button class="btn btn-primary" onclick="app.saveUserEdits('${type}', ${id})">Guardar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    saveUserEdits(type, id) {
+        try {
+            const list = type === 'teacher' ? this.state.teachers : (type === 'admin' ? this.state.admins : this.state.clients);
+            const idx = list.findIndex(u => String(u.id) == String(id));
+            if (idx === -1) return;
+
+            list[idx].name = document.getElementById('edit-user-name').value;
+            list[idx].email = document.getElementById('edit-user-email').value;
+            list[idx].phone = document.getElementById('edit-user-phone').value;
+
+            // Atualizar também no QR se existir
+            if (this.state.qrClients) {
+                const qrIdx = this.state.qrClients.findIndex(q => q && String(q.clientId) == String(id));
+                if (qrIdx !== -1) {
+                    this.state.qrClients[qrIdx].nome = list[idx].name;
+                    this.state.qrClients[qrIdx].tel = list[idx].phone;
+                }
+            }
+
+            this.saveState();
+            document.querySelector('.modal-overlay').remove();
+            
+            if (this.activeView === 'users') {
+                this.switchAdminTab(type === 'teacher' ? 'teachers' : (type === 'admin' ? 'admins' : 'clients'));
+            } else {
+                this.renderContent();
+            }
+            
+            this.showToast('Dados atualizados com sucesso.');
+        } catch (err) {
+            console.error("Erro ao guardar edições:", err);
+            alert("Erro ao guardar alterações.");
+        }
+    }
+
+    syncQRUsers() {
+        if (!this.state.qrClients) this.state.qrClients = [];
+        let changed = false;
+
+        const hasAccess = (uid) => {
+            if (!uid) return true;
+            // Comparação frouxa (string/number) para garantir deteção mesmo com tipos mistos
+            return this.state.qrClients.some(q => q && String(q.clientId) == String(uid));
+        };
+
+        // Staff (Admins e Professores)
+        const staff = [...(this.state.admins || []), ...(this.state.teachers || [])];
+        staff.forEach(s => {
+            if (s && s.id && !hasAccess(s.id)) {
+                console.log(`Ativando QR automático para Staff: ${s.name}`);
+                this.enableQRForClient(s.id, false, true);
+                changed = true;
+            }
+        });
+
+        // Alunos
+        (this.state.clients || []).forEach(c => {
+            if (c && c.id && !hasAccess(c.id)) {
+                this.enableQRForClient(c.id, false, false);
+                changed = true;
+            }
+        });
+
+        if (changed) {
+            this.saveState();
+        }
+    }
+
+
 
     generateRandomPassword() {
         const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%";
@@ -1157,7 +1273,11 @@ Bons treinos!`;
                                             <strong>${t.name}</strong>
                                             <div style="font-size: 0.8rem; color: var(--text-muted);">${t.email}</div>
                                         </div>
-                                        <button class="btn btn-ghost btn-sm" onclick="app.setView('users')">Gerir <i class="fas fa-chevron-right"></i></button>
+                                        <div style="display:flex; gap:0.5rem;">
+                                            <button class="btn btn-ghost btn-sm" style="color:var(--primary);" onclick="app.showEditUserModal('teacher', ${t.id})" title="Editar"><i class="fas fa-edit"></i></button>
+                                            <button class="btn btn-ghost btn-sm" onclick="app.setView('users')">Gerir <i class="fas fa-chevron-right"></i></button>
+                                        </div>
+
                                     </div>
                                 `).join('')}
                             </div>
@@ -4326,11 +4446,14 @@ Bons treinos!`;
                 <div style="display:flex; gap:0.6rem;">
                     ${isClient ? `
                         <button class="btn-icon" style="color:var(--primary);" onclick="app.spyClient(${user.id})" title="Ver Ficha Completa"><i class="fas fa-user-edit"></i></button>
-                        <button class="btn-icon" style="color:var(--accent);" onclick="app.enableQRForClient(${user.id})" title="Gerir Acesso QR"><i class="fas fa-qrcode"></i></button>
-                    ` : ''}
+                    ` : `
+                        <button class="btn-icon" style="color:var(--primary);" onclick="app.showEditUserModal('${type}', ${user.id})" title="Editar Dados"><i class="fas fa-edit"></i></button>
+                    `}
+                    <button class="btn-icon" style="color:var(--accent);" onclick="app.enableQRForClient(${user.id}, true, ${isTeacher || isAdmin})" title="Gerir Acesso QR"><i class="fas fa-qrcode"></i></button>
                     <button class="btn-icon" style="color:var(--text-muted);" onclick="app.resetPass('${type}', ${user.id}, '${user.name || ''}')" title="Reset Senha"><i class="fas fa-key"></i></button>
                     <button class="btn-icon danger" onclick="app.deleteUser('${type}', ${user.id}, '${user.name || ''}')" title="Eliminar Conta"><i class="fas fa-trash-alt"></i></button>
                 </div>
+
             </div>
             `;
     }
@@ -5661,14 +5784,17 @@ Bons treinos!`;
                             <i class="fas fa-user-tie"></i> Staff (Adm/Prof)
                         </button>
                     </div>
+                    <div style="margin-bottom: 2rem;">
+                            <div style="position: relative;">
+                                <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); opacity: 0.6;"></i>
+                                <input type="text" id="qr-search-input" placeholder="Pesquisar por nome, telemóvel ou código..." 
+                                    oninput="app.filterQRList(this.value)" 
+                                    style="width: 100%; padding: 1rem 1rem 1rem 3rem; background: rgba(255,b255,255,0.02); border: 1px solid rgba(255,b255,255,0.05); border-radius: 14px; outline: none; transition: all 0.3s ease; font-size: 0.95rem;">
 
-                    <div class="search-container" style="margin:0; width: 220px; height: 32px;">
-                        <i class="fas fa-search"></i>
-                        <input type="text" class="search-bar" placeholder="Pesquisar..." onkeyup="app.filterQRList(this.value)" style="height: 100% !important; font-size:0.8rem;">
-                    </div>
-                </div>
-                
-                <div class="glass-panel" style="padding: 0; background: transparent; border:none; box-shadow:none;">
+                            </div>
+                        </div>
+
+                        <div class="glass-panel" style="padding: 0; background: transparent; border:none; box-shadow:none;">
                     ${this.qrActiveTab === 'alunos' ? `
                     <div style="background: rgba(255,255,255,0.02); padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; border: 1px solid rgba(255,255,255,0.05);">
                         <div style="display:flex; align-items:center; gap:8px;">
