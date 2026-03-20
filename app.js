@@ -7520,9 +7520,7 @@ Bons treinos!`;
 
         this.showModal(`
             <div style="text-align: center; padding: 1.5rem 0.5rem;">
-                <div style="width: 80px; height: 80px; background: rgba(var(--primary-rgb), 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; color: var(--primary);">
-                    <i class="fas fa-check-circle" style="font-size: 3rem;"></i>
-                </div>
+
                 <h2 style="margin-bottom: 0.5rem;">Guardado com Sucesso!</h2>
                 <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem;">Pretende alertar o cliente <strong>${c.name}</strong> sobre esta atualização?</p>
                 
