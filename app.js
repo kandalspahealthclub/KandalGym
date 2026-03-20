@@ -5716,6 +5716,11 @@ Bons treinos!`;
     // --- QR MANAGER FUNCTIONALITY ---
     renderQRManager(container) {
         if (!this.state.qrClients) this.state.qrClients = [];
+        
+        // Preservar o estado do status box se ja houver algo lá (ajuda a nao apagar msgs de boas-vindas)
+        const prevStatusEl = document.getElementById('scan-status');
+        const prevHTML = prevStatusEl ? prevStatusEl.innerHTML : '';
+        const prevClass = prevStatusEl ? prevStatusEl.className : '';
 
         try {
             container.innerHTML = `
@@ -5735,7 +5740,9 @@ Bons treinos!`;
                         <div id="video-container" class="qr-scanner-container" style="border: 2px solid var(--surface-border); margin-top: 15px;">
                             <video id="v-stream" class="qr-video" playsinline autoplay muted style="transform:none;"></video>
                         </div>
-                        <div id="scan-status" style="margin-top: 15px; min-height: 50px;"></div>
+                        <div id="scan-status" style="margin-top: 15px; min-height: 50px;">
+                            ${prevHTML || '<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding:1rem; opacity:0.5;"><i class="fas fa-qrcode"></i> Pronto para ler código...</div>'}
+                        </div>
                         <canvas id="c-hidden" style="display:none;"></canvas>
 
                         <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed var(--surface-border);">
@@ -5777,24 +5784,24 @@ Bons treinos!`;
                 </div>
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.8rem;">
-                        <button class="btn ${this.qrActiveTab === 'alunos' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('alunos')" style="padding: 6px 12px; font-size:0.8rem;">
-                            <i class="fas fa-user-friends"></i> Alunos
-                        </button>
-                        <button class="btn ${this.qrActiveTab === 'teachers' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('teachers')" style="padding: 6px 12px; font-size:0.8rem;">
-                            <i class="fas fa-user-tie"></i> Staff (Adm/Prof)
-                        </button>
+                    <button class="btn ${this.qrActiveTab === 'alunos' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('alunos')" style="padding: 6px 12px; font-size:0.8rem;">
+                        <i class="fas fa-user-friends"></i> Alunos
+                    </button>
+                    <button class="btn ${this.qrActiveTab === 'teachers' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('teachers')" style="padding: 6px 12px; font-size:0.8rem;">
+                        <i class="fas fa-user-tie"></i> Staff (Adm/Prof)
+                    </button>
+                </div>
+
+                <div style="margin-bottom: 2rem;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); opacity: 0.6;"></i>
+                        <input type="text" id="qr-search-input" placeholder="Pesquisar por nome, telemóvel ou código..." 
+                            oninput="app.filterQRList(this.value)" 
+                            style="width: 100%; padding: 1rem 1rem 1rem 3rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; outline: none; transition: all 0.3s ease; font-size: 0.95rem;">
                     </div>
-                    <div style="margin-bottom: 2rem;">
-                            <div style="position: relative;">
-                                <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); opacity: 0.6;"></i>
-                                <input type="text" id="qr-search-input" placeholder="Pesquisar por nome, telemóvel ou código..." 
-                                    oninput="app.filterQRList(this.value)" 
-                                    style="width: 100%; padding: 1rem 1rem 1rem 3rem; background: rgba(255,b255,255,0.02); border: 1px solid rgba(255,b255,255,0.05); border-radius: 14px; outline: none; transition: all 0.3s ease; font-size: 0.95rem;">
+                </div>
 
-                            </div>
-                        </div>
-
-                        <div class="glass-panel" style="padding: 0; background: transparent; border:none; box-shadow:none;">
+                <div class="glass-panel" style="padding: 0; background: transparent; border:none; box-shadow:none;">
                     ${this.qrActiveTab === 'alunos' ? `
                     <div style="background: rgba(255,255,255,0.02); padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; border: 1px solid rgba(255,255,255,0.05);">
                         <div style="display:flex; align-items:center; gap:8px;">
@@ -5808,6 +5815,7 @@ Bons treinos!`;
                         </div>
                     </div>
                     ` : ''}
+                    
                     <style>
                         .qr-modern-table { width: 100%; border-collapse: separate; border-spacing: 0 0.8rem; text-align: left; }
                         .qr-modern-table th { padding: 0 1rem 0.5rem; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600; border: none; letter-spacing: 0.5px; }
@@ -5848,6 +5856,7 @@ Bons treinos!`;
                             box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
                         }
                     </style>
+
                     <div style="overflow-x:auto; padding-top: 0.5rem;">
                         <table class="qr-modern-table">
                             <thead>
@@ -5867,16 +5876,19 @@ Bons treinos!`;
                             </tbody>
                         </table>
                     </div>
-                    </div>
-
-
                 </div>
             `;
-        } catch (err) {
-            console.error("Error in renderQRManager:", err);
-            container.innerHTML = `<div class="glass-card" style="color:var(--danger);">Erro ao carregar Gestão de Entradas: ${err.message}</div>`;
+            
+            // Restaurar classe se existia
+            if (prevClass) {
+                const newStatusEl = document.getElementById('scan-status');
+                if (newStatusEl) newStatusEl.className = prevClass;
+            }
+        } catch (error) {
+            console.error("Erro ao renderizar QR Manager:", error);
+            container.innerHTML = `<div class="glass-card danger">Erro ao carregar Gestão de Entradas.</div>`;
         }
-
+        
         // Reset scanner state when rendering
         this.qrScannerAtivo = false;
     }
@@ -6443,36 +6455,42 @@ Bons treinos!`;
             return;
         }
 
-        // Validar cooldown (2 minutos)
-        if (c.histórico && c.histórico.length > 0) {
+        const isStaffMember = c.plano === 'Staff';
+
+        // Validar cooldown (2 minutos) - Apenas para Alunos
+        if (!isStaffMember && c.histórico && c.histórico.length > 0) {
             const lastEntry = new Date(c.histórico[0]);
             const diffMin = (agora - lastEntry) / 1000 / 60;
             if (diffMin < 2) {
                 const waitSec = Math.ceil(120 - diffMin * 60);
-                this.showQRMsg(` ${c.nome}: Cooldown(${waitSec}s)`, "bg-qr-warning");
+                this.showQRMsg(`${c.nome}: Cooldown(${waitSec}s)`, "bg-qr-warning");
                 this.lastProcessedQR = formattedId;
                 this.lastProcessedTime = Date.now();
                 return;
             }
         }
 
-        // Validar limite diario
-        const entriesHj = (c.histórico || []).filter(h => h.startsWith(hj)).length;
-        if (entriesHj >= 2) {
-            this.showQRMsg(` ${c.nome}: Limite diario atingido`, "bg-qr-warning");
-            this.lastProcessedQR = formattedId;
-            this.lastProcessedTime = Date.now();
-            return;
+        // Validar limite diario - Apenas para Alunos
+        if (!isStaffMember) {
+            const entriesHj = (c.histórico || []).filter(h => h.startsWith(hj)).length;
+            if (entriesHj >= 2) {
+                this.showQRMsg(`${c.nome}: Limite diário atingido`, "bg-qr-warning");
+                this.lastProcessedQR = formattedId;
+                this.lastProcessedTime = Date.now();
+                return;
+            }
         }
+
 
         // Processar sucesso
         c.ent--;
         if (!c.histórico) c.histórico = [];
         c.histórico.unshift(agora.toISOString());
 
-        this.showQRMsg(` Bem - vindo, ${c.nome} !Entrada validada.`, "bg-qr-success");
+        this.showQRMsg(`Bem-vindo, ${c.nome}! Entrada validada.`, "bg-qr-success");
         this.lastProcessedQR = formattedId;
         this.lastProcessedTime = Date.now();
+
 
         this.saveState();
 
