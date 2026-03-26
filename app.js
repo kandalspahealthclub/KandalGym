@@ -6795,14 +6795,16 @@ Bons treinos!`;
     // --- CLASSES & SCHEDULING ---
 
     async checkFinishedClasses() {
-        // SEGURANÇA: Garantir que o estado existe e apenas Admin/Teacher processam a manutenção
+        // SEGURANÇA: Garantir que o estado existe e temos dados carregados
         if (!this.state || !this.state.classes || !this.hasLoadedData || this.isCheckingClasses) return;
-        if (this.role !== 'admin' && this.role !== 'teacher') return;
+        
+        // Se for cliente, podemos correr a manutenção mas de forma silenciosa e facultativa
+        // Staff corre prioritariamente.
 
         this.isCheckingClasses = true;
         try {
             const now = new Date();
-            const gracePeriod = 90 * 60 * 1000; // 1h aula + 30m tolerância
+            const gracePeriod = 70 * 60 * 1000; // 1h aula + 10m tolerância
 
             // IMPORTANTE: Firebase RTDB pode converter arrays com buracos em objetos. 
             // Converter sempre para array para iterar com segurança.
@@ -6888,7 +6890,9 @@ Bons treinos!`;
                 });
 
                 localStorage.setItem('kandalgym_state', JSON.stringify(this.state));
-                this.showToast('Horário das aulas atualizado com sucesso.', 'success');
+                if (this.role !== 'client') {
+                    this.showToast('Horário das aulas atualizado com sucesso.', 'success');
+                }
                 this.renderContent();
             }
         } catch (err) {
@@ -7352,8 +7356,10 @@ Bons treinos!`;
         const classDate = new Date(`${date}T${time}`);
         const now = new Date();
 
+        // Permitir guardar mesmo que seja no passado (útil para mover datas manualmente sem bloquear o admin)
+        // Apenas enviamos um aviso no log se for no passado
         if (classDate < now) {
-            return alert('Não pode criar ou editar uma aula com uma data/hora que já passou.');
+            console.warn('A gravar aula com data no passado.');
         }
 
         // Usar meio-dia para evitar desvios de fuso horário ao calcular o dia da semana
