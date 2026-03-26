@@ -6793,15 +6793,14 @@ Bons treinos!`;
     // --- CLASSES & SCHEDULING ---
 
     async checkFinishedClasses() {
-        // MUITO IMPORTANTE: Apenas o Administrador ou Professores podem arquivar aulas e atualizar o horário global.
-        // Isto evita erros de permissão e conflitos de sincronização se múltiplos alunos tentarem atualizar o estado
-        // ao mesmo tempo.
+        // Apenas Administrador ou Professor podem processar alterações no horário global.
         if (this.role === 'client' || !this.state.classes || this.state.classes.length === 0 || !this.hasLoadedData || this.isCheckingClasses) return;
 
         this.isCheckingClasses = true;
         try {
             const now = new Date();
-            const gracePeriod = 30 * 60 * 1000;
+            // Período após o início da aula para considerá-la "arquivável" (1h de duração + 30 min de tolerância)
+            const gracePeriod = 90 * 60 * 1000; 
 
             let changed = false;
             const remainingClasses = [];
@@ -6818,38 +6817,55 @@ Bons treinos!`;
                     continue;
                 }
 
-                const endDateTime = new Date(classDateTime.getTime() + 60 * 60 * 1000 + gracePeriod);
+                // Consideramos a aula terminada para efeitos de arquivo após o início + duração + tolerância
+                const threshold = classDateTime.getTime() + gracePeriod;
 
-                if (endDateTime < now) {
-                    console.log(`Aula terminada detetada: ${c.name} (${c.date} ${c.time})`);
+                if (now.getTime() > threshold) {
+                    console.log(`Pós-processamento de aula: ${c.name} (${c.date})`);
                     changed = true;
+                    
+                    // 1. Arquivar histórico para os inscritos atuais (antes de limpar)
                     const participantsIds = this.state.enrollments[String(c.id)] || [];
                     const teacher = (this.state.teachers || []).find(t => Number(t.id) === Number(c.teacherId));
 
                     participantsIds.forEach(pid => {
                         const clientId = Number(pid);
                         if (!this.state.trainingHistory[clientId]) this.state.trainingHistory[clientId] = [];
-                        this.state.trainingHistory[clientId].push({
-                            date: c.date,
-                            time: c.time,
-                            type: 'class',
-                            title: c.name,
-                            teacher: teacher ? teacher.name : 'N/A',
-                            completedAt: now.toISOString()
-                        });
+                        
+                        // Evitar duplicados no histórico (mesma aula/dia)
+                        const exists = this.state.trainingHistory[clientId].some(h => h.date === c.date && h.title === c.name);
+                        if (!exists) {
+                            this.state.trainingHistory[clientId].push({
+                                date: c.date,
+                                time: c.time,
+                                type: 'class',
+                                title: c.name,
+                                teacher: teacher ? teacher.name : 'N/A',
+                                completedAt: now.toISOString()
+                            });
+                        }
                     });
 
                     if (c.isRecurring) {
-                        const nextDate = new Date(classDateTime.getTime() + 7 * 24 * 60 * 60 * 1000);
-                        // Usar formato local YYYY-MM-DD para evitar desvios de fuso horário
+                        // 2. Avançar a data até à próxima ocorrência futura
+                        let nextDate = new Date(classDateTime.getTime());
+                        while (nextDate.getTime() + gracePeriod < now.getTime()) {
+                            nextDate.setDate(nextDate.getDate() + 7);
+                        }
+
                         const y = nextDate.getFullYear();
                         const m = String(nextDate.getMonth() + 1).padStart(2, '0');
                         const d = String(nextDate.getDate()).padStart(2, '0');
+                        
                         c.date = `${y}-${m}-${d}`;
                         c.day = nextDate.getDay();
+                        
+                        // Limpar inscrições para a nova semana
                         this.state.enrollments[String(c.id)] = [];
                         remainingClasses.push(c);
+                        console.log(`Aula ${c.name} renovada para ${c.date}`);
                     } else {
+                        // Aula única: remover do horário
                         delete this.state.enrollments[String(c.id)];
                     }
                 } else {
@@ -6860,19 +6876,20 @@ Bons treinos!`;
             if (changed) {
                 this.state.classes = remainingClasses;
                 this.isSaving = true;
-                // Usar update direcionado para evitar o erro de gravação global se o utilizador tiver permissões parciais
-                // ou se a internet estiver instável no envio de grandes volumes de dados.
+                
+                // Gravação silenciosa (update) para evitar alert() invasivo em tarefas de fundo
                 await this.dbRef.update({
                     classes: this.state.classes,
                     enrollments: this.state.enrollments,
                     trainingHistory: this.state.trainingHistory
-                });
+                }).catch(err => console.warn("Erro silencioso na sync de fundo:", err));
+
                 localStorage.setItem('kandalgym_state', JSON.stringify(this.state));
                 setTimeout(() => { this.isSaving = false; }, 1000);
                 this.renderContent();
             }
         } catch (err) {
-            console.error("Erro no processamento automático de aulas:", err);
+            console.error("Critical error in class check:", err);
         } finally {
             this.isCheckingClasses = false;
         }
