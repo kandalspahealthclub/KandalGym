@@ -6793,9 +6793,10 @@ Bons treinos!`;
     // --- CLASSES & SCHEDULING ---
 
     async checkFinishedClasses() {
-        // MUITO IMPORTANTE: Apenas o Administrador pode arquivar aulas.
-        // Se um cliente o fizesse e tivesse o relogio errado, podia "matar" aulas prematuramente para todos.
-        if (this.role !== 'admin' || !this.state.classes || this.state.classes.length === 0 || !this.hasLoadedData || this.isCheckingClasses) return;
+        // Permitir que qualquer utilizador (Admin, Professor ou Aluno) possa desencadear a atualização lógica
+        // das aulas terminadas. Isto garante que o horário se mantém atualizado mesmo que nenhum Admin
+        // faça login durante vários dias.
+        if (!this.state.classes || this.state.classes.length === 0 || !this.hasLoadedData || this.isCheckingClasses) return;
 
         this.isCheckingClasses = true;
         const now = new Date();
@@ -6835,7 +6836,13 @@ Bons treinos!`;
 
                 if (c.isRecurring) {
                     const nextDate = new Date(classDateTime.getTime() + 7 * 24 * 60 * 60 * 1000);
-                    c.date = nextDate.toISOString().split('T')[0];
+                    
+                    // CORREÇÃO: Usar formato local YYYY-MM-DD para evitar desvios de fuso horário (UTC vs Local)
+                    const y = nextDate.getFullYear();
+                    const m = String(nextDate.getMonth() + 1).padStart(2, '0');
+                    const d = String(nextDate.getDate()).padStart(2, '0');
+                    c.date = `${y}-${m}-${d}`;
+                    
                     c.day = nextDate.getDay();
                     this.state.enrollments[String(c.id)] = [];
                     remainingClasses.push(c);
@@ -7520,6 +7527,9 @@ Bons treinos!`;
 
         this.showModal(`
             <div style="text-align: center; padding: 1.5rem 0.5rem;">
+                <div style="width: 80px; height: 80px; background: rgba(34, 197, 94, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; color: #22c55e;">
+                    <i class="fas fa-check-circle" style="font-size: 3rem;"></i>
+                </div>
 
                 <h2 style="margin-bottom: 0.5rem;">Guardado com Sucesso!</h2>
                 <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem;">Pretende alertar o cliente <strong>${c.name}</strong> sobre esta atualização?</p>
