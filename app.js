@@ -160,9 +160,11 @@ class FitnessApp {
             console.log("Estado guardado com sucesso no Firebase");
         } catch (e) {
             console.error('Firebase Sync error:', e);
-            alert("Erro ao guardar dados. Verifique a internet.");
+            // Mostrar apenas erro persistente para admins e professores
+            if (this.role !== 'client') {
+                alert("Erro ao guardar dados. Verifique a sua ligação ou o Console (F12) para detalhes.");
+            }
         } finally {
-            // Tempo suficiente para o Firebase processar e devolver o sinal de volta
             setTimeout(() => { this.isSaving = false; }, 1000);
         }
     }
@@ -220,7 +222,7 @@ class FitnessApp {
                 }
 
                 if (!this.checkInterval) {
-                    setTimeout(() => this.checkFinishedClasses(), 2000);
+                    setTimeout(() => this.checkFinishedClasses(), 1000);
                     this.checkInterval = setInterval(() => this.checkFinishedClasses(), 60000);
                 }
             } catch (err) {
@@ -719,7 +721,7 @@ class FitnessApp {
             }
         });
 
-        if (changed) {
+        if (changed && (this.role === 'admin' || this.role === 'teacher')) {
             this.saveState();
         }
     }
@@ -6793,64 +6795,66 @@ Bons treinos!`;
     // --- CLASSES & SCHEDULING ---
 
     async checkFinishedClasses() {
-        // Apenas Administrador ou Professor podem processar alterações no horário global.
-        if (this.role === 'client' || !this.state.classes || this.state.classes.length === 0 || !this.hasLoadedData || this.isCheckingClasses) return;
+        // SEGURANÇA: Garantir que o estado existe e apenas Admin/Teacher processam a manutenção
+        if (!this.state || !this.state.classes || !this.hasLoadedData || this.isCheckingClasses) return;
+        if (this.role !== 'admin' && this.role !== 'teacher') return;
 
         this.isCheckingClasses = true;
         try {
             const now = new Date();
-            // Período após o início da aula para considerá-la "arquivável" (1h de duração + 30 min de tolerância)
-            const gracePeriod = 90 * 60 * 1000; 
+            const gracePeriod = 90 * 60 * 1000; // 1h aula + 30m tolerância
+
+            // IMPORTANTE: Firebase RTDB pode converter arrays com buracos em objetos. 
+            // Converter sempre para array para iterar com segurança.
+            const rawClasses = Array.isArray(this.state.classes) ? this.state.classes : Object.values(this.state.classes);
+            if (rawClasses.length === 0) return;
 
             let changed = false;
-            const remainingClasses = [];
+            const updatedClasses = [];
 
-            for (const c of this.state.classes) {
-                if (!c.date || !c.time) {
-                    remainingClasses.push(c);
+            for (const c of rawClasses) {
+                if (!c || !c.date || !c.time) {
+                    if (c) updatedClasses.push(c);
                     continue;
                 }
 
                 const classDateTime = new Date(`${c.date}T${c.time}`);
                 if (isNaN(classDateTime.getTime())) {
-                    remainingClasses.push(c);
+                    updatedClasses.push(c);
                     continue;
                 }
 
-                // Consideramos a aula terminada para efeitos de arquivo após o início + duração + tolerância
                 const threshold = classDateTime.getTime() + gracePeriod;
 
                 if (now.getTime() > threshold) {
-                    console.log(`Pós-processamento de aula: ${c.name} (${c.date})`);
                     changed = true;
-                    
-                    // 1. Arquivar histórico para os inscritos atuais (antes de limpar)
+                    console.log(`A processar aula terminada: ${c.name} (${c.date})`);
+
+                    // 1. Arquivar histórico
                     const participantsIds = this.state.enrollments[String(c.id)] || [];
                     const teacher = (this.state.teachers || []).find(t => Number(t.id) === Number(c.teacherId));
 
                     participantsIds.forEach(pid => {
                         const clientId = Number(pid);
+                        if (!this.state.trainingHistory) this.state.trainingHistory = {};
                         if (!this.state.trainingHistory[clientId]) this.state.trainingHistory[clientId] = [];
                         
-                        // Evitar duplicados no histórico (mesma aula/dia)
                         const exists = this.state.trainingHistory[clientId].some(h => h.date === c.date && h.title === c.name);
                         if (!exists) {
                             this.state.trainingHistory[clientId].push({
-                                date: c.date,
-                                time: c.time,
-                                type: 'class',
-                                title: c.name,
-                                teacher: teacher ? teacher.name : 'N/A',
-                                completedAt: now.toISOString()
+                                date: c.date, time: c.time, type: 'class', title: c.name,
+                                teacher: teacher ? teacher.name : 'N/A', completedAt: now.toISOString()
                             });
                         }
                     });
 
                     if (c.isRecurring) {
-                        // 2. Avançar a data até à próxima ocorrência futura
+                        // 2. Avançar data até ao futuro
                         let nextDate = new Date(classDateTime.getTime());
-                        while (nextDate.getTime() + gracePeriod < now.getTime()) {
+                        let safety = 0;
+                        while (nextDate.getTime() + gracePeriod < now.getTime() && safety < 100) {
                             nextDate.setDate(nextDate.getDate() + 7);
+                            safety++;
                         }
 
                         const y = nextDate.getFullYear();
@@ -6859,39 +6863,40 @@ Bons treinos!`;
                         
                         c.date = `${y}-${m}-${d}`;
                         c.day = nextDate.getDay();
-                        
-                        // Limpar inscrições para a nova semana
                         this.state.enrollments[String(c.id)] = [];
-                        remainingClasses.push(c);
-                        console.log(`Aula ${c.name} renovada para ${c.date}`);
+                        updatedClasses.push(c);
                     } else {
-                        // Aula única: remover do horário
+                        // Não é recorrente: remover do horário
                         delete this.state.enrollments[String(c.id)];
                     }
                 } else {
-                    remainingClasses.push(c);
+                    updatedClasses.push(c);
                 }
             }
 
             if (changed) {
-                this.state.classes = remainingClasses;
+                this.state.classes = updatedClasses;
                 this.isSaving = true;
                 
-                // Gravação silenciosa (update) para evitar alert() invasivo em tarefas de fundo
                 await this.dbRef.update({
                     classes: this.state.classes,
                     enrollments: this.state.enrollments,
                     trainingHistory: this.state.trainingHistory
-                }).catch(err => console.warn("Erro silencioso na sync de fundo:", err));
+                }).catch(err => {
+                    console.error("Erro na sync de fundo:", err);
+                    throw err; 
+                });
 
                 localStorage.setItem('kandalgym_state', JSON.stringify(this.state));
-                setTimeout(() => { this.isSaving = false; }, 1000);
+                this.showToast('Horário das aulas atualizado com sucesso.', 'success');
                 this.renderContent();
             }
         } catch (err) {
-            console.error("Critical error in class check:", err);
+            console.error("Falha na manutenção de aulas:", err);
         } finally {
             this.isCheckingClasses = false;
+            // Dar tempo ao Firebase echo antes de permitir nova gravação
+            setTimeout(() => { this.isSaving = false; }, 1200);
         }
     }
 
