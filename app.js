@@ -154,15 +154,16 @@ class FitnessApp {
                 console.warn('LocalStorage Quota exceeded');
             }
 
-            await this.dbRef.set(this.state);
+            const cleanState = JSON.parse(JSON.stringify(this.state));
+            await this.dbRef.set(cleanState);
             // Backup imediato no localStorage para evitar perda de dados local
-            localStorage.setItem('kandalgym_state', JSON.stringify(this.state));
+            localStorage.setItem('kandalgym_state', JSON.stringify(cleanState));
             console.log("Estado guardado com sucesso no Firebase");
         } catch (e) {
             console.error('Firebase Sync error:', e);
             // Mostrar apenas erro persistente para admins e professores
             if (this.role !== 'client') {
-                alert("Erro ao guardar dados. Verifique a sua ligação ou o Console (F12) para detalhes.");
+                alert("Erro ao guardar dados: " + (e.message || "Verifique a sua ligação ou o Console (F12) para detalhes."));
             }
         } finally {
             setTimeout(() => { this.isSaving = false; }, 1000);
