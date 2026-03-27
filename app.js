@@ -1236,6 +1236,65 @@ Bons treinos!`;
         }
     }
 
+    getOccupancyHTML() {
+        if (!this.state.qrClients || this.state.qrClients.length === 0) return '';
+
+        const todayStart = new Date();
+        todayStart.setHours(0,0,0,0);
+        const todayEnd = new Date();
+        todayEnd.setHours(23,59,59,999);
+
+        // Calculate hours array (from 7h to 22h gym hours)
+        const hoursCount = {};
+        for (let i = 7; i <= 22; i++) hoursCount[i] = 0;
+
+        let totalHoje = 0;
+        this.state.qrClients.forEach(c => {
+            if (c.histórico) {
+                c.histórico.forEach(isoString => {
+                    const d = new Date(isoString);
+                    if (d >= todayStart && d <= todayEnd) {
+                        const h = d.getHours();
+                        if (h >= 7 && h <= 22) {
+                            hoursCount[h]++;
+                            totalHoje++;
+                        }
+                    }
+                });
+            }
+        });
+
+        const maxCount = Math.max(...Object.values(hoursCount), 1); // Avoid division by 0
+
+        let barsHTML = '';
+        for (let i = 7; i <= 22; i++) {
+            const count = hoursCount[i];
+            const height = (count / maxCount) * 100;
+            const isCurrent = i === new Date().getHours();
+            barsHTML += `
+                <div style="display:flex; flex-direction:column; align-items:center; flex:1; min-width:20px;">
+                    <span style="font-size:0.6rem; color:var(--text-muted); margin-bottom:4px; font-weight:bold;">${count}</span>
+                    <div style="width:100%; max-width:18px; height:120px; background:rgba(0,0,0,0.2); border-radius:10px; position:relative; overflow:hidden;">
+                        <div style="position:absolute; bottom:0; left:0; right:0; height:${height}%; background:${isCurrent ? 'linear-gradient(to top, var(--accent), #f368e0)' : 'linear-gradient(to top, var(--primary), var(--secondary))'}; border-radius:10px; transition:height 1s ease;"></div>
+                    </div>
+                    <span style="font-size:0.6rem; color:var(--text-muted); margin-top:6px; font-weight:bold; ${isCurrent?'color:var(--accent);':''}">${i}h</span>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="glass-panel animate-fade-in" style="margin-bottom:2rem; padding:1.5rem;">
+                <h3 style="margin-top:0; color:var(--text-base); display:flex; align-items:center; gap:0.5rem; justify-content:space-between; margin-bottom:1.5rem;">
+                    <span><i class="fas fa-chart-line" style="color:var(--accent);"></i> Afluência Hoje (Entradas)</span>
+                    <span style="font-size:0.8rem; background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:12px;">Total: <strong>${totalHoje}</strong></span>
+                </h3>
+                <div style="display:flex; gap:2px; justify-content:space-between; align-items:flex-end; padding-top:10px; overflow-x:auto; padding-bottom:5px;">
+                    ${barsHTML}
+                </div>
+            </div>
+        `;
+    }
+
     renderAdminContent(container) {
         if (!this.hasLoadedData) {
             container.innerHTML = `<div style="padding:5rem; text-align:center;"><div class="loader" style="margin:0 auto;"></div></div>`;
@@ -1245,6 +1304,8 @@ Bons treinos!`;
             case 'dashboard':
                 container.innerHTML = `
                     <h2 class="animate-fade-in"><i class="fas fa-user-shield"></i> Dashboard Admin</h2>
+                    
+                    ${this.getOccupancyHTML()}
                     
                     <div class="stats-grid" style="margin-bottom: 2rem;">
                         <div class="glass-card" style="border-left: 4px solid var(--primary); display: flex; align-items: center; gap: 1rem;">
@@ -1446,6 +1507,8 @@ Bons treinos!`;
                                 style="background:transparent; border:none; color:#fff; font-family:inherit; font-weight:600; font-size:0.9rem; outline:none; cursor:pointer; width:180px;">
                         </div>
                     </div>
+                    
+                    ${this.getOccupancyHTML()}
                     
                     <div class="stats-grid">
                         <div class="glass-card" style="border-left: 4px solid var(--primary);">
@@ -3879,6 +3942,8 @@ Bons treinos!`;
                 container.innerHTML = `
                     <h2 class="animate-fade-in">Bem-vindo, ${c.name} </h2>
                     <p style="color:var(--text-muted); margin-bottom:1rem;">Este é o seu painel de acompanhamento KandalGym.</p>
+                    
+                    ${this.getOccupancyHTML()}
                     
                     ${(() => {
                         const t = this.state.teachers.find(teacher => teacher.id === c.teacherId);
