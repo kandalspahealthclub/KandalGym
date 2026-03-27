@@ -4477,11 +4477,10 @@ Bons treinos!`;
                     </div>
                 </div>
                 <div style="display:flex; gap:0.6rem;">
+                    <button class="btn-icon" style="color:var(--primary);" onclick="app.showEditUserModal('${type}', ${user.id})" title="Editar Dados"><i class="fas fa-edit"></i></button>
                     ${isClient ? `
-                        <button class="btn-icon" style="color:var(--primary);" onclick="app.spyClient(${user.id})" title="Ver Ficha Completa"><i class="fas fa-user-edit"></i></button>
-                    ` : `
-                        <button class="btn-icon" style="color:var(--primary);" onclick="app.showEditUserModal('${type}', ${user.id})" title="Editar Dados"><i class="fas fa-edit"></i></button>
-                    `}
+                        <button class="btn-icon" style="color:var(--secondary);" onclick="app.spyClient(${user.id})" title="Entrar na Conta (Ficha do Aluno)"><i class="fas fa-sign-in-alt"></i></button>
+                    ` : ''}
                     <button class="btn-icon" style="color:var(--accent);" onclick="app.enableQRForClient(${user.id}, true, ${isTeacher || isAdmin})" title="Gerir Acesso QR"><i class="fas fa-qrcode"></i></button>
                     <button class="btn-icon" style="color:var(--text-muted);" onclick="app.resetPass('${type}', ${user.id}, '${user.name || ''}')" title="Reset Senha"><i class="fas fa-key"></i></button>
                     <button class="btn-icon danger" onclick="app.deleteUser('${type}', ${user.id}, '${user.name || ''}')" title="Eliminar Conta"><i class="fas fa-trash-alt"></i></button>
