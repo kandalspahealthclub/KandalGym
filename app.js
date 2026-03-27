@@ -1312,8 +1312,6 @@ Bons treinos!`;
                 container.innerHTML = `
                     <h2 class="animate-fade-in"><i class="fas fa-user-shield"></i> Dashboard Admin</h2>
                     
-                    ${this.getOccupancyHTML()}
-                    
                     <div class="stats-grid" style="margin-bottom: 2rem;">
                         <div class="glass-card" style="border-left: 4px solid var(--primary); display: flex; align-items: center; gap: 1rem;">
                             <div style="background: rgba(99, 102, 241, 0.1); padding: 1rem; border-radius: 12px; color: var(--primary);">
@@ -1335,6 +1333,8 @@ Bons treinos!`;
                             </div>
                         </div>
                     </div>
+
+                    ${this.getOccupancyHTML()}
 
                     <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
                         <div class="glass-panel" style="padding: 1.5rem;">
@@ -1515,8 +1515,6 @@ Bons treinos!`;
                         </div>
                     </div>
                     
-                    ${this.getOccupancyHTML()}
-                    
                     <div class="stats-grid">
                         <div class="glass-card" style="border-left: 4px solid var(--primary);">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Meus Alunos</small>
@@ -1543,6 +1541,8 @@ Bons treinos!`;
                             <div style="font-size:1.8rem; font-weight:800; color:var(--primary);">${monthAnamnesis}</div>
                         </div>
                     </div>
+
+                    ${this.getOccupancyHTML()}
 
                     <div style="margin-top:2rem;">
                         <h3>Atividade de ${new Intl.DateTimeFormat('pt-PT', { month: 'long', year: 'numeric' }).format(displayDate)}</h3>
@@ -3950,8 +3950,6 @@ Bons treinos!`;
                     <h2 class="animate-fade-in">Bem-vindo, ${c.name} </h2>
                     <p style="color:var(--text-muted); margin-bottom:1rem;">Este é o seu painel de acompanhamento KandalGym.</p>
                     
-                    ${this.getOccupancyHTML(false)}
-                    
                     ${(() => {
                         const t = this.state.teachers.find(teacher => teacher.id === c.teacherId);
                         if (t) {
@@ -3987,6 +3985,10 @@ Bons treinos!`;
                             <h3>Avaliação Física</h3>
                             <small>Ver peso e medidas</small>
                         </div>
+                    </div>
+
+                    <div style="margin-top: 2rem;">
+                        ${this.getOccupancyHTML(false)}
                     </div>
         `;
                 break;
