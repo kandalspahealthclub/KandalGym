@@ -1237,7 +1237,8 @@ Bons treinos!`;
     }
 
     getOccupancyHTML(showTotal = true) {
-        if (!this.state.qrClients || this.state.qrClients.length === 0) return '';
+        const qrClientsArray = Object.values(this.state.qrClients || {});
+        if (qrClientsArray.length === 0) return '';
 
         const todayStart = new Date();
         todayStart.setHours(0,0,0,0);
@@ -1249,9 +1250,10 @@ Bons treinos!`;
         for (let i = 7; i <= 22; i++) hoursCount[i] = 0;
 
         let totalHoje = 0;
-        this.state.qrClients.forEach(c => {
+        qrClientsArray.forEach(c => {
             if (c.histórico) {
-                c.histórico.forEach(entry => {
+                const histArray = Object.values(c.histórico);
+                histArray.forEach(entry => {
                     const isoDate = typeof entry === 'string' ? entry : entry.d;
                     const type = typeof entry === 'string' ? 'in' : entry.t;
                     
