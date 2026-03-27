@@ -340,6 +340,7 @@ class FitnessApp {
                     <p>Entre na sua conta para continuar</p>
                 </div>
                 <form class="login-form" onsubmit="app.handleLogin(); return false;">
+                    <div id="login-error-msg" style="display:none; color:var(--danger); background:rgba(239, 68, 68, 0.1); padding:0.8rem; border-radius:8px; margin-bottom:1rem; font-size:0.9rem; text-align:center; border: 1px solid rgba(239, 68, 68, 0.3);"></div>
                     <div class="input-icon-group">
                         <i class="fas fa-envelope"></i>
                         <input type="email" id="login-email" placeholder="Email" required>
@@ -438,6 +439,9 @@ class FitnessApp {
         try {
             const emailInput = document.getElementById('login-email');
             const passInput = document.getElementById('login-pass');
+            const errorDiv = document.getElementById('login-error-msg');
+            
+            if (errorDiv) errorDiv.style.display = 'none';
 
             if (!emailInput || !passInput) return;
 
@@ -445,6 +449,11 @@ class FitnessApp {
             const pass = passInput.value;
 
             if (!email || !pass) {
+                if (errorDiv) {
+                    errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Por favor, preencha todos os campos.';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
                 return alert('Por favor, preencha todos os campos.');
             }
 
@@ -454,29 +463,28 @@ class FitnessApp {
             if (!this.state.teachers) this.state.teachers = [];
             if (!this.state.clients) this.state.clients = [];
 
-            const admin = this.state.admins.find(a => a.email.toLowerCase() === email && a.password === pass);
+            const emailLower = email.toLowerCase();
+            const admin = this.state.admins.find(a => (a.email || '').toLowerCase() === emailLower && a.password === pass);
             if (admin) {
                 this.role = 'admin';
                 this.currentUser = admin;
                 this.isLoggedIn = true;
                 this.persistLogin();
                 this.renderAppInterface();
-                this.oneSignalLogin(this.currentUser.id);
                 return;
             }
 
-            const teacher = this.state.teachers.find(t => t.email.toLowerCase() === email && t.password === pass);
+            const teacher = this.state.teachers.find(t => (t.email || '').toLowerCase() === emailLower && t.password === pass);
             if (teacher) {
                 this.role = 'teacher';
                 this.currentUser = teacher;
                 this.isLoggedIn = true;
                 this.persistLogin();
                 this.renderAppInterface();
-                this.oneSignalLogin(this.currentUser.id);
                 return;
             }
 
-            const client = this.state.clients.find(c => c.email.toLowerCase() === email && c.password === pass);
+            const client = this.state.clients.find(c => (c.email || '').toLowerCase() === emailLower && c.password === pass);
             if (client) {
                 this.role = 'client';
                 this.currentUser = client;
@@ -484,12 +492,24 @@ class FitnessApp {
                 this.isLoggedIn = true;
                 this.persistLogin();
                 this.renderAppInterface();
+                return;
+            }
+            
+            if (typeof errorDiv !== 'undefined' && errorDiv) {
+                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Email ou palavra-passe incorretos.';
+                errorDiv.style.display = 'block';
             } else {
-                alert('Email ou palavra-passe incorretos.');
+                this.showToast('Email ou palavra-passe incorretos.', 'error');
             }
         } catch (error) {
             console.error('Erro no login:', error);
-            alert('Ocorreu um erro ao entrar. Tente refrescar a página.');
+            const errDiv = document.getElementById('login-error-msg');
+            if (errDiv) {
+                errDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Ocorreu um erro ao entrar: ${error.message}`;
+                errDiv.style.display = 'block';
+            } else {
+                this.showToast(`Ocorreu um erro ao entrar: ${error.message}`, 'error');
+            }
         }
     }
 
