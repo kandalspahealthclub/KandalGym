@@ -5863,7 +5863,7 @@ Bons treinos!`;
                         <h3 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
                             <i class="fas fa-camera"></i> Scanner de Entrada
                         </h3>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Aponte a câmara para o código QR do aluno para validar a entrada.</p>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Aponte a câmara para o código QR do aluno.</p>
                         <button class="btn btn-secondary" style="width: 100%; border: 1px solid var(--primary); color: var(--primary); background: rgba(145, 27, 43, 0.05);" id="btnCam" onclick="app.iniciarLeitorQR()">
                             <i class="fas fa-video"></i> Ativar Câmara
                         </button>
@@ -5874,7 +5874,27 @@ Bons treinos!`;
                             ${this.renderQRMsgHTML()}
                         </div>
                         <canvas id="c-hidden" style="display:none;"></canvas>
+                    </div>
 
+                    <div class="glass-panel" style="padding: 1.5rem;">
+                        <h3 style="margin-top: 0; color: var(--success); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
+                            <i class="fas fa-ticket-alt"></i> Novo Treino Avulso
+                        </h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Crie um acesso rápido para clientes temporários.</p>
+                        
+                        <div style="display: grid; gap: 10px;">
+                            <input type="text" id="casual-name" placeholder="Nome do Cliente" class="qr-input-sleek">
+                            <div style="display: flex; gap: 8px;">
+                                <select id="casual-type" class="qr-input-sleek" style="flex: 2; height: 42px;">
+                                    <option value="Diária">📦 Diária (1 Ent.)</option>
+                                    <option value="Semanal">🗓️ Semanal (7 Dias)</option>
+                                    <option value="Mensal">📅 Mensal (30 Dias)</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="app.createCasualPass()" style="flex: 1; height: 42px; border-radius: 6px;">
+                                    Criar <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
 
                         <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed var(--surface-border);">
                             <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Entrada Manual (Backup)</label>
@@ -5886,7 +5906,6 @@ Bons treinos!`;
                                     <i class="fas fa-check"></i>
                                 </button>
                             </div>
-                            <small style="color:var(--text-muted); font-size:0.7rem; margin-top:5px; display:block;">Use isto se a câmara não estiver disponível.</small>
                         </div>
                     </div>
 
@@ -6198,6 +6217,57 @@ Bons treinos!`;
     filterQRList(val) {
         const body = document.getElementById("gridQRClientes");
         if (body) body.innerHTML = this.renderQRClientCards(val);
+    }
+
+    createCasualPass() {
+        const nameEl = document.getElementById('casual-name');
+        const typeEl = document.getElementById('casual-type');
+        if (!nameEl || !typeEl) return;
+
+        const name = nameEl.value.trim();
+        const type = typeEl.value;
+
+        if (!name) return alert('Por favor, insira o nome do cliente.');
+
+        if (!this.state.qrClients) this.state.qrClients = [];
+
+        // Generar novo código K
+        const usedIds = this.state.qrClients.map(c => {
+            const m = c.id.match(/^K(\d+)$/);
+            return m ? parseInt(m[1]) : 0;
+        });
+        const maxId = usedIds.length > 0 ? Math.max(...usedIds) : 0;
+        const qrId = "K" + (maxId + 1);
+
+        const validDate = new Date();
+        let credits = 1;
+
+        if (type === 'Diária') {
+            validDate.setDate(validDate.getDate() + 1);
+            credits = 1;
+        } else if (type === 'Semanal') {
+            validDate.setDate(validDate.getDate() + 7);
+            credits = 99; // Praticamente ilimitado na semana
+        } else if (type === 'Mensal') {
+            validDate.setDate(validDate.getDate() + 30);
+            credits = 99;
+        }
+
+        this.state.qrClients.push({
+            id: qrId,
+            clientId: 0, // 0 indica cliente avulso sem conta na app
+            nome: `AVULSO: ${name}`,
+            tel: "Visitante",
+            ativo: true,
+            ent: credits,
+            plano: type,
+            validade: validDate.toISOString().split('T')[0],
+            histórico: []
+        });
+
+        this.saveState();
+        this.renderQRManager(document.getElementById('main-content'));
+        this.showToast(`Passe ${type} criado para ${name}! Código: ${qrId}`);
     }
 
     enableQRForClient(clientId, autoRedirect = true, isStaff = false) {
