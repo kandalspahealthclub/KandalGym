@@ -953,7 +953,8 @@ Bons treinos!`;
 
     handleExercisePhotoUpload(input, previewId) {
         if (input.files && input.files[0]) {
-            this.processImage(input.files[0], 600, 0.75, (base64) => {
+            // Compressão EXTREMA para poupar espaço: 300px max, qualidade 0.6
+            this.processImage(input.files[0], 300, 0.6, (base64) => {
                 this.tempExercisePhoto = base64;
                 const preview = document.getElementById(previewId);
                 if (preview) {
@@ -4157,7 +4158,8 @@ Bons treinos!`;
 
     handlePhotoUpload(input) {
         if (input.files && input.files[0]) {
-            this.processImage(input.files[0], 400, 0.7, (base64) => {
+            // Compressão EXTREMA para poupar espaço: 200px max, qualidade 0.5
+            this.processImage(input.files[0], 200, 0.5, (base64) => {
                 this.currentUser.photoUrl = base64;
                 const preview = document.getElementById('profile-photo-preview');
                 if (preview) {
