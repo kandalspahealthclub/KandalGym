@@ -1104,6 +1104,7 @@ Bons treinos!`;
                 { id: 'classes', icon: 'fa-calendar-alt', label: 'Aulas' },
                 { id: 'users', icon: 'fa-users-cog', label: 'Contas' },
                 { id: 'qr_manager', icon: 'fa-qrcode', label: 'Entradas' },
+                { id: 'monitor', icon: 'fa-desktop', label: 'Monitor' },
                 { id: 'exercises', icon: 'fa-play-circle', label: 'Exercícios' },
                 { id: 'foods', icon: 'fa-apple-alt', label: 'Alimentos' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'Perfil' }
@@ -1154,6 +1155,7 @@ Bons treinos!`;
                 { id: 'classes', icon: 'fa-calendar-alt', label: 'Horário & Aulas' },
                 { id: 'users', icon: 'fa-users-cog', label: 'Gestão Contas' },
                 { id: 'qr_manager', icon: 'fa-qrcode', label: 'Gestão de Entradas' },
+                { id: 'monitor', icon: 'fa-desktop', label: 'Monitor de Acesso' },
                 { id: 'exercises', icon: 'fa-play-circle', label: 'Biblioteca Exercícios' },
                 { id: 'foods', icon: 'fa-apple-alt', label: 'Base de Alimentos' },
                 { id: 'all-clients', icon: 'fa-search', label: 'Acesso Global' },
@@ -1452,10 +1454,142 @@ Bons treinos!`;
                 `;
                 this.renderAdminGlobalClientsList();
                 break;
+            case 'monitor':
+                this.renderMonitorView(container);
+                break;
             case 'profile':
                 this.renderProfileView(container);
                 break;
         }
+    }
+
+    renderMonitorView(container) {
+        container.innerHTML = `
+            <div style="height: calc(100vh - 150px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2rem;">
+                <div class="glass-panel" style="max-width: 600px; padding: 3rem; border-radius: 30px; border: 2px solid var(--primary);">
+                    <i class="fas fa-desktop" style="font-size: 4rem; color: var(--primary); margin-bottom: 2rem;"></i>
+                    <h2 style="font-size: 2rem; margin-bottom: 1rem;">Monitor de Acesso</h2>
+                    <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2rem;">
+                        Esta funcionalidade foi desenhada para um segundo ecrã (TV ou Monitor) virado para o cliente na receção.
+                    </p>
+                    <button class="btn btn-primary btn-lg" onclick="app.openAccessMonitor()" style="padding: 1.5rem 3rem; font-size: 1.2rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);">
+                        <i class="fas fa-external-link-alt"></i> Abrir Ecra de Cliente
+                    </button>
+                    <p style="margin-top: 2rem; font-size: 0.9rem; color: var(--text-muted);">
+                        <i class="fas fa-info-circle"></i> Após abrir, arraste a nova janela para o segundo monitor e coloque em ecrã inteiro (tecla F11).
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+
+    openAccessMonitor() {
+        const monitorWindow = window.open('', 'KandalMonitor', 'width=1200,height=800');
+        if (!monitorWindow) return alert("Por favor, permita pop-ups para abrir o monitor.");
+
+        const css = `
+            :root {
+                --primary: #6366f1;
+                --secondary: #10b981;
+                --danger: #ef4444;
+                --bg: #0f172a;
+                --text: #f8fafc;
+            }
+            body { 
+                margin: 0; padding: 0; background: var(--bg); color: var(--text); 
+                font-family: 'Outfit', sans-serif; display: flex; align-items: center; 
+                justify-content: center; height: 100vh; overflow: hidden;
+            }
+            .container { text-align: center; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.5s ease; }
+            .logo { width: 400px; opacity: 0.8; animation: pulse 3s infinite ease-in-out; }
+            .user-card { 
+                display: none; flex-direction: column; align-items: center; 
+                animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            }
+            .photo-frame { 
+                width: 350px; height: 350px; border-radius: 50%; border: 15px solid var(--primary); 
+                overflow: hidden; background: #1e293b; margin-bottom: 2rem;
+                box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            }
+            .photo-frame img { width: 100%; height: 100%; object-fit: cover; }
+            .photo-frame i { font-size: 8rem; margin-top: 5rem; color: #334155; }
+            .name { font-size: 5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin: 0; }
+            .status { font-size: 2.5rem; font-weight: 600; padding: 1rem 3rem; border-radius: 50px; margin-top: 1.5rem; }
+            
+            .bg-valid { background: linear-gradient(135deg, #064e3b, #065f46); }
+            .bg-invalid { background: linear-gradient(135deg, #7f1d1d, #991b1b); }
+            .border-valid { border-color: var(--secondary) !important; color: var(--secondary); }
+            .border-invalid { border-color: var(--danger) !important; color: var(--danger); }
+
+            @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
+            @keyframes slideUp { from { opacity: 0; transform: translateY(100px); } to { opacity: 1; transform: translateY(0); } }
+        `;
+
+        monitorWindow.document.write(\`
+            <html>
+                <head>
+                    <title>KandalGym - Monitor de Acesso</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+                    <style>\${css}</style>
+                </head>
+                <body>
+                    <div id="display-container" class="container">
+                        <div id="standby" class="logo">
+                             <img src="logo.png" style="width:100%; filter: drop-shadow(0 0 30px rgba(99,102,241,0.3));">
+                        </div>
+                        <div id="user-display" class="user-card">
+                            <div id="user-photo-frame" class="photo-frame">
+                                <img id="user-photo" src="" style="display:none;">
+                                <i id="user-icon" class="fas fa-user"></i>
+                            </div>
+                            <h1 id="user-name" class="name">NOME DO CLIENTE</h1>
+                            <div id="user-status" class="status">ENTRADA VÁLIDA</div>
+                        </div>
+                    </div>
+                    <script>
+                        const bc = new BroadcastChannel('kandal_access');
+                        let timeout;
+                        bc.onmessage = (ev) => {
+                            const { type, data } = ev.data;
+                            if (type === 'access_event') {
+                                clearTimeout(timeout);
+                                document.getElementById('standby').style.display = 'none';
+                                document.getElementById('user-display').style.display = 'flex';
+                                
+                                const nameEl = document.getElementById('user-name');
+                                const statusEl = document.getElementById('user-status');
+                                const frameEl = document.getElementById('user-photo-frame');
+                                const photoEl = document.getElementById('user-photo');
+                                const iconEl = document.getElementById('user-icon');
+                                
+                                nameEl.innerText = data.name;
+                                nameEl.className = 'name ' + (data.valid ? 'border-valid' : 'border-invalid');
+                                
+                                statusEl.innerText = data.msg.toUpperCase();
+                                statusEl.className = 'status ' + (data.valid ? 'bg-valid' : 'bg-invalid');
+                                frameEl.className = 'photo-frame ' + (data.valid ? 'border-valid' : 'border-invalid');
+                                
+                                if (data.photo) {
+                                    photoEl.src = data.photo;
+                                    photoEl.style.display = 'block';
+                                    iconEl.style.display = 'none';
+                                } else {
+                                    photoEl.style.display = 'none';
+                                    iconEl.style.display = 'block';
+                                }
+
+                                timeout = setTimeout(() => {
+                                    document.getElementById('standby').style.display = 'block';
+                                    document.getElementById('user-display').style.display = 'none';
+                                }, 5000);
+                            }
+                        };
+                    </script>
+                </body>
+            </html>
+        \`);
+        monitorWindow.document.close();
     }
 
     renderTeacherContent(container) {
@@ -6629,6 +6763,10 @@ Bons treinos!`;
 
         if (!c) {
             this.showQRMsg(" Codigo não reconhecido", "bg-qr-danger");
+            new BroadcastChannel('kandal_access').postMessage({ 
+                type: 'access_event', 
+                data: { name: 'INVÁLIDO', msg: 'CÓDIGO DESCONHECIDO', valid: false, photo: null } 
+            });
             this.lastProcessedQR = formattedId;
             this.lastProcessedTime = Date.now();
             return;
@@ -6700,6 +6838,10 @@ Bons treinos!`;
                 // Validar créditos
                 if ((c.ent || 0) <= 0) {
                     this.showQRMsg(`${c.nome}: Sem créditos`, "bg-qr-danger");
+                    new BroadcastChannel('kandal_access').postMessage({ 
+                        type: 'access_event', 
+                        data: { name: c.nome, msg: 'SEM CRÉDITOS', valid: false, photo: c.photoUrl || null } 
+                    });
                     return;
                 }
             }
@@ -6726,6 +6868,11 @@ Bons treinos!`;
 
             this.showQRMsg(`Bem-vindo, ${c.nome}! Entrada validada.`, "bg-qr-success");
             this.showToast(`Entrada validada: ${c.nome}`, "success");
+
+            new BroadcastChannel('kandal_access').postMessage({ 
+                type: 'access_event', 
+                data: { name: c.nome, msg: 'BEM-VINDO!', valid: true, photo: c.photoUrl || null } 
+            });
         }
 
         this.lastProcessedQR = formattedId;
