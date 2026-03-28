@@ -1196,6 +1196,11 @@ Bons treinos!`;
     }
 
     setView(view) {
+        // Se estivermos a sair da página do scanner, paramos a câmara para libertar recursos
+        if (this.activeView === 'qr_manager' && view !== 'qr_manager') {
+            this.pararLeitorQR();
+        }
+
         this.activeView = view;
         this.persistLogin();
         this.renderNavbar();
@@ -6090,15 +6095,18 @@ Bons treinos!`;
             }
 
             // --- AUTO INICIAR SCANNER ---
+            // Só iniciamos se já não estiver ativo para evitar erros de permissão ou flickers
             if (!this.qrScannerAtivo) {
                 setTimeout(() => {
                     this.iniciarLeitorQR();
                     const manualInput = document.getElementById('manual-qr-id');
                     if (manualInput) manualInput.focus();
-                }, 300);
+                }, 400);
             } else {
-                // Se já estiver ativo, apenas focar
+                // Se já estiver ativo, garantimos que o container está visível e focado
                 setTimeout(() => {
+                    const videoContainer = document.getElementById('video-container');
+                    if (videoContainer) videoContainer.style.display = 'block';
                     const manualInput = document.getElementById('manual-qr-id');
                     if (manualInput) manualInput.focus();
                 }, 100);
@@ -6662,6 +6670,9 @@ Bons treinos!`;
 
         if (video) video.srcObject = null;
         if (container) container.style.display = "none";
+        
+        // Se houver vídeo, forçamos o preto para não carregar a última imagem
+        if (video) video.style.background = "#000";
 
         this.qrScannerAtivo = false;
         clearTimeout(this.qrRequestAnimationFrameId);
