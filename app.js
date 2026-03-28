@@ -1196,11 +1196,6 @@ Bons treinos!`;
     }
 
     setView(view) {
-        // Se estivermos a sair da página do scanner, paramos a câmara para libertar recursos
-        if (this.activeView === 'qr_manager' && view !== 'qr_manager') {
-            this.pararLeitorQR();
-        }
-
         this.activeView = view;
         this.persistLogin();
         this.renderNavbar();
@@ -6103,10 +6098,29 @@ Bons treinos!`;
                     if (manualInput) manualInput.focus();
                 }, 400);
             } else {
-                // Se já estiver ativo, garantimos que o container está visível e focado
+                // Se já estiver ativo, garantimos que o container está visível
                 setTimeout(() => {
                     const videoContainer = document.getElementById('video-container');
+                    const video = document.getElementById('v-stream');
+                    const scanStatus = document.getElementById('scan-status');
+                    const btnCam = document.getElementById('btnCam');
+                    
                     if (videoContainer) videoContainer.style.display = 'block';
+                    
+                    // Se o scanner está ativo no estado mas o vídeo não tem stream ligado ao elemento (acontece no re-render)
+                    if (video && !video.srcObject && this.qrStreamGlobal) {
+                        video.srcObject = this.qrStreamGlobal;
+                        video.play().catch(e => console.warn("Erro ao retomar play:", e));
+                        
+                        if (btnCam) {
+                            btnCam.innerHTML = '<i class="fas fa-stop"></i> Parar Câmara';
+                            btnCam.onclick = () => this.pararLeitorQR();
+                        }
+                        if (scanStatus) {
+                            scanStatus.innerHTML = "<span style='color: var(--success)'> Scanner Ativo</span><br>Otimizado (2 scans/seg)";
+                        }
+                    }
+
                     const manualInput = document.getElementById('manual-qr-id');
                     if (manualInput) manualInput.focus();
                 }, 100);
@@ -6558,6 +6572,7 @@ Bons treinos!`;
                 stream = await navigator.mediaDevices.getUserMedia({ video: true });
             }
 
+            this.qrStreamGlobal = stream; // Guardar globalmente para persistência
             video.srcObject = stream;
             
             // Tentar ativar o foco automático se suportado
@@ -6683,6 +6698,7 @@ Bons treinos!`;
         if (video) video.style.background = "#000";
 
         this.qrScannerAtivo = false;
+        this.qrStreamGlobal = null;
         clearTimeout(this.qrRequestAnimationFrameId);
 
         if (btnCam) {
