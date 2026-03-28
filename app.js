@@ -6413,7 +6413,7 @@ Bons treinos!`;
         if (idx !== -1) {
             this.state.qrClients[idx].ativo = !this.state.qrClients[idx].ativo;
             this.saveState();
-            this.renderContent();
+            this.refreshQRTableUI();
         }
     }
 
@@ -6422,7 +6422,7 @@ Bons treinos!`;
         if (idx !== -1) {
             this.state.qrClients[idx].ent = Math.max(0, (this.state.qrClients[idx].ent || 0) + val);
             this.saveState();
-            this.renderContent();
+            this.refreshQRTableUI();
         }
     }
 
@@ -6439,7 +6439,7 @@ Bons treinos!`;
             if (hIdx !== -1) this.state.qrClients[idx].histórico.splice(hIdx, 1);
         }
         this.saveState();
-        this.renderContent();
+        this.refreshQRTableUI();
     }
 
     updateQRClientField(id, field, value) {
@@ -6447,11 +6447,17 @@ Bons treinos!`;
         if (idx !== -1) {
             this.state.qrClients[idx][field] = value;
             this.saveState();
-            // Don't re-render everything to avoid losing focus if editing
-            // But some fields like credits might need it for consistency if using +/- buttons
-            if (field === 'ent' || field === 'validade') {
-                this.renderContent();
+            // Para nome e telemóvel não fazemos refresh para não perder o foco do input atual
+            if (field === 'ent' || field === 'validade' || field === 'plano' || field === 'ativo') {
+                this.refreshQRTableUI();
             }
+        }
+    }
+
+    refreshQRTableUI() {
+        const grid = document.getElementById("gridQRClientes");
+        if (grid) {
+            grid.innerHTML = this.renderQRClientCards();
         }
     }
 
@@ -6463,7 +6469,7 @@ Bons treinos!`;
         if (confirm("Deseja eliminar este cliente QR permanentemente?")) {
             this.state.qrClients = this.state.qrClients.filter(c => c.id !== id);
             this.saveState();
-            this.renderContent();
+            this.refreshQRTableUI();
         }
     }
 
@@ -6586,6 +6592,8 @@ Bons treinos!`;
 
             this.showQRMsg(msg, "bg-qr-danger");
             alert(msg);
+        } finally {
+            this.isRequestingCâmara = false;
         }
     }
 
