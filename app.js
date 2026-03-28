@@ -5986,26 +5986,21 @@ Bons treinos!`;
                         </div>
                     </div>
 
-                    <div class="glass-panel" style="padding: 1.5rem;">
+                    <div class="glass-panel" style="padding: 1.5rem; border: 2px solid var(--accent); background: rgba(var(--accent-rgb), 0.05);">
                         <h3 style="margin-top: 0; color: var(--accent); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
-                            <i class="fas fa-shield-alt"></i> Regras de Validação
+                            <i class="fas fa-keyboard"></i> Entrada Manual / Scanner USB
                         </h3>
-                        <div style="display: grid; gap: 10px; margin-top: 15px;">
-                            <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-sign-in-alt" style="color: var(--success); width: 20px;"></i> Entrada: Debita 1 crédito e inicia cooldown.
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-sign-out-alt" style="color: var(--accent); width: 20px;"></i> Saída: Registo de saída (Não debita créditos).
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-clock" style="color: var(--primary); width: 20px;"></i> Cooldown de 20 segundos entre operações.
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted);">
-                                <i class="fas fa-ban" style="color: var(--accent); width: 20px;"></i> Regras de validade apenas na Entrada.
-                            </div>
-
-
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Clique no campo e use o leitor de mão ou escreva o código.</p>
+                        
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" id="manual-qr-id" placeholder="Ex: K1" 
+                                onkeyup="if(event.key === 'Enter') app.processarManualQR()"
+                                style="flex:1; height:45px; background:rgba(255,255,255,0.05); border:1px solid var(--accent); border-radius:8px; color:#fff; padding:0 12px; font-size:1.1rem; font-weight:bold; outline:none; text-align:center;">
+                            <button class="btn btn-primary" onclick="app.processarManualQR()" style="padding: 0 20px; background:var(--accent);">
+                                <i class="fas fa-check"></i>
+                            </button>
                         </div>
+                        <p style="margin-top:10px; font-size:0.7rem; color:var(--text-muted); text-align:center;">💡 Recomendado para máxima rapidez e fiabilidade.</p>
                     </div>
                 </div>
 
@@ -6541,8 +6536,9 @@ Bons treinos!`;
             const constraints = {
                 video: {
                     facingMode: "environment",
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 },
+                    focusMode: "continuous"
                 }
             };
 
@@ -6550,14 +6546,24 @@ Bons treinos!`;
             try {
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
             } catch (err) {
-                console.warn("Falha ao tentar câmara traseira, tentando qualquer câmara...", err);
-                // Fallback para qualquer câmara disponível
-                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 1280 }, 
+                        height: { ideal: 720 },
+                        focusMode: "continuous"
+                    } 
+                });
             }
 
             video.srcObject = stream;
+            
+            // Tentar ativar o foco automático se suportado
+            const track = stream.getVideoTracks()[0];
+            const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+            if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
+                track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+            }
 
-            // Garantir que o vídeo carrega antes de iniciar o loop
             await new Promise((resolve) => {
                 video.onloadedmetadata = () => {
                     video.play().then(resolve);
@@ -6571,7 +6577,7 @@ Bons treinos!`;
             this.qrScannerAtivo = true;
             this.qrRequestAnimationFrameId = requestAnimationFrame(() => this.loopLeitorQR(video));
 
-            scanStatus.innerHTML = "<span style='color: var(--success)'> Scanner Ativo</span><br>Aponte para o QR Code";
+            scanStatus.innerHTML = "<span style='color: var(--success)'> Scanner Ativo</span><br>Melhorada Nitidez 1080p";
             scanStatus.className = "";
         } catch (e) {
             console.error(e);
@@ -6690,10 +6696,17 @@ Bons treinos!`;
 
             canvas.height = v.videoHeight;
             canvas.width = v.videoWidth;
+            
+            // Aplicar filtros de imagem para facilitar a leitura do QR
+            // Converter para escala de cinza e aumentar contraste
+            ctx.filter = 'grayscale(100%) contrast(150%) brightness(110%)';
             ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+            ctx.filter = 'none';
 
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: "attemptBoth"
+            });
 
             if (code) {
                 this.processarLeituraQR(code.data);
