@@ -6090,12 +6090,19 @@ Bons treinos!`;
             }
 
             // --- AUTO INICIAR SCANNER ---
-            setTimeout(() => {
-                this.iniciarLeitorQR();
-                // Focar campo manual para scanner USB
-                const manualInput = document.getElementById('manual-qr-id');
-                if (manualInput) manualInput.focus();
-            }, 300);
+            if (!this.qrScannerAtivo) {
+                setTimeout(() => {
+                    this.iniciarLeitorQR();
+                    const manualInput = document.getElementById('manual-qr-id');
+                    if (manualInput) manualInput.focus();
+                }, 300);
+            } else {
+                // Se já estiver ativo, apenas focar
+                setTimeout(() => {
+                    const manualInput = document.getElementById('manual-qr-id');
+                    if (manualInput) manualInput.focus();
+                }, 100);
+            }
 
         } catch (error) {
             console.error("Erro ao renderizar QR Manager:", error);
@@ -6521,7 +6528,6 @@ Bons treinos!`;
                 throw new Error(errorMsg);
             }
 
-            // Constraints mais flexiveis
             const constraints = {
                 video: {
                     facingMode: "environment",
@@ -6846,9 +6852,11 @@ Bons treinos!`;
         this.lastProcessedTime = Date.now();
         this.saveState();
 
-        // Refresh markers or cards if they are visible
+        // ATUALIZAÇÃO SEGURA: Apenas a tabela, não a página toda para não desligar a câmara
         const grid = document.getElementById("gridQRClientes");
-        if (grid) grid.innerHTML = this.renderQRClientCards();
+        if (grid) {
+            grid.innerHTML = this.renderQRClientCards();
+        }
     }
 
 
