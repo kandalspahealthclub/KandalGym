@@ -5936,9 +5936,10 @@ Bons treinos!`;
                 </div>
 
                 <div class="dashboard" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; margin-top: 20px;">
-                    <div class="glass-panel" style="padding: 1.5rem;">
+                    <!-- Scanner de Camara Oculto Temporariamente -->
+                    <div class="glass-panel" style="padding: 1.5rem; display:none;">
                         <h3 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
-                            <i class="fas fa-camera"></i> Scanner de Entrada
+                            <i class="fas fa-camera"></i> Scanner de Entrada (Câmara)
                         </h3>
                         <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Aponte a câmara para o código QR do aluno.</p>
                         <button class="btn btn-secondary" style="width: 100%; border: 1px solid var(--primary); color: var(--primary); background: rgba(145, 27, 43, 0.05);" id="btnCam" onclick="app.iniciarLeitorQR()">
@@ -6106,10 +6107,9 @@ Bons treinos!`;
                 if (newStatusEl) newStatusEl.className = prevClass;
             }
 
-            // --- AUTO INICIAR SCANNER ---
+            // --- AUTO PREPARAR ---
             setTimeout(() => {
-                this.iniciarLeitorQR();
-                // Focar campo manual para scanner USB
+                // Focar campo manual para scanner USB (Apenas focar, nao inicia camera)
                 const manualInput = document.getElementById('manual-qr-id');
                 if (manualInput) manualInput.focus();
             }, 300);
