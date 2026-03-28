@@ -5936,10 +5936,9 @@ Bons treinos!`;
                 </div>
 
                 <div class="dashboard" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; margin-top: 20px;">
-                    <!-- Scanner de Camara Oculto Temporariamente -->
-                    <div class="glass-panel" style="padding: 1.5rem; display:none;">
+                    <div class="glass-panel" style="padding: 1.5rem;">
                         <h3 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
-                            <i class="fas fa-camera"></i> Scanner de Entrada (Câmara)
+                            <i class="fas fa-camera"></i> Scanner de Entrada
                         </h3>
                         <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Aponte a câmara para o código QR do aluno.</p>
                         <button class="btn btn-secondary" style="width: 100%; border: 1px solid var(--primary); color: var(--primary); background: rgba(145, 27, 43, 0.05);" id="btnCam" onclick="app.iniciarLeitorQR()">
@@ -5954,55 +5953,43 @@ Bons treinos!`;
                         <canvas id="c-hidden" style="display:none;"></canvas>
                     </div>
 
-                    <div class="glass-panel" style="padding: 1.5rem;">
-                        <h3 style="margin-top: 0; color: var(--success); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
-                            <i class="fas fa-ticket-alt"></i> Novo Treino Avulso
-                        </h3>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Crie um acesso rápido para clientes temporários.</p>
-                        
-                        <div style="display: grid; gap: 10px;">
-                            <input type="text" id="casual-name" placeholder="Nome do Cliente" class="qr-input-sleek">
-                            <div style="display: flex; gap: 8px;">
-                                <select id="casual-type" class="qr-input-sleek" style="flex: 2; height: 42px;">
-                                    <option value="Diária">📦 Diária (1 Ent.)</option>
-                                    <option value="Semanal">🗓️ Semanal (7 Dias)</option>
-                                    <option value="Mensal">📅 Mensal (30 Dias)</option>
-                                </select>
-                                <button class="btn btn-primary" onclick="app.createCasualPass()" style="flex: 1; height: 42px; border-radius: 6px;">
-                                    Criar <i class="fas fa-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed var(--surface-border);">
-                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Entrada Manual (Backup)</label>
+                    <div style="display:flex; flex-direction:column; gap:20px;">
+                        <div class="glass-panel" style="padding: 1.5rem; border: 2px solid var(--accent); background: rgba(var(--accent-rgb), 0.05);">
+                            <h3 style="margin-top: 0; color: var(--accent); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
+                                <i class="fas fa-keyboard"></i> Entrada Manual / Scanner USB
+                            </h3>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Clique no campo e use o leitor de mão ou escreva o código.</p>
+                            
                             <div style="display:flex; gap:10px;">
                                 <input type="text" id="manual-qr-id" placeholder="Ex: K1" 
                                     onkeyup="if(event.key === 'Enter') app.processarManualQR()"
-                                    style="flex:1; height:42px; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 12px; font-size:0.9rem;">
-                                <button class="btn btn-primary btn-sm" onclick="app.processarManualQR()" style="padding: 0 15px;">
+                                    style="flex:1; height:45px; background:rgba(255,255,255,0.05); border:1px solid var(--accent); border-radius:8px; color:#fff; padding:0 12px; font-size:1.1rem; font-weight:bold; outline:none; text-align:center;">
+                                <button class="btn btn-primary" onclick="app.processarManualQR()" style="padding: 0 20px; background:var(--accent);">
                                     <i class="fas fa-check"></i>
                                 </button>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="glass-panel" style="padding: 1.5rem; border: 2px solid var(--accent); background: rgba(var(--accent-rgb), 0.05);">
-                        <h3 style="margin-top: 0; color: var(--accent); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
-                            <i class="fas fa-keyboard"></i> Entrada Manual / Scanner USB
-                        </h3>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Clique no campo e use o leitor de mão ou escreva o código.</p>
-                        
-                        <div style="display:flex; gap:10px;">
-                            <input type="text" id="manual-qr-id" placeholder="Ex: K1" 
-                                onkeyup="if(event.key === 'Enter') app.processarManualQR()"
-                                style="flex:1; height:45px; background:rgba(255,255,255,0.05); border:1px solid var(--accent); border-radius:8px; color:#fff; padding:0 12px; font-size:1.1rem; font-weight:bold; outline:none; text-align:center;">
-                            <button class="btn btn-primary" onclick="app.processarManualQR()" style="padding: 0 20px; background:var(--accent);">
-                                <i class="fas fa-check"></i>
-                            </button>
+                        <div class="glass-panel" style="padding: 1.5rem;">
+                            <h3 style="margin-top: 0; color: var(--success); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
+                                <i class="fas fa-ticket-alt"></i> Novo Treino Avulso
+                            </h3>
+                            <div style="display: grid; gap: 10px;">
+                                <input type="text" id="casual-name" placeholder="Nome do Cliente" class="qr-input-sleek">
+                                <div style="display: flex; gap: 8px;">
+                                    <select id="casual-type" class="qr-input-sleek" style="flex: 2; height: 42px;">
+                                        <option value="Diária">📦 Diária (1 Ent.)</option>
+                                        <option value="Semanal">🗓️ Semanal (7 Dias)</option>
+                                        <option value="Mensal">📅 Mensal (30 Dias)</option>
+                                    </select>
+                                    <button class="btn btn-primary" onclick="app.createCasualPass()" style="flex: 1; height: 42px; border-radius: 6px;">
+                                        Criar <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <p style="margin-top:10px; font-size:0.7rem; color:var(--text-muted); text-align:center;">💡 Recomendado para máxima rapidez e fiabilidade.</p>
                     </div>
+                </div>
                 </div>
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.8rem;">
@@ -6107,9 +6094,10 @@ Bons treinos!`;
                 if (newStatusEl) newStatusEl.className = prevClass;
             }
 
-            // --- AUTO PREPARAR ---
+            // --- AUTO INICIAR SCANNER ---
             setTimeout(() => {
-                // Focar campo manual para scanner USB (Apenas focar, nao inicia camera)
+                this.iniciarLeitorQR();
+                // Focar campo manual para scanner USB
                 const manualInput = document.getElementById('manual-qr-id');
                 if (manualInput) manualInput.focus();
             }, 300);
