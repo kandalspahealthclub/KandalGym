@@ -6525,8 +6525,8 @@ Bons treinos!`;
             const constraints = {
                 video: {
                     facingMode: "environment",
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
                     focusMode: "continuous"
                 }
             };
@@ -6535,13 +6535,7 @@ Bons treinos!`;
             try {
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
             } catch (err) {
-                stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        width: { ideal: 1280 }, 
-                        height: { ideal: 720 },
-                        focusMode: "continuous"
-                    } 
-                });
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
             }
 
             video.srcObject = stream;
@@ -6564,9 +6558,10 @@ Bons treinos!`;
             btnCam.onclick = () => this.pararLeitorQR(stream);
 
             this.qrScannerAtivo = true;
-            this.qrRequestAnimationFrameId = requestAnimationFrame(() => this.loopLeitorQR(video));
+            // Iniciar o loop com delay para poupar CPU
+            this.qrRequestAnimationFrameId = setTimeout(() => this.loopLeitorQR(video), 500);
 
-            scanStatus.innerHTML = "<span style='color: var(--success)'> Scanner Ativo</span><br>Melhorada Nitidez 1080p";
+            scanStatus.innerHTML = "<span style='color: var(--success)'> Scanner Ativo</span><br>Otimizado (2 scans/seg)";
             scanStatus.className = "";
         } catch (e) {
             console.error(e);
@@ -6663,7 +6658,7 @@ Bons treinos!`;
         if (container) container.style.display = "none";
 
         this.qrScannerAtivo = false;
-        cancelAnimationFrame(this.qrRequestAnimationFrameId);
+        clearTimeout(this.qrRequestAnimationFrameId);
 
         if (btnCam) {
             btnCam.innerHTML = '<i class="fas fa-video"></i> Ativar Câmara';
@@ -6703,7 +6698,7 @@ Bons treinos!`;
         }
 
         if (this.qrScannerAtivo) {
-            this.qrRequestAnimationFrameId = requestAnimationFrame(() => this.loopLeitorQR(v));
+            this.qrRequestAnimationFrameId = setTimeout(() => this.loopLeitorQR(v), 500);
         }
     }
 
