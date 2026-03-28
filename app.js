@@ -5944,8 +5944,8 @@ Bons treinos!`;
                         <button class="btn btn-secondary" style="width: 100%; border: 1px solid var(--primary); color: var(--primary); background: rgba(145, 27, 43, 0.05);" id="btnCam" onclick="app.iniciarLeitorQR()">
                             <i class="fas fa-video"></i> Ativar Câmara
                         </button>
-                        <div id="video-container" class="qr-scanner-container" style="border: 2px solid var(--surface-border); margin-top: 15px;">
-                            <video id="v-stream" class="qr-video" playsinline autoplay muted style="transform:none;"></video>
+                        <div id="video-container" class="qr-scanner-container" style="border: 2px solid var(--surface-border); margin-top: 15px; display:block; min-height: 200px; background: #000;">
+                            <video id="v-stream" class="qr-video" playsinline autoplay muted style="transform:none; width:100%; height:auto; display:block;"></video>
                         </div>
                         <div id="scan-status" style="margin-top: 15px; min-height: 50px;">
                             ${this.renderQRMsgHTML()}
@@ -6105,13 +6105,19 @@ Bons treinos!`;
                 const newStatusEl = document.getElementById('scan-status');
                 if (newStatusEl) newStatusEl.className = prevClass;
             }
+
+            // --- AUTO INICIAR SCANNER ---
+            setTimeout(() => {
+                this.iniciarLeitorQR();
+                // Focar campo manual para scanner USB
+                const manualInput = document.getElementById('manual-qr-id');
+                if (manualInput) manualInput.focus();
+            }, 300);
+
         } catch (error) {
             console.error("Erro ao renderizar QR Manager:", error);
             container.innerHTML = `<div class="glass-card danger">Erro ao carregar Gestão de Entradas.</div>`;
         }
-        
-        // Reset scanner state when rendering
-        this.qrScannerAtivo = false;
     }
 
     toggleAllQRSelection(isChecked) {
