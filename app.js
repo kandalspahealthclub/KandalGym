@@ -108,6 +108,24 @@ class FitnessApp {
         this.serialPort = null;
         this.serialWriter = null;
 
+        // Auto-conectar Arduino se já foi autorizado anteriormente
+        if ("serial" in navigator) {
+            navigator.serial.getPorts().then(async (ports) => {
+                if (ports.length > 0) {
+                    console.log("Porta Serial anteriormente autorizada encontrada. Tentando auto-conectar...");
+                    try {
+                        this.serialPort = ports[0];
+                        await this.serialPort.open({ baudRate: 9600 });
+                        const writableStream = this.serialPort.writable;
+                        this.serialWriter = writableStream.getWriter();
+                        console.log("Arduino auto-conectado com sucesso.");
+                    } catch (e) {
+                         console.warn("Falha na auto-conexão Serial:", e);
+                    }
+                }
+            });
+        }
+
         // 3. Failsafe: Se após 8 segundos ainda estiver "Sincronizando", forçamos o carregamento
         // para não bloquear o utilizador, usando os dados do cache local se necessário.
         setTimeout(() => {
@@ -6768,9 +6786,9 @@ Bons treinos!`;
             canvas.height = v.videoHeight;
             canvas.width = v.videoWidth;
             
-            // Aplicar filtros de imagem para facilitar a leitura do QR
-            // Converter para escala de cinza e aumentar contraste
-            ctx.filter = 'grayscale(100%) contrast(150%) brightness(110%)';
+            // Aplicar filtros de imagem mais eficientes para leitura
+            // Tons de cinzento e contraste forte ajudam o jsQR a detetar contornos
+            ctx.filter = 'contrast(1.4) brightness(1.1) grayscale(100%)';
             ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
             ctx.filter = 'none';
 
@@ -6785,7 +6803,8 @@ Bons treinos!`;
         }
 
         if (this.qrScannerAtivo) {
-            this.qrRequestAnimationFrameId = setTimeout(() => this.loopLeitorQR(v), 500);
+            // Aumentando a performance: scanning a cada 100ms (10 vezes por segundo)
+            this.qrRequestAnimationFrameId = setTimeout(() => this.loopLeitorQR(v), 100);
         }
     }
 
