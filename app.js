@@ -6623,9 +6623,8 @@ Bons treinos!`;
             const constraints = {
                 video: {
                     facingMode: "environment",
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                    focusMode: "continuous"
+                    width: { max: 1280 },
+                    height: { max: 720 }
                 }
             };
 
@@ -6639,26 +6638,19 @@ Bons treinos!`;
             this.qrStreamGlobal = stream; // Guardar globalmente para persistência
             video.srcObject = stream;
             
-            // Tentar ativar o foco automático se suportado
-            const track = stream.getVideoTracks()[0];
-            const capabilities = track.getCapabilities ? track.getCapabilities() : {};
-            if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
-                track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+            // Tentar play imediato
+            try {
+                await video.play();
+            } catch (pErr) {
+                console.warn("Erro ao iniciar play:", pErr);
             }
-
-            await new Promise((resolve) => {
-                video.onloadedmetadata = () => {
-                    video.play().then(resolve);
-                };
-            });
 
             container.style.display = "block";
             btnCam.innerHTML = '<i class="fas fa-stop"></i> Parar Câmara';
             btnCam.onclick = () => this.pararLeitorQR(stream);
 
             this.qrScannerAtivo = true;
-            // Iniciar o loop com delay para poupar CPU
-            this.qrRequestAnimationFrameId = setTimeout(() => this.loopLeitorQR(video), 500);
+            this.qrRequestAnimationFrameId = setTimeout(() => this.loopLeitorQR(video), 200);
 
             scanStatus.innerHTML = "<span style='color: var(--success)'> Scanner Ativo</span><br>Otimizado (2 scans/seg)";
             scanStatus.className = "";
@@ -6786,11 +6778,8 @@ Bons treinos!`;
             canvas.height = v.videoHeight;
             canvas.width = v.videoWidth;
             
-            // Aplicar filtros de imagem mais eficientes para leitura
-            // Tons de cinzento e contraste forte ajudam o jsQR a detetar contornos
-            ctx.filter = 'contrast(1.4) brightness(1.1) grayscale(100%)';
+            // Desenhar imagem pura para o scanner (filtros desativados para compatibilidade)
             ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
-            ctx.filter = 'none';
 
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const code = jsQR(imageData.data, imageData.width, imageData.height, {
