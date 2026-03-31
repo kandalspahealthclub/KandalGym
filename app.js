@@ -105,6 +105,9 @@ class FitnessApp {
         // 2. Iniciar escuta do Firebase em segundo plano
         this.init();
 
+        this.serialPort = null;
+        this.serialWriter = null;
+
         // 3. Failsafe: Se após 8 segundos ainda estiver "Sincronizando", forçamos o carregamento
         // para não bloquear o utilizador, usando os dados do cache local se necessário.
         setTimeout(() => {
@@ -119,6 +122,42 @@ class FitnessApp {
     }
 
 
+
+    async connectArduino() {
+        if (!("serial" in navigator)) {
+            alert("O seu navegador não suporta a Web Serial API. Use o Google Chrome ou Microsoft Edge.");
+            return;
+        }
+
+        try {
+            this.serialPort = await navigator.serial.requestPort();
+            await this.serialPort.open({ baudRate: 9600 });
+            
+            const encoder = new TextEncoder();
+            const writableStream = this.serialPort.writable;
+            this.serialWriter = writableStream.getWriter();
+            
+            this.showToast("Arduino ligado com sucesso!", "success");
+            this.renderContent(); // Re-render para atualizar o estado do botão
+        } catch (err) {
+            console.error("Erro ao ligar ao Arduino:", err);
+            alert("Não foi possível conectar ao Arduino.");
+        }
+    }
+
+    async sendToArduino(cmd) {
+        if (this.serialWriter) {
+            try {
+                const encoder = new TextEncoder();
+                await this.serialWriter.write(encoder.encode(cmd));
+                console.log("Comando enviado ao Arduino:", cmd);
+            } catch (err) {
+                console.error("Erro ao enviar para o Arduino:", err);
+                this.serialWriter = null;
+                this.serialPort = null;
+            }
+        }
+    }
 
     renderAppInterface() {
         try {
@@ -5941,9 +5980,16 @@ Bons treinos!`;
                             <i class="fas fa-camera"></i> Scanner de Entrada
                         </h3>
                         <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Aponte a câmara para o código QR do aluno.</p>
-                        <button class="btn btn-secondary" style="width: 100%; border: 1px solid var(--primary); color: var(--primary); background: rgba(145, 27, 43, 0.05);" id="btnCam" onclick="app.iniciarLeitorQR()">
-                            <i class="fas fa-video"></i> Ativar Câmara
-                        </button>
+                        <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+                            <button class="btn btn-secondary" style="flex: 1; border: 1px solid var(--primary); color: var(--primary); background: rgba(145, 27, 43, 0.05);" id="btnCam" onclick="app.iniciarLeitorQR()">
+                                <i class="fas fa-video"></i> Câmara
+                            </button>
+                            <button class="btn ${this.serialWriter ? 'btn-success' : 'btn-secondary'}" 
+                                style="flex: 1; border: 1px solid ${this.serialWriter ? 'var(--success)' : 'var(--primary)'}; color: ${this.serialWriter ? '#fff' : 'var(--primary)'}; background: ${this.serialWriter ? 'var(--success)' : 'rgba(145, 27, 43, 0.05)'};" 
+                                onclick="app.connectArduino()">
+                                <i class="fas fa-plug"></i> ${this.serialWriter ? 'Arduino OK' : 'Ligar Arduino'}
+                            </button>
+                        </div>
                         <div id="video-container" class="qr-scanner-container" style="border: 2px solid var(--surface-border); margin-top: 15px; display:block; min-height: 200px; background: #000;">
                             <video id="v-stream" class="qr-video" playsinline autoplay muted style="transform:none; width:100%; height:auto; display:block;"></video>
                         </div>
@@ -6758,6 +6804,7 @@ Bons treinos!`;
                 type: 'access_event', 
                 data: { name: 'INVÁLIDO', msg: 'CÓDIGO DESCONHECIDO', valid: false, photo: null } 
             });
+            this.sendToArduino('B');
             this.lastProcessedQR = formattedId;
             this.lastProcessedTime = Date.now();
             return;
@@ -6769,6 +6816,7 @@ Bons treinos!`;
                 type: 'access_event', 
                 data: { name: c.nome, msg: 'CONTA INATIVA', valid: false, photo: c.photoUrl || null } 
             });
+            this.sendToArduino('B');
             this.lastProcessedQR = formattedId;
             this.lastProcessedTime = Date.now();
             return;
@@ -6825,6 +6873,7 @@ Bons treinos!`;
                 type: 'access_event', 
                 data: { name: c.nome, msg: 'ATÉ AMANHÃ! (SAÍDA)', valid: true, photo: c.photoUrl || null } 
             });
+            this.sendToArduino('A');
 
         } else {
             // --- LOGICA DE ENTRADA ---
@@ -6836,6 +6885,7 @@ Bons treinos!`;
                         type: 'access_event', 
                         data: { name: c.nome, msg: 'VALIDADE EXPIRADA', valid: false, photo: c.photoUrl || null } 
                     });
+                    this.sendToArduino('B');
                     return;
                 }
 
@@ -6846,6 +6896,7 @@ Bons treinos!`;
                         type: 'access_event', 
                         data: { name: c.nome, msg: 'SEM CRÉDITOS', valid: false, photo: c.photoUrl || null } 
                     });
+                    this.sendToArduino('B');
                     return;
                 }
             }
@@ -6865,6 +6916,7 @@ Bons treinos!`;
                         type: 'access_event', 
                         data: { name: c.nome, msg: 'LIMITE DIÁRIO', valid: false, photo: c.photoUrl || null } 
                     });
+                    this.sendToArduino('B');
                     return;
                 }
             }
@@ -6881,6 +6933,7 @@ Bons treinos!`;
                 type: 'access_event', 
                 data: { name: c.nome, msg: 'BEM-VINDO!', valid: true, photo: c.photoUrl || null } 
             });
+            this.sendToArduino('A');
         }
 
         this.lastProcessedQR = formattedId;
