@@ -6337,47 +6337,6 @@ Bons treinos!`;
                         </div>
                     </div>
                     ` : ''}
-                    
-                    <style>
-                        .qr-modern-table { width: 100%; border-collapse: separate; border-spacing: 0 0.8rem; text-align: left; }
-                        .qr-modern-table th { padding: 0 1rem 0.5rem; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600; border: none; letter-spacing: 0.5px; }
-                        .qr-modern-row { transition: all 0.3s ease; }
-                        .qr-modern-row:hover td { background: rgba(255,255,255,0.05); }
-                        .qr-modern-row td { 
-                            background: rgba(255,255,255,0.02); 
-                            padding: 1rem; 
-                            vertical-align: middle;
-                            border-top: 1px solid rgba(255,255,255,0.04);
-                            border-bottom: 1px solid rgba(255,255,255,0.04);
-                        }
-                        .qr-modern-row td:first-child { 
-                            border-left: 1px solid rgba(255,255,255,0.04); 
-                            border-top-left-radius: 12px; 
-                            border-bottom-left-radius: 12px; 
-                        }
-                        .qr-modern-row td:last-child { 
-                            border-right: 1px solid rgba(255,255,255,0.04); 
-                            border-top-right-radius: 12px; 
-                            border-bottom-right-radius: 12px; 
-                        }
-                        .qr-input-sleek {
-                            background: rgba(0,0,0,0.2) !important;
-                            border: 1px solid rgba(255,255,255,0.05) !important;
-                            border-radius: 6px !important;
-                            padding: 0.5rem 0.8rem !important;
-                            color: #fff !important;
-                            font-size: 0.85rem !important;
-                            transition: all 0.3s ease;
-                            width: 100%;
-                            box-sizing: border-box;
-                        }
-                        .qr-input-sleek:focus {
-                            border-color: var(--primary) !important;
-                            background: rgba(0,0,0,0.4) !important;
-                            outline: none;
-                            box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
-                        }
-                    </style>
 
                     <div style="overflow-x:auto; padding-top: 0.5rem;">
                         <table class="qr-modern-table">
@@ -6401,20 +6360,24 @@ Bons treinos!`;
                 </div>
             `;
 
+            // --- RESTAURAÇÃO IMEDIATA (PASSO 1) ---
+            window.scrollTo({ top: scrollPosWin, behavior: 'instant' });
+            container.scrollTop = scrollPosCont;
+
             // Restaurar classe se existia
             if (prevClass) {
                 const newStatusEl = document.getElementById('scan-status');
                 if (newStatusEl) newStatusEl.className = prevClass;
             }
             
-            // Restaurar Scroll após um pequeno delay para o DOM assentar
+            // Restaurar Scroll (PASSO 2 - ADIADO) após o DOM assentar completamente
             setTimeout(() => {
                 if (container) {
                     window.scrollTo({ top: scrollPosWin, behavior: 'instant' });
                     container.scrollTop = scrollPosCont;
                     container.style.minHeight = '';
                 }
-            }, 60);
+            }, 100);
 
             // --- AUTO INICIAR SCANNER ---
             // Só iniciamos se já não estiver ativo para evitar erros de permissão ou flickers
@@ -6452,11 +6415,6 @@ Bons treinos!`;
                     if (manualInput) manualInput.focus();
                 }, 100);
             }
-
-            // Restaurar Scroll após um pequeno delay para o DOM assentar
-            setTimeout(() => {
-                window.scrollTo({ top: scrollPos, behavior: 'instant' });
-            }, 60);
 
         } catch (error) {
             console.error("Erro ao renderizar QR Manager:", error);
@@ -6834,12 +6792,16 @@ Bons treinos!`;
 
             grid.innerHTML = this.renderQRClientCards();
 
-            // Libertar após o render
+            // Passo 1: Imediato
+            window.scrollTo({ top: scrollPosWin, behavior: 'instant' });
+            container.scrollTop = scrollPosCont;
+
+            // Passo 2: Adiado (Garante que se o browser recalcular, o scroll volta)
             setTimeout(() => {
                 window.scrollTo({ top: scrollPosWin, behavior: 'instant' });
                 container.scrollTop = scrollPosCont;
                 container.style.minHeight = '';
-            }, 50);
+            }, 100);
         }
     }
 
