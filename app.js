@@ -6395,6 +6395,11 @@ Bons treinos!`;
                 const newStatusEl = document.getElementById('scan-status');
                 if (newStatusEl) newStatusEl.className = prevClass;
             }
+            
+            // Restaurar Scroll após um pequeno delay para o DOM assentar
+            setTimeout(() => {
+                window.scrollTo({ top: scrollPos, behavior: 'instant' });
+            }, 60);
 
             // --- AUTO INICIAR SCANNER ---
             // Só iniciamos se já não estiver ativo para evitar erros de permissão ou flickers
