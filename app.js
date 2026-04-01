@@ -6230,9 +6230,9 @@ Bons treinos!`;
         // Se estiver num layout com barra lateral fixa, o scroll acontece no contentor e não na window!
         const scrollPos = container.scrollTop;
         
-        // Bloquear a altura atual para evitar saltos
-        const currentHeight = container.offsetHeight;
-        container.style.minHeight = currentHeight + 'px';
+        // Bloquear a altura total (incluindo o que está escondido) para evitar saltos
+        const currentTotalHeight = container.scrollHeight;
+        container.style.minHeight = currentTotalHeight + 'px';
 
         // Preservar o estado do status box se ja houver algo lá
         const prevStatusEl = document.getElementById('scan-status');
@@ -6822,8 +6822,20 @@ Bons treinos!`;
 
     refreshQRTableUI() {
         const grid = document.getElementById("gridQRClientes");
-        if (grid) {
+        const container = document.getElementById('main-content');
+        if (grid && container) {
+            // Trancar scroll e altura total do contentor pai
+            const scrollPos = container.scrollTop;
+            const currentTotalHeight = container.scrollHeight;
+            container.style.minHeight = currentTotalHeight + 'px';
+
             grid.innerHTML = this.renderQRClientCards();
+
+            // Libertar após o render
+            setTimeout(() => {
+                container.scrollTop = scrollPos;
+                container.style.minHeight = '';
+            }, 50);
         }
     }
 
