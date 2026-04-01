@@ -974,8 +974,8 @@ Bons treinos!`;
                     <a href="${mailtoLink}" class="btn btn-secondary" style="text-decoration: none;">
                         <i class="fas fa-envelope"></i> Enviar por Email
                     </a>
-                    <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove(); app.setView('users');">
-                        Concluir sem enviar
+                    <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove();">
+                        Concluir <i class="fas fa-times"></i>
                     </button>
                 </div>
                 
