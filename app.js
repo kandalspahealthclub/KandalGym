@@ -1501,8 +1501,15 @@ Bons treinos!`;
                 break;
             case 'all-clients':
                 container.innerHTML = `
-                    <h2 style="margin-bottom:0.5rem;">Acesso Global (Admin)</h2>
-                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Como Administrador, tem acesso total a todos os alunos, independentemente do professor atribuído.</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:10px;">
+                        <div>
+                            <h2 style="margin-bottom:0.1rem;">Acesso Global (Admin)</h2>
+                            <p style="color:var(--text-muted); font-size:0.85rem; margin:0;">Como Administrador, tem acesso total a todos os alunos registados no sistema.</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="app.showBulkImportModal()">
+                            <i class="fas fa-file-import"></i> Importar em Massa
+                        </button>
+                    </div>
                     
                     <div class="search-container">
                         <i class="fas fa-search"></i>
@@ -1521,6 +1528,164 @@ Bons treinos!`;
             case 'profile':
                 this.renderProfileView(container);
                 break;
+        }
+    }
+
+    showBulkImportModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content animate-fade-in" style="max-width: 600px;">
+                <h2 style="margin-top:0;"><i class="fas fa-file-import"></i> Importar Base de Dados</h2>
+                
+                <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+                    <div style="flex: 1; padding: 1rem; background: rgba(255,255,255,0.03); border: 1px dashed var(--surface-border); border-radius: 12px; text-align: center;">
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">O meu ficheiro está em <strong>JSON</strong>:</p>
+                        <button class="btn btn-primary btn-sm" onclick="document.getElementById('import-client-json').click()">
+                            <i class="fas fa-upload"></i> Carregar Ficheiro JSON
+                        </button>
+                        <input type="file" id="import-client-json" style="display:none;" accept=".json" onchange="app.importClientJSON(this)">
+                    </div>
+                    <div style="flex: 1; padding: 1rem; background: rgba(255,255,255,0.03); border: 1px dashed var(--surface-border); border-radius: 12px; text-align: center;">
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">Tenho uma lista de <strong>Texto</strong>:</p>
+                        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('manual-bulk-area').style.display = 'block'; this.parentElement.parentElement.style.display = 'none';">
+                            <i class="fas fa-paste"></i> Colar Lista de Nomes
+                        </button>
+                    </div>
+                </div>
+
+                <div id="manual-bulk-area" style="display: none;">
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
+                        Cole abaixo no formato: <strong>Nome Completo; Contacto</strong> (um por linha)
+                    </p>
+                    <textarea id="bulk-import-data" placeholder="Joao Silva; 912345678\nMaria Santos; 933445566" 
+                        style="width: 100%; height: 200px; background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); border-radius: 12px; color: #fff; padding: 1rem; font-family: monospace; font-size: 0.85rem; outline: none; margin-bottom: 1.5rem;"></textarea>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
+                        <button class="btn btn-primary" onclick="app.processBulkImportText()">
+                            Validar e Importar <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 1.5rem; background: rgba(255,193,7,0.1); border-left: 4px solid #ffc107; padding: 0.8rem; font-size: 0.8rem;">
+                    <i class="fas fa-info-circle"></i> <strong>Nota:</strong> O sistema irá gerar emails automáticos (ex: 912345678@kandalgym.pt) e definir a password padrão: <strong>Kandal123</strong>.
+                </div>
+
+                <div id="bulk-import-cancel" style="margin-top: 1.5rem; text-align: center;">
+                    <button class="btn btn-ghost btn-sm" onclick="this.closest('.modal-overlay').remove()">Fechar</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    importClientJSON(input) {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                const array = Array.isArray(data) ? data : (data.clients || data.alunos || []);
+                if (array.length === 0) throw new Error("O ficheiro JSON está vazio ou não contém uma lista de clientes válida.");
+                
+                this.addClientsInBatch(array);
+            } catch (err) {
+                console.error("Erro no JSON:", err);
+                alert("Erro ao ler JSON: " + err.message);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    processBulkImportText() {
+        const textArea = document.getElementById('bulk-import-data');
+        const data = textArea ? textArea.value.trim() : "";
+        if (!data) return alert("Por favor, cole os dados para importar.");
+
+        const lines = data.split('\n');
+        const clientsToImport = [];
+
+        for (const line of lines) {
+            const row = line.trim();
+            if (!row) continue;
+
+            let parts = row.split(';');
+            if (parts.length < 2) parts = row.split(',');
+            if (parts.length < 2) continue;
+
+            clientsToImport.push({
+                name: parts[0].trim(),
+                phone: parts[1].trim()
+            });
+        }
+        
+        this.addClientsInBatch(clientsToImport);
+    }
+
+    async addClientsInBatch(clientsArray) {
+        let imported = 0;
+        let skipped = 0;
+        let errors = 0;
+
+        for (const raw of clientsArray) {
+            // Tentar extrair nome e telefone de várias chaves possíveis
+            const name = (raw.name || raw.nome || raw.Name || "").trim();
+            const phone = String(raw.phone || raw.contacto || raw.tel || raw.Tel || "").trim();
+
+            if (!name || !phone) {
+                errors++;
+                continue;
+            }
+
+            // Normalizar telefone para verificação de duplicados
+            const cleanPhone = phone.replace(/\s+/g, '');
+            const exists = (this.state.clients || []).some(c => (c.phone || '').replace(/\s+/g, '') === cleanPhone);
+
+            if (exists) {
+                skipped++;
+                continue;
+            }
+
+            // Gerar dados automáticos
+            const newId = Date.now() + imported;
+            const email = (raw.email || raw.Email || `${cleanPhone}@kandalgym.pt`).toLowerCase().trim();
+            const pass = raw.password || raw.pass || "Kandal123";
+
+            const newClient = {
+                id: newId,
+                name: name,
+                email: email,
+                phone: phone,
+                password: pass,
+                status: 'Ativo',
+                lastEvaluation: '-',
+                goal: 'Novo Aluno (Importado)',
+                teacherId: null,
+                birthDate: raw.birthDate || raw.data_nascimento || ''
+            };
+
+            this.state.clients.push(newClient);
+            this.enableQRForClient(newId, false);
+            imported++;
+        }
+
+        if (imported > 0) {
+            this.saveState();
+            this.showToast(`Importação concluída! ${imported} novos clientes.`);
+        }
+
+        alert(`Resumo da Importação:\n\n✅ Sucesso: ${imported}\n⚠️ Ignorados (Já existem): ${skipped}\n❌ Erros (Campos em falta): ${errors}`);
+        
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) modal.remove();
+
+        if (this.activeView === 'all-clients') {
+            this.renderAdminGlobalClientsList();
+        } else {
+            this.renderContent();
         }
     }
 
@@ -2626,6 +2791,15 @@ Bons treinos!`;
                 </div>
             `).join('') : `
                 <div class="glass-panel" style="padding:3rem 1rem; text-align:center;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:10px;">
+                        <div>
+                            <h2 style="margin-bottom:0.1rem;">Acesso Global (Admin)</h2>
+                            <p style="color:var(--text-muted); font-size:0.85rem; margin:0;">Como Administrador, tem acesso total a todos os alunos registados no sistema.</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="app.showBulkImportModal()">
+                            <i class="fas fa-file-import"></i> Importar em Massa
+                        </button>
+                    </div>
                     <i class="fas fa-dumbbell" style="font-size:3rem; color:var(--text-muted); opacity:0.3; margin-bottom:1rem;"></i>
                     <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda não tem plano de treino atribuído.</p>
                     ${isTeacher ? `<button class="btn btn-primary" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-plus"></i> Criar Plano de Treino</button>` : ''}
