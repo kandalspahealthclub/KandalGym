@@ -1263,8 +1263,10 @@ Bons treinos!`;
         this.renderSidebar();
         this.renderContent();
         this.renderFAB();
-        if (!skipScroll) {
-            window.scrollTo({ top: 0, behavior: 'instant' });
+        
+        const container = document.getElementById('main-content');
+        if (!skipScroll && container) {
+            container.scrollTop = 0;
         }
     }
 
@@ -6225,9 +6227,10 @@ Bons treinos!`;
         if (!container) return;
 
         // --- PRESERVAR SCROLL E ALTURA ---
-        const scrollPos = window.scrollY;
+        // Se estiver num layout com barra lateral fixa, o scroll acontece no contentor e não na window!
+        const scrollPos = container.scrollTop;
         
-        // Bloquear a altura atual para evitar que o navegador salte para o topo enquanto limpa o HTML
+        // Bloquear a altura atual para evitar saltos
         const currentHeight = container.offsetHeight;
         container.style.minHeight = currentHeight + 'px';
 
@@ -6405,8 +6408,10 @@ Bons treinos!`;
             
             // Restaurar Scroll após um pequeno delay para o DOM assentar
             setTimeout(() => {
-                window.scrollTo({ top: scrollPos, behavior: 'instant' });
-                if (container) container.style.minHeight = '';
+                if (container) {
+                    container.scrollTop = scrollPos;
+                    container.style.minHeight = '';
+                }
             }, 60);
 
             // --- AUTO INICIAR SCANNER ---
