@@ -6384,8 +6384,7 @@ Bons treinos!`;
             if (!this.qrScannerAtivo) {
                 setTimeout(() => {
                     this.iniciarLeitorQR();
-                    const manualInput = document.getElementById('manual-qr-id');
-                    if (manualInput) manualInput.focus();
+                    // Removido o foco automático para evitar saltos de scroll em PCs
                 }, 400);
             } else {
                 // Se já estiver ativo, garantimos que o container está visível
@@ -6410,9 +6409,7 @@ Bons treinos!`;
                             scanStatus.innerHTML = "<span style='color: var(--success)'> Scanner Ativo</span><br>Otimizado (2 scans/seg)";
                         }
                     }
-
-                    const manualInput = document.getElementById('manual-qr-id');
-                    if (manualInput) manualInput.focus();
+                    // Removido o foco automático para evitar saltos de scroll em PCs
                 }, 100);
             }
 
