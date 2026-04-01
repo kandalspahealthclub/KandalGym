@@ -1256,14 +1256,16 @@ Bons treinos!`;
         `;
     }
 
-    setView(view) {
+    setView(view, skipScroll = false) {
         this.activeView = view;
         this.persistLogin();
         this.renderNavbar();
         this.renderSidebar();
         this.renderContent();
         this.renderFAB();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (!skipScroll) {
+            window.scrollTo({ top: 0, behavior: 'instant' });
+        }
     }
 
     renderContent() {
@@ -6220,11 +6222,16 @@ Bons treinos!`;
     // --- QR MANAGER FUNCTIONALITY ---
     renderQRManager(container) {
         if (!this.state.qrClients) this.state.qrClients = [];
+        if (!container) return;
 
-        // --- PRESERVAR SCROLL ---
+        // --- PRESERVAR SCROLL E ALTURA ---
         const scrollPos = window.scrollY;
+        
+        // Bloquear a altura atual para evitar que o navegador salte para o topo enquanto limpa o HTML
+        const currentHeight = container.offsetHeight;
+        container.style.minHeight = currentHeight + 'px';
 
-        // Preservar o estado do status box se ja houver algo lá (ajuda a nao apagar msgs de boas-vindas)
+        // Preservar o estado do status box se ja houver algo lá
         const prevStatusEl = document.getElementById('scan-status');
         const prevHTML = prevStatusEl ? prevStatusEl.innerHTML : '';
         const prevClass = prevStatusEl ? prevStatusEl.className : '';
@@ -6399,6 +6406,7 @@ Bons treinos!`;
             // Restaurar Scroll após um pequeno delay para o DOM assentar
             setTimeout(() => {
                 window.scrollTo({ top: scrollPos, behavior: 'instant' });
+                if (container) container.style.minHeight = '';
             }, 60);
 
             // --- AUTO INICIAR SCANNER ---
