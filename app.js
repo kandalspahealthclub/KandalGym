@@ -920,6 +920,8 @@ class FitnessApp {
 
 A sua conta de ${label} na KandalGym foi criada com sucesso!
 
+Esta App ainda encontra-se em fase de teste, mas poderá já usufruir de várias funcionalidades como: a marcação de aulas, consulta dos seus planos de treino, avaliações físicas e planos alimentares.
+
 Poderá aceder a plataforma através do seguinte endereço: https://kandalspahealthclub.github.io/KandalGym/
 
 As suas credenciais de acesso sao:
@@ -934,6 +936,8 @@ Equipa KandalGym`;
         const whatsappText = `*Bem-vindo a KandalGym* 
 
 Ola ${name}, a sua conta de ${label} foi criada!
+
+_A App está em fase de teste, mas já pode usar a marcação de aulas, os planos de treino, avaliações físicas e planos alimentares._
 
  Aceda aqui: https://kandalspahealthclub.github.io/KandalGym/
 
