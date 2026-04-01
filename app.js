@@ -6227,13 +6227,11 @@ Bons treinos!`;
         if (!this.state.qrClients) this.state.qrClients = [];
         if (!container) return;
 
-        // --- PRESERVAR SCROLL HÍBRIDO (PC + TELEMÓVEL) ---
-        const scrollPosWin = window.scrollY;
-        const scrollPosCont = container.scrollTop;
+        // --- PRESERVAR SCROLL DA JANELA (o body scrolla no PC, não o contentor) ---
+        const scrollPosWin = window.scrollY || window.pageYOffset;
         
-        // Bloquear a altura total para evitar saltos
-        const currentTotalHeight = Math.max(container.scrollHeight, document.body.scrollHeight);
-        container.style.minHeight = currentTotalHeight + 'px';
+        // Bloquear a altura do body para evitar colapso durante o re-render
+        document.body.style.minHeight = document.body.scrollHeight + 'px';
 
         // Preservar o estado do status box se ja houver algo lá
         const prevStatusEl = document.getElementById('scan-status');
@@ -6360,9 +6358,8 @@ Bons treinos!`;
                 </div>
             `;
 
-            // --- RESTAURAÇÃO IMEDIATA (PASSO 1) ---
-            window.scrollTo({ top: scrollPosWin, behavior: 'instant' });
-            container.scrollTop = scrollPosCont;
+            // --- RESTAURAÇÃO IMEDIATA ---
+            window.scrollTo(0, scrollPosWin);
 
             // Restaurar classe se existia
             if (prevClass) {
@@ -6370,14 +6367,13 @@ Bons treinos!`;
                 if (newStatusEl) newStatusEl.className = prevClass;
             }
             
-            // Restaurar Scroll (PASSO 2 - ADIADO) após o DOM assentar completamente
-            setTimeout(() => {
-                if (container) {
-                    window.scrollTo({ top: scrollPosWin, behavior: 'instant' });
-                    container.scrollTop = scrollPosCont;
-                    container.style.minHeight = '';
-                }
-            }, 100);
+            // Garantir posição no próximo frame e libertar a trava
+            requestAnimationFrame(() => {
+                window.scrollTo(0, scrollPosWin);
+                requestAnimationFrame(() => {
+                    document.body.style.minHeight = '';
+                });
+            });
 
             // --- AUTO INICIAR SCANNER ---
             // Só iniciamos se já não estiver ativo para evitar erros de permissão ou flickers
@@ -6780,30 +6776,26 @@ Bons treinos!`;
 
     refreshQRTableUI() {
         const grid = document.getElementById('gridQRClientes');
-        const container = document.getElementById('main-content');
-        if (!grid || !container) return;
+        if (!grid) return;
 
-        // 1. Capturar posição ANTES de tocar no DOM
-        const scrollWin = window.scrollY;
-        const scrollCont = container.scrollTop;
+        // 1. Capturar a posição REAL do scroll — é a JANELA que faz scroll no PC, não o contentor
+        const scrollY = window.scrollY || window.pageYOffset;
 
-        // 2. Travar altura para o browser não "encolher" a página
-        const lockedHeight = container.scrollHeight;
-        container.style.minHeight = lockedHeight + 'px';
+        // 2. Travar a altura do BODY para o browser não "encolher" a página durante o update
+        document.body.style.minHeight = document.body.scrollHeight + 'px';
 
         // 3. Atualizar APENAS a tabela (não a página inteira)
         grid.innerHTML = this.renderQRClientCards();
 
-        // 4. Restaurar scroll IMEDIATAMENTE (síncrono)
-        window.scrollTo({ top: scrollWin, behavior: 'instant' });
-        container.scrollTop = scrollCont;
+        // 4. Restaurar IMEDIATAMENTE (síncrono, antes do browser pintar)
+        window.scrollTo(0, scrollY);
 
-        // 5. Libertar a trava após o browser redesenhar o frame
+        // 5. Garantir a posição no próximo frame (caso o browser tente ajustar)
         requestAnimationFrame(() => {
-            window.scrollTo({ top: scrollWin, behavior: 'instant' });
-            container.scrollTop = scrollCont;
+            window.scrollTo(0, scrollY);
             requestAnimationFrame(() => {
-                container.style.minHeight = '';
+                // Libertar a trava após 2 frames (DOM já estabilizado)
+                document.body.style.minHeight = '';
             });
         });
     }
