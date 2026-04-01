@@ -1265,8 +1265,9 @@ Bons treinos!`;
         this.renderFAB();
         
         const container = document.getElementById('main-content');
-        if (!skipScroll && container) {
-            container.scrollTop = 0;
+        if (!skipScroll) {
+            window.scrollTo({ top: 0, behavior: 'instant' });
+            if (container) container.scrollTop = 0;
         }
     }
 
@@ -6226,12 +6227,12 @@ Bons treinos!`;
         if (!this.state.qrClients) this.state.qrClients = [];
         if (!container) return;
 
-        // --- PRESERVAR SCROLL E ALTURA ---
-        // Se estiver num layout com barra lateral fixa, o scroll acontece no contentor e não na window!
-        const scrollPos = container.scrollTop;
+        // --- PRESERVAR SCROLL HÍBRIDO (PC + TELEMÓVEL) ---
+        const scrollPosWin = window.scrollY;
+        const scrollPosCont = container.scrollTop;
         
-        // Bloquear a altura total (incluindo o que está escondido) para evitar saltos
-        const currentTotalHeight = container.scrollHeight;
+        // Bloquear a altura total para evitar saltos
+        const currentTotalHeight = Math.max(container.scrollHeight, document.body.scrollHeight);
         container.style.minHeight = currentTotalHeight + 'px';
 
         // Preservar o estado do status box se ja houver algo lá
@@ -6409,7 +6410,8 @@ Bons treinos!`;
             // Restaurar Scroll após um pequeno delay para o DOM assentar
             setTimeout(() => {
                 if (container) {
-                    container.scrollTop = scrollPos;
+                    window.scrollTo({ top: scrollPosWin, behavior: 'instant' });
+                    container.scrollTop = scrollPosCont;
                     container.style.minHeight = '';
                 }
             }, 60);
@@ -6824,16 +6826,18 @@ Bons treinos!`;
         const grid = document.getElementById("gridQRClientes");
         const container = document.getElementById('main-content');
         if (grid && container) {
-            // Trancar scroll e altura total do contentor pai
-            const scrollPos = container.scrollTop;
-            const currentTotalHeight = container.scrollHeight;
+            // Trancar scroll e altura total (Híbrido)
+            const scrollPosWin = window.scrollY;
+            const scrollPosCont = container.scrollTop;
+            const currentTotalHeight = Math.max(container.scrollHeight, document.body.scrollHeight);
             container.style.minHeight = currentTotalHeight + 'px';
 
             grid.innerHTML = this.renderQRClientCards();
 
             // Libertar após o render
             setTimeout(() => {
-                container.scrollTop = scrollPos;
+                window.scrollTo({ top: scrollPosWin, behavior: 'instant' });
+                container.scrollTop = scrollPosCont;
                 container.style.minHeight = '';
             }, 50);
         }
