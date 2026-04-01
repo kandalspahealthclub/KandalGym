@@ -1506,9 +1506,18 @@ Bons treinos!`;
                             <h2 style="margin-bottom:0.1rem;">Acesso Global (Admin)</h2>
                             <p style="color:var(--text-muted); font-size:0.85rem; margin:0;">Como Administrador, tem acesso total a todos os alunos registados no sistema.</p>
                         </div>
-                        <button class="btn btn-primary" onclick="app.showBulkImportModal()">
-                            <i class="fas fa-file-import"></i> Importar em Massa
-                        </button>
+                        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                            <button class="btn btn-secondary btn-sm" onclick="app.exportClientDatabase()" title="Exportar Backup de Clientes">
+                                <i class="fas fa-file-export"></i> Backup (Download)
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-client-backup-input').click()" title="Importar Backup de Clientes">
+                                <i class="fas fa-file-import"></i> Backup (Upload)
+                            </button>
+                            <input type="file" id="import-client-backup-input" style="display:none;" accept=".json" onchange="app.importClientDatabase(this)">
+                            <button class="btn btn-primary btn-sm" onclick="app.showBulkImportModal()">
+                                <i class="fas fa-users"></i> Importar em Massa
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="search-container">
@@ -1626,6 +1635,7 @@ Bons treinos!`;
     }
 
     async addClientsInBatch(clientsArray) {
+        // ... (existing code inside addClientsInBatch) ...
         let imported = 0;
         let skipped = 0;
         let errors = 0;
@@ -1687,6 +1697,67 @@ Bons treinos!`;
         } else {
             this.renderContent();
         }
+    }
+
+    exportClientDatabase() {
+        const data = {
+            version: "1.0",
+            timestamp: new Date().toISOString(),
+            clients: this.state.clients || [],
+            qrClients: this.state.qrClients || []
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const now = new Date().toISOString().split('T')[0];
+        a.href = url;
+        a.download = `Backup_Clientes_KandalGym_${now}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    importClientDatabase(input) {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+        
+        if (!confirm("Tem a certeza que deseja restaurar este backup? Isto irá juntar os dados do ficheiro à base de dados atual.")) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                
+                // Suportar tanto o formato de exportacao novo quanto um array simples
+                const newClients = Array.isArray(data) ? data : (data.clients || []);
+                const newQRClients = Array.isArray(data) ? [] : (data.qrClients || []);
+
+                if (newClients.length === 0) throw new Error("Ficheiro não contém clientes válidos.");
+
+                // Merge seguro (evitar duplicados por ID ou email)
+                let added = 0;
+                newClients.forEach(nc => {
+                    const exists = this.state.clients.some(c => c.id === nc.id || c.email === nc.email);
+                    if (!exists) {
+                        this.state.clients.push(nc);
+                        added++;
+                    }
+                });
+
+                // Importar QR se disponível
+                newQRClients.forEach(nqr => {
+                    const exists = this.state.qrClients.some(q => q.id === nqr.id);
+                    if (!exists) this.state.qrClients.push(nqr);
+                });
+
+                this.saveState();
+                alert(`Backup Restaurado!\n\n✅ ${added} novos clientes adicionados.`);
+                this.renderContent();
+            } catch (err) {
+                console.error("Erro no Backup:", err);
+                alert("Erro ao ler ficheiro de backup: " + err.message);
+            }
+        };
+        reader.readAsText(file);
     }
 
     renderMonitorView(container) {
@@ -2791,15 +2862,6 @@ Bons treinos!`;
                 </div>
             `).join('') : `
                 <div class="glass-panel" style="padding:3rem 1rem; text-align:center;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:10px;">
-                        <div>
-                            <h2 style="margin-bottom:0.1rem;">Acesso Global (Admin)</h2>
-                            <p style="color:var(--text-muted); font-size:0.85rem; margin:0;">Como Administrador, tem acesso total a todos os alunos registados no sistema.</p>
-                        </div>
-                        <button class="btn btn-primary" onclick="app.showBulkImportModal()">
-                            <i class="fas fa-file-import"></i> Importar em Massa
-                        </button>
-                    </div>
                     <i class="fas fa-dumbbell" style="font-size:3rem; color:var(--text-muted); opacity:0.3; margin-bottom:1rem;"></i>
                     <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda não tem plano de treino atribuído.</p>
                     ${isTeacher ? `<button class="btn btn-primary" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-plus"></i> Criar Plano de Treino</button>` : ''}
@@ -6159,6 +6221,9 @@ Bons treinos!`;
     renderQRManager(container) {
         if (!this.state.qrClients) this.state.qrClients = [];
 
+        // --- PRESERVAR SCROLL ---
+        const scrollPos = window.scrollY;
+
         // Preservar o estado do status box se ja houver algo lá (ajuda a nao apagar msgs de boas-vindas)
         const prevStatusEl = document.getElementById('scan-status');
         const prevHTML = prevStatusEl ? prevStatusEl.innerHTML : '';
@@ -6367,6 +6432,11 @@ Bons treinos!`;
                     if (manualInput) manualInput.focus();
                 }, 100);
             }
+
+            // Restaurar Scroll após um pequeno delay para o DOM assentar
+            setTimeout(() => {
+                window.scrollTo({ top: scrollPos, behavior: 'instant' });
+            }, 60);
 
         } catch (error) {
             console.error("Erro ao renderizar QR Manager:", error);
