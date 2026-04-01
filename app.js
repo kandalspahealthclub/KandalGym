@@ -28,10 +28,10 @@ class FitnessApp {
         this.spySubView = 'training';
         this.dashboardMonth = new Date().toISOString().substring(0, 7);
         this.planRestrictions = {
-             'Musculação': { allowClasses: false },
-             'Pilates': { allowClasses: true, filter: ['Pilates'] },
-             'Aulas Geral': { allowClasses: true, exclude: ['Pilates', 'Dance Kids'] },
-             'Dance Kids': { allowClasses: true, filter: ['Dance Kids'] }
+            'Musculação': { allowClasses: false },
+            'Pilates': { allowClasses: true, filter: ['Pilates'] },
+            'Aulas Geral': { allowClasses: true, exclude: ['Pilates', 'Dance Kids'] },
+            'Dance Kids': { allowClasses: true, filter: ['Dance Kids'] }
         };
         this.hasLoadedData = false; // Flag para evitar flickering de "Utilizador não encontrado"
         this.isCheckingClasses = false;
@@ -120,7 +120,7 @@ class FitnessApp {
                         this.serialWriter = writableStream.getWriter();
                         console.log("Arduino auto-conectado com sucesso.");
                     } catch (e) {
-                         console.warn("Falha na auto-conexão Serial:", e);
+                        console.warn("Falha na auto-conexão Serial:", e);
                     }
                 }
             });
@@ -150,11 +150,11 @@ class FitnessApp {
         try {
             this.serialPort = await navigator.serial.requestPort();
             await this.serialPort.open({ baudRate: 9600 });
-            
+
             const encoder = new TextEncoder();
             const writableStream = this.serialPort.writable;
             this.serialWriter = writableStream.getWriter();
-            
+
             this.showToast("Arduino ligado com sucesso!", "success");
             this.renderContent(); // Re-render para atualizar o estado do botão
         } catch (err) {
@@ -249,10 +249,10 @@ class FitnessApp {
 
                 const dictCollections = ['trainingPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments', 'planRestrictions'];
                 dictCollections.forEach(coll => { if (!this.state[coll]) this.state[coll] = {}; });
-                
+
                 // Integridade das restrições
                 if (Object.keys(this.state.planRestrictions || {}).length === 0) {
-                     this.state.planRestrictions = JSON.parse(JSON.stringify(this.planRestrictions));
+                    this.state.planRestrictions = JSON.parse(JSON.stringify(this.planRestrictions));
                 }
 
                 // 2. Conta mestre garantida
@@ -497,7 +497,7 @@ class FitnessApp {
             const emailInput = document.getElementById('login-email');
             const passInput = document.getElementById('login-pass');
             const errorDiv = document.getElementById('login-error-msg');
-            
+
             if (errorDiv) errorDiv.style.display = 'none';
 
             if (!emailInput || !passInput) return;
@@ -551,7 +551,7 @@ class FitnessApp {
                 this.renderAppInterface();
                 return;
             }
-            
+
             if (typeof errorDiv !== 'undefined' && errorDiv) {
                 errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Email ou palavra-passe incorretos.';
                 errorDiv.style.display = 'block';
@@ -757,13 +757,13 @@ class FitnessApp {
 
             this.saveState();
             document.querySelector('.modal-overlay').remove();
-            
+
             if (this.activeView === 'users') {
                 this.switchAdminTab(type === 'teacher' ? 'teachers' : (type === 'admin' ? 'admins' : 'clients'));
             } else {
                 this.renderContent();
             }
-            
+
             this.showToast('Dados atualizados com sucesso.');
         } catch (err) {
             console.error("Erro ao guardar edições:", err);
@@ -916,7 +916,7 @@ class FitnessApp {
         modal.className = 'modal-overlay';
 
         const subject = `Bem-vindo a KandalGym - ${name}`;
-        const body = `Ola ${name},
+        const body = `Olá ${name},
 
 A sua conta de ${label} na KandalGym foi criada com sucesso!
 
@@ -935,7 +935,7 @@ Equipa KandalGym`;
 
         const whatsappText = `*Bem-vindo a KandalGym* 
 
-Ola ${name}, a sua conta de ${label} foi criada!
+Olá ${name}, a sua conta de ${label} foi criada!
 
 _A App está em fase de teste, mas já pode usar a marcação de aulas, os planos de treino, avaliações físicas e planos alimentares._
 
@@ -1324,9 +1324,9 @@ Bons treinos!`;
         if (qrClientsArray.length === 0) return '';
 
         const todayStart = new Date();
-        todayStart.setHours(0,0,0,0);
+        todayStart.setHours(0, 0, 0, 0);
         const todayEnd = new Date();
-        todayEnd.setHours(23,59,59,999);
+        todayEnd.setHours(23, 59, 59, 999);
 
         // Calculate hours array (from 7h to 22h gym hours)
         const hoursCount = {};
@@ -1339,7 +1339,7 @@ Bons treinos!`;
                 histArray.forEach(entry => {
                     const isoDate = typeof entry === 'string' ? entry : entry.d;
                     const type = typeof entry === 'string' ? 'in' : entry.t;
-                    
+
                     if (type === 'in') {
                         const d = new Date(isoDate);
                         if (!isNaN(d.getTime()) && d >= todayStart && d <= todayEnd) {
@@ -1367,7 +1367,7 @@ Bons treinos!`;
                     <div style="width:100%; max-width:18px; height:120px; background:rgba(0,0,0,0.2); border-radius:10px; position:relative; overflow:hidden;">
                         <div style="position:absolute; bottom:0; left:0; right:0; height:${height}%; background:${isCurrent ? 'linear-gradient(to top, var(--accent), #f368e0)' : 'linear-gradient(to top, var(--primary), var(--secondary))'}; border-radius:10px; transition:height 1s ease;"></div>
                     </div>
-                    <span style="font-size:0.6rem; color:var(--text-muted); margin-top:6px; font-weight:bold; ${isCurrent?'color:var(--accent);':''}">${i}h</span>
+                    <span style="font-size:0.6rem; color:var(--text-muted); margin-top:6px; font-weight:bold; ${isCurrent ? 'color:var(--accent);' : ''}">${i}h</span>
                 </div>
             `;
         }
@@ -2982,7 +2982,7 @@ Bons treinos!`;
 
         // Notificar o aluno do novo plano de treino (App)
         this.addAppNotification(this.editingClientId, 'Novo Plano de Treino!', 'O seu professor atualizou o seu plano de treino.');
-        
+
         // Perguntar método de notificação externa
         this.askNotificationMethod(this.editingClientId, 'Plano de Treino');
 
@@ -3566,7 +3566,7 @@ Bons treinos!`;
 
         // Notificar o aluno
         this.addAppNotification(this.editingClientId, 'Nova Dieta Disponível!', 'O seu professor atualizou o seu plano alimentar.');
-        
+
         // Perguntar método de notificação externa
         this.askNotificationMethod(this.editingClientId, 'Plano Alimentar');
 
@@ -4298,13 +4298,13 @@ Bons treinos!`;
                 ${(() => {
                 const qrInfo = (this.state.qrClients || []).find(q => q.clientId === user.id || q.nome === user.name);
                 if (!qrInfo && this.role === 'client') return ''; // Só mostra pros clientes se já tiverem QR
-                
+
                 const displayId = qrInfo ? qrInfo.id : "A" + user.id; // Fallback prefixo A para Admin/Prof se não tiver QR?
                 // Na verdade, se for staff e não tiver QR, talvez não devamos mostrar nada ou mostrar um botão?
                 // O utilizador pediu para apresentar como nos clientes.
-                
+
                 if (!qrInfo && (this.role === 'teacher' || this.role === 'admin')) {
-                     return `
+                    return `
                         <div class="glass-card" style="margin-top:2rem; padding:1.5rem; text-align:center; border: 1px dashed var(--text-muted); background: rgba(255,255,255,0.02);">
                             <h4 style="margin-bottom:1rem; color:var(--text-muted); opacity:0.8;"><i class="fas fa-qrcode"></i> Acesso QR Não Ativado</h4>
                             <p style="font-size:0.8rem; color:var(--text-muted);">Como Staff, pode ativar o seu acesso na aba de Gestão de Entradas.</p>
@@ -4468,8 +4468,8 @@ Bons treinos!`;
         // Reset all tabs style
         const tabs = ['teachers', 'clients', 'admins', 'plans'];
         tabs.forEach(t => {
-             const btn = document.getElementById('tab-' + t);
-             if (btn) btn.style.borderBottom = 'none';
+            const btn = document.getElementById('tab-' + t);
+            if (btn) btn.style.borderBottom = 'none';
         });
 
         const activeBtn = document.getElementById('tab-' + tab);
@@ -4490,12 +4490,12 @@ Bons treinos!`;
 
     renderPlanRestrictions(container) {
         if (!this.state.planRestrictions) {
-             this.state.planRestrictions = JSON.parse(JSON.stringify(this.planRestrictions));
+            this.state.planRestrictions = JSON.parse(JSON.stringify(this.planRestrictions));
         }
-        
+
         const plans = Object.keys(this.state.planRestrictions);
         const uniqueClasses = [...new Set((this.state.classes || []).map(c => c.name).filter(n => n))].sort();
-        
+
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 2rem;">
                 <div>
@@ -4507,12 +4507,12 @@ Bons treinos!`;
 
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.5rem;">
                 ${plans.map(p => {
-                    const r = this.state.planRestrictions[p];
-                    if (typeof r.filter === 'string') r.filter = r.filter ? [r.filter] : [];
-                    if (!r.exclude) r.exclude = [];
-                    if (typeof r.exclude === 'string') r.exclude = r.exclude ? [r.exclude] : [];
-                    
-                    return `
+            const r = this.state.planRestrictions[p];
+            if (typeof r.filter === 'string') r.filter = r.filter ? [r.filter] : [];
+            if (!r.exclude) r.exclude = [];
+            if (typeof r.exclude === 'string') r.exclude = r.exclude ? [r.exclude] : [];
+
+            return `
                         <div class="glass-card animate-fade-in" style="padding: 1.5rem; position: relative; display: flex; flex-direction: column; gap: 1.2rem; border-top: 4px solid var(--accent);">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <h4 style="margin: 0; font-size: 1.3rem; display: flex; align-items: center; gap: 8px;">
@@ -4555,7 +4555,7 @@ Bons treinos!`;
                             `}
                         </div>
                     `;
-                }).join('')}
+        }).join('')}
             </div>
 
             <div style="margin-top:2.5rem; padding:1.2rem 1.5rem; background:rgba(38,222,129,0.05); border-radius:12px; border:1px solid rgba(38,222,129,0.2); display: flex; align-items: flex-start; gap: 1.2rem;">
@@ -4571,7 +4571,7 @@ Bons treinos!`;
     updatePlanRestriction(plan, field, value) {
         if (!this.state.planRestrictions) this.state.planRestrictions = {};
         if (!this.state.planRestrictions[plan]) return;
-        
+
         this.state.planRestrictions[plan][field] = value;
         this.saveState();
         this.showToast('Regra guardada.');
@@ -4579,15 +4579,15 @@ Bons treinos!`;
 
     renderMultiSelectCheckboxes(plan, field, selected = [], allClasses = [], theme = 'success') {
         if (allClasses.length === 0) return '<small style="color:var(--text-muted); opacity:0.6; display:block; text-align:center; padding: 1rem 0;">(Vazio)</small>';
-        
+
         const color = theme === 'success' ? '#26de81' : '#ff4757'; // Success or Danger explicitly defined
         const bgActive = theme === 'success' ? 'rgba(38,222,129,0.15)' : 'rgba(255,71,87,0.15)';
-        
+
         return `
             <div style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 0 0.5rem; scrollbar-width: thin; scrollbar-color: ${color} transparent;">
                 ${allClasses.map(name => {
-                    const isChecked = selected.includes(name);
-                    return `
+            const isChecked = selected.includes(name);
+            return `
                         <label style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: ${isChecked ? bgActive : 'rgba(0,0,0,0.2)'}; border: 1px solid ${isChecked ? color : 'rgba(255,255,255,0.05)'}; border-radius: 8px; cursor: pointer; transition: all 0.25s ease; margin:0;" class="hover-scale-sm">
                             <span style="font-size: 0.8rem; color: ${isChecked ? '#fff' : 'var(--text-muted)'}; font-weight: ${isChecked ? '600' : '400'}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;" title="${name}">${name}</span>
                             <input type="checkbox" value="${name}" ${isChecked ? 'checked' : ''} 
@@ -4619,7 +4619,7 @@ Bons treinos!`;
                             <i class="fas ${isChecked ? 'fa-check-circle' : 'fa-circle'}" style="color: ${isChecked ? color : 'rgba(255,255,255,0.1)'}; font-size: 1rem; transition: all 0.2s ease;"></i>
                         </label>
                     `;
-                }).join('')}
+        }).join('')}
             </div>
         `;
     }
@@ -4627,7 +4627,7 @@ Bons treinos!`;
     togglePlanClassRestriction(plan, field, className, isChecked) {
         if (!this.state.planRestrictions[plan]) return;
         if (!this.state.planRestrictions[plan][field]) this.state.planRestrictions[plan][field] = [];
-        
+
         const current = this.state.planRestrictions[plan][field];
         if (isChecked) {
             if (!current.includes(className)) current.push(className);
@@ -5984,7 +5984,7 @@ Bons treinos!`;
     // --- QR MANAGER FUNCTIONALITY ---
     renderQRManager(container) {
         if (!this.state.qrClients) this.state.qrClients = [];
-        
+
         // Preservar o estado do status box se ja houver algo lá (ajuda a nao apagar msgs de boas-vindas)
         const prevStatusEl = document.getElementById('scan-status');
         const prevHTML = prevStatusEl ? prevStatusEl.innerHTML : '';
@@ -6150,7 +6150,7 @@ Bons treinos!`;
                     </div>
                 </div>
             `;
-            
+
             // Restaurar classe se existia
             if (prevClass) {
                 const newStatusEl = document.getElementById('scan-status');
@@ -6172,14 +6172,14 @@ Bons treinos!`;
                     const video = document.getElementById('v-stream');
                     const scanStatus = document.getElementById('scan-status');
                     const btnCam = document.getElementById('btnCam');
-                    
+
                     if (videoContainer) videoContainer.style.display = 'block';
-                    
+
                     // Se o scanner está ativo no estado mas o vídeo não tem stream ligado ao elemento (acontece no re-render)
                     if (video && !video.srcObject && this.qrStreamGlobal) {
                         video.srcObject = this.qrStreamGlobal;
                         video.play().catch(e => console.warn("Erro ao retomar play:", e));
-                        
+
                         if (btnCam) {
                             btnCam.innerHTML = '<i class="fas fa-stop"></i> Parar Câmara';
                             btnCam.onclick = () => this.pararLeitorQR();
@@ -6209,7 +6209,7 @@ Bons treinos!`;
     async applyBulkValidity() {
         const customDateInput = document.getElementById('bulkCustomDate');
         const newDateStr = customDateInput ? customDateInput.value : '';
-        
+
         if (!newDateStr) return alert('Por favor, escolha uma data no calendário indicando a nova validade.');
 
         const checkboxes = document.querySelectorAll('.qr-bulk-checkbox:checked');
@@ -6306,17 +6306,17 @@ Bons treinos!`;
                         <select onchange="app.updateQRClientField('${c.id}', 'plano', this.value)"
                             style="background:rgba(var(--primary-rgb), 0.1); color:var(--primary); font-weight:600; border:1px solid rgba(var(--primary-rgb), 0.3); border-radius:20px; padding:6px 12px; outline:none; cursor:pointer; width:100%; font-size:0.8rem; appearance:none; text-align:center;">
                             ${isStaff ? '<option value="Staff">Staff / Vitalício</option>' : (() => {
-                                const plans = Object.keys(this.state.planRestrictions || {});
-                                if (plans.length === 0) {
-                                     return `
+                    const plans = Object.keys(this.state.planRestrictions || {});
+                    if (plans.length === 0) {
+                        return `
                                         <option value="Livre Trânsito" ${c.plano === 'Livre Trânsito' ? 'selected' : ''}>Livre Trânsito</option>
                                         <option value="3x Semana" ${c.plano === '3x Semana' ? 'selected' : ''}>3x Semana</option>
                                         <option value="2x Semana" ${c.plano === '2x Semana' ? 'selected' : ''}>2x Semana</option>
                                         <option value="Pontual" ${c.plano === 'Pontual' ? 'selected' : ''}>Pontual</option>
                                      `;
-                                }
-                                return plans.map(p => `<option value="${p}" ${c.plano === p ? 'selected' : ''}>${p}</option>`).join('');
-                            })()}
+                    }
+                    return plans.map(p => `<option value="${p}" ${c.plano === p ? 'selected' : ''}>${p}</option>`).join('');
+                })()}
                         </select>
                     </td>
                     <td style="text-align:center;">
@@ -6441,8 +6441,8 @@ Bons treinos!`;
     enableQRForClient(clientId, autoRedirect = true, isStaff = false) {
         if (!this.state.qrClients) this.state.qrClients = [];
 
-        const client = isStaff 
-            ? [...(this.state.teachers || []), ...(this.state.admins || [])].find(t => Number(t.id) === Number(clientId)) 
+        const client = isStaff
+            ? [...(this.state.teachers || []), ...(this.state.admins || [])].find(t => Number(t.id) === Number(clientId))
             : (this.state.clients || []).find(c => Number(c.id) === Number(clientId));
         if (!client) return;
 
@@ -6464,9 +6464,9 @@ Bons treinos!`;
 
         const validDate = new Date();
         if (isStaff) {
-             validDate.setFullYear(2099);
+            validDate.setFullYear(2099);
         } else {
-             validDate.setDate(validDate.getDate() + 30);
+            validDate.setDate(validDate.getDate() + 30);
         }
 
         this.state.qrClients.push({
@@ -6641,7 +6641,7 @@ Bons treinos!`;
 
             this.qrStreamGlobal = stream; // Guardar globalmente para persistência
             video.srcObject = stream;
-            
+
             // Tentar play imediato
             try {
                 await video.play();
@@ -6753,7 +6753,7 @@ Bons treinos!`;
 
         if (video) video.srcObject = null;
         if (container) container.style.display = "none";
-        
+
         // Se houver vídeo, forçamos o preto para não carregar a última imagem
         if (video) video.style.background = "#000";
 
@@ -6781,7 +6781,7 @@ Bons treinos!`;
 
             canvas.height = v.videoHeight;
             canvas.width = v.videoWidth;
-            
+
             // Desenhar imagem pura para o scanner (filtros desativados para compatibilidade)
             ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
 
@@ -6812,9 +6812,9 @@ Bons treinos!`;
 
         if (!c) {
             this.showQRMsg(" Codigo não reconhecido", "bg-qr-danger");
-            new BroadcastChannel('kandal_access').postMessage({ 
-                type: 'access_event', 
-                data: { name: 'INVÁLIDO', msg: 'CÓDIGO DESCONHECIDO', valid: false, photo: null } 
+            new BroadcastChannel('kandal_access').postMessage({
+                type: 'access_event',
+                data: { name: 'INVÁLIDO', msg: 'CÓDIGO DESCONHECIDO', valid: false, photo: null }
             });
             this.sendToArduino('B');
             this.lastProcessedQR = formattedId;
@@ -6824,9 +6824,9 @@ Bons treinos!`;
 
         if (!c.ativo) {
             this.showQRMsg(` ${c.nome}: Conta Inativa`, "bg-qr-danger");
-            new BroadcastChannel('kandal_access').postMessage({ 
-                type: 'access_event', 
-                data: { name: c.nome, msg: 'CONTA INATIVA', valid: false, photo: c.photoUrl || null } 
+            new BroadcastChannel('kandal_access').postMessage({
+                type: 'access_event',
+                data: { name: c.nome, msg: 'CONTA INATIVA', valid: false, photo: c.photoUrl || null }
             });
             this.sendToArduino('B');
             this.lastProcessedQR = formattedId;
@@ -6840,12 +6840,12 @@ Bons treinos!`;
         // Determinar se é ENTRADA ou SAÍDA
         const lastLog = (c.histórico && c.histórico.length > 0) ? c.histórico[0] : null;
         let isExit = false;
-        
+
         if (lastLog) {
             const lastDateStr = typeof lastLog === 'string' ? lastLog : lastLog.d;
             const lastEntry = new Date(lastDateStr);
             const lastType = typeof lastLog === 'string' ? 'in' : lastLog.t;
-            
+
             // Se foi hoje e a última foi Entrada, agora é Saída
             if (lastEntry.toDateString() === agora.toDateString() && lastType === 'in') {
                 isExit = true;
@@ -6854,8 +6854,8 @@ Bons treinos!`;
 
         // Determinar se é Staff (Teacher ou Admin) para ignorar limites
         const isStaffMember = (this.state.teachers || []).some(t => Number(t.id) === Number(c.clientId)) ||
-                              (this.state.admins || []).some(a => Number(a.id) === Number(c.clientId)) ||
-                              c.plano === 'Staff';
+            (this.state.admins || []).some(a => Number(a.id) === Number(c.clientId)) ||
+            c.plano === 'Staff';
 
 
         // Validar cooldown (20 segundos) - Para operações consecutivas
@@ -6877,13 +6877,13 @@ Bons treinos!`;
             // --- LOGICA DE SAÍDA ---
             if (!c.histórico) c.histórico = [];
             c.histórico.unshift({ d: agora.toISOString(), t: 'out' });
-            
+
             this.showQRMsg(`Até amanhã, ${c.nome}! Saída registada.`, "bg-qr-warning");
             this.showToast(`Saída registada: ${c.nome}`, "info");
 
-            new BroadcastChannel('kandal_access').postMessage({ 
-                type: 'access_event', 
-                data: { name: c.nome, msg: 'ATÉ AMANHÃ! (SAÍDA)', valid: true, photo: c.photoUrl || null } 
+            new BroadcastChannel('kandal_access').postMessage({
+                type: 'access_event',
+                data: { name: c.nome, msg: 'ATÉ AMANHÃ! (SAÍDA)', valid: true, photo: c.photoUrl || null }
             });
             this.sendToArduino('A');
 
@@ -6893,9 +6893,9 @@ Bons treinos!`;
                 // Validar data
                 if (hj > (c.validade || '')) {
                     this.showQRMsg(`${c.nome}: Validade Expirada`, "bg-qr-warning");
-                    new BroadcastChannel('kandal_access').postMessage({ 
-                        type: 'access_event', 
-                        data: { name: c.nome, msg: 'VALIDADE EXPIRADA', valid: false, photo: c.photoUrl || null } 
+                    new BroadcastChannel('kandal_access').postMessage({
+                        type: 'access_event',
+                        data: { name: c.nome, msg: 'VALIDADE EXPIRADA', valid: false, photo: c.photoUrl || null }
                     });
                     this.sendToArduino('B');
                     return;
@@ -6904,9 +6904,9 @@ Bons treinos!`;
                 // Validar créditos
                 if ((c.ent || 0) <= 0) {
                     this.showQRMsg(`${c.nome}: Sem créditos`, "bg-qr-danger");
-                    new BroadcastChannel('kandal_access').postMessage({ 
-                        type: 'access_event', 
-                        data: { name: c.nome, msg: 'SEM CRÉDITOS', valid: false, photo: c.photoUrl || null } 
+                    new BroadcastChannel('kandal_access').postMessage({
+                        type: 'access_event',
+                        data: { name: c.nome, msg: 'SEM CRÉDITOS', valid: false, photo: c.photoUrl || null }
                     });
                     this.sendToArduino('B');
                     return;
@@ -6924,9 +6924,9 @@ Bons treinos!`;
 
                 if (entriesHj >= 2) {
                     this.showQRMsg(`${c.nome}: Limite diário atingido`, "bg-qr-warning");
-                    new BroadcastChannel('kandal_access').postMessage({ 
-                        type: 'access_event', 
-                        data: { name: c.nome, msg: 'LIMITE DIÁRIO', valid: false, photo: c.photoUrl || null } 
+                    new BroadcastChannel('kandal_access').postMessage({
+                        type: 'access_event',
+                        data: { name: c.nome, msg: 'LIMITE DIÁRIO', valid: false, photo: c.photoUrl || null }
                     });
                     this.sendToArduino('B');
                     return;
@@ -6941,9 +6941,9 @@ Bons treinos!`;
             this.showQRMsg(`Bem-vindo, ${c.nome}! Entrada validada.`, "bg-qr-success");
             this.showToast(`Entrada validada: ${c.nome}`, "success");
 
-            new BroadcastChannel('kandal_access').postMessage({ 
-                type: 'access_event', 
-                data: { name: c.nome, msg: 'BEM-VINDO!', valid: true, photo: c.photoUrl || null } 
+            new BroadcastChannel('kandal_access').postMessage({
+                type: 'access_event',
+                data: { name: c.nome, msg: 'BEM-VINDO!', valid: true, photo: c.photoUrl || null }
             });
             this.sendToArduino('A');
         }
@@ -6963,7 +6963,7 @@ Bons treinos!`;
     showUserQRLogs(id) {
         const client = (this.state.qrClients || []).find(c => c.id === id);
         if (!client) return;
-        
+
         const logs = client.histórico || [];
         const content = `
             <div style="padding: 0.5rem;">
@@ -6984,12 +6984,12 @@ Bons treinos!`;
                         </thead>
                         <tbody>
                             ${logs.length === 0 ? '<tr><td colspan="2" style="padding: 4rem 2rem; text-align: center; color: var(--text-muted);"><i class="fas fa-ghost" style="font-size:2rem; display:block; margin-bottom:1rem; opacity:0.3;"></i> Sem registos de acesso para este utilizador.</td></tr>' : logs.map(l => {
-                                const dateStr = typeof l === 'string' ? l : l.d;
-                                const type = typeof l === 'string' ? 'in' : l.t;
-                                const d = new Date(dateStr);
-                                const isIn = type === 'in';
-                                
-                                return `
+            const dateStr = typeof l === 'string' ? l : l.d;
+            const type = typeof l === 'string' ? 'in' : l.t;
+            const d = new Date(dateStr);
+            const isIn = type === 'in';
+
+            return `
                                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,185,255,0.02)'" onmouseout="this.style.background='transparent'">
                                         <td style="padding: 12px 15px;">
                                             <div style="font-weight:600; font-size:0.9rem; color:#fff;">${d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })}</div>
@@ -7002,7 +7002,7 @@ Bons treinos!`;
                                         </td>
                                     </tr>
                                 `;
-                            }).join('')}
+        }).join('')}
 
                         </tbody>
                     </table>
@@ -7027,7 +7027,7 @@ Bons treinos!`;
         let bg = 'rgba(255,b255,255,0.05)';
         let color = '#fff';
         let icon = 'fa-info-circle';
-        
+
         if (cls.includes('success')) { bg = 'rgba(38,222,129,0.15)'; color = '#26de81'; icon = 'fa-check-circle'; }
         else if (cls.includes('warning')) { bg = 'rgba(255,159,67,0.15)'; color = '#ff9f43'; icon = 'fa-exclamation-triangle'; }
         else if (cls.includes('danger')) { bg = 'rgba(235,77,75,0.15)'; color = '#eb4d4b'; icon = 'fa-times-circle'; }
@@ -7182,7 +7182,7 @@ Bons treinos!`;
     async checkFinishedClasses() {
         // SEGURANÇA: Garantir que o estado existe e temos dados carregados
         if (!this.state || !this.state.classes || !this.hasLoadedData || this.isCheckingClasses) return;
-        
+
         // Se for cliente, podemos correr a manutenção mas de forma silenciosa e facultativa
         // Staff corre prioritariamente.
 
@@ -7225,7 +7225,7 @@ Bons treinos!`;
                         const clientId = Number(pid);
                         if (!this.state.trainingHistory) this.state.trainingHistory = {};
                         if (!this.state.trainingHistory[clientId]) this.state.trainingHistory[clientId] = [];
-                        
+
                         const exists = this.state.trainingHistory[clientId].some(h => h.date === c.date && h.title === c.name);
                         if (!exists) {
                             this.state.trainingHistory[clientId].push({
@@ -7247,7 +7247,7 @@ Bons treinos!`;
                         const y = nextDate.getFullYear();
                         const m = String(nextDate.getMonth() + 1).padStart(2, '0');
                         const d = String(nextDate.getDate()).padStart(2, '0');
-                        
+
                         c.date = `${y}-${m}-${d}`;
                         c.day = nextDate.getDay();
                         this.state.enrollments[String(c.id)] = [];
@@ -7264,14 +7264,14 @@ Bons treinos!`;
             if (changed) {
                 this.state.classes = updatedClasses;
                 this.isSaving = true;
-                
+
                 await this.dbRef.update({
                     classes: this.state.classes,
                     enrollments: this.state.enrollments,
                     trainingHistory: this.state.trainingHistory
                 }).catch(err => {
                     console.error("Erro na sync de fundo:", err);
-                    throw err; 
+                    throw err;
                 });
 
                 localStorage.setItem('kandalgym_state', JSON.stringify(this.state));
@@ -7484,7 +7484,7 @@ Bons treinos!`;
                         <input type="text" id="manualEnrollSearch" placeholder="Pesquisar..." onkeyup="app.filterManualEnrollSearch()" style="width: 100px; background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); border-radius: 6px; padding: 6px 10px; color: #fff; font-size: 0.85rem;">
                         <select id="manualEnrollSelect" style="flex: 1; min-width: 0; background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); border-radius: 6px; padding: 6px 10px; color: #fff; font-size: 0.85rem;">
                             <option value="">Selecione um aluno...</option>
-                            ${(this.state.clients || []).filter(c => !participantsIds.includes(String(c.id)) && !participantsIds.includes(c.id)).sort((a,b) => a.name.localeCompare(b.name)).map(c => `<option value="${c.id}">${c.name} (Ref: ${c.id})</option>`).join('')}
+                            ${(this.state.clients || []).filter(c => !participantsIds.includes(String(c.id)) && !participantsIds.includes(c.id)).sort((a, b) => a.name.localeCompare(b.name)).map(c => `<option value="${c.id}">${c.name} (Ref: ${c.id})</option>`).join('')}
                         </select>
                         <button class="btn btn-primary btn-sm" onclick="app.enrollManualStudent('${classIdStr}')" style="white-space: nowrap;"><i class="fas fa-plus"></i> Ingresso</button>
                     </div>
@@ -7516,17 +7516,17 @@ Bons treinos!`;
     async enrollManualStudent(classId) {
         const select = document.getElementById('manualEnrollSelect');
         if (!select || !select.value) return alert('Por favor, selecione um aluno da lista.');
-        
+
         const clientId = Number(select.value);
         const classIdStr = String(classId);
-        
+
         if (!this.state.enrollments[classIdStr]) this.state.enrollments[classIdStr] = [];
         const participants = this.state.enrollments[classIdStr];
-        
+
         if (participants.includes(String(clientId)) || participants.includes(clientId)) {
             return alert('O aluno já está inscrito nesta aula.');
         }
-        
+
         const cls = this.state.classes.find(x => String(x.id) === classIdStr);
 
         // Validate plan restrictions
@@ -7554,14 +7554,14 @@ Bons treinos!`;
         }
 
         if (cls && participants.length >= (cls.capacity || 20)) {
-             if (!confirm('A aula já está na capacidade máxima. Tem a certeza que pretende forçar a inscrição?')) return;
+            if (!confirm('A aula já está na capacidade máxima. Tem a certeza que pretende forçar a inscrição?')) return;
         }
-        
+
         participants.push(clientId);
         this.saveState();
         this.showToast('Aluno inscrito manualmente com sucesso!', 'success');
-        this.showParticipantsList(classId); 
-        
+        this.showParticipantsList(classId);
+
         if (this.role === 'admin') this.renderAdminClasses(document.getElementById('main-content'));
         else if (this.role === 'teacher') this.renderTeacherClasses(document.getElementById('main-content'));
     }
@@ -7570,7 +7570,7 @@ Bons treinos!`;
         const input = document.getElementById('manualEnrollSearch');
         const select = document.getElementById('manualEnrollSelect');
         if (!input || !select) return;
-        
+
         const filterStr = input.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         Array.from(select.options).forEach(opt => {
             if (opt.value === "") return;
@@ -7814,27 +7814,27 @@ Bons treinos!`;
         const qrInfo = (this.state.qrClients || []).find(q => Number(q.clientId) === Number(clientId));
         const plano = qrInfo ? qrInfo.plano : 'Livre Trânsito';
         const restrictions = (this.state.planRestrictions || {})[plano];
-        
+
         if (restrictions) {
-             if (!restrictions.allowClasses) {
-                  return alert(`O plano ${plano} não permite a marcação de aulas.`);
-             }
-             
-             // Validar Filtro (Apenas pode estas)
-             if (restrictions.filter && restrictions.filter.length > 0) {
-                  const isAllowed = restrictions.filter.some(f => cls.name.toLowerCase().includes(f.toLowerCase()));
-                  if (!isAllowed) {
-                      return alert(`O seu plano (${plano}) apenas permite reserva das aulas: ${restrictions.filter.join(', ')}.`);
-                  }
-             }
-             
-             // Validar Exclusão (Não pode estas)
-             if (restrictions.exclude && restrictions.exclude.length > 0) {
-                  const isExcluded = restrictions.exclude.some(ex => cls.name.toLowerCase().includes(ex.toLowerCase()));
-                  if (isExcluded) {
-                      return alert(`O seu plano (${plano}) não permite a reserva de aulas desta categoria.`);
-                  }
-             }
+            if (!restrictions.allowClasses) {
+                return alert(`O plano ${plano} não permite a marcação de aulas.`);
+            }
+
+            // Validar Filtro (Apenas pode estas)
+            if (restrictions.filter && restrictions.filter.length > 0) {
+                const isAllowed = restrictions.filter.some(f => cls.name.toLowerCase().includes(f.toLowerCase()));
+                if (!isAllowed) {
+                    return alert(`O seu plano (${plano}) apenas permite reserva das aulas: ${restrictions.filter.join(', ')}.`);
+                }
+            }
+
+            // Validar Exclusão (Não pode estas)
+            if (restrictions.exclude && restrictions.exclude.length > 0) {
+                const isExcluded = restrictions.exclude.some(ex => cls.name.toLowerCase().includes(ex.toLowerCase()));
+                if (isExcluded) {
+                    return alert(`O seu plano (${plano}) não permite a reserva de aulas desta categoria.`);
+                }
+            }
         }
 
         participants.push(clientId);
@@ -7878,7 +7878,7 @@ Bons treinos!`;
             overlay.style.zIndex = '9999999';
             overlay.style.opacity = '0';
             overlay.style.transition = 'opacity 0.3s ease';
-            
+
             overlay.innerHTML = `
                 <div class="modal-content" style="text-align: center; max-width: 400px; padding: 2rem 1.5rem;">
                     <div style="width: 64px; height: 64px; background: linear-gradient(135deg, rgba(var(--danger-rgb), 0.2), rgba(var(--accent-rgb), 0.2)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; border: 1px solid rgba(var(--danger-rgb), 0.4); box-shadow: 0 8px 20px rgba(var(--danger-rgb), 0.15);">
@@ -7892,10 +7892,10 @@ Bons treinos!`;
                     </div>
                 </div>
             `;
-            
+
             document.body.appendChild(overlay);
             setTimeout(() => overlay.style.opacity = '1', 10);
-            
+
             document.getElementById('btn-custom-cancel').onclick = () => {
                 overlay.style.opacity = '0';
                 setTimeout(() => { overlay.remove(); resolve(false); }, 300);
@@ -7914,7 +7914,7 @@ Bons treinos!`;
             overlay.style.zIndex = '9999999';
             overlay.style.opacity = '0';
             overlay.style.transition = 'opacity 0.3s ease';
-            
+
             const dv = defaultVal || '';
             overlay.innerHTML = `
                 <div class="modal-content" style="max-width: 400px; padding: 2rem 1.5rem;">
@@ -7930,13 +7930,13 @@ Bons treinos!`;
                     </div>
                 </div>
             `;
-            
+
             document.body.appendChild(overlay);
-            setTimeout(() => { 
+            setTimeout(() => {
                 overlay.style.opacity = '1';
                 document.getElementById('custom-prompt-input').focus();
             }, 10);
-            
+
             document.getElementById('btn-prompt-cancel').onclick = () => {
                 overlay.style.opacity = '0';
                 setTimeout(() => { overlay.remove(); resolve(null); }, 300);
@@ -7989,11 +7989,11 @@ Bons treinos!`;
 
         const appUrl = "https://kandalgympro.web.app";
         const message = `Olá ${c.name}, o seu professor atualizou o seu ${topic} no KandalGym! Aceda aqui para ver: ${appUrl}`;
-        
+
         if (type === 'whatsapp') {
             let phone = (c.phone || '').replace(/\s/g, '').replace('+', '');
             if (!phone) return alert('O cliente não tem telemóvel registado!');
-            
+
             // Adicionar prefixo PT se estiver em falta
             if (phone.length === 9 && (phone.startsWith('91') || phone.startsWith('92') || phone.startsWith('93') || phone.startsWith('96'))) {
                 phone = '351' + phone;
@@ -8017,7 +8017,7 @@ const app = new FitnessApp();
 
 // Override global window.alert para usar o modal premium em todo o lado
 window.originalAlert = window.alert;
-window.alert = function(msg) {
+window.alert = function (msg) {
     if (typeof app !== 'undefined' && app.showModal) {
         app.showModal(`
             <div style="text-align: center; padding: 1.5rem 0.5rem 0.5rem;">
