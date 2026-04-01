@@ -6445,7 +6445,7 @@ Bons treinos!`;
         });
 
         this.saveState();
-        this.renderQRManager(document.getElementById('main-content'));
+        this.refreshQRTableUI();
         this.showToast(`Validade atualizada para ${checkboxes.length} alunos!`);
     }
 
@@ -6675,7 +6675,7 @@ Bons treinos!`;
         });
 
         this.saveState();
-        this.renderQRManager(document.getElementById('main-content'));
+        this.refreshQRTableUI();
         this.showToast(`Passe ${type} criado para ${name}! Código: ${qrId}`);
     }
 
@@ -6778,28 +6778,33 @@ Bons treinos!`;
     }
 
     refreshQRTableUI() {
-        const grid = document.getElementById("gridQRClientes");
+        const grid = document.getElementById('gridQRClientes');
         const container = document.getElementById('main-content');
-        if (grid && container) {
-            // Trancar scroll e altura total (Híbrido)
-            const scrollPosWin = window.scrollY;
-            const scrollPosCont = container.scrollTop;
-            const currentTotalHeight = Math.max(container.scrollHeight, document.body.scrollHeight);
-            container.style.minHeight = currentTotalHeight + 'px';
+        if (!grid || !container) return;
 
-            grid.innerHTML = this.renderQRClientCards();
+        // 1. Capturar posição ANTES de tocar no DOM
+        const scrollWin = window.scrollY;
+        const scrollCont = container.scrollTop;
 
-            // Passo 1: Imediato
-            window.scrollTo({ top: scrollPosWin, behavior: 'instant' });
-            container.scrollTop = scrollPosCont;
+        // 2. Travar altura para o browser não "encolher" a página
+        const lockedHeight = container.scrollHeight;
+        container.style.minHeight = lockedHeight + 'px';
 
-            // Passo 2: Adiado (Garante que se o browser recalcular, o scroll volta)
-            setTimeout(() => {
-                window.scrollTo({ top: scrollPosWin, behavior: 'instant' });
-                container.scrollTop = scrollPosCont;
+        // 3. Atualizar APENAS a tabela (não a página inteira)
+        grid.innerHTML = this.renderQRClientCards();
+
+        // 4. Restaurar scroll IMEDIATAMENTE (síncrono)
+        window.scrollTo({ top: scrollWin, behavior: 'instant' });
+        container.scrollTop = scrollCont;
+
+        // 5. Libertar a trava após o browser redesenhar o frame
+        requestAnimationFrame(() => {
+            window.scrollTo({ top: scrollWin, behavior: 'instant' });
+            container.scrollTop = scrollCont;
+            requestAnimationFrame(() => {
                 container.style.minHeight = '';
-            }, 100);
-        }
+            });
+        });
     }
 
     editQRClientData(id) {
