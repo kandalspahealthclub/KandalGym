@@ -1616,7 +1616,8 @@ option {
 }
 
 /* PREVENÇÃO DE SALTOS PHANTOM NO NAVEGADOR */
-#main-content {
+#main-content,
+#main-content * {
     overflow-anchor: none !important;
 }
 

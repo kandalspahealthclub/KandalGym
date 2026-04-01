@@ -6770,8 +6770,9 @@ Bons treinos!`;
         if (idx !== -1) {
             this.state.qrClients[idx][field] = value;
             this.saveState();
-            // Para nome e telemóvel não fazemos refresh para não perder o foco do input atual
-            if (field === 'ent' || field === 'validade' || field === 'plano' || field === 'ativo') {
+            // Nome, telemóvel e PLANO não precisam de refresh:
+            // o input/select já mostra o novo valor — refrescar destruiria o elemento focado e causaria salto de ecrã
+            if (field === 'ent' || field === 'validade' || field === 'ativo') {
                 this.refreshQRTableUI();
             }
         }
