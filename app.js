@@ -274,8 +274,9 @@ class FitnessApp {
 
                 this.syncSessionWithState();
 
-                // Atualizar UI apenas se logado e não houver modais abertas
-                if (this.isLoggedIn && !document.querySelector('.modal-overlay')) {
+                // Atualizar UI apenas se logado, não houver modais abertas,
+                // E NÃO estivermos no meio de uma gravação nossa (evita reset de scroll)
+                if (this.isLoggedIn && !document.querySelector('.modal-overlay') && !this.isSaving) {
                     this.renderContent();
                 }
 
