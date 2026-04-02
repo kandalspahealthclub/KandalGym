@@ -6227,11 +6227,11 @@ Bons treinos!`;
         if (!this.state.qrClients) this.state.qrClients = [];
         if (!container) return;
 
-        // --- PRESERVAR SCROLL DA JANELA (o body scrolla no PC, não o contentor) ---
-        const scrollPosWin = window.scrollY || window.pageYOffset;
+        // --- PRESERVAR SCROLL DO CONTENTOR (CSS garante scroll interno no PC) ---
+        const scrollPosCont = container.scrollTop;
         
-        // Bloquear a altura do body para evitar colapso durante o re-render
-        document.body.style.minHeight = document.body.scrollHeight + 'px';
+        // Bloquear altura mínima para evitar colapso durante o re-render
+        container.style.minHeight = container.scrollHeight + 'px';
 
         // Preservar o estado do status box se ja houver algo lá
         const prevStatusEl = document.getElementById('scan-status');
@@ -6358,8 +6358,8 @@ Bons treinos!`;
                 </div>
             `;
 
-            // --- RESTAURAÇÃO IMEDIATA ---
-            window.scrollTo(0, scrollPosWin);
+            // --- RESTAURAÇÃO DO SCROLL DO CONTENTOR ---
+            container.scrollTop = scrollPosCont;
 
             // Restaurar classe se existia
             if (prevClass) {
@@ -6367,11 +6367,11 @@ Bons treinos!`;
                 if (newStatusEl) newStatusEl.className = prevClass;
             }
             
-            // Garantir posição no próximo frame e libertar a trava
+            // Confirmar no próximo frame e libertar a trava de altura
             requestAnimationFrame(() => {
-                window.scrollTo(0, scrollPosWin);
+                container.scrollTop = scrollPosCont;
                 requestAnimationFrame(() => {
-                    document.body.style.minHeight = '';
+                    container.style.minHeight = '';
                 });
             });
 
@@ -6776,26 +6776,26 @@ Bons treinos!`;
 
     refreshQRTableUI() {
         const grid = document.getElementById('gridQRClientes');
-        if (!grid) return;
+        const container = document.getElementById('main-content');
+        if (!grid || !container) return;
 
-        // 1. Capturar a posição REAL do scroll — é a JANELA que faz scroll no PC, não o contentor
-        const scrollY = window.scrollY || window.pageYOffset;
+        // 1. Capturar scroll do contentor (CSS garante scroll interno, não da janela)
+        const scrollY = container.scrollTop;
 
-        // 2. Travar a altura do BODY para o browser não "encolher" a página durante o update
-        document.body.style.minHeight = document.body.scrollHeight + 'px';
+        // 2. Travar altura para o contentor não "encolher" durante o update
+        container.style.minHeight = container.scrollHeight + 'px';
 
-        // 3. Atualizar APENAS a tabela (não a página inteira)
+        // 3. Atualizar APENAS a tabela
         grid.innerHTML = this.renderQRClientCards();
 
-        // 4. Restaurar IMEDIATAMENTE (síncrono, antes do browser pintar)
-        window.scrollTo(0, scrollY);
+        // 4. Restaurar imediatamente
+        container.scrollTop = scrollY;
 
-        // 5. Garantir a posição no próximo frame (caso o browser tente ajustar)
+        // 5. Confirmar no próximo frame
         requestAnimationFrame(() => {
-            window.scrollTo(0, scrollY);
+            container.scrollTop = scrollY;
             requestAnimationFrame(() => {
-                // Libertar a trava após 2 frames (DOM já estabilizado)
-                document.body.style.minHeight = '';
+                container.style.minHeight = '';
             });
         });
     }

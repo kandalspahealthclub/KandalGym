@@ -1621,6 +1621,36 @@ option {
     overflow-anchor: none !important;
 }
 
+/* ============================================================
+   LAYOUT FIXO PARA PC (≥ 901px)
+   Scroll acontece DENTRO de #main-content, nunca na janela.
+   Isto elimina definitivamente os saltos de ecrã.
+   ============================================================ */
+@media (min-width: 901px) {
+    body {
+        overflow: hidden;
+        height: 100vh;
+    }
+
+    #app {
+        height: 100vh;
+        min-height: unset;
+        overflow: hidden;
+    }
+
+    main {
+        /* min-height: 0 é crítico para flex/grid children poderem encolher */
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .content-area {
+        /* Ocupa toda a altura disponível na coluna do grid */
+        height: 100%;
+        overflow-y: auto;
+    }
+}
+
 /* QR MANAGER MODERN STYLES - Moved from app.js to prevent layout shifts */
 .qr-modern-table { width: 100%; border-collapse: separate; border-spacing: 0 0.8rem; text-align: left; }
 .qr-modern-table th { padding: 0 1rem 0.5rem; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600; border: none; letter-spacing: 0.5px; }
