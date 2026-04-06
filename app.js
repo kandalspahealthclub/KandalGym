@@ -4360,15 +4360,28 @@ Bons treinos!`;
         }
 
         // Tentar encontrar o cliente (flexivel Number/String)
-        const c = this.state.clients.find(x => String(x.id) === String(this.currentClientId));
+        const c = (this.state.clients || []).find(x => String(x.id) === String(this.currentClientId));
 
         if (!c) {
-            container.innerHTML = `<div style="padding:4rem 2rem; text-align:center;">
-                <i class="fas fa-user-slash" style="font-size:3rem; color:var(--danger); opacity:0.5; margin-bottom:1.5rem;"></i>
-                <h3 style="color:#fff;">Utilizador não encontrado.</h3>
-                <p style="color:var(--text-muted); margin-bottom:2rem;">O seu perfil (ID: ${this.currentClientId}) não existe na base de dados.</p>
-                <button class="btn btn-primary" onclick="app.handleLogout()">Sair e Tentar Novamente</button>
-            </div>`;
+            container.innerHTML = `
+                <div style="padding:4rem 2rem; text-align:center; max-width: 500px; margin: 0 auto;">
+                    <div style="background: rgba(239, 68, 68, 0.1); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;">
+                        <i class="fas fa-user-slash" style="font-size:2.5rem; color:var(--danger);"></i>
+                    </div>
+                    <h2 style="color:#fff; margin-bottom: 1rem;">Perfil não encontrado</h2>
+                    <p style="color:var(--text-muted); margin-bottom:2rem; line-height: 1.6;">
+                        Não conseguimos encontrar os seus dados de acesso (ID: ${this.currentClientId}). 
+                        Isto pode acontecer se a sua conta foi alterada ou se existe um erro na memória temporária do seu telemóvel.
+                    </p>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <button class="btn btn-primary" onclick="app.handleLogout()" style="width: 100%;">
+                            <i class="fas fa-sign-out-alt"></i> Sair e Limpar Memória
+                        </button>
+                        <button class="btn btn-secondary" onclick="location.reload()" style="width: 100%;">
+                            <i class="fas fa-sync-alt"></i> Tentar Novamente
+                        </button>
+                    </div>
+                </div>`;
             return;
         }
         switch (this.activeView) {
@@ -6830,14 +6843,18 @@ Bons treinos!`;
         const container = document.getElementById('main-content');
         if (!grid || !container) return;
 
-        // 1. Capturar scroll do contentor (CSS garante scroll interno, não da janela)
+        // Capturar o valor atual da pesquisa para não perder o filtro
+        const searchInput = document.getElementById('qr-search-input');
+        const filterVal = searchInput ? searchInput.value : '';
+
+        // 1. Capturar scroll do contentor
         const scrollY = container.scrollTop;
 
-        // 2. Travar altura para o contentor não "encolher" durante o update
+        // 2. Travar altura
         container.style.minHeight = container.scrollHeight + 'px';
 
-        // 3. Atualizar APENAS a tabela
-        grid.innerHTML = this.renderQRClientCards();
+        // 3. Atualizar a tabela mantendo o filtro ativo
+        grid.innerHTML = this.renderQRClientCards(filterVal);
 
         // 4. Restaurar imediatamente
         container.scrollTop = scrollY;
@@ -6857,7 +6874,8 @@ Bons treinos!`;
 
     async deleteQRClient(id) {
         if (confirm("Deseja eliminar este cliente QR permanentemente?")) {
-            this.state.qrClients = this.state.qrClients.filter(c => c.id !== id);
+            // Comparação como String para garantir match em IDs manuais (K1) e automáticos (timestamps)
+            this.state.qrClients = this.state.qrClients.filter(c => String(c.id) !== String(id));
             this.saveState();
             this.refreshQRTableUI();
         }
