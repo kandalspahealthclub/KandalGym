@@ -2739,8 +2739,6 @@ Bons treinos!`;
                     <button class="btn btn-secondary btn-sm" onclick="app.downloadTrainingPDF('${clientId}')" title="Download PDF"><i class="fas fa-file-pdf"></i> <span class="hide-mobile">PDF</span></button>
                     ${isClient ? `<button class="btn btn-secondary btn-sm" onclick="app.setView('training_history')"><i class="fas fa-history"></i> <span class="hide-mobile">Histórico</span></button>` : ''}
                     ${isTeacher ? `
-                        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-training-${clientId}').click()" title="Importar JSON"><i class="fas fa-file-import"></i> <span class="hide-mobile">Importar</span></button>
-                        <input type="file" id="import-training-${clientId}" style="display:none;" accept=".json" onchange="app.importTrainingPlanJSON(this, '${clientId}')">
                         <button class="btn btn-primary btn-sm" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-edit"></i> <span class="hide-mobile">Gerir</span></button>
                         <button class="btn btn-ghost btn-sm" style="color:var(--danger); border:1px solid rgba(220, 38, 38, 0.2);" onclick="app.deleteTrainingPlan('${clientId}')">
                             <i class="fas fa-trash"></i> <span class="hide-mobile">Eliminar</span>
@@ -5528,11 +5526,7 @@ Bons treinos!`;
                     </div>
                     <strong>${c.name}</strong>
                 </div>
-                <div style="display:flex; gap:0.5rem;">
-                    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-training-list-${c.id}').click()" title="Importar Plano"><i class="fas fa-file-import"></i></button>
-                    <input type="file" id="import-training-list-${c.id}" style="display:none;" accept=".json" onchange="app.importTrainingPlanJSON(this, '${c.id}')">
-                    <button class="btn btn-secondary btn-sm" onclick="app.spyClient('${c.id}')">Gerir</button>
-                </div>
+                <button class="btn btn-secondary btn-sm" onclick="app.spyClient('${c.id}')">Gerir</button>
             </div> `;
         }).join('');
     }
@@ -5894,11 +5888,7 @@ Bons treinos!`;
                         <small style="color:var(--text-muted);">Professor: ${teacher ? teacher.name : 'Nenhum'}</small>
                     </div>
                 </div>
-                <div style="display:flex; gap:0.5rem;">
-                    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-training-admin-${c.id}').click()" title="Importar Plano"><i class="fas fa-file-import"></i></button>
-                    <input type="file" id="import-training-admin-${c.id}" style="display:none;" accept=".json" onchange="app.importTrainingPlanJSON(this, '${c.id}')">
-                    <button class="btn btn-primary btn-sm" onclick="app.spyClient('${c.id}')">Ver Ficha</button>
-                </div>
+                <button class="btn btn-primary btn-sm" onclick="app.spyClient('${c.id}')">Ver Ficha</button>
             </div> `;
         }).join('');
     }
@@ -6159,166 +6149,7 @@ Bons treinos!`;
         printWindow.document.close();
     }
 
-    importTrainingPlanJSON(input, clientId) {
-        if (!input.files || !input.files[0]) return;
-        const file = input.files[0];
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                console.log("Iniciando importação para cliente:", clientId);
-                const data = JSON.parse(e.target.result);
-                console.log("Dados recebidos:", data);
 
-                let days = [];
-
-                // --- NOVO: MODO MINERAÇÃO DE OCR ---
-                // Detetar se o JSON é um output bruto de OCR (com campos como 'pages' ou 'content')
-                if (data.pages || data.content || (data.version && data.success_count !== undefined)) {
-                    console.log("Modo OCR Super-Robusto Ativado...");
-                    
-                    const paragraphs = [];
-                    const source = data.pages || [{ content: data.content || [] }];
-                    source.forEach(page => {
-                        if (page.content) {
-                            page.content.forEach(c => {
-                                if (c.text) paragraphs.push(c.text.trim());
-                            });
-                        }
-                    });
-
-                    const foundDays = [];
-                    let currentDay = { title: "Plano Importado", exercises: [] };
-                    const dayKeywords = ["peito", "costas", "pernas", "ombros", "braços", "cardio", "abdominal", "full", "superior", "inferior", "aquecimento"];
-
-                    for (let i = 0; i < paragraphs.length; i++) {
-                        const p = paragraphs[i];
-                        const pLow = p.toLowerCase();
-
-                        // 1. Detetar se é um cabeçalho de Dia de Treino
-                        if (dayKeywords.some(k => pLow === k || pLow.includes("treino " + k)) && p.length < 20) {
-                            if (currentDay.exercises.length > 0) foundDays.push(currentDay);
-                            currentDay = { title: p.charAt(0).toUpperCase() + p.slice(1), exercises: [] };
-                            continue;
-                        }
-
-                        // 2. Detetar início de Exercício (pode ser "1" num parágrafo e "Nome" no outro, ou "1 Nome")
-                        let exerciseName = "";
-                        let skipNext = 0;
-
-                        if (/^\d+$/.test(p) && i + 1 < paragraphs.length && paragraphs[i+1].length > 2) {
-                            // Caso "1" \n "Supino"
-                            exerciseName = paragraphs[i+1];
-                            skipNext = 1;
-                        } else if (/^\d+\s+[A-Za-z]/.test(p)) {
-                            // Caso "1 Supino"
-                            exerciseName = p.replace(/^\d+\s+/, '');
-                        }
-
-                        if (exerciseName) {
-                            // Ignorar se for lixo de OCR
-                            if (exerciseName.toLowerCase().includes("modifica") || exerciseName.toLowerCase().includes("validade")) continue;
-
-                            const exObj = {
-                                id: Date.now() + i,
-                                name: exerciseName.trim(),
-                                sets: "",
-                                reps: "",
-                                observations: ""
-                            };
-
-                            // 3. Procurar Detalhes nos próximos 3 parágrafos
-                            let searchIdx = i + skipNext + 1;
-                            let limit = searchIdx + 3;
-                            while (searchIdx < paragraphs.length && searchIdx < limit) {
-                                const nextP = paragraphs[searchIdx];
-                                
-                                // Se encontrar outro exercício ou dia, pára
-                                if (/^\d+$/.test(nextP) || /^\d+\s+[A-Za-z]/.test(nextP)) break;
-
-                                // Tentar extrair Valores (Séries/Reps)
-                                const setsMatch = nextP.match(/(\d+)\s*(u|x|série|serie|s|rounds)/i);
-                                if (setsMatch && !exObj.sets) exObj.sets = setsMatch[1];
-                                
-                                const repsMatch = nextP.match(/(\d+[-\d]*\s*(R|rep|repet|m|min|s|seg))/i);
-                                if (repsMatch && !exObj.reps) exObj.reps = repsMatch[1];
-
-                                // Acumular como observações caso contenha palavras-chave ou pareça detalhe
-                                if (nextP.includes(":") || nextP.match(/\d/)) {
-                                    exObj.observations += (exObj.observations ? " | " : "") + nextP;
-                                }
-
-                                searchIdx++;
-                            }
-
-                            currentDay.exercises.push(exObj);
-                            i += skipNext + (searchIdx - (i + skipNext + 1)); 
-                        }
-                    }
-
-                    if (currentDay.exercises.length > 0) foundDays.push(currentDay);
-                    if (foundDays.length > 0) days = foundDays;
-                } 
-                
-                // --- MODO JSON ESTRUTURADO (Original) ---
-                if (days.length === 0) {
-                    if (Array.isArray(data)) {
-                        days = data;
-                    } 
-                    else if (data && (data.days || data.plan || data.treino || data.workouts)) {
-                        let rawDays = data.days || data.plan || data.treino || data.workouts;
-                        days = Array.isArray(rawDays) ? rawDays : Object.values(rawDays);
-                    }
-                    else if (data && typeof data === 'object') {
-                        days = Object.values(data);
-                    }
-                }
-
-                // Filtro básico para garantir que temos exercícios
-                if (!Array.isArray(days) || days.length === 0) {
-                    throw new Error("Não foi possível encontrar uma lista de exercícios válida no ficheiro. O JSON deve conter um array ou um objeto com a propriedade 'days'.");
-                }
-
-                // Normalizar estrutura mínima para o motor da aplicação
-                const cleanDays = days.map((day, dIdx) => {
-                    // Tentar encontrar a lista de exercícios em qualquer propriedade comum ou na primeira que seja um array
-                    let rawEx = day.exercises || day.exercicios || day.list || day.items || day.activities || day.treino;
-                    if (!Array.isArray(rawEx)) {
-                        const foundArrayKey = Object.keys(day).find(k => Array.isArray(day[k]));
-                        rawEx = foundArrayKey ? day[foundArrayKey] : [];
-                    }
-
-                    return {
-                        title: day.title || day.name || day.titulo || `Treino ${dIdx + 1}`,
-                        exercises: rawEx.map(ex => ({
-                            id: ex.id || '',
-                            name: ex.name || ex.nome || ex.label || ex.exercicio || ex.description || ex.titulo || 'Exercício',
-                            sets: String(ex.sets || ex.series || ex.set || ex.s || ex.rounds || ex.peso || ex.carga || ''),
-                            reps: String(ex.reps || ex.repeticoes || ex.rep || ex.r || ex.tempo || ex.duracao || ex.qty || ex.repeticao || ''),
-                            observations: ex.observations || ex.obs || ex.observacoes || ex.notes || ex.note || ex.comentario || ex.dica || ''
-                        }))
-                    };
-                });
-
-                if (confirm(`Deseja importar este plano de treino (${cleanDays.length} blocos) para o aluno? Isso irá substituir o plano atual.`)) {
-                    const planObject = {
-                        days: cleanDays,
-                        author: this.currentUser.name,
-                        updatedAt: new Date().toLocaleDateString('pt-PT'),
-                        imported: true
-                    };
-                    this.state.trainingPlans[clientId] = planObject;
-                    this.saveState();
-                    this.showToast('Plano de treino importado com sucesso!');
-                    this.renderContent();
-                }
-            } catch (err) {
-                console.error("Erro ao importar plano:", err);
-                alert("Erro ao importar: " + err.message + "\nVerifique o formato ou a consola (F12) para detalhes.");
-            }
-            input.value = ''; // Reset input
-        };
-        reader.readAsText(file);
-    }
 
     downloadAnamnesisPDF(clientId, index) {
         const client = this.state.clients.find(c => c.id == clientId);
