@@ -6165,20 +6165,47 @@ Bons treinos!`;
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
+                console.log("Iniciando importação para cliente:", clientId);
                 const data = JSON.parse(e.target.result);
-                // Validate structure: expect an object with 'days' array or an array of days
+                console.log("Dados recebidos:", data);
+
                 let days = [];
+
+                // Nível de flexibilidade 1: É um array direto?
                 if (Array.isArray(data)) {
                     days = data;
-                } else if (data && Array.isArray(data.days)) {
-                    days = data.days;
-                } else {
-                    throw new Error("Formato de plano de treino inválido. O JSON deve conter um array de dias ou um objeto com a propriedade 'days'.");
+                } 
+                // Nível 2: É um objeto com a chave 'days', 'plan', 'treino' ou 'workouts'?
+                else if (data && (data.days || data.plan || data.treino || data.workouts)) {
+                    let rawDays = data.days || data.plan || data.treino || data.workouts;
+                    // Se o conteúdo da chave for um objeto (comum no Firebase), converter em array
+                    days = Array.isArray(rawDays) ? rawDays : Object.values(rawDays);
+                }
+                // Nível 3: Se for apenas um objeto com chaves numéricas ou nomes de dias
+                else if (data && typeof data === 'object') {
+                    days = Object.values(data);
                 }
 
-                if (confirm(`Deseja importar este plano de treino para o aluno? Isso irá substituir o plano atual.`)) {
+                // Filtro básico para garantir que temos exercícios
+                if (!Array.isArray(days) || days.length === 0) {
+                    throw new Error("Não foi possível encontrar uma lista de exercícios válida no ficheiro. O JSON deve conter um array ou um objeto com a propriedade 'days'.");
+                }
+
+                // Normalizar estrutura mínima para o motor da aplicação
+                const cleanDays = days.map((day, dIdx) => ({
+                    title: day.title || day.name || day.titulo || `Treino ${dIdx + 1}`,
+                    exercises: (Array.isArray(day.exercises) ? day.exercises : (Array.isArray(day.exercicios) ? day.exercicios : [])).map(ex => ({
+                        id: ex.id || '',
+                        name: ex.name || ex.nome || 'Exercício',
+                        sets: ex.sets || ex.series || '',
+                        reps: ex.reps || ex.repeticoes || '',
+                        observations: ex.observations || ex.obs || ex.observacoes || ''
+                    }))
+                }));
+
+                if (confirm(`Deseja importar este plano de treino (${cleanDays.length} blocos) para o aluno? Isso irá substituir o plano atual.`)) {
                     const planObject = {
-                        days: days,
+                        days: cleanDays,
                         author: this.currentUser.name,
                         updatedAt: new Date().toLocaleDateString('pt-PT'),
                         imported: true
@@ -6190,7 +6217,7 @@ Bons treinos!`;
                 }
             } catch (err) {
                 console.error("Erro ao importar plano:", err);
-                alert("Erro ao importar plano: " + err.message);
+                alert("Erro ao importar: " + err.message + "\nVerifique o formato ou a consola (F12) para detalhes.");
             }
             input.value = ''; // Reset input
         };
