@@ -6614,20 +6614,23 @@ Bons treinos!`;
                             style="color:${hoje > c.validade ? 'var(--danger)' : '#fff'} !important; border-color:${hoje > c.validade ? 'rgba(var(--danger-rgb),0.5)' : ''} !important;">
                         `}
                     </td>
-                    <td style="text-align: right;">
-                        <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                            <button class="btn-icon" onclick="app.showUserQRLogs('${c.id}')" title="Ver Histórico de Acessos" style="background:rgba(255,255,255,0.05); color:var(--text-muted);">
+                    <td style="text-align: right; width: 90px; vertical-align: middle;">
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; justify-content: flex-end; width: 82px; margin-left: auto;">
+                            <!-- Linha 1 -->
+                            <button class="btn-icon" onclick="app.showUserQRLogs('${c.id}')" title="Ver Histórico de Acessos" style="background:rgba(255,255,255,0.05); color:var(--text-muted); width: 38px; height: 38px;">
                                 <i class="fas fa-history"></i>
                             </button>
                             ${c.clientId ? `
-                            <button class="btn-icon" onclick="app.resendInviteFromQR('${c.id}')" title="Reenviar Convite (WhatsApp/Email)" style="background:rgba(var(--primary-rgb), 0.1); color:var(--primary);">
+                            <button class="btn-icon" onclick="app.resendInviteFromQR('${c.id}')" title="Reenviar Convite (WhatsApp/Email)" style="background:rgba(var(--primary-rgb), 0.1); color:var(--primary); width: 38px; height: 38px;">
                                 <i class="fas fa-paper-plane"></i>
                             </button>
-                            ` : ''}
-                            <button class="btn-icon" onclick="app.toggleQRCodeDisplay('qr-row-area-${idx}', '${c.id}')" title="Gerar QR">
+                            ` : '<div style="width:38px; height:38px;"></div>'}
+                            
+                            <!-- Linha 2 -->
+                            <button class="btn-icon" onclick="app.toggleQRCodeDisplay('qr-row-area-${idx}', '${c.id}')" title="Gerar QR" style="width: 38px; height: 38px;">
                                 <i class="fas fa-qrcode"></i>
                             </button>
-                            <button class="btn-icon danger" onclick="app.deleteQRClient('${c.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                            <button class="btn-icon danger" onclick="app.deleteQRClient('${c.id}')" title="Eliminar" style="width: 38px; height: 38px;"><i class="fas fa-trash"></i></button>
                         </div>
                     </td>
                 </tr>
