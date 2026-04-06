@@ -20,6 +20,9 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
+        this.appVersion = '2026.04.06.v17'; // Versão de controlo para Hard Reset
+        this.checkForForceUpdate();
+
         this.role = 'client';
         this.currentClientId = null;
         this.activeView = 'dashboard';
@@ -137,6 +140,23 @@ class FitnessApp {
                 }
             }
         }, 8000);
+    }
+
+    checkForForceUpdate() {
+        const targetV = 'v17';
+        const currentV = localStorage.getItem('kg_v');
+        if (currentV !== targetV) {
+            console.warn("Forçando atualização total da App (KandalGym v17)...");
+            localStorage.setItem('kg_v', targetV);
+            localStorage.removeItem('kandalgym_session');
+            localStorage.removeItem('kandalgym_state'); 
+            if ('caches' in window) {
+                caches.keys().then((names) => {
+                    for (let name of names) caches.delete(name);
+                });
+            }
+            window.location.reload(true);
+        }
     }
 
 
