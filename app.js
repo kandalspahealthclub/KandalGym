@@ -6192,19 +6192,24 @@ Bons treinos!`;
                         const p = paragraphs[i];
                         
                         // Detetar o início de um exercício (ex: "1 Elitica", "2 Chest Press", ou apenas nomes comuns)
-                        // Também procuramos palavras-chave de estrutura
-                        if (p.includes("Séries:") || p.includes("Carga:") || p.includes("Repetições:")) {
+                        // Também procuramos palavras-chave de estrutura incluindo Cardio/Aquecimento
+                        if (p.match(/Séries:|Carga:|Repetições:|Tempo:|Velocidade:|Nível:|Nivel:|Intervalo:|Kg:|Peso:/i)) {
                             // Se chegámos aqui, o parágrafo anterior [i-1] era provavelmente o nome do exercício
-                            // E o parágrafo seguinte [i+1] são provavelmente os valores
                             let name = i > 0 ? paragraphs[i-1] : "Exercício";
                             
+                            // Ignorar metadados do PDF como "Ultima modificação" ou datas se vierem antes do exercício
+                            if (name.toLowerCase().includes("modifica") || name.toLowerCase().includes("validade") || name.length > 50) {
+                                name = "Exercício " + (exercises.length + 1);
+                            }
+
                             // Limpar números iniciais (ex: "1", "2") se o nome for apenas o número
                             if (/^\d+$/.test(name) && i > 1) {
                                 name = paragraphs[i-2] + " " + name;
                             }
 
                             exercises.push({
-                                name: name.replace(/^\d+\s+/, '').trim(), // Remover "1 ", "2 " etc
+                                id: Date.now() + i,
+                                name: name.replace(/^\d+\s+/, '').trim(),
                                 sets: "",
                                 reps: "",
                                 observations: ""
@@ -6213,12 +6218,14 @@ Bons treinos!`;
                             const currentEx = exercises[exercises.length - 1];
                             const values = i + 1 < paragraphs.length ? paragraphs[i+1] : "";
                             
-                            // Tentar segmentar os valores se for o formato OCR padrão: "4u nid 8k g 12-12-10-10R..."
+                            // Tentar segmentar os valores se for o formato OCR: "4u nid 8k g 12-12-10-10R..."
                             if (values) {
-                                const setsMatch = values.match(/(\d+)u\s+nid/i);
+                                // Sets: Procura padrões como "4u", "3 séries", "4x"
+                                const setsMatch = values.match(/(\d+)\s*(u|x|série|serie|s|rounds)/i);
                                 if (setsMatch) currentEx.sets = setsMatch[1];
                                 
-                                const repsMatch = values.match(/(\d+[-\d]*R)/i);
+                                // Reps: Procura padrões como "12R", "10-12", "15 repet", "10m" (para cardio)
+                                const repsMatch = values.match(/(\d+[-\d]*\s*(R|rep|repet|m|min|s|seg))/i);
                                 if (repsMatch) currentEx.reps = repsMatch[1];
 
                                 currentEx.observations = values;
