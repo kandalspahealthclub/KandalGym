@@ -6517,22 +6517,24 @@ Bons treinos!`;
             const isStaff = (this.state.teachers || []).some(t => Number(t.id) === Number(c.clientId)) ||
                 (this.state.admins || []).some(a => Number(a.id) === Number(c.clientId));
 
-            // Tentar obter a foto do perfil real
-            let userPhoto = c.photoUrl || null;
-            if (!userPhoto && c.clientId) {
-                const realUser = [...(this.state.clients || []), ...(this.state.teachers || []), ...(this.state.admins || [])]
-                    .find(u => Number(u.id) === Number(c.clientId));
-                if (realUser && realUser.photoUrl) userPhoto = realUser.photoUrl;
-            }
-            // Atualizar no objeto QR para o monitor usar
+            // Obter utilizador real para dados mestres (foto, login, atividade)
+            const realUser = c.clientId ? [...(this.state.clients || []), ...(this.state.teachers || []), ...(this.state.admins || [])]
+                .find(u => Number(u.id) === Number(c.clientId)) : null;
+
+            let userPhoto = c.photoUrl || (realUser ? realUser.photoUrl : null);
             c.photoUrl = userPhoto;
 
             const avatarLetra = c.nome ? c.nome.substring(0, 1).toUpperCase() : '?';
 
-            // Deteção inteligente de envio (manual ou por login do aluno)
+            // Deteção inteligente de envio/atividade (manual, login ou treinos registados)
             const hasLastLogin = realUser && realUser.lastLogin;
-            const showIcon = c.inviteSent || hasLastLogin;
-            const tooltipText = hasLastLogin ? `Acedeu à App em: ${realUser.lastLogin}` : (c.inviteSent ? `App Enviada em: ${c.inviteSent}` : '');
+            const hasHistory = c.clientId && this.state.trainingHistory && this.state.trainingHistory[c.clientId] && this.state.trainingHistory[c.clientId].length > 0;
+            const showIcon = c.inviteSent || hasLastLogin || hasHistory;
+            
+            let tooltipText = "";
+            if (hasLastLogin) tooltipText = `Acedeu à App em: ${realUser.lastLogin}`;
+            else if (hasHistory) tooltipText = "Atividade detetada (Registou treinos/pesos)";
+            else if (c.inviteSent) tooltipText = `App Enviada em: ${c.inviteSent}`;
 
             return `
                 <tr class="qr-modern-row">
@@ -6546,7 +6548,7 @@ Bons treinos!`;
                     <td>
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <div style="position:relative;">
-                                <div style="width: 45px; height: 45px; border-radius: 50%; background: ${userPhoto ? 'none' : 'linear-gradient(135deg, rgba(var(--primary-rgb),0.8), rgba(var(--accent-rgb),0.8))'}; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.3); overflow:hidden; border: 2px solid rgba(255,255,255,0.1);">
+                                <div style="width: 45px; height: 45px; border-radius: 50%; background: ${userPhoto ? 'none' : 'linear-gradient(135deg, rgba(var(--primary-rgb),0.8), rgba(var(--accent-rgb),0.8))'}; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); overflow:hidden; border: 2px solid rgba(255,255,255,0.1);">
                                     ${userPhoto ? `<img src="${userPhoto}" style="width:100%; height:100%; object-fit:cover;">` : avatarLetra}
                                 </div>
                                 <div style="position: absolute; bottom: -4px; right: -8px; background: #2a2a2a; border-radius: 6px; padding: 2px 4px; border: 1px solid rgba(255,255,255,0.1); font-size: 0.55rem; font-weight: 800; color: var(--accent); white-space: nowrap;">
@@ -6556,7 +6558,7 @@ Bons treinos!`;
                             <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
                                 <div style="display:flex; align-items:center; gap:6px;">
                                     <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" class="qr-input-sleek" style="font-weight:700; font-size:0.9rem; padding:0.4rem 0.6rem !important; flex:1;">
-                                    ${showIcon ? `<i class="fas fa-paper-plane" title="${tooltipText}" style="color:${hasLastLogin ? '#26de81' : 'var(--success)'}; font-size:0.75rem;"></i>` : ''}
+                                    ${showIcon ? `<i class="fas fa-paper-plane" title="${tooltipText}" style="color:${(hasLastLogin || hasHistory) ? '#26de81' : 'var(--success)'}; font-size:0.75rem;"></i>` : ''}
                                 </div>
                                 <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" class="qr-input-sleek" style="color:var(--text-muted); font-size:0.75rem; padding:0.3rem 0.6rem !important;" placeholder="Telemóvel...">
                                 <span style="font-size:0.6rem; color:var(--text-muted);">Ref: ${c.clientId || '-'}</span>
