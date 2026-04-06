@@ -911,7 +911,21 @@ class FitnessApp {
         }
     }
 
-    showInviteModal(name, email, pass, type, phone) {
+    markInviteSent(qrId) {
+        if (!qrId) return;
+        const q = (this.state.qrClients || []).find(x => x.id === qrId);
+        if (q) {
+            q.inviteSent = new Date().toLocaleString('pt-PT');
+            this.saveState();
+            // Silently update if we can, or let the user see it on next render.
+            // If we are in the QR Manager, the table is filtered, so we might need a refresh.
+            if (this.activeView === 'admin' && this.adminActiveTab === 'qr_manager') {
+                this.refreshQRTableUI();
+            }
+        }
+    }
+
+    showInviteModal(name, email, pass, type, phone, qrId = null) {
         const label = type === 'teacher' ? 'Professor' : 'Aluno';
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
@@ -969,10 +983,10 @@ Bons treinos!`;
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                    <a href="${whatsappLink}" target="_blank" class="btn" style="text-decoration: none; background: #25D366; color: white;">
+                    <a href="${whatsappLink}" target="_blank" class="btn" onclick="app.markInviteSent('${qrId}')" style="text-decoration: none; background: #25D366; color: white;">
                         <i class="fab fa-whatsapp"></i> Enviar por WhatsApp
                     </a>
-                    <a href="${mailtoLink}" class="btn btn-secondary" style="text-decoration: none;">
+                    <a href="${mailtoLink}" class="btn btn-secondary" onclick="app.markInviteSent('${qrId}')" style="text-decoration: none;">
                         <i class="fas fa-envelope"></i> Enviar por Email
                     </a>
                     <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove();">
@@ -6529,7 +6543,10 @@ Bons treinos!`;
                                 </div>
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
-                                <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" class="qr-input-sleek" style="font-weight:700; font-size:0.9rem; padding:0.4rem 0.6rem !important;">
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" class="qr-input-sleek" style="font-weight:700; font-size:0.9rem; padding:0.4rem 0.6rem !important; flex:1;">
+                                    ${c.inviteSent ? `<i class="fas fa-paper-plane" title="App Enviada em: ${c.inviteSent}" style="color:var(--success); font-size:0.75rem;"></i>` : ''}
+                                </div>
                                 <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" class="qr-input-sleek" style="color:var(--text-muted); font-size:0.75rem; padding:0.3rem 0.6rem !important;" placeholder="Telemóvel...">
                                 <span style="font-size:0.6rem; color:var(--text-muted);">Ref: ${c.clientId || '-'}</span>
                             </div>
@@ -6634,7 +6651,7 @@ Bons treinos!`;
         const isStaff = (this.state.teachers || []).some(t => Number(t.id) === Number(user.id));
         const type = isStaff ? 'teacher' : 'client';
 
-        this.showInviteModal(user.name, user.email, user.password || 'Kandal123', type, user.phone);
+        this.showInviteModal(user.name, user.email, user.password || 'Kandal123', type, user.phone, qrId);
     }
 
     filterQRList(val) {
