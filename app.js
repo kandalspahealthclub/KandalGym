@@ -6171,19 +6171,80 @@ Bons treinos!`;
 
                 let days = [];
 
-                // Nível de flexibilidade 1: É um array direto?
-                if (Array.isArray(data)) {
-                    days = data;
+                // --- NOVO: MODO MINERAÇÃO DE OCR ---
+                // Detetar se o JSON é um output bruto de OCR (com campos como 'pages' ou 'content')
+                if (data.pages || data.content || (data.version && data.success_count !== undefined)) {
+                    console.log("Modo OCR Detetado. A tentar reconstruir plano a partir de texto bruto...");
+                    
+                    const paragraphs = [];
+                    const source = data.pages || [{ content: data.content || [] }];
+                    source.forEach(page => {
+                        if (page.content) {
+                            page.content.forEach(c => {
+                                if (c.text) paragraphs.push(c.text.trim());
+                            });
+                        }
+                    });
+
+                    // Tentativa de reconstruir exercícios a partir dos parágrafos
+                    const exercises = [];
+                    for (let i = 0; i < paragraphs.length; i++) {
+                        const p = paragraphs[i];
+                        
+                        // Detetar o início de um exercício (ex: "1 Elitica", "2 Chest Press", ou apenas nomes comuns)
+                        // Também procuramos palavras-chave de estrutura
+                        if (p.includes("Séries:") || p.includes("Carga:") || p.includes("Repetições:")) {
+                            // Se chegámos aqui, o parágrafo anterior [i-1] era provavelmente o nome do exercício
+                            // E o parágrafo seguinte [i+1] são provavelmente os valores
+                            let name = i > 0 ? paragraphs[i-1] : "Exercício";
+                            
+                            // Limpar números iniciais (ex: "1", "2") se o nome for apenas o número
+                            if (/^\d+$/.test(name) && i > 1) {
+                                name = paragraphs[i-2] + " " + name;
+                            }
+
+                            exercises.push({
+                                name: name.replace(/^\d+\s+/, '').trim(), // Remover "1 ", "2 " etc
+                                sets: "",
+                                reps: "",
+                                observations: ""
+                            });
+
+                            const currentEx = exercises[exercises.length - 1];
+                            const values = i + 1 < paragraphs.length ? paragraphs[i+1] : "";
+                            
+                            // Tentar segmentar os valores se for o formato OCR padrão: "4u nid 8k g 12-12-10-10R..."
+                            if (values) {
+                                const setsMatch = values.match(/(\d+)u\s+nid/i);
+                                if (setsMatch) currentEx.sets = setsMatch[1];
+                                
+                                const repsMatch = values.match(/(\d+[-\d]*R)/i);
+                                if (repsMatch) currentEx.reps = repsMatch[1];
+
+                                currentEx.observations = values;
+                            }
+                            
+                            i++; // Pular o parágrafo de valores
+                        }
+                    }
+
+                    if (exercises.length > 0) {
+                        days = [{ title: "Treino Importado (PDF/OCR)", exercises: exercises }];
+                    }
                 } 
-                // Nível 2: É um objeto com a chave 'days', 'plan', 'treino' ou 'workouts'?
-                else if (data && (data.days || data.plan || data.treino || data.workouts)) {
-                    let rawDays = data.days || data.plan || data.treino || data.workouts;
-                    // Se o conteúdo da chave for um objeto (comum no Firebase), converter em array
-                    days = Array.isArray(rawDays) ? rawDays : Object.values(rawDays);
-                }
-                // Nível 3: Se for apenas um objeto com chaves numéricas ou nomes de dias
-                else if (data && typeof data === 'object') {
-                    days = Object.values(data);
+                
+                // --- MODO JSON ESTRUTURADO (Original) ---
+                if (days.length === 0) {
+                    if (Array.isArray(data)) {
+                        days = data;
+                    } 
+                    else if (data && (data.days || data.plan || data.treino || data.workouts)) {
+                        let rawDays = data.days || data.plan || data.treino || data.workouts;
+                        days = Array.isArray(rawDays) ? rawDays : Object.values(rawDays);
+                    }
+                    else if (data && typeof data === 'object') {
+                        days = Object.values(data);
+                    }
                 }
 
                 // Filtro básico para garantir que temos exercícios
@@ -6192,16 +6253,25 @@ Bons treinos!`;
                 }
 
                 // Normalizar estrutura mínima para o motor da aplicação
-                const cleanDays = days.map((day, dIdx) => ({
-                    title: day.title || day.name || day.titulo || `Treino ${dIdx + 1}`,
-                    exercises: (Array.isArray(day.exercises) ? day.exercises : (Array.isArray(day.exercicios) ? day.exercicios : [])).map(ex => ({
-                        id: ex.id || '',
-                        name: ex.name || ex.nome || 'Exercício',
-                        sets: ex.sets || ex.series || '',
-                        reps: ex.reps || ex.repeticoes || '',
-                        observations: ex.observations || ex.obs || ex.observacoes || ''
-                    }))
-                }));
+                const cleanDays = days.map((day, dIdx) => {
+                    // Tentar encontrar a lista de exercícios em qualquer propriedade comum ou na primeira que seja um array
+                    let rawEx = day.exercises || day.exercicios || day.list || day.items || day.activities || day.treino;
+                    if (!Array.isArray(rawEx)) {
+                        const foundArrayKey = Object.keys(day).find(k => Array.isArray(day[k]));
+                        rawEx = foundArrayKey ? day[foundArrayKey] : [];
+                    }
+
+                    return {
+                        title: day.title || day.name || day.titulo || `Treino ${dIdx + 1}`,
+                        exercises: rawEx.map(ex => ({
+                            id: ex.id || '',
+                            name: ex.name || ex.nome || ex.label || ex.exercicio || ex.description || ex.titulo || 'Exercício',
+                            sets: String(ex.sets || ex.series || ex.set || ex.s || ex.rounds || ex.peso || ex.carga || ''),
+                            reps: String(ex.reps || ex.repeticoes || ex.rep || ex.r || ex.tempo || ex.duracao || ex.qty || ex.repeticao || ''),
+                            observations: ex.observations || ex.obs || ex.observacoes || ex.notes || ex.note || ex.comentario || ex.dica || ''
+                        }))
+                    };
+                });
 
                 if (confirm(`Deseja importar este plano de treino (${cleanDays.length} blocos) para o aluno? Isso irá substituir o plano atual.`)) {
                     const planObject = {
