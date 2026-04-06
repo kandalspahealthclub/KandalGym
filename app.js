@@ -1473,6 +1473,13 @@ Bons treinos!`;
                         <button class="btn btn-primary" onclick="app.showAddUserModal()"><i class="fas fa-plus"></i> Novo Utilizador</button>
                     </div>
 
+                    <div class="search-container" style="margin-bottom:1.5rem;">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Pesquisar utilizador por nome ou email..." 
+                            oninput="app.switchAdminTab(app.activeAdminTab || 'teachers', this.value)"
+                            class="search-bar">
+                    </div>
+
                     <div class="tab-container" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 0.5rem; overflow-x: auto;">
                         <button class="btn btn-ghost" id="tab-teachers" onclick="app.switchAdminTab('teachers')" style="color: var(--primary); font-weight: 600;">
                             <i class="fas fa-user-tie"></i> Professores (${(this.state.teachers || []).length})
@@ -1495,6 +1502,7 @@ Bons treinos!`;
                         </div>
                     </div>
                 `;
+                this.activeAdminTab = 'teachers';
                 break;
             case 'qr_manager':
                 this.renderQRManager(container);
@@ -4703,9 +4711,13 @@ Bons treinos!`;
         }
     }
 
-    switchAdminTab(tab) {
+    switchAdminTab(tab, query = '') {
+        this.activeAdminTab = tab;
         const listContainer = document.getElementById('admin-user-list');
         if (!listContainer) return;
+
+        const q = this.normalizeText(query);
+        const filterFn = u => !q || this.normalizeText(u.name || '').includes(q) || this.normalizeText(u.email || '').includes(q);
 
         // Reset all tabs style
         const tabs = ['teachers', 'clients', 'admins', 'plans'];
@@ -4720,11 +4732,14 @@ Bons treinos!`;
         }
 
         if (tab === 'teachers') {
-            listContainer.innerHTML = `<div class="client-list animate-fade-in">${(this.state.teachers || []).map(t => this.renderUserCard(t, 'teacher')).join('')}</div>`;
+            const filtered = (this.state.teachers || []).filter(filterFn);
+            listContainer.innerHTML = `<div class="client-list animate-fade-in">${filtered.map(t => this.renderUserCard(t, 'teacher')).join('')}</div>`;
         } else if (tab === 'admins') {
-            listContainer.innerHTML = `<div class="client-list animate-fade-in">${(this.state.admins || []).map(a => this.renderUserCard(a, 'admin')).join('')}</div>`;
+            const filtered = (this.state.admins || []).filter(filterFn);
+            listContainer.innerHTML = `<div class="client-list animate-fade-in">${filtered.map(a => this.renderUserCard(a, 'admin')).join('')}</div>`;
         } else if (tab === 'clients') {
-            listContainer.innerHTML = `<div class="client-list animate-fade-in">${(this.state.clients || []).map(c => this.renderUserCard(c, 'client')).join('')}</div>`;
+            const filtered = (this.state.clients || []).filter(filterFn);
+            listContainer.innerHTML = `<div class="client-list animate-fade-in">${filtered.map(c => this.renderUserCard(c, 'client')).join('')}</div>`;
         } else if (tab === 'plans') {
             this.renderPlanRestrictions(listContainer);
         }
