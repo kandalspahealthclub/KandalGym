@@ -522,6 +522,7 @@ class FitnessApp {
             if (!this.state.clients) this.state.clients = [];
 
             const emailLower = email.toLowerCase();
+            const admin = this.state.admins.find(a => (a.email || '').toLowerCase() === emailLower && a.password === pass);
             if (admin) {
                 admin.lastLogin = new Date().toLocaleString('pt-PT');
                 this.role = 'admin';
