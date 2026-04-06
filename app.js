@@ -2739,6 +2739,8 @@ Bons treinos!`;
                     <button class="btn btn-secondary btn-sm" onclick="app.downloadTrainingPDF('${clientId}')" title="Download PDF"><i class="fas fa-file-pdf"></i> <span class="hide-mobile">PDF</span></button>
                     ${isClient ? `<button class="btn btn-secondary btn-sm" onclick="app.setView('training_history')"><i class="fas fa-history"></i> <span class="hide-mobile">Histórico</span></button>` : ''}
                     ${isTeacher ? `
+                        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-training-${clientId}').click()" title="Importar JSON"><i class="fas fa-file-import"></i> <span class="hide-mobile">Importar</span></button>
+                        <input type="file" id="import-training-${clientId}" style="display:none;" accept=".json" onchange="app.importTrainingPlanJSON(this, '${clientId}')">
                         <button class="btn btn-primary btn-sm" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-edit"></i> <span class="hide-mobile">Gerir</span></button>
                         <button class="btn btn-ghost btn-sm" style="color:var(--danger); border:1px solid rgba(220, 38, 38, 0.2);" onclick="app.deleteTrainingPlan('${clientId}')">
                             <i class="fas fa-trash"></i> <span class="hide-mobile">Eliminar</span>
@@ -5526,7 +5528,11 @@ Bons treinos!`;
                     </div>
                     <strong>${c.name}</strong>
                 </div>
-                <button class="btn btn-secondary btn-sm" onclick="app.spyClient('${c.id}')">Gerir</button>
+                <div style="display:flex; gap:0.5rem;">
+                    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-training-list-${c.id}').click()" title="Importar Plano"><i class="fas fa-file-import"></i></button>
+                    <input type="file" id="import-training-list-${c.id}" style="display:none;" accept=".json" onchange="app.importTrainingPlanJSON(this, '${c.id}')">
+                    <button class="btn btn-secondary btn-sm" onclick="app.spyClient('${c.id}')">Gerir</button>
+                </div>
             </div> `;
         }).join('');
     }
@@ -5888,7 +5894,11 @@ Bons treinos!`;
                         <small style="color:var(--text-muted);">Professor: ${teacher ? teacher.name : 'Nenhum'}</small>
                     </div>
                 </div>
-                <button class="btn btn-primary btn-sm" onclick="app.spyClient('${c.id}')">Ver Ficha</button>
+                <div style="display:flex; gap:0.5rem;">
+                    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-training-admin-${c.id}').click()" title="Importar Plano"><i class="fas fa-file-import"></i></button>
+                    <input type="file" id="import-training-admin-${c.id}" style="display:none;" accept=".json" onchange="app.importTrainingPlanJSON(this, '${c.id}')">
+                    <button class="btn btn-primary btn-sm" onclick="app.spyClient('${c.id}')">Ver Ficha</button>
+                </div>
             </div> `;
         }).join('');
     }
@@ -6147,6 +6157,44 @@ Bons treinos!`;
             </html>
         `);
         printWindow.document.close();
+    }
+
+    importTrainingPlanJSON(input, clientId) {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                // Validate structure: expect an object with 'days' array or an array of days
+                let days = [];
+                if (Array.isArray(data)) {
+                    days = data;
+                } else if (data && Array.isArray(data.days)) {
+                    days = data.days;
+                } else {
+                    throw new Error("Formato de plano de treino inválido. O JSON deve conter um array de dias ou um objeto com a propriedade 'days'.");
+                }
+
+                if (confirm(`Deseja importar este plano de treino para o aluno? Isso irá substituir o plano atual.`)) {
+                    const planObject = {
+                        days: days,
+                        author: this.currentUser.name,
+                        updatedAt: new Date().toLocaleDateString('pt-PT'),
+                        imported: true
+                    };
+                    this.state.trainingPlans[clientId] = planObject;
+                    this.saveState();
+                    this.showToast('Plano de treino importado com sucesso!');
+                    this.renderContent();
+                }
+            } catch (err) {
+                console.error("Erro ao importar plano:", err);
+                alert("Erro ao importar plano: " + err.message);
+            }
+            input.value = ''; // Reset input
+        };
+        reader.readAsText(file);
     }
 
     downloadAnamnesisPDF(clientId, index) {
