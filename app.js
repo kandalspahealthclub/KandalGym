@@ -522,11 +522,12 @@ class FitnessApp {
             if (!this.state.clients) this.state.clients = [];
 
             const emailLower = email.toLowerCase();
-            const admin = this.state.admins.find(a => (a.email || '').toLowerCase() === emailLower && a.password === pass);
             if (admin) {
+                admin.lastLogin = new Date().toLocaleString('pt-PT');
                 this.role = 'admin';
                 this.currentUser = admin;
                 this.isLoggedIn = true;
+                this.saveState();
                 this.persistLogin();
                 this.renderAppInterface();
                 return;
@@ -534,9 +535,11 @@ class FitnessApp {
 
             const teacher = this.state.teachers.find(t => (t.email || '').toLowerCase() === emailLower && t.password === pass);
             if (teacher) {
+                teacher.lastLogin = new Date().toLocaleString('pt-PT');
                 this.role = 'teacher';
                 this.currentUser = teacher;
                 this.isLoggedIn = true;
+                this.saveState();
                 this.persistLogin();
                 this.renderAppInterface();
                 return;
@@ -544,10 +547,12 @@ class FitnessApp {
 
             const client = this.state.clients.find(c => (c.email || '').toLowerCase() === emailLower && c.password === pass);
             if (client) {
+                client.lastLogin = new Date().toLocaleString('pt-PT');
                 this.role = 'client';
                 this.currentUser = client;
                 this.currentClientId = client.id;
                 this.isLoggedIn = true;
+                this.saveState();
                 this.persistLogin();
                 this.renderAppInterface();
                 return;
@@ -6523,6 +6528,12 @@ Bons treinos!`;
             c.photoUrl = userPhoto;
 
             const avatarLetra = c.nome ? c.nome.substring(0, 1).toUpperCase() : '?';
+
+            // Deteção inteligente de envio (manual ou por login do aluno)
+            const hasLastLogin = realUser && realUser.lastLogin;
+            const showIcon = c.inviteSent || hasLastLogin;
+            const tooltipText = hasLastLogin ? `Acedeu à App em: ${realUser.lastLogin}` : (c.inviteSent ? `App Enviada em: ${c.inviteSent}` : '');
+
             return `
                 <tr class="qr-modern-row">
                     ${this.qrActiveTab === 'alunos' && !isStaff ? `
@@ -6545,7 +6556,7 @@ Bons treinos!`;
                             <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
                                 <div style="display:flex; align-items:center; gap:6px;">
                                     <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" class="qr-input-sleek" style="font-weight:700; font-size:0.9rem; padding:0.4rem 0.6rem !important; flex:1;">
-                                    ${c.inviteSent ? `<i class="fas fa-paper-plane" title="App Enviada em: ${c.inviteSent}" style="color:var(--success); font-size:0.75rem;"></i>` : ''}
+                                    ${showIcon ? `<i class="fas fa-paper-plane" title="${tooltipText}" style="color:${hasLastLogin ? '#26de81' : 'var(--success)'}; font-size:0.75rem;"></i>` : ''}
                                 </div>
                                 <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" class="qr-input-sleek" style="color:var(--text-muted); font-size:0.75rem; padding:0.3rem 0.6rem !important;" placeholder="Telemóvel...">
                                 <span style="font-size:0.6rem; color:var(--text-muted);">Ref: ${c.clientId || '-'}</span>
