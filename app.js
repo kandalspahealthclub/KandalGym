@@ -6174,7 +6174,7 @@ Bons treinos!`;
                 // --- NOVO: MODO MINERAÇÃO DE OCR ---
                 // Detetar se o JSON é um output bruto de OCR (com campos como 'pages' ou 'content')
                 if (data.pages || data.content || (data.version && data.success_count !== undefined)) {
-                    console.log("Modo OCR Detetado. A tentar reconstruir plano a partir de texto bruto...");
+                    console.log("Modo OCR Super-Robusto Ativado...");
                     
                     const paragraphs = [];
                     const source = data.pages || [{ content: data.content || [] }];
@@ -6186,58 +6186,77 @@ Bons treinos!`;
                         }
                     });
 
-                    // Tentativa de reconstruir exercícios a partir dos parágrafos
-                    const exercises = [];
+                    const foundDays = [];
+                    let currentDay = { title: "Plano Importado", exercises: [] };
+                    const dayKeywords = ["peito", "costas", "pernas", "ombros", "braços", "cardio", "abdominal", "full", "superior", "inferior", "aquecimento"];
+
                     for (let i = 0; i < paragraphs.length; i++) {
                         const p = paragraphs[i];
-                        
-                        // Detetar o início de um exercício (ex: "1 Elitica", "2 Chest Press", ou apenas nomes comuns)
-                        // Também procuramos palavras-chave de estrutura incluindo Cardio/Aquecimento
-                        if (p.match(/Séries:|Carga:|Repetições:|Tempo:|Velocidade:|Nível:|Nivel:|Intervalo:|Kg:|Peso:/i)) {
-                            // Se chegámos aqui, o parágrafo anterior [i-1] era provavelmente o nome do exercício
-                            let name = i > 0 ? paragraphs[i-1] : "Exercício";
-                            
-                            // Ignorar metadados do PDF como "Ultima modificação" ou datas se vierem antes do exercício
-                            if (name.toLowerCase().includes("modifica") || name.toLowerCase().includes("validade") || name.length > 50) {
-                                name = "Exercício " + (exercises.length + 1);
-                            }
+                        const pLow = p.toLowerCase();
 
-                            // Limpar números iniciais (ex: "1", "2") se o nome for apenas o número
-                            if (/^\d+$/.test(name) && i > 1) {
-                                name = paragraphs[i-2] + " " + name;
-                            }
+                        // 1. Detetar se é um cabeçalho de Dia de Treino
+                        if (dayKeywords.some(k => pLow === k || pLow.includes("treino " + k)) && p.length < 20) {
+                            if (currentDay.exercises.length > 0) foundDays.push(currentDay);
+                            currentDay = { title: p.charAt(0).toUpperCase() + p.slice(1), exercises: [] };
+                            continue;
+                        }
 
-                            exercises.push({
+                        // 2. Detetar início de Exercício (pode ser "1" num parágrafo e "Nome" no outro, ou "1 Nome")
+                        let exerciseName = "";
+                        let skipNext = 0;
+
+                        if (/^\d+$/.test(p) && i + 1 < paragraphs.length && paragraphs[i+1].length > 2) {
+                            // Caso "1" \n "Supino"
+                            exerciseName = paragraphs[i+1];
+                            skipNext = 1;
+                        } else if (/^\d+\s+[A-Za-z]/.test(p)) {
+                            // Caso "1 Supino"
+                            exerciseName = p.replace(/^\d+\s+/, '');
+                        }
+
+                        if (exerciseName) {
+                            // Ignorar se for lixo de OCR
+                            if (exerciseName.toLowerCase().includes("modifica") || exerciseName.toLowerCase().includes("validade")) continue;
+
+                            const exObj = {
                                 id: Date.now() + i,
-                                name: name.replace(/^\d+\s+/, '').trim(),
+                                name: exerciseName.trim(),
                                 sets: "",
                                 reps: "",
                                 observations: ""
-                            });
+                            };
 
-                            const currentEx = exercises[exercises.length - 1];
-                            const values = i + 1 < paragraphs.length ? paragraphs[i+1] : "";
-                            
-                            // Tentar segmentar os valores se for o formato OCR: "4u nid 8k g 12-12-10-10R..."
-                            if (values) {
-                                // Sets: Procura padrões como "4u", "3 séries", "4x"
-                                const setsMatch = values.match(/(\d+)\s*(u|x|série|serie|s|rounds)/i);
-                                if (setsMatch) currentEx.sets = setsMatch[1];
+                            // 3. Procurar Detalhes nos próximos 3 parágrafos
+                            let searchIdx = i + skipNext + 1;
+                            let limit = searchIdx + 3;
+                            while (searchIdx < paragraphs.length && searchIdx < limit) {
+                                const nextP = paragraphs[searchIdx];
                                 
-                                // Reps: Procura padrões como "12R", "10-12", "15 repet", "10m" (para cardio)
-                                const repsMatch = values.match(/(\d+[-\d]*\s*(R|rep|repet|m|min|s|seg))/i);
-                                if (repsMatch) currentEx.reps = repsMatch[1];
+                                // Se encontrar outro exercício ou dia, pára
+                                if (/^\d+$/.test(nextP) || /^\d+\s+[A-Za-z]/.test(nextP)) break;
 
-                                currentEx.observations = values;
+                                // Tentar extrair Valores (Séries/Reps)
+                                const setsMatch = nextP.match(/(\d+)\s*(u|x|série|serie|s|rounds)/i);
+                                if (setsMatch && !exObj.sets) exObj.sets = setsMatch[1];
+                                
+                                const repsMatch = nextP.match(/(\d+[-\d]*\s*(R|rep|repet|m|min|s|seg))/i);
+                                if (repsMatch && !exObj.reps) exObj.reps = repsMatch[1];
+
+                                // Acumular como observações caso contenha palavras-chave ou pareça detalhe
+                                if (nextP.includes(":") || nextP.match(/\d/)) {
+                                    exObj.observations += (exObj.observations ? " | " : "") + nextP;
+                                }
+
+                                searchIdx++;
                             }
-                            
-                            i++; // Pular o parágrafo de valores
+
+                            currentDay.exercises.push(exObj);
+                            i += skipNext + (searchIdx - (i + skipNext + 1)); 
                         }
                     }
 
-                    if (exercises.length > 0) {
-                        days = [{ title: "Treino Importado (PDF/OCR)", exercises: exercises }];
-                    }
+                    if (currentDay.exercises.length > 0) foundDays.push(currentDay);
+                    if (foundDays.length > 0) days = foundDays;
                 } 
                 
                 // --- MODO JSON ESTRUTURADO (Original) ---
