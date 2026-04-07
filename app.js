@@ -3300,13 +3300,13 @@ Bons treinos!`;
                         <div id="day-${dIdx}-exercises">
                             ${day.exercises.map((ex, eIdx) => `
                                 <div class="glass-card" style="padding:1.5rem; margin-bottom:1.5rem; background:rgba(255,255,255,0.03); border-left:4px solid var(--secondary);">
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
-                                        <div style="flex:1; margin-right:1rem;">
+                                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.75rem;">
+                                        <div style="flex:1; min-width:200px;">
                                             <label style="display:block; font-size:0.8rem; color:var(--accent); font-weight:600; text-transform:uppercase; margin-bottom:6px;">Exercício Selecionado</label>
                                             <button class="btn btn-secondary exercise-search-btn" onclick="app.showExerciseSelectionModal(${dIdx}, ${eIdx})" 
-                                                style="width:100%; height:45px; background:#1e293b; color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:10px; justify-content:flex-start;">
-                                                <i class="fas fa-search" style="color:var(--primary);"></i>
-                                                <span id="ex-name-display-${dIdx}-${eIdx}" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                                style="width:100%; min-height:45px; height:auto; background:#1e293b; color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:8px 15px; font-size:1rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:10px; justify-content:flex-start; line-height:1.2;">
+                                                <i class="fas fa-search" style="color:var(--primary); flex-shrink:0;"></i>
+                                                <span id="ex-name-display-${dIdx}-${eIdx}" style="word-break:break-word; white-space:normal; overflow:visible;">
                                                     ${ex.name || '-- Selecionar Exercício --'}
                                                 </span>
                                             </button>
@@ -3324,9 +3324,9 @@ Bons treinos!`;
                                         </div>
                                     </div>
                                     
-                                    <div style="display:grid; grid-template-columns: 100px 100px 1fr; gap:1.25rem;">
+                                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap:1rem;">
                                         <div>
-                                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Series</label>
+                                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Séries</label>
                                             <input type="text" value="${ex.sets || ''}" placeholder="Ex: 4" onchange="app.updateEditorExercise(${dIdx}, ${eIdx}, 'sets', this.value)"
                                                 style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:600;">
                                         </div>
@@ -3335,7 +3335,7 @@ Bons treinos!`;
                                             <input type="text" value="${ex.reps || ''}" placeholder="Ex: 12" onchange="app.updateEditorExercise(${dIdx}, ${eIdx}, 'reps', this.value)"
                                                 style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:600;">
                                         </div>
-                                        <div>
+                                        <div style="grid-column: span 1; min-width: 150px;">
                                             <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Observações (opcional)</label>
                                             <input type="text" value="${ex.observations || ''}" placeholder="Ex: Foco na descida controlada" onchange="app.updateEditorExercise(${dIdx}, ${eIdx}, 'observations', this.value)"
                                                 style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 15px; font-size:1rem;">
