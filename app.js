@@ -9,9 +9,12 @@ window.onerror = function (message, source, lineno, colno, error) {
                 <h2 style="color:#fff;">Ocorreu um erro na aplicação</h2>
                 <p style="color:var(--text-muted);">A página não conseguiu carregar corretamente.</p>
                 <div style="background:rgba(0,0,0,0.3); padding:1rem; border-radius:8px; margin:1rem 0; text-align:left; font-family:monospace; font-size:0.75rem; color:var(--danger); overflow-x:auto;">
-                    ${message}<br><small>Linha: ${lineno}</small>
+                    Erro: ${message}<br>
+                    Arquivo: ${source}<br>
+                    Linha: ${lineno} | Col: ${colno}<br>
+                    ${error ? `Detalhes: ${error.stack}` : ''}
                 </div>
-                <button class="btn btn-primary" onclick="location.reload()">Recarregar App</button>
+                <button class="btn btn-primary" onclick="localStorage.removeItem('kandalgym_session'); location.reload()">Reset & Recarregar</button>
             </div>
         `;
     }
@@ -143,19 +146,28 @@ class FitnessApp {
     }
 
     checkForForceUpdate() {
-        const targetV = 'v17';
-        const currentV = localStorage.getItem('kg_v');
-        if (currentV !== targetV) {
-            console.warn("Forçando atualização total da App (KandalGym v17)...");
-            localStorage.setItem('kg_v', targetV);
-            localStorage.removeItem('kandalgym_session');
-            localStorage.removeItem('kandalgym_state'); 
-            if ('caches' in window) {
-                caches.keys().then((names) => {
-                    for (let name of names) caches.delete(name);
-                });
+        try {
+            const targetV = 'v18'; // Forçar v18 para garantir limpeza após erro
+            const currentV = localStorage.getItem('kg_v');
+            if (currentV !== targetV) {
+                console.warn("Forçando atualização total da App (KandalGym v18)...");
+                localStorage.setItem('kg_v', targetV);
+                localStorage.removeItem('kandalgym_session');
+                localStorage.removeItem('kandalgym_state'); 
+                
+                if ('caches' in window) {
+                    caches.keys().then((names) => {
+                        for (let name of names) caches.delete(name);
+                    }).catch(e => console.warn("Cache delete failed:", e));
+                }
+                
+                // Dar um tempo para o localStorage gravar antes de recarregar
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
             }
-            window.location.reload();
+        } catch (e) {
+            console.error("Erro no checkUpdate:", e);
         }
     }
 
@@ -623,7 +635,8 @@ class FitnessApp {
 
             const email = emailInput.value.trim().toLowerCase();
             const pass = passInput.value;
-            const rememberMe = document.getElementById('remember-me').checked;
+            const rememberEl = document.getElementById('remember-me');
+            const rememberMe = rememberEl ? rememberEl.checked : false;
 
             if (!email || !pass) {
                 if (errorDiv) {
