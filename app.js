@@ -155,8 +155,13 @@ class FitnessApp {
                     for (let name of names) caches.delete(name);
                 });
             }
-            window.location.reload(true);
+            window.location.reload();
         }
+    }
+
+    normalizeText(text) {
+        if (!text) return '';
+        return text.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     }
 
 
