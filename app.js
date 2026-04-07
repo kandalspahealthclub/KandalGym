@@ -3299,7 +3299,7 @@ Bons treinos!`;
 
             <div id="editor-days-container">
                 ${this.editingPlan.map((day, dIdx) => `
-                    <div class="glass-panel" style="padding:1.5rem; margin-bottom:1.5rem; border-top: 4px solid var(--primary);">
+                    <div class="glass-panel" style="padding:1.5rem; margin-bottom:2.5rem; border-top: 4px solid var(--primary);">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                             <input type="text" value="${day.title === 'Pendente' ? '' : day.title}" 
                                 placeholder="Nome do Plano (ex: Treino A)..."
@@ -3337,18 +3337,18 @@ Bons treinos!`;
                                         </div>
                                     </div>
                                     
-                                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap:1rem;">
-                                        <div>
+                                    <div style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end;">
+                                        <div style="flex:1; min-width:70px; max-width:110px;">
                                             <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Séries</label>
                                             <input type="text" value="${ex.sets || ''}" placeholder="Ex: 4" onchange="app.updateEditorExercise(${dIdx}, ${eIdx}, 'sets', this.value)"
                                                 style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:600;">
                                         </div>
-                                        <div>
+                                        <div style="flex:1; min-width:70px; max-width:110px;">
                                             <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Reps</label>
                                             <input type="text" value="${ex.reps || ''}" placeholder="Ex: 12" onchange="app.updateEditorExercise(${dIdx}, ${eIdx}, 'reps', this.value)"
                                                 style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:600;">
                                         </div>
-                                        <div style="grid-column: span 1; min-width: 150px;">
+                                        <div style="flex:3; min-width:240px;">
                                             <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Observações (opcional)</label>
                                             <input type="text" value="${ex.observations || ''}" placeholder="Ex: Foco na descida controlada" onchange="app.updateEditorExercise(${dIdx}, ${eIdx}, 'observations', this.value)"
                                                 style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 15px; font-size:1rem;">
@@ -3356,11 +3356,11 @@ Bons treinos!`;
                                     </div>
                                 </div>
                             `).join('')}
-                        <div id="day-${dIdx}-exercises-footer" style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.05);">
-                            <button class="btn btn-ghost btn-sm" style="color:var(--primary);" onclick="app.addExerciseToEditor(${dIdx})">
+                        <div id="day-${dIdx}-exercises-footer" style="display:flex; justify-content:space-between; align-items:center; margin-top:2.5rem; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,0.05); flex-wrap:wrap; gap:1.25rem;">
+                            <button class="btn btn-ghost btn-sm" style="color:var(--primary); padding:6px 12px; font-size:0.85rem;" onclick="app.addExerciseToEditor(${dIdx})">
                                 <i class="fas fa-plus"></i> Adicionar Exercício
                             </button>
-                            <button class="btn btn-secondary btn-sm" onclick="app.addTrainingDay()" style="background:rgba(var(--primary-rgb), 0.1); color:var(--primary); border:1px dashed var(--primary); font-weight:700;">
+                            <button class="btn btn-secondary btn-sm" onclick="app.addTrainingDay()" style="background:rgba(var(--primary-rgb), 0.1); color:var(--primary); border:1px dashed var(--primary); font-weight:700; padding:6px 12px; font-size:0.85rem;">
                                 <i class="fas fa-calendar-plus"></i> Adicionar Próximo Dia
                             </button>
                         </div>
