@@ -3629,8 +3629,12 @@ Bons treinos!`;
     showExerciseSelectionModal(dayIdx, exIdx) {
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
+        
+        // Obter todas as categorias únicas de exercícios
+        const categories = this.state.exerciseCategories || [];
+        
         modal.innerHTML = `
-            <div class="modal-content" style="max-width:800px; max-height:85vh; display:flex; flex-direction:column;">
+            <div class="modal-content" style="max-width:850px; max-height:85vh; display:flex; flex-direction:column;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
                     <h2 style="margin:0;"><i class="fas fa-dumbbell"></i> Selecionar Exercício</h2>
                     <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()" style="padding:8px;">
@@ -3638,11 +3642,19 @@ Bons treinos!`;
                     </button>
                 </div>
 
-                <div class="search-container" style="margin-bottom:1.5rem;">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="exercise-search-input" placeholder="Pesquisar exercício ou musculo..." 
-                        oninput="app.filterExercisesInModal(this.value)"
-                        class="search-bar" autofocus>
+                <div style="display:flex; gap:10px; margin-bottom:1.5rem; flex-wrap:wrap;">
+                    <div class="search-container" style="margin:0; flex:1; min-width:250px;">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="exercise-search-input" placeholder="Pesquisar exercício ou musculo..." 
+                            oninput="app.filterExercisesInModal(this.value, document.getElementById('exercise-category-filter').value)"
+                            class="search-bar" autofocus>
+                    </div>
+                    
+                    <select id="exercise-category-filter" onchange="app.filterExercisesInModal(document.getElementById('exercise-search-input').value, this.value)"
+                        style="width:200px; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:12px; padding:0 12px; font-size:0.9rem; outline:none; transition:border-color 0.2s;">
+                        <option value="">Todas as Categorias</option>
+                        ${categories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('')}
+                    </select>
                 </div>
 
                 <div id="exercise-grid-container" style="overflow-y:auto; flex:1; padding-right:5px;">
@@ -3655,10 +3667,16 @@ Bons treinos!`;
         this.currentSelectionState = { dayIdx, exIdx };
     }
 
-    renderExerciseGrid(searchQuery = '') {
+    renderExerciseGrid(searchQuery = '', categoryFilter = '') {
         const baseEx = this.state.exercises || [];
         let exercises = [...baseEx].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
+        // Filtro por Categoria (Exato)
+        if (categoryFilter) {
+            exercises = exercises.filter(ex => ex.category === categoryFilter);
+        }
+
+        // Filtro por Texto
         if (searchQuery) {
             const query = this.normalizeText(searchQuery);
             exercises = exercises.filter(ex =>
@@ -3699,10 +3717,10 @@ Bons treinos!`;
         `;
     }
 
-    filterExercisesInModal(query) {
+    filterExercisesInModal(query, category) {
         const container = document.getElementById('exercise-grid-container');
         if (container) {
-            container.innerHTML = this.renderExerciseGrid(query);
+            container.innerHTML = this.renderExerciseGrid(query, category);
         }
     }
 
