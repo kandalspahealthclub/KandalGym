@@ -3311,9 +3311,17 @@ Bons treinos!`;
                                                 </span>
                                             </button>
                                         </div>
-                                        <button class="btn btn-ghost" style="color:var(--danger); padding:0.5rem; align-self:flex-end;" onclick="app.removeExerciseFromEditor(${dIdx}, ${eIdx})" title="Remover Exercício">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
+                                        <div style="display:flex; gap:0.5rem; align-self:flex-end;">
+                                            <button class="btn btn-ghost" style="color:var(--primary); padding:0.5rem;" onclick="app.moveExercise(${dIdx}, ${eIdx}, -1)" title="Subir" ${eIdx === 0 ? 'disabled style="opacity:0.3; cursor:default;"' : ''}>
+                                                <i class="fas fa-arrow-up"></i>
+                                            </button>
+                                            <button class="btn btn-ghost" style="color:var(--primary); padding:0.5rem;" onclick="app.moveExercise(${dIdx}, ${eIdx}, 1)" title="Descer" ${eIdx === day.exercises.length - 1 ? 'disabled style="opacity:0.3; cursor:default;"' : ''}>
+                                                <i class="fas fa-arrow-down"></i>
+                                            </button>
+                                            <button class="btn btn-ghost" style="color:var(--danger); padding:0.5rem;" onclick="app.removeExerciseFromEditor(${dIdx}, ${eIdx})" title="Remover Exercício">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                     
                                     <div style="display:grid; grid-template-columns: 100px 100px 1fr; gap:1.25rem;">
@@ -3369,6 +3377,20 @@ Bons treinos!`;
         this.editingPlan[dayIdx].exercises.splice(exIdx, 1);
         this.saveTrainingDraft();
         this.renderTrainingEditor();
+    }
+
+    moveExercise(dayIdx, exIdx, direction) {
+        const exercises = this.editingPlan[dayIdx].exercises;
+        const targetIdx = exIdx + direction;
+
+        if (targetIdx < 0 || targetIdx >= exercises.length) return;
+
+        // Trocar posição
+        [exercises[exIdx], exercises[targetIdx]] = [exercises[targetIdx], exercises[exIdx]];
+
+        this.saveTrainingDraft();
+        this.renderTrainingEditor();
+        this.showToast('Ordem do exercício alterada.');
     }
 
     updateEditorExercise(dayIdx, exIdx, field, value) {
