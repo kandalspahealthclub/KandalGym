@@ -498,6 +498,9 @@ class FitnessApp {
         if (loginScreen) loginScreen.style.display = 'flex';
         if (appScreen) appScreen.style.display = 'none';
 
+        const savedCreds = JSON.parse(localStorage.getItem('kg_saved_creds') || '{}');
+        const rememberChecked = localStorage.getItem('kg_remember') === 'true';
+
         loginScreen.innerHTML = `
             <div class="login-card">
                 <div class="login-hero">
@@ -510,13 +513,19 @@ class FitnessApp {
                     <div id="login-error-msg" style="display:none; color:var(--danger); background:rgba(239, 68, 68, 0.1); padding:0.8rem; border-radius:8px; margin-bottom:1rem; font-size:0.9rem; text-align:center; border: 1px solid rgba(239, 68, 68, 0.3);"></div>
                     <div class="input-icon-group">
                         <i class="fas fa-envelope"></i>
-                        <input type="email" id="login-email" placeholder="Email" required>
+                        <input type="email" id="login-email" placeholder="Email" value="${savedCreds.email || ''}" required>
                     </div>
                     <div class="input-icon-group">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="login-pass" placeholder="Password" required>
+                        <input type="password" id="login-pass" placeholder="Password" value="${savedCreds.pass || ''}" required>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width:100%; margin-top:0.5rem;">
+
+                    <div style="display:flex; align-items:center; gap:8px; margin:0.2rem 0 1.2rem 4px; cursor:pointer;">
+                        <input type="checkbox" id="remember-me" style="width:16px; height:16px; cursor:pointer;" ${rememberChecked ? 'checked' : ''}>
+                        <label for="remember-me" style="font-size:0.85rem; color:var(--text-muted); cursor:pointer;">Lembrar-me</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width:100%;">
                         Entrar <i class="fas fa-arrow-right"></i>
                     </button>
                 </form>
@@ -614,6 +623,7 @@ class FitnessApp {
 
             const email = emailInput.value.trim().toLowerCase();
             const pass = passInput.value;
+            const rememberMe = document.getElementById('remember-me').checked;
 
             if (!email || !pass) {
                 if (errorDiv) {
@@ -637,6 +647,15 @@ class FitnessApp {
                 this.role = 'admin';
                 this.currentUser = admin;
                 this.isLoggedIn = true;
+
+                if (rememberMe) {
+                    localStorage.setItem('kg_remember', 'true');
+                    localStorage.setItem('kg_saved_creds', JSON.stringify({ email: email, pass: pass }));
+                } else {
+                    localStorage.removeItem('kg_remember');
+                    localStorage.removeItem('kg_saved_creds');
+                }
+
                 this.saveState();
                 this.persistLogin();
                 this.renderAppInterface();
@@ -649,6 +668,15 @@ class FitnessApp {
                 this.role = 'teacher';
                 this.currentUser = teacher;
                 this.isLoggedIn = true;
+
+                if (rememberMe) {
+                    localStorage.setItem('kg_remember', 'true');
+                    localStorage.setItem('kg_saved_creds', JSON.stringify({ email: email, pass: pass }));
+                } else {
+                    localStorage.removeItem('kg_remember');
+                    localStorage.removeItem('kg_saved_creds');
+                }
+
                 this.saveState();
                 this.persistLogin();
                 this.renderAppInterface();
@@ -662,6 +690,15 @@ class FitnessApp {
                 this.currentUser = client;
                 this.currentClientId = client.id;
                 this.isLoggedIn = true;
+
+                if (rememberMe) {
+                    localStorage.setItem('kg_remember', 'true');
+                    localStorage.setItem('kg_saved_creds', JSON.stringify({ email: email, pass: pass }));
+                } else {
+                    localStorage.removeItem('kg_remember');
+                    localStorage.removeItem('kg_saved_creds');
+                }
+
                 this.saveState();
                 this.persistLogin();
                 this.renderAppInterface();
