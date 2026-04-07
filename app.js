@@ -3356,10 +3356,14 @@ Bons treinos!`;
                                     </div>
                                 </div>
                             `).join('')}
+                        <div id="day-${dIdx}-exercises-footer" style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.05);">
+                            <button class="btn btn-ghost btn-sm" style="color:var(--primary);" onclick="app.addExerciseToEditor(${dIdx})">
+                                <i class="fas fa-plus"></i> Adicionar Exercício
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="app.addTrainingDay()" style="background:rgba(var(--primary-rgb), 0.1); color:var(--primary); border:1px dashed var(--primary); font-weight:700;">
+                                <i class="fas fa-calendar-plus"></i> Adicionar Próximo Dia
+                            </button>
                         </div>
-                        <button class="btn btn-ghost btn-sm" style="color:var(--primary);" onclick="app.addExerciseToEditor(${dIdx})">
-                            <i class="fas fa-plus"></i> Adicionar Exercício
-                        </button>
                     </div>
                 `).join('')}
             </div>
