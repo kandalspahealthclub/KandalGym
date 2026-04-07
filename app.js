@@ -3653,7 +3653,7 @@ Bons treinos!`;
                     <select id="exercise-category-filter" onchange="app.filterExercisesInModal(document.getElementById('exercise-search-input').value, this.value)"
                         style="width:200px; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:12px; padding:0 12px; font-size:0.9rem; outline:none; transition:border-color 0.2s;">
                         <option value="">Todas as Categorias</option>
-                        ${categories.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('')}
+                        ${categories.map(cat => `<option value="${cat}">${cat}</option>`).join('')}
                     </select>
                 </div>
 
