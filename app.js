@@ -52,7 +52,7 @@ class FitnessApp {
             this.state = (typeof mockState !== 'undefined') ? mockState : {};
         }
 
-        const vitalCollections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes'];
+        const vitalCollections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes', 'news'];
         vitalCollections.forEach(c => { if (!this.state[c]) this.state[c] = []; });
 
         const vitalDicts = ['trainingPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments'];
@@ -221,6 +221,83 @@ class FitnessApp {
         }
     }
 
+    showManageNewsModal() {
+        const newsList = (this.state.news || []).slice().reverse();
+        
+        let newsHtml = newsList.map((item, idx) => `
+            <div class="glass-card" style="margin-bottom:1rem; padding:1rem; border-left:3px solid var(--accent);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div style="flex:1;">
+                        <h4 style="margin:0; font-size:1rem; color:#fff;">${item.title}</h4>
+                        <small style="color:var(--text-muted); display:block; margin-bottom:5px;">${item.date}</small>
+                        <p style="margin:0; font-size:0.85rem; color:var(--text-muted); white-space:pre-wrap;">${item.content}</p>
+                    </div>
+                    <button class="btn btn-ghost" style="color:var(--danger); padding:5px;" onclick="app.deleteNews('${item.id}')">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+
+        if (newsList.length === 0) newsHtml = '<p style="text-align:center; color:var(--text-muted); padding:2rem;">Nenhuma notícia publicada.</p>';
+
+        const content = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h2 style="margin:0;"><i class="fas fa-bullhorn"></i> Gerir Notícias & Novidades</h2>
+                <button class="btn btn-ghost" onclick="app.closeModal()"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="glass-panel" style="padding:1.5rem; margin-bottom:2rem; background:rgba(255,255,255,0.03);">
+                <h3 style="margin-top:0; font-size:1rem; margin-bottom:1rem;">Publicar Nova Notícia</h3>
+                <div style="display:flex; flex-direction:column; gap:1rem;">
+                    <input type="text" id="news-title-input" placeholder="Título da notícia..." class="search-bar" style="width:100% !important; padding-left:15px !important;">
+                    <textarea id="news-content-input" placeholder="Conteúdo da novidade..." 
+                        style="width:100%; height:100px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:12px; padding:12px; outline:none; font-family:inherit; resize:none;"></textarea>
+                    <button class="btn btn-primary" onclick="app.addNews()">
+                        <i class="fas fa-paper-plane"></i> Publicar Agora
+                    </button>
+                </div>
+            </div>
+
+            <h3 style="font-size:1rem; margin-bottom:1rem;">Histórico de Notícias</h3>
+            <div style="max-height:300px; overflow-y:auto; padding-right:5px;">
+                ${newsHtml}
+            </div>
+        `;
+        this.showModal(content, '600px');
+    }
+
+    addNews() {
+        const title = document.getElementById('news-title-input').value.trim();
+        const content = document.getElementById('news-content-input').value.trim();
+
+        if (!title || !content) {
+            return alert('Por favor, preencha o título e o conteúdo.');
+        }
+
+        if (!this.state.news) this.state.news = [];
+
+        const newEntry = {
+            id: Date.now().toString(),
+            title: title,
+            content: content,
+            date: new Date().toLocaleDateString('pt-PT') + ' ' + new Date().toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'})
+        };
+
+        this.state.news.push(newEntry);
+        this.saveState();
+        this.showManageNewsModal(); // Atualizar lista no modal
+        this.showToast('Notícia publicada com sucesso!', 'success');
+    }
+
+    deleteNews(id) {
+        if (!confirm('Tem a certeza que deseja apagar esta notícia?')) return;
+        this.state.news = this.state.news.filter(n => n.id !== id);
+        this.saveState();
+        this.showManageNewsModal();
+        this.showToast('Notícia removida.', 'success');
+    }
+
     async saveState() {
         if (!this.hasLoadedData) {
             console.warn('Tentativa de gravar antes de carregar dados do Firebase ignorada.');
@@ -269,7 +346,7 @@ class FitnessApp {
                 }
 
                 // 1. Integridade local
-                const collections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes'];
+                const collections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes', 'news'];
                 collections.forEach(coll => { if (!this.state[coll]) this.state[coll] = []; });
 
                 const dictCollections = ['trainingPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments', 'planRestrictions'];
@@ -1444,7 +1521,12 @@ Bons treinos!`;
         switch (this.activeView) {
             case 'dashboard':
                 container.innerHTML = `
-                    <h2 class="animate-fade-in"><i class="fas fa-user-shield"></i> Dashboard Admin</h2>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:10px;">
+                        <h2 class="animate-fade-in" style="margin:0;"><i class="fas fa-user-shield"></i> Dashboard Admin</h2>
+                        <button class="btn btn-secondary btn-sm" onclick="app.showManageNewsModal()" style="height:40px; padding:0 1.5rem;">
+                            <i class="fas fa-bullhorn" style="color:var(--primary);"></i> Gerir Notícias
+                        </button>
+                    </div>
                     
                     <div class="stats-grid" style="margin-bottom: 2rem;">
                         <div class="glass-card" style="border-left: 4px solid var(--primary); display: flex; align-items: center; gap: 1rem;">
@@ -4474,6 +4556,25 @@ Bons treinos!`;
                     <div style="margin-top: 2rem;">
                         ${this.getOccupancyHTML(false)}
                     </div>
+
+                    ${(this.state.news && this.state.news.length > 0) ? `
+                    <div style="margin-top: 2rem;" class="animate-fade-in">
+                        <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                            <i class="fas fa-bullhorn" style="color: var(--primary);"></i> Notícias & Novidades
+                        </h3>
+                        <div style="display: flex; flex-direction: column; gap: 1rem;">
+                            ${[...this.state.news].reverse().slice(0, 5).map(item => `
+                                <div class="glass-panel" style="padding: 1.25rem; border-left: 4px solid var(--accent);">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                        <h4 style="margin: 0; color: #fff; font-size: 1.1rem;">${item.title}</h4>
+                                        <small style="color: var(--text-muted);">${item.date || ''}</small>
+                                    </div>
+                                    <p style="margin: 0; color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap;">${item.content}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
         `;
                 break;
             case 'training': this.renderTrainingView(container, this.currentClientId); break;
