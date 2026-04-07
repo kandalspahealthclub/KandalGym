@@ -3299,7 +3299,7 @@ Bons treinos!`;
 
             <div id="editor-days-container">
                 ${this.editingPlan.map((day, dIdx) => `
-                    <div class="glass-panel" style="padding:1.5rem; margin-bottom:2.5rem; border-top: 4px solid var(--primary);">
+                    <div class="glass-panel" style="padding:1.5rem; margin-bottom:3rem; border-top: 4px solid var(--primary);">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                             <input type="text" value="${day.title === 'Pendente' ? '' : day.title}" 
                                 placeholder="Nome do Plano (ex: Treino A)..."
@@ -3356,7 +3356,7 @@ Bons treinos!`;
                                     </div>
                                 </div>
                             `).join('')}
-                        <div id="day-${dIdx}-exercises-footer" style="display:flex; justify-content:space-between; align-items:center; margin-top:2.5rem; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,0.05); flex-wrap:wrap; gap:1.25rem;">
+                        <div id="day-${dIdx}-exercises-footer" style="display:flex; justify-content:space-between; align-items:center; margin-top:2.5rem; margin-bottom:1rem; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,0.05); flex-wrap:wrap; gap:1.25rem;">
                             <button class="btn btn-ghost btn-sm" style="color:var(--primary); padding:6px 12px; font-size:0.85rem;" onclick="app.addExerciseToEditor(${dIdx})">
                                 <i class="fas fa-plus"></i> Adicionar Exercício
                             </button>
