@@ -33,6 +33,7 @@ class FitnessApp {
         this.adminTab = 'teachers';
         this.spySubView = 'training';
         this.dashboardMonth = new Date().toISOString().substring(0, 7);
+        this.editingDayIdx = 0; // Controla qual o dia (Plano A, B...) a ser mostrado no editor
         this.planRestrictions = {
             'Musculação': { allowClasses: false },
             'Pilates': { allowClasses: true, filter: ['Pilates'] },
@@ -3222,6 +3223,7 @@ Bons treinos!`;
                 if (confirm('Detetamos um rascunho não guardado deste treino. Deseja recupera-lo?')) {
                     this.editingPlan = draftData.plan;
                     this.editingClientId = clientId;
+                    this.editingDayIdx = 0;
                     this.setView('edit_training');
                     return;
                 } else {
@@ -3250,6 +3252,7 @@ Bons treinos!`;
         }
 
         this.editingClientId = clientId;
+        this.editingDayIdx = 0;
         this.setView('edit_training');
     }
 
@@ -3272,6 +3275,10 @@ Bons treinos!`;
         if (!container) return;
         const c = this.state.clients.find(x => x.id === this.editingClientId);
 
+        // Garantir que o index é válido
+        if (this.editingDayIdx >= this.editingPlan.length) this.editingDayIdx = 0;
+        const currentDay = this.editingPlan[this.editingDayIdx];
+
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
                 <h2 style="margin:0;">Editar Treino: ${c.name}</h2>
@@ -3282,103 +3289,127 @@ Bons treinos!`;
                 </div>
             </div>
 
-
-
             <div style="margin-bottom:1.5rem; display:flex; gap:1rem; align-items:center; flex-wrap: wrap;">
                 <div>
                     <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase;">Objetivo do Plano</label>
-                    <input type="text" id="edit-training-goal" value="${c.goal || ''}" placeholder="Ex: Hipertrofia, Reducao de Massa Gorda..."
+                    <input type="text" id="edit-training-goal" value="${c.goal || ''}" placeholder="Ex: Hipertrofia, Redução de Massa Gorda..."
                         onchange="app.state.clients.find(x => x.id === app.editingClientId).goal = this.value; app.saveState();"
                         style="width:300px; height:40px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 12px; font-size:0.95rem;">
                 </div>
-                <div style="display:flex; align-items:center; gap:0.5rem; align-self: flex-end;">
-                    <strong style="color:var(--text-muted);">Dias:</strong>
-                    <button class="btn btn-secondary btn-sm" onclick="app.addTrainingDay()"><i class="fas fa-plus"></i> Adicionar Dia</button>
-                </div>
+            </div>
+
+            <!-- MENU DE SELECÇÃO DE PLANO (TABS) -->
+            <div id="editor-tabs-container" style="display:flex; gap:0.75rem; margin-bottom:2rem; flex-wrap:wrap; background:rgba(255,255,255,0.03); padding:12px; border-radius:15px; border:1px solid rgba(255,255,255,0.05);">
+                ${this.editingPlan.map((day, dIdx) => `
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <button class="btn ${this.editingDayIdx === dIdx ? 'btn-primary' : 'btn-ghost'}" 
+                            onclick="app.editingDayIdx = ${dIdx}; app.renderTrainingEditor();"
+                            style="padding:10px 18px; font-size:0.95rem; border-radius:10px; display:flex; align-items:center; gap:10px; min-width:140px; justify-content:center; box-shadow:${this.editingDayIdx === dIdx ? '0 4px 12px rgba(var(--primary-rgb), 0.3)' : 'none'};">
+                            <i class="fas ${this.editingDayIdx === dIdx ? 'fa-check-square' : 'fa-square'}" style="font-size:1.1rem; opacity:${this.editingDayIdx === dIdx ? '1' : '0.4'};"></i>
+                            <span style="font-weight:700;">${day.title || `Plano ${String.fromCharCode(65 + dIdx)}`}</span>
+                            <span style="opacity:0.6; font-size:0.85rem;">(${day.exercises.length})</span>
+                        </button>
+                    </div>
+                `).join('')}
+                <button class="btn btn-ghost" onclick="app.addTrainingDay()" 
+                    style="color:var(--accent); border:2px dashed rgba(var(--accent-rgb), 0.3); padding:8px 18px; border-radius:10px; font-size:0.9rem; font-weight:700;">
+                    <i class="fas fa-plus-circle"></i> Novo Plano
+                </button>
             </div>
 
             <div id="editor-days-container">
-                ${this.editingPlan.map((day, dIdx) => `
-                    <div class="glass-panel" style="padding:1.5rem; margin-bottom:3rem; border-top: 4px solid var(--primary);">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                            <input type="text" value="${day.title === 'Pendente' ? '' : day.title}" 
-                                placeholder="Nome do Plano (ex: Treino A)..."
-                                oninput="app.editingPlan[${dIdx}].title = this.value; app.saveTrainingDraft();"
-                                style="font-weight:700; font-size:1.2rem; background:transparent; border:none; border-bottom:1px solid var(--surface-border); width:100%; max-width:400px; padding:5px 0; color:#fff; outline:none;">
-                            <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.removeTrainingDay(${dIdx})">
-                                <i class="fas fa-trash"></i> Remover Dia
-                            </button>
-                        </div>
-
-                        <div id="day-${dIdx}-exercises">
-                            ${day.exercises.map((ex, eIdx) => `
-                                <div class="glass-card" style="padding:1.5rem; margin-bottom:1.5rem; background:rgba(255,255,255,0.03); border-left:4px solid var(--secondary);">
-                                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.75rem;">
-                                        <div style="flex:1; min-width:200px;">
-                                            <label style="display:block; font-size:0.8rem; color:var(--accent); font-weight:600; text-transform:uppercase; margin-bottom:6px;">Exercício Selecionado</label>
-                                            <button class="btn btn-secondary exercise-search-btn" onclick="app.showExerciseSelectionModal(${dIdx}, ${eIdx})" 
-                                                style="width:100%; min-height:45px; height:auto; background:#1e293b; color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:8px 15px; font-size:1rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:10px; justify-content:flex-start; line-height:1.2;">
-                                                <i class="fas fa-search" style="color:var(--primary); flex-shrink:0;"></i>
-                                                <span id="ex-name-display-${dIdx}-${eIdx}" style="word-break:break-word; white-space:normal; overflow:visible;">
-                                                    ${ex.name || '-- Selecionar Exercício --'}
-                                                </span>
-                                            </button>
-                                        </div>
-                                        <div style="display:flex; gap:0.5rem; align-self:flex-end;">
-                                            <button class="btn btn-ghost" style="color:var(--primary); padding:0.5rem;" onclick="app.moveExercise(${dIdx}, ${eIdx}, -1)" title="Subir" ${eIdx === 0 ? 'disabled style="opacity:0.3; cursor:default;"' : ''}>
-                                                <i class="fas fa-arrow-up"></i>
-                                            </button>
-                                            <button class="btn btn-ghost" style="color:var(--primary); padding:0.5rem;" onclick="app.moveExercise(${dIdx}, ${eIdx}, 1)" title="Descer" ${eIdx === day.exercises.length - 1 ? 'disabled style="opacity:0.3; cursor:default;"' : ''}>
-                                                <i class="fas fa-arrow-down"></i>
-                                            </button>
-                                            <button class="btn btn-ghost" style="color:var(--danger); padding:0.5rem;" onclick="app.removeExerciseFromEditor(${dIdx}, ${eIdx})" title="Remover Exercício">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    <div style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end;">
-                                        <div style="flex:1; min-width:70px; max-width:110px;">
-                                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Séries</label>
-                                            <input type="text" value="${ex.sets || ''}" placeholder="Ex: 4" onchange="app.updateEditorExercise(${dIdx}, ${eIdx}, 'sets', this.value)"
-                                                style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:600;">
-                                        </div>
-                                        <div style="flex:1; min-width:70px; max-width:110px;">
-                                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Reps</label>
-                                            <input type="text" value="${ex.reps || ''}" placeholder="Ex: 12" onchange="app.updateEditorExercise(${dIdx}, ${eIdx}, 'reps', this.value)"
-                                                style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:600;">
-                                        </div>
-                                        <div style="flex:3; min-width:240px;">
-                                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Observações (opcional)</label>
-                                            <input type="text" value="${ex.observations || ''}" placeholder="Ex: Foco na descida controlada" onchange="app.updateEditorExercise(${dIdx}, ${eIdx}, 'observations', this.value)"
-                                                style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 15px; font-size:1rem;">
-                                        </div>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        <div id="day-${dIdx}-exercises-footer" style="display:flex; justify-content:space-between; align-items:center; margin-top:2.5rem; margin-bottom:1rem; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,0.05); flex-wrap:wrap; gap:1.25rem;">
-                            <button class="btn btn-ghost btn-sm" style="color:var(--primary); padding:6px 12px; font-size:0.85rem;" onclick="app.addExerciseToEditor(${dIdx})">
-                                <i class="fas fa-plus"></i> Adicionar Exercício
-                            </button>
-                            <button class="btn btn-secondary btn-sm" onclick="app.addTrainingDay()" style="background:rgba(var(--primary-rgb), 0.1); color:var(--primary); border:1px dashed var(--primary); font-weight:700; padding:6px 12px; font-size:0.85rem;">
-                                <i class="fas fa-calendar-plus"></i> Adicionar Próximo Dia
+                <div class="glass-panel" style="padding:1.5rem; margin-bottom:3rem; border-top: 4px solid var(--primary); animation: fadeIn 0.3s ease;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+                        <input type="text" value="${currentDay.title || `Plano ${String.fromCharCode(65 + this.editingDayIdx)}`}" 
+                            placeholder="Nome do Plano (ex: Treino A)..."
+                            oninput="app.editingPlan[${this.editingDayIdx}].title = this.value; app.saveTrainingDraft();"
+                            onchange="app.renderTrainingEditor();"
+                            style="font-weight:800; font-size:1.3rem; background:transparent; border:none; border-bottom:2px solid var(--primary); width:100%; max-width:400px; padding:8px 0; color:#fff; outline:none; text-transform:uppercase; letter-spacing:1px;">
+                        
+                        <div style="display:flex; gap:0.5rem;">
+                            <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.removeTrainingDay(${this.editingDayIdx})">
+                                <i class="fas fa-trash"></i> Remover Plano
                             </button>
                         </div>
                     </div>
-                `).join('')}
+
+                    <div id="day-${this.editingDayIdx}-exercises">
+                        ${currentDay.exercises.map((ex, eIdx) => `
+                            <div class="glass-card" style="padding:1.5rem; margin-bottom:1.5rem; background:rgba(255,255,255,0.03); border-left:4px solid var(--secondary);">
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.75rem;">
+                                    <div style="flex:1; min-width:200px;">
+                                        <label style="display:block; font-size:0.8rem; color:var(--accent); font-weight:600; text-transform:uppercase; margin-bottom:6px;">Exercício Selecionado</label>
+                                        <button class="btn btn-secondary exercise-search-btn" onclick="app.showExerciseSelectionModal(${this.editingDayIdx}, ${eIdx})" 
+                                            style="width:100%; min-height:45px; height:auto; background:#1e293b; color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:8px 15px; font-size:1rem; cursor:pointer; text-align:left; display:flex; align-items:center; gap:10px; justify-content:flex-start; line-height:1.2;">
+                                            <i class="fas fa-search" style="color:var(--primary); flex-shrink:0;"></i>
+                                            <span id="ex-name-display-${this.editingDayIdx}-${eIdx}" style="word-break:break-word; white-space:normal; overflow:visible;">
+                                                ${ex.name || '-- Selecionar Exercício --'}
+                                            </span>
+                                        </button>
+                                    </div>
+                                    <div style="display:flex; gap:0.5rem; align-self:flex-end;">
+                                        <button class="btn btn-ghost" style="color:var(--primary); padding:0.5rem;" onclick="app.moveExercise(${this.editingDayIdx}, ${eIdx}, -1)" title="Subir" ${eIdx === 0 ? 'disabled style="opacity:0.3; cursor:default;"' : ''}>
+                                            <i class="fas fa-arrow-up"></i>
+                                        </button>
+                                        <button class="btn btn-ghost" style="color:var(--primary); padding:0.5rem;" onclick="app.moveExercise(${this.editingDayIdx}, ${eIdx}, 1)" title="Descer" ${eIdx === currentDay.exercises.length - 1 ? 'disabled style="opacity:0.3; cursor:default;"' : ''}>
+                                            <i class="fas fa-arrow-down"></i>
+                                        </button>
+                                        <button class="btn btn-ghost" style="color:var(--danger); padding:0.5rem;" onclick="app.removeExerciseFromEditor(${this.editingDayIdx}, ${eIdx})" title="Remover Exercício">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end;">
+                                    <div style="flex:1; min-width:70px; max-width:110px;">
+                                        <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Séries</label>
+                                        <input type="text" value="${ex.sets || ''}" placeholder="Ex: 4" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'sets', this.value)"
+                                            style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:600;">
+                                    </div>
+                                    <div style="flex:1; min-width:70px; max-width:110px;">
+                                        <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Reps</label>
+                                        <input type="text" value="${ex.reps || ''}" placeholder="Ex: 12" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'reps', this.value)"
+                                            style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:600;">
+                                    </div>
+                                    <div style="flex:3; min-width:240px;">
+                                        <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Observações (opcional)</label>
+                                        <input type="text" value="${ex.observations || ''}" placeholder="Ex: Foco na descida controlada" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'observations', this.value)"
+                                            style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 15px; font-size:1rem;">
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div id="day-${this.editingDayIdx}-exercises-footer" style="display:flex; justify-content:space-between; align-items:center; margin-top:2.5rem; margin-bottom:1rem; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,0.05); flex-wrap:wrap; gap:1.25rem;">
+                        <button class="btn btn-ghost btn-sm" style="color:var(--primary); padding:6px 12px; font-size:0.85rem;" onclick="app.addExerciseToEditor(${this.editingDayIdx})">
+                            <i class="fas fa-plus"></i> Adicionar Exercício
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="app.addTrainingDay(true)" style="background:rgba(var(--primary-rgb), 0.1); color:var(--primary); border:1px dashed var(--primary); font-weight:700; padding:6px 12px; font-size:0.85rem;">
+                            <i class="fas fa-calendar-plus"></i> Adicionar Próximo Plano
+                        </button>
+                    </div>
+                </div>
             </div>
         `;
     }
 
-    addTrainingDay() {
+    addTrainingDay(autoSwitch = false) {
         this.editingPlan.push({ title: '', exercises: [] });
+        if (autoSwitch) {
+            this.editingDayIdx = this.editingPlan.length - 1;
+        }
         this.saveTrainingDraft();
         this.renderTrainingEditor();
     }
 
     removeTrainingDay(idx) {
-        if (confirm('Deseja remover este dia de treino e todos os exercícios associados?')) {
+        if (this.editingPlan.length <= 1) {
+            return alert('Não pode remover o único plano existente!');
+        }
+        if (confirm('Deseja remover este plano de treino e todos os exercícios associados?')) {
             this.editingPlan.splice(idx, 1);
+            this.editingDayIdx = Math.max(0, idx - 1);
             this.saveTrainingDraft();
             this.renderTrainingEditor();
         }
