@@ -909,7 +909,7 @@ class FitnessApp {
 
         // Alunos
         (this.state.clients || []).forEach(c => {
-            if (c && c.id && !hasAccess(c.id)) {
+            if (c && c.id && !c.qrDisabled && !hasAccess(c.id)) {
                 this.enableQRForClient(c.id, false, false);
                 changed = true;
             }
@@ -7025,24 +7025,35 @@ Bons treinos!`;
     }
 
     async deleteQRClient(id) {
-        if (confirm("Deseja eliminar este cliente QR permanentemente?")) {
-            const targetId = String(id).trim().toLowerCase();
-            
-            // Filtro robusto
-            const originalCount = this.state.qrClients.length;
-            this.state.qrClients = this.state.qrClients.filter(c => {
-                const currentId = String(c.id).trim().toLowerCase();
-                return currentId !== targetId;
-            });
+        const qrClient = this.state.qrClients.find(c => String(c.id).trim().toLowerCase() === String(id).trim().toLowerCase());
+        if (!qrClient) return;
 
-            if (this.state.qrClients.length < originalCount) {
-                this.saveState();
-                this.refreshQRTableUI();
-                this.showToast('Cliente removido com sucesso.');
-            } else {
-                console.warn("Cliente não encontrado para eliminação:", id);
-                alert("Erro: Não foi possível localizar o registo para eliminar. Tente atualizar a página.");
+        if (confirm(`Deseja eliminar o acesso QR de ${qrClient.nome} permanentemente?`)) {
+            const targetId = String(id).trim().toLowerCase();
+            const clientId = qrClient.clientId;
+
+            // Se for um aluno real (clientId != 0)
+            if (clientId && clientId != 0) {
+                const deleteMain = confirm("Este utilizador tem uma conta ativa na App. Deseja ELIMINAR TAMBÉM a conta do aluno e todo o seu histórico?");
+                if (deleteMain) {
+                    // Eliminar do sistema principal (clientes, professores ou admins)
+                    this.state.clients = (this.state.clients || []).filter(c => String(c.id) !== String(clientId));
+                    this.state.teachers = (this.state.teachers || []).filter(t => String(t.id) !== String(clientId));
+                    this.state.admins = (this.state.admins || []).filter(a => String(a.id) !== String(clientId));
+                } else {
+                    // Manter aluno mas impedir que o auto-sync o traga de volta
+                    const mainUser = [...(this.state.clients || []), ...(this.state.teachers || []), ...(this.state.admins || [])]
+                        .find(u => String(u.id) === String(clientId));
+                    if (mainUser) mainUser.qrDisabled = true;
+                }
             }
+
+            // Remover da lista de QR
+            this.state.qrClients = this.state.qrClients.filter(c => String(c.id).trim().toLowerCase() !== targetId);
+            
+            this.saveState();
+            this.refreshQRTableUI();
+            this.showToast('Registo QR removido com sucesso.');
         }
     }
 
