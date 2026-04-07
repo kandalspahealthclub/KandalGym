@@ -347,7 +347,14 @@ class FitnessApp {
 
                 // 1. Integridade local
                 const collections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes', 'news'];
-                collections.forEach(coll => { if (!this.state[coll]) this.state[coll] = []; });
+                collections.forEach(coll => { 
+                    if (!this.state[coll]) {
+                        this.state[coll] = []; 
+                    } else if (typeof this.state[coll] === 'object' && !Array.isArray(this.state[coll])) {
+                        // Garantir que é um Array (Firebase por vezes converte para objeto com chaves numéricas)
+                        this.state[coll] = Object.values(this.state[coll]);
+                    }
+                });
 
                 const dictCollections = ['trainingPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments', 'planRestrictions'];
                 dictCollections.forEach(coll => { if (!this.state[coll]) this.state[coll] = {}; });
@@ -7019,10 +7026,23 @@ Bons treinos!`;
 
     async deleteQRClient(id) {
         if (confirm("Deseja eliminar este cliente QR permanentemente?")) {
-            // Comparação como String para garantir match em IDs manuais (K1) e automáticos (timestamps)
-            this.state.qrClients = this.state.qrClients.filter(c => String(c.id) !== String(id));
-            this.saveState();
-            this.refreshQRTableUI();
+            const targetId = String(id).trim().toLowerCase();
+            
+            // Filtro robusto
+            const originalCount = this.state.qrClients.length;
+            this.state.qrClients = this.state.qrClients.filter(c => {
+                const currentId = String(c.id).trim().toLowerCase();
+                return currentId !== targetId;
+            });
+
+            if (this.state.qrClients.length < originalCount) {
+                this.saveState();
+                this.refreshQRTableUI();
+                this.showToast('Cliente removido com sucesso.');
+            } else {
+                console.warn("Cliente não encontrado para eliminação:", id);
+                alert("Erro: Não foi possível localizar o registo para eliminar. Tente atualizar a página.");
+            }
         }
     }
 
