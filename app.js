@@ -6646,7 +6646,6 @@ Bons treinos!`;
                             <input type="text" id="casual-name" placeholder="Nome do Cliente" class="qr-input-sleek">
                             <div style="display: flex; gap: 8px;">
                                 <select id="casual-type" class="qr-input-sleek" style="flex: 2; height: 42px;">
-                                    <option value="Diária">📦 Diária (1 Ent.)</option>
                                     <option value="Semanal">🗓️ Semanal (7 Dias)</option>
                                     <option value="Mensal">📅 Mensal (30 Dias)</option>
                                 </select>
