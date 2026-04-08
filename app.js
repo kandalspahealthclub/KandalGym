@@ -2995,11 +2995,47 @@ Bons treinos!`;
                 </div>
             </div>
 
-            ${plans && plans.length ? plans.map((day, dIdx) => `
-                <div class="glass-panel" style="padding:1.5rem; margin-bottom:1.5rem;">
-                    <h3 style="color:var(--primary); margin-bottom:1.25rem; display:flex; align-items:center; gap:0.6rem; border-bottom:1px solid var(--surface-border); padding-bottom:0.75rem;">
-                        <i class="fas fa-calendar-day"></i> ${day.title}
-                    </h3>
+            <!-- TABS DE VISUALIZAÇÃO -->
+            ${plans && plans.length > 0 ? `
+            <div style="display:flex; gap:0.5rem; margin:1.5rem 0; overflow-x:auto; padding-bottom:0.5rem; -webkit-overflow-scrolling:touch;">
+                ${plans.map((day, dIdx) => `
+                    <button class="btn ${this.viewingDayIdx === dIdx ? 'btn-primary' : 'btn-ghost'}" 
+                        onclick="app.viewingDayIdx = ${dIdx}; app.renderTrainingView(null, '${clientId}');"
+                        style="padding:12px 20px; font-size:0.9rem; border-radius:12px; min-width:130px; display:flex; align-items:center; gap:8px; justify-content:center; flex-shrink:0; font-weight:700; background:${this.viewingDayIdx === dIdx ? '' : 'rgba(255,255,255,0.03)'}; border:${this.viewingDayIdx === dIdx ? '' : '1px solid rgba(255,255,255,0.05)'};">
+                        <i class="fas ${this.viewingDayIdx === dIdx ? 'fa-calendar-check' : 'fa-calendar-day'}" style="font-size:1rem;"></i>
+                        <span>${day.title || `Plano ${String.fromCharCode(65 + dIdx)}`}</span>
+                    </button>
+                `).join('')}
+            </div>
+            ` : ''}
+
+            ${plans && plans.length && plans[this.viewingDayIdx] ? (() => {
+                const day = plans[this.viewingDayIdx];
+                return `
+                <div class="glass-panel animate-fade-in" style="padding:1.5rem; margin-bottom:1.5rem; border-top:4px solid var(--primary);">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+                        <h3 style="color:#fff; margin:0; font-weight:800; font-size:1.4rem; border:none; padding:0;">
+                            ${day.title || `Plano ${String.fromCharCode(65 + this.viewingDayIdx)}`}
+                        </h3>
+                        <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                            ${day.rest ? `
+                                <div style="background:rgba(var(--accent-rgb),0.1); color:var(--accent); padding:6px 14px; border-radius:10px; font-size:0.85rem; font-weight:800; display:flex; align-items:center; gap:8px;">
+                                    <i class="fas fa-stopwatch"></i> Descanso: ${day.rest}
+                                </div>
+                            ` : ''}
+                            <div style="background:rgba(255,255,255,0.05); color:var(--text-muted); padding:6px 14px; border-radius:10px; font-size:0.85rem; font-weight:700;">
+                                <i class="fas fa-layer-group"></i> ${day.exercises.length} Exercícios
+                            </div>
+                        </div>
+                    </div>
+
+                    ${day.notes ? `
+                        <div style="background:rgba(255,255,255,0.03); padding:1.25rem; border-radius:15px; margin-bottom:2rem; border:1px solid rgba(255,255,255,0.05); display:flex; gap:12px; align-items:flex-start;">
+                            <i class="fas fa-sticky-note" style="color:var(--primary); margin-top:3px; font-size:1.1rem;"></i>
+                            <div style="color:#e0e0e0; font-size:0.95rem; line-height:1.6; font-style:italic;">"${day.notes}"</div>
+                        </div>
+                    ` : ''}
+
                     <div style="display:grid; grid-template-columns: 1fr; gap:1.25rem;">
                         ${day.exercises.map((ex, exIdx) => {
             const numSets = parseInt(ex.sets) || 0;
@@ -3086,37 +3122,36 @@ Bons treinos!`;
                             </div>
                             `;
 
-        }).join('')}
+                            </div>
+                            `;
+                        }).join('')}
                     </div>
 
-                    <!-- Feedback Global do Treino -->
                     ${isClient ? `
                         <div class="glass-panel" style="background: rgba(var(--primary-rgb), 0.05); border: 1px solid rgba(var(--primary-rgb), 0.2); margin-top: 2rem; padding: 1.25rem;">
                             <h4 style="margin: 0 0 1rem; font-size: 0.95rem; color: var(--primary); display: flex; align-items: center; gap: 8px;">
                                 <i class="fas fa-comment-dots"></i> Feedback Geral do Treino
                             </h4>
-                            <textarea id="workout-global-note-${clientId}-${dIdx}" 
-                                placeholder="Como correu o treino de hoje? (ex: senti-me com muita energia, dor no joelho direito...)"
-                                style="width:100%; min-height:80px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#fff; padding:12px; font-size:0.9rem; resize:vertical; font-family:inherit; outline:none; transition: border-color 0.3s;"
+                            <textarea id="workout-global-note-${clientId}-${this.viewingDayIdx}" 
+                                placeholder="Como correu o treino de hoje?..."
+                                style="width:100%; min-height:80px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#fff; padding:12px; font-size:0.9rem; resize:vertical; font-family:inherit; outline:none; transition: all 0.3s;"
                                 onfocus="this.style.borderColor='var(--primary)'"
                                 onblur="this.style.borderColor='rgba(255,255,255,0.1)'"></textarea>
                         </div>
 
                         <div style="margin-top:2rem; text-align:center; padding-bottom: 2rem;">
-                            <button class="btn btn-primary" onclick="app.finishWorkout(${clientId}, ${dIdx})" 
+                            <button class="btn btn-primary" onclick="app.finishWorkout('${clientId}', ${this.viewingDayIdx})" 
                                 style="width:100%; height:60px; font-size:1.1rem; font-weight: 800; border-radius: 16px; background: linear-gradient(135deg, var(--primary), var(--accent)); border:none; box-shadow:0 8px 25px rgba(var(--primary-rgb),0.4); display: flex; align-items: center; justify-content: center; gap: 12px;">
                                 <i class="fas fa-check-double" style="font-size: 1.3rem;"></i> Finalizar Treino
                             </button>
-                            <p style="font-size:0.75rem; color:var(--text-muted); margin-top:12px; font-weight: 500;">
-                                <i class="fas fa-info-circle"></i> Os pesos e notas serão guardados no seu histórico pessoal.
-                            </p>
                         </div>
                     ` : ''}
                 </div>
-            `).join('') : `
-                <div class="glass-panel" style="padding:3rem 1rem; text-align:center;">
-                    <i class="fas fa-dumbbell" style="font-size:3rem; color:var(--text-muted); opacity:0.3; margin-bottom:1rem;"></i>
-                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda não tem plano de treino atribuído.</p>
+                `;
+            })() : `
+                <div class="glass-panel" style="padding:4rem; text-align:center;">
+                    <i class="fas fa-dumbbell" style="font-size:3rem; color:var(--text-muted); opacity:0.2; margin-bottom:1.5rem;"></i>
+                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Não existem exercícios definidos para este praticante.</p>
                     ${isTeacher ? `<button class="btn btn-primary" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-plus"></i> Criar Plano de Treino</button>` : ''}
                 </div>
             `}
