@@ -3380,7 +3380,13 @@ Bons treinos!`;
                             onchange="app.renderTrainingEditor();"
                             style="font-weight:800; font-size:1.3rem; background:transparent; border:none; border-bottom:2px solid var(--primary); width:100%; max-width:400px; padding:8px 0; color:#fff; outline:none; text-transform:uppercase; letter-spacing:1px;">
                         
-                        <div style="display:flex; gap:0.5rem;">
+                        <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                            <div style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.05); padding:5px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.1);">
+                                <label style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Descanso:</label>
+                                <input type="text" value="${currentDay.rest || ''}" placeholder="Ex: 60s" 
+                                    onchange="app.updateEditorDayRest(${this.editingDayIdx}, this.value)"
+                                    style="width:80px; height:32px; background:rgba(0,0,0,0.3); color:var(--accent); border:1px solid rgba(var(--accent-rgb), 0.3); border-radius:6px; text-align:center; font-weight:700; font-size:0.9rem;">
+                            </div>
                             <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.removeTrainingDay(${this.editingDayIdx})">
                                 <i class="fas fa-trash"></i> Remover Plano
                             </button>
@@ -3414,25 +3420,20 @@ Bons treinos!`;
                                     </div>
                                 </div>
                                 
-                                <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;">
-                                    <div style="flex:1; min-width:85px; max-width:110px;">
+                                <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
+                                    <div style="width:90px;">
                                         <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Séries</label>
                                         <input type="text" value="${ex.sets || ''}" placeholder="Ex: 4" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'sets', this.value)"
                                             style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:600;">
                                     </div>
-                                    <div style="flex:1; min-width:85px; max-width:110px;">
-                                        <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Reps</label>
-                                        <input type="text" value="${ex.reps || ''}" placeholder="Ex: 12" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'reps', this.value)"
-                                            style="width:100%; height:45px; background:rgba(255,255,255,0.05); color:#fff; border:2px solid var(--primary); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:700;">
+                                    <div style="flex:2; min-width:140px;">
+                                        <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Repetições (Reps)</label>
+                                        <input type="text" value="${ex.reps || ''}" placeholder="Ex: 12-15 ou Falha" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'reps', this.value)"
+                                            style="width:100%; height:45px; background:rgba(255,255,255,0.05); color:#fff; border:2px solid var(--primary); border-radius:8px; padding:0 15px; text-align:center; font-size:1.1rem; font-weight:700;">
                                     </div>
-                                    <div style="flex:1; min-width:105px; max-width:130px;">
-                                        <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Descanso</label>
-                                        <input type="text" value="${ex.rest || ''}" placeholder="Ex: 60s" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'rest', this.value)"
-                                            style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 12px; text-align:center; font-size:1.1rem; color:var(--accent);">
-                                    </div>
-                                    <div style="flex:3; min-width:240px;">
-                                        <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Observações (opcional)</label>
-                                        <input type="text" value="${ex.observations || ''}" placeholder="Ex: Foco na descida controlada" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'observations', this.value)"
+                                    <div style="flex:3; min-width:200px;">
+                                        <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Observações do Exercício</label>
+                                        <input type="text" value="${ex.observations || ''}" placeholder="Ex: Foco na descida" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'observations', this.value)"
                                             style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 15px; font-size:1rem;">
                                     </div>
                                 </div>
@@ -3510,6 +3511,13 @@ Bons treinos!`;
         this.saveTrainingDraft();
         this.renderTrainingEditor();
         this.showToast('Ordem do exercício alterada.');
+    }
+
+    updateEditorDayRest(dayIdx, value) {
+        if (this.editingPlan[dayIdx]) {
+            this.editingPlan[dayIdx].rest = value;
+            this.saveTrainingDraft();
+        }
     }
 
     updateEditorDayNotes(dayIdx, value) {
