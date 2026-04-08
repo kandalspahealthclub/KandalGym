@@ -1,4 +1,4 @@
-﻿// Tratador de Erros Global - Deve ser o primeiro a carregar
+// Tratador de Erros Global - Deve ser o primeiro a carregar
 window.onerror = function (message, source, lineno, colno, error) {
     console.error("Erro detectado:", message, "em", source, ":", lineno);
     const container = document.getElementById('main-content');
@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.06.v17'; // Versáo de controlo para Hard Reset
+        this.appVersion = '2026.04.08.v19'; // Versão de controlo para Hard Reset
         this.checkForForceUpdate();
 
         this.role = 'client';
@@ -149,7 +149,7 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v18'; // Forçar v18 para garantir limpeza após erro
+            const targetV = 'v19'; // Forçar v19 para garantir limpeza após erro fatal de sintaxe
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
                 console.warn("Forçando atualizaçáo total da App (KandalGym v18)...");
