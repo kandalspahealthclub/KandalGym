@@ -3480,9 +3480,14 @@ Bons treinos!`;
     }
 
     removeExerciseFromEditor(dayIdx, exIdx) {
-        this.editingPlan[dayIdx].exercises.splice(exIdx, 1);
-        this.saveTrainingDraft();
-        this.renderTrainingEditor();
+        const ex = this.editingPlan[dayIdx].exercises[exIdx];
+        const exName = ex.name || 'este exercício';
+        if (confirm(`Tem a certeza que deseja eliminar ${exName}?`)) {
+            this.editingPlan[dayIdx].exercises.splice(exIdx, 1);
+            this.saveTrainingDraft();
+            this.renderTrainingEditor();
+            this.showToast('Exercício removido', 'success');
+        }
     }
 
     moveExercise(dayIdx, exIdx, direction) {
