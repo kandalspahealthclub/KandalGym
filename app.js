@@ -6612,28 +6612,36 @@ Bons treinos!`;
                 </div>
 
                 <div class="dashboard" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; margin-top: 20px;">
-                    <div class="glass-panel" style="padding: 1.5rem;">
+                    <div class="glass-panel" style="padding: 1.5rem; border-left: 4px solid var(--accent);">
                         <h3 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
-                            <i class="fas fa-camera"></i> Scanner de Entrada
+                            <i class="fas fa-barcode"></i> Scanner de Hardware Ativo
                         </h3>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">Aponte a câmara para o código QR do aluno.</p>
-                        <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-                            <button class="btn btn-secondary" style="flex: 1; border: 1px solid var(--primary); color: var(--primary); background: rgba(145, 27, 43, 0.05);" id="btnCam" onclick="app.iniciarLeitorQR()">
-                                <i class="fas fa-video"></i> Câmara
-                            </button>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;">Utilize o leitor físico para ler os códigos QR dos alunos.</p>
+                        
+                        <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+                            <div style="flex: 1; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 10px; display: flex; align-items: center; gap: 10px;">
+                                <span class="pulse-green" style="width:10px; height:10px; background:#10b981; border-radius:50%;"></span>
+                                <span style="font-size:0.85rem; color:#10b981; font-weight:700;">Pronto para leitura</span>
+                            </div>
                             <button class="btn ${this.serialWriter ? 'btn-success' : 'btn-secondary'}" 
-                                style="flex: 1; border: 1px solid ${this.serialWriter ? 'var(--success)' : 'var(--primary)'}; color: ${this.serialWriter ? '#fff' : 'var(--primary)'}; background: ${this.serialWriter ? 'var(--success)' : 'rgba(145, 27, 43, 0.05)'};" 
+                                style="flex: 1; border: 1px solid ${this.serialWriter ? 'var(--success)' : 'var(--primary)'}; color: ${this.serialWriter ? '#fff' : 'var(--primary)'}; background: ${this.serialWriter ? 'var(--success)' : 'rgba(145, 27, 43, 0.05)'}; height: 44px;" 
                                 onclick="app.connectArduino()">
-                                <i class="fas fa-plug"></i> ${this.serialWriter ? 'Arduino OK' : 'Ligar Arduino'}
+                                <i class="fas fa-plug"></i> ${this.serialWriter ? 'Arduino Conetado' : 'Ligar Arduino'}
                             </button>
                         </div>
-                        <div id="video-container" class="qr-scanner-container" style="border: 2px solid var(--surface-border); margin-top: 15px; display:block; min-height: 200px; background: #000;">
-                            <video id="v-stream" class="qr-video" playsinline autoplay muted style="transform:none; width:100%; height:auto; display:block;"></video>
+
+                        <div style="background: rgba(0,0,0,0.2); border: 1px dashed var(--surface-border); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px;">
+                            <i class="fas fa-qrcode" style="font-size: 3rem; color: rgba(255,255,255,0.05); margin-bottom: 10px; display: block;"></i>
+                            <input type="text" id="hardware-scanner-input" 
+                                placeholder="Aguardando QR..." 
+                                onkeyup="if(event.key === 'Enter') { app.processarLeituraQR(this.value); this.value=''; }"
+                                autocomplete="off"
+                                style="width: 100%; height: 50px; background: rgba(0,0,0,0.4); border: 2px solid var(--primary); border-radius: 10px; color: #fff; text-align: center; font-size: 1.2rem; font-weight: 700; letter-spacing: 2px; outline: none; box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.1);">
                         </div>
-                        <div id="scan-status" style="margin-top: 15px; min-height: 50px;">
+
+                        <div id="scan-status" style="min-height: 50px;">
                             ${this.renderQRMsgHTML()}
                         </div>
-                        <canvas id="c-hidden" style="display:none;"></canvas>
                     </div>
 
                     <div class="glass-panel" style="padding: 1.5rem;">
@@ -6741,39 +6749,17 @@ Bons treinos!`;
                 });
             });
 
-            // --- AUTO INICIAR SCANNER ---
-            // Só iniciamos se já não estiver ativo para evitar erros de permissão ou flickers
-            if (!this.qrScannerAtivo) {
-                setTimeout(() => {
-                    this.iniciarLeitorQR();
-                    // Removido o foco automático para evitar saltos de scroll em PCs
-                }, 400);
-            } else {
-                // Se já estiver ativo, garantimos que o container está visível
-                setTimeout(() => {
-                    const videoContainer = document.getElementById('video-container');
-                    const video = document.getElementById('v-stream');
-                    const scanStatus = document.getElementById('scan-status');
-                    const btnCam = document.getElementById('btnCam');
-
-                    if (videoContainer) videoContainer.style.display = 'block';
-
-                    // Se o scanner está ativo no estado mas o vídeo não tem stream ligado ao elemento (acontece no re-render)
-                    if (video && !video.srcObject && this.qrStreamGlobal) {
-                        video.srcObject = this.qrStreamGlobal;
-                        video.play().catch(e => console.warn("Erro ao retomar play:", e));
-
-                        if (btnCam) {
-                            btnCam.innerHTML = '<i class="fas fa-stop"></i> Parar Câmara';
-                            btnCam.onclick = () => this.pararLeitorQR();
-                        }
-                        if (scanStatus) {
-                            scanStatus.innerHTML = "<span style='color: var(--success)'> Scanner Ativo</span><br>Otimizado (2 scans/seg)";
-                        }
-                    }
-                    // Removido o foco automático para evitar saltos de scroll em PCs
-                }, 100);
-            }
+            // --- AUTO FOCUS NO HARDWARE SCANNER ---
+            setTimeout(() => {
+                const hwInput = document.getElementById('hardware-scanner-input');
+                if (hwInput) {
+                    hwInput.focus();
+                    // Manter foco se o utilizador clicar algures na página (apenas na vista QR)
+                    document.onmousedown = () => { 
+                        setTimeout(() => { if (this.activeView === 'qr_manager' && hwInput) hwInput.focus(); }, 10);
+                    };
+                }
+            }, 500);
 
         } catch (error) {
             console.error("Erro ao renderizar QR Manager:", error);
