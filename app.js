@@ -6754,9 +6754,21 @@ Bons treinos!`;
                 const hwInput = document.getElementById('hardware-scanner-input');
                 if (hwInput) {
                     hwInput.focus();
-                    // Manter foco se o utilizador clicar algures na página (apenas na vista QR)
-                    document.onmousedown = () => { 
-                        setTimeout(() => { if (this.activeView === 'qr_manager' && hwInput) hwInput.focus(); }, 10);
+                    // Manter foco apenas se NÃO estivermos a interagir com outros campos
+                    document.onmousedown = (e) => { 
+                        if (this.activeView !== 'qr_manager' || !hwInput) return;
+                        
+                        // Lista de elementos que NÃO devem ser interrompidos
+                        const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'];
+                        if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button')) {
+                            return; // Deixa o utilizador interagir com o campo
+                        }
+
+                        setTimeout(() => { 
+                            if (this.activeView === 'qr_manager' && hwInput && document.activeElement.tagName !== 'INPUT') {
+                                hwInput.focus(); 
+                            }
+                        }, 100);
                     };
                 }
             }, 500);
