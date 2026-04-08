@@ -2187,25 +2187,6 @@ Bons treinos!`;
                         </div>
                     </div>
 
-                    <div style="margin-top:2.5rem; display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem;">
-                        <div class="glass-card" onclick="app.setView('exercises')" style="cursor:pointer; display:flex; align-items:center; gap:1rem; border:1px solid rgba(var(--primary-rgb), 0.2); background:rgba(var(--primary-rgb), 0.05);">
-                            <div style="background:var(--primary); color:#fff; width:45px; height:45px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">
-                                <i class="fas fa-play-circle"></i>
-                            </div>
-                            <div>
-                                <h4 style="margin:0; font-size:1rem;">Exercícios</h4>
-                                <small style="color:var(--text-muted);">Biblioteca de Vídeos</small>
-                            </div>
-                        </div>
-                        <div class="glass-card" onclick="app.setView('foods')" style="cursor:pointer; display:flex; align-items:center; gap:1rem; border:1px solid rgba(16, 185, 129, 0.2); background:rgba(16, 185, 129, 0.05);">
-                            <div style="background:var(--success); color:#fff; width:45px; height:45px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">
-                                <i class="fas fa-apple-alt"></i>
-                            </div>
-                            <div>
-                                <h4 style="margin:0; font-size:1rem;">Alimentos</h4>
-                                <small style="color:var(--text-muted);">Base de Dados</small>
-                            </div>
-                        </div>
                     </div>
 
                     ${this.getOccupancyHTML()}
