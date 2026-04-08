@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.08.v19'; // Versão de controlo para Hard Reset
+        this.appVersion = '2026.04.08.v20'; // Versão de controlo para Hard Reset
         this.checkForForceUpdate();
 
         this.role = 'client';
@@ -149,7 +149,7 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v19'; // Forçar v19 para garantir limpeza após erro fatal de sintaxe
+            const targetV = 'v20'; // Forçar v20 para entregar novo design de planos
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
                 console.warn("Forçando atualizaçáo total da App (KandalGym v18)...");
@@ -2998,15 +2998,19 @@ Bons treinos!`;
                 </div>
             </div>
 
-            <!-- TABS DE VISUALIZAáâ€¡áÆ’O -->
+            <!-- TABS DE VISUALIZAÇÃO -->
             ${plans && plans.length > 0 ? `
-            <div style="display:flex; gap:0.5rem; margin:1.5rem 0; overflow-x:auto; padding-bottom:0.5rem; -webkit-overflow-scrolling:touch;">
+            <div style="display:flex; gap:0.6rem; margin:1.5rem 0; overflow-x:auto; padding:5px 0 12px; -webkit-overflow-scrolling:touch; scrollbar-width: none;">
                 ${plans.map((day, dIdx) => `
-                    <button class="btn ${this.viewingDayIdx === dIdx ? 'btn-primary' : 'btn-ghost'}" 
+                    <button class="btn" 
                         onclick="app.viewingDayIdx = ${dIdx}; app.renderTrainingView(null, '${clientId}');"
-                        style="padding:12px 20px; font-size:0.9rem; border-radius:12px; min-width:130px; display:flex; align-items:center; gap:8px; justify-content:center; flex-shrink:0; font-weight:700; background:${this.viewingDayIdx === dIdx ? '' : 'rgba(255,255,255,0.03)'}; border:${this.viewingDayIdx === dIdx ? '' : '1px solid rgba(255,255,255,0.05)'};">
-                        <i class="fas ${this.viewingDayIdx === dIdx ? 'fa-calendar-check' : 'fa-calendar-day'}" style="font-size:1rem;"></i>
-                        <span>${day.title || `Plano ${String.fromCharCode(65 + dIdx)}`}</span>
+                        style="padding:10px 22px; font-size:0.85rem; border-radius:100px; min-width:120px; display:flex; align-items:center; gap:8px; justify-content:center; flex-shrink:0; font-weight:700; transition:all 0.3s ease;
+                        background:${this.viewingDayIdx === dIdx ? 'var(--primary)' : 'rgba(255,255,255,0.05)'}; 
+                        color:${this.viewingDayIdx === dIdx ? '#fff' : 'var(--text-muted)'};
+                        border: 1px solid ${this.viewingDayIdx === dIdx ? 'var(--primary)' : 'rgba(255,255,255,0.1)'};
+                        box-shadow: ${this.viewingDayIdx === dIdx ? '0 4px 15px rgba(var(--primary-rgb), 0.3)' : 'none'};">
+                        <i class="fas ${this.viewingDayIdx === dIdx ? 'fa-calendar-check' : 'fa-calendar-day'}" style="font-size:0.9rem;"></i>
+                        <span style="text-transform:uppercase; letter-spacing:0.5px;">${day.title || `Plano ${String.fromCharCode(64 + (dIdx+1))}`}</span>
                     </button>
                 `).join('')}
             </div>
@@ -3015,110 +3019,101 @@ Bons treinos!`;
             ${plans && plans.length && plans[this.viewingDayIdx] ? (() => {
                 const day = plans[this.viewingDayIdx];
                 return `
-                <div class="glass-panel animate-fade-in" style="padding:1.5rem; margin-bottom:1.5rem; border-top:4px solid var(--primary);">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
-                        <h3 style="color:#fff; margin:0; font-weight:800; font-size:1.4rem; border:none; padding:0;">
-                            ${day.title || `Plano ${String.fromCharCode(65 + this.viewingDayIdx)}`}
-                        </h3>
-                        <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
-                            ${day.rest ? `
-                                <div style="background:rgba(var(--accent-rgb),0.1); color:var(--accent); padding:6px 14px; border-radius:10px; font-size:0.85rem; font-weight:800; display:flex; align-items:center; gap:8px;">
-                                    <i class="fas fa-stopwatch"></i> Descanso: ${day.rest}
-                                </div>
-                            ` : ''}
-                            <div style="background:rgba(255,255,255,0.05); color:var(--text-muted); padding:6px 14px; border-radius:10px; font-size:0.85rem; font-weight:700;">
-                                <i class="fas fa-layer-group"></i> ${day.exercises.length} Exercícios
+                <div class="animate-fade-in" style="margin-bottom:2rem;">
+                    <!-- INFO DO PLANO (RESUMO CABEÇALHO) -->
+                    <div class="glass-panel" style="padding:1.25rem; margin-bottom:1.5rem; border-left:4px solid var(--primary); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                        <div>
+                            <h3 style="color:#fff; margin:0; font-weight:800; font-size:1.2rem; text-transform:uppercase; letter-spacing:1px;">
+                                ${day.title || `Plano ${String.fromCharCode(65 + this.viewingDayIdx)}`}
+                            </h3>
+                            <div style="display:flex; gap:12px; margin-top:5px; align-items:center;">
+                                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;"><i class="fas fa-dumbbell" style="color:var(--primary);"></i> ${day.exercises.length} EXERCÍCIOS</span>
+                                ${day.rest ? `<span style="font-size:0.75rem; color:var(--accent); font-weight:600;"><i class="fas fa-clock"></i> DESCANSO: ${day.rest}</span>` : ''}
                             </div>
                         </div>
+                        ${day.notes ? `
+                            <div style="flex:1; min-width:250px; background:rgba(255,255,255,0.03); padding:10px 15px; border-radius:10px; border:1px solid rgba(255,255,255,0.05); position:relative;">
+                                <i class="fas fa-quote-left" style="position:absolute; top:8px; left:8px; font-size:0.6rem; opacity:0.3; color:var(--primary);"></i>
+                                <div style="color:var(--text-muted); font-size:0.85rem; font-style:italic; padding-left:12px; line-height:1.4;">"${day.notes}"</div>
+                            </div>
+                        ` : ''}
                     </div>
 
-                    ${day.notes ? `
-                        <div style="background:rgba(255,255,255,0.03); padding:1.25rem; border-radius:15px; margin-bottom:2rem; border:1px solid rgba(255,255,255,0.05); display:flex; gap:12px; align-items:flex-start;">
-                            <i class="fas fa-sticky-note" style="color:var(--primary); margin-top:3px; font-size:1.1rem;"></i>
-                            <div style="color:#e0e0e0; font-size:0.95rem; line-height:1.6; font-style:italic;">"${day.notes}"</div>
-                        </div>
-                    ` : ''}
-
-                    <div style="display:grid; grid-template-columns: 1fr; gap:1.25rem;">
+                    <!-- TABELA / LISTA DE EXERCICIOS (LEAN & PREMIUM) -->
+                    <div style="display:flex; flex-direction:column; gap:0.75rem;">
                         ${day.exercises.map((ex, exIdx) => {
-            const numSets = parseInt(ex.sets) || 0;
-            // Busca robusta: primeiro por ID, fallback por nome se o ID náo encontrar
-            let libEx = this.state.exercises.find(le => le.id == ex.id);
-            if (!libEx && ex.name) {
-                libEx = this.state.exercises.find(le => le.name.toLowerCase() === ex.name.toLowerCase());
-            }
+                            const numSets = parseInt(ex.sets) || 0;
+                            let libEx = this.state.exercises.find(le => le.id == ex.id);
+                            if (!libEx && ex.name) {
+                                libEx = this.state.exercises.find(le => le.name.toLowerCase() === ex.name.toLowerCase());
+                            }
+                            const muscleColor = libEx ? this.getMuscleColor(libEx.muscle) : 'var(--primary)';
 
-            return `
-                            <div class="glass-card" style="margin-bottom:0.5rem; background:rgba(255,255,255,0.03); padding: 1.25rem; border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
-                                <div style="display:flex; align-items:flex-start; gap:14px; margin-bottom:1rem;">
-                                    <!-- Miniatura do Exercício -->
-                                    <div style="width:65px; height:65px; border-radius:16px; overflow:hidden; background:rgba(0,0,0,0.4); flex-shrink:0; display:flex; align-items:center; justify-content:center; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-                                        ${libEx && libEx.photoUrl ?
-                    `<img src="${libEx.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` :
-                    `<div style="font-size:1.8rem; opacity:0.7;">${this.getExerciseIcon(libEx ? libEx.muscle : '')}</div>`
-                }
+                            return `
+                            <div class="glass-card" style="padding:0; overflow:hidden; border:1px solid rgba(255,255,255,0.05); transition:transform 0.2s ease; border-radius:12px; display:flex; flex-direction:column;">
+                                <div style="display:flex; align-items:center; padding:0.75rem 1rem; gap:15px; position:relative;">
+                                    <!-- Faixa Lateral de Cor por Grupo Muscular -->
+                                    <div style="position:absolute; left:0; top:0; bottom:0; width:4px; background:${muscleColor}; opacity:0.8;"></div>
+                                    
+                                    <!-- Foto/Icon -->
+                                    <div style="width:50px; height:50px; border-radius:10px; overflow:hidden; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+                                        ${libEx && libEx.photoUrl ? 
+                                            `<img src="${libEx.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : 
+                                            `<div style="font-size:1.4rem; opacity:0.6;">${this.getExerciseIcon(libEx ? libEx.muscle : '')}</div>`
+                                        }
+                                    </div>
+
+                                    <!-- Nome e Info Básica -->
+                                    <div style="flex:1; min-width:0;">
+                                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                                            <span style="font-weight:700; font-size:0.95rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">${ex.name}</span>
+                                            ${libEx && libEx.videoUrl ? `
+                                                <i class="fas fa-video" onclick="app.viewExerciseVideo('${libEx.videoUrl}', '${ex.name}')" style="color:var(--primary); cursor:pointer; font-size:0.85rem; opacity:0.7; padding:5px;"></i>
+                                            ` : ''}
+                                        </div>
+                                        <div style="display:flex; gap:10px; align-items:center; margin-top:3px;">
+                                            <span style="font-size:0.7rem; color:${muscleColor}; font-weight:800; text-transform:uppercase;">${libEx?.muscle || 'Geral'}</span>
+                                            <span style="width:3px; height:3px; border-radius:50%; background:rgba(255,255,255,0.2);"></span>
+                                            <span style="font-size:0.75rem; color:#fff; font-weight:700;">${ex.sets} SETS <span style="color:var(--text-muted);">x</span> ${ex.reps} REPS</span>
+                                        </div>
                                     </div>
                                     
-                                    <div style="min-width: 0; flex: 1;">
-                                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-                                            <strong style="font-size:1.05rem; display:block; color: #fff; line-height: 1.3;">${ex.name}</strong>
-                                            ${libEx && libEx.videoUrl ? `
-                                                <button class="btn btn-ghost" onclick="app.viewExerciseVideo('${libEx.videoUrl}', '${ex.name}')" 
-                                                    style="color:var(--primary); background:rgba(var(--primary-rgb),0.15); width: 32px; height: 32px; padding: 0; border-radius: 50%; border: 1px solid rgba(var(--primary-rgb),0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                                    <i class="fas fa-play" style="font-size: 0.75rem; margin-left: 2px;"></i>
-                                                </button>
-                                            ` : ''}
+                                    <!-- Badge de Cargas (Mobile Friendly) -->
+                                    ${!isClient && ex.weightLog ? `
+                                        <div style="text-align:right; flex-shrink:0;">
+                                            <small style="display:block; font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:2px;">Última Carga</small>
+                                            <span style="font-size:0.9rem; font-weight:800; color:var(--success);">${Math.max(...Object.values(ex.weightLog).map(v => parseFloat(v) || 0))}kg</span>
                                         </div>
-                                        <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 10px;">
-                                            <div style="font-size:0.8rem; font-weight: 700; color: var(--primary); background: rgba(var(--primary-rgb),0.1); padding: 2px 8px; border-radius: 6px;">
-                                                <i class="fas fa-redo-alt" style="font-size: 0.7rem;"></i> ${ex.sets} x ${ex.reps}
-                                            </div>
-                                            ${libEx && libEx.muscle ? `
-                                                <div style="font-size:0.75rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 6px;">
-                                                    ${libEx.muscle}
-                                                </div>
-                                            ` : ''}
-                                        </div>
-                                    </div>
+                                    ` : ''}
                                 </div>
 
+                                <!-- Observações (Expansível ou Compacta) -->
                                 ${ex.observations ? `
-                                    <div style="background: rgba(var(--accent-rgb),0.05); padding: 8px 12px; border-radius: 12px; margin-bottom: 1rem; border-left: 3px solid var(--accent);">
-                                        <small style="color:var(--accent); font-size: 0.75rem; font-weight: 500; display: block; line-height: 1.4;">
-                                            <i class="fas fa-quote-left" style="opacity:0.5; font-size: 0.6rem; vertical-align: top;"></i> 
-                                            ${ex.observations}
-                                        </small>
+                                    <div style="background:rgba(0,0,0,0.15); padding:6px 1rem; border-top:1px solid rgba(255,255,255,0.03); display:flex; gap:8px; align-items:center;">
+                                        <i class="fas fa-info-circle" style="font-size:0.7rem; color:var(--accent);"></i>
+                                        <span style="font-size:0.75rem; color:var(--text-muted); line-height:1.2;">${ex.observations}</span>
                                     </div>
                                 ` : ''}
 
+                                <!-- Se for Cliente: Área de Registo Compacta -->
                                 ${isClient ? `
-                                    <div style="background: rgba(0,0,0,0.15); padding: 1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
-                                        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                                            <label style="font-size:0.7rem; color:var(--text-muted); font-weight: 700; text-transform:uppercase; letter-spacing:0.8px;">Registo de Cargas (kg)</label>
-                                            <i class="fas fa-weight-hanging" style="font-size: 0.8rem; color: var(--primary); opacity: 0.6;"></i>
-                                        </div>
-                                        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap:0.5rem; margin-bottom: 1rem;">
+                                    <div style="padding:1rem; background:rgba(0,0,0,0.2); border-top:1px solid rgba(255,255,255,0.05);">
+                                        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap:0.4rem; margin-bottom:0.75rem;">
                                             ${Array.from({ length: numSets }).map((_, sIdx) => {
-                    const val = (ex.weightLog && ex.weightLog[sIdx]) || '';
-                    return `
-                                                <div style="text-align: center;">
+                                                const val = (ex.weightLog && ex.weightLog[sIdx]) || '';
+                                                return `
                                                     <input type="number" value="${val}" placeholder="S${sIdx + 1}" 
-                                                        onblur="app.logWeight(${clientId}, ${dIdx}, ${exIdx}, ${sIdx}, this.value)"
+                                                        onblur="app.logWeight(${clientId}, ${this.viewingDayIdx}, ${exIdx}, ${sIdx}, this.value)"
                                                         class="no-spin"
-                                                        style="width:100%; height:38px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:#fff; text-align:center; font-size:0.9rem; font-weight: 700; outline: none; transition: all 0.2s;"
-                                                        onfocus="this.style.borderColor='var(--primary)'; this.style.background='rgba(var(--primary-rgb),0.1)'">
-                                                </div>
+                                                        style="width:100%; height:32px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; text-align:center; font-size:0.8rem; font-weight:700; outline:none;">
                                                 `;
-                }).join('')}
+                                            }).join('')}
                                         </div>
-                                        
-                                        <div style="position: relative;">
-                                            <textarea id="note-${clientId}-${dIdx}-${exIdx}" 
-                                                onblur="app.saveExerciseNote(${clientId}, ${dIdx}, ${exIdx}, this.value)"
-                                                placeholder="Notas do exercício..."
-                                                style="width:100%; min-height:50px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); border-radius:12px; color:#fff; padding:10px 10px 10px 32px; font-size:0.85rem; resize:vertical; font-family:inherit; outline:none; transition: all 0.2s;"
-                                                onfocus="this.style.borderColor='var(--accent)'">${ex.clientNotes || ''}</textarea>
-                                            <i class="fas fa-sticky-note" style="position:absolute; left:12px; top:14px; font-size:0.8rem; color:var(--text-muted);"></i>
+                                        <div style="position:relative;">
+                                            <input type="text" value="${ex.clientNotes || ''}" placeholder="Adicionar nota rápida..."
+                                                onblur="app.saveExerciseNote(${clientId}, ${this.viewingDayIdx}, ${exIdx}, this.value)"
+                                                style="width:100%; height:32px; background:rgba(0,0,0,0.1); border:1px solid rgba(255,255,255,0.03); border-radius:8px; color:#fff; padding:0 10px 0 28px; font-size:0.8rem; font-family:inherit; outline:none;">
+                                            <i class="fas fa-edit" style="position:absolute; left:10px; top:9px; font-size:0.7rem; color:var(--text-muted);"></i>
                                         </div>
                                     </div>
                                 ` : ''}
@@ -3127,22 +3122,19 @@ Bons treinos!`;
                         }).join('')}
                     </div>
 
+                    <!-- Finalização para Cliente -->
                     ${isClient ? `
-                        <div class="glass-panel" style="background: rgba(var(--primary-rgb), 0.05); border: 1px solid rgba(var(--primary-rgb), 0.2); margin-top: 2rem; padding: 1.25rem;">
-                            <h4 style="margin: 0 0 1rem; font-size: 0.95rem; color: var(--primary); display: flex; align-items: center; gap: 8px;">
+                        <div class="glass-panel" style="background: rgba(var(--primary-rgb), 0.05); border: 1px solid rgba(var(--primary-rgb), 0.2); margin-top:2rem; padding:1.25rem; border-radius:15px;">
+                            <h4 style="margin: 0 0 1rem; font-size: 0.9rem; color: var(--primary); display:flex; align-items:center; gap:8px;">
                                 <i class="fas fa-comment-dots"></i> Feedback Geral do Treino
                             </h4>
                             <textarea id="workout-global-note-${clientId}-${this.viewingDayIdx}" 
-                                placeholder="Como correu o treino de hoje?..."
-                                style="width:100%; min-height:80px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#fff; padding:12px; font-size:0.9rem; resize:vertical; font-family:inherit; outline:none; transition: all 0.3s;"
-                                onfocus="this.style.borderColor='var(--primary)'"
-                                onblur="this.style.borderColor='rgba(255,255,255,0.1)'"></textarea>
-                        </div>
-
-                        <div style="margin-top:2rem; text-align:center; padding-bottom: 2rem;">
+                                placeholder="Notas gerais sobre o treino de hoje..."
+                                style="width:100%; min-height:80px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#fff; padding:12px; font-size:0.9rem; resize:vertical; font-family:inherit; outline:none; transition:all 0.3s;"></textarea>
+                            
                             <button class="btn btn-primary" onclick="app.finishWorkout('${clientId}', ${this.viewingDayIdx})" 
-                                style="width:100%; height:60px; font-size:1.1rem; font-weight: 800; border-radius: 16px; background: linear-gradient(135deg, var(--primary), var(--accent)); border:none; box-shadow:0 8px 25px rgba(var(--primary-rgb),0.4); display: flex; align-items: center; justify-content: center; gap: 12px;">
-                                <i class="fas fa-check-double" style="font-size: 1.3rem;"></i> Finalizar Treino
+                                style="width:100%; height:55px; margin-top:1.5rem; font-size:1.05rem; font-weight:800; border-radius:16px; background: linear-gradient(135deg, var(--primary), var(--accent)); border:none; box-shadow:0 8px 25px rgba(var(--primary-rgb),0.4); display:flex; align-items:center; justify-content:center; gap:12px;">
+                                <i class="fas fa-check-double" style="font-size:1.2rem;"></i> Finalizar Treino
                             </button>
                         </div>
                     ` : ''}
@@ -3932,20 +3924,38 @@ Bons treinos!`;
 
     getExerciseIcon(muscle) {
         const iconMap = {
-            'Peitorais': '',
-            'Costas': '',
-            'Ombros': '',
-            'Biceps': '',
-            'Triceps': '',
-            'Quadriceps': '',
-            'Isquiotibiais': '',
-            'Gluteos': '',
-            'Gemeos': '',
-            'Abdominais': '',
-            'Antebraco': '',
-            'Lombar': ''
+            'Peitorais': '💪',
+            'Costas': '👐',
+            'Ombros': '👔',
+            'Biceps': '💪',
+            'Triceps': '💪',
+            'Quadriceps': '🦵',
+            'Isquiotibiais': '🦵',
+            'Gluteos': '🍑',
+            'Gemeos': '🦵',
+            'Abdominais': '🍫',
+            'Antebraco': '💪',
+            'Lombar': '背'
         };
-        return iconMap[muscle] || '';
+        return iconMap[muscle] || '🏋️';
+    }
+
+    getMuscleColor(muscle) {
+        const colors = {
+            'Peitorais': '#3b82f6', // Blue
+            'Costas': '#8b5cf6',    // Violet
+            'Ombros': '#06b6d4',    // Cyan
+            'Biceps': '#f43f5e',    // Rose
+            'Triceps': '#ec4899',   // Pink
+            'Quadriceps': '#10b981', // Emerald
+            'Isquiotibiais': '#059669', // Green
+            'Gluteos': '#f59e0b',   // Amber
+            'Gemeos': '#d946ef',    // Fuchsia
+            'Abdominais': '#ef4444', // Red
+            'Antebraco': '#6366f1',  // Indigo
+            'Lombar': '#475569'      // Slate
+        };
+        return colors[muscle] || 'var(--primary)';
     }
 
     showExerciseSelectionModal(dayIdx, exIdx) {
