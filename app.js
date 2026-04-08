@@ -34,6 +34,7 @@ class FitnessApp {
         this.spySubView = 'training';
         this.dashboardMonth = new Date().toISOString().substring(0, 7);
         this.editingDayIdx = 0; // Controla qual o dia (Plano A, B...) a ser mostrado no editor
+        this.editingNewsId = null; // Controla se estamos a editar uma noticia
         this.planRestrictions = {
             'Musculação': { allowClasses: false },
             'Pilates': { allowClasses: true, filter: ['Pilates'] },
@@ -236,18 +237,24 @@ class FitnessApp {
 
     showManageNewsModal() {
         const newsList = (this.state.news || []).slice().reverse();
+        const editingItem = this.editingNewsId ? this.state.news.find(n => n.id === this.editingNewsId) : null;
         
         let newsHtml = newsList.map((item, idx) => `
-            <div class="glass-card" style="margin-bottom:1rem; padding:1rem; border-left:3px solid var(--accent);">
+            <div class="glass-card" style="margin-bottom:1rem; padding:1rem; border-left:3px solid var(--accent); transition: all 0.3s ease; ${this.editingNewsId === item.id ? 'border: 1px solid var(--primary); box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.2);' : ''}">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                     <div style="flex:1;">
                         <h4 style="margin:0; font-size:1rem; color:#fff;">${item.title}</h4>
                         <small style="color:var(--text-muted); display:block; margin-bottom:5px;">${item.date}</small>
                         <p style="margin:0; font-size:0.85rem; color:var(--text-muted); white-space:pre-wrap;">${item.content}</p>
                     </div>
-                    <button class="btn btn-ghost" style="color:var(--danger); padding:5px;" onclick="app.deleteNews('${item.id}')">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button class="btn btn-ghost" style="color:var(--primary); padding:5px;" onclick="app.startEditNews('${item.id}')" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-ghost" style="color:var(--danger); padding:5px;" onclick="app.deleteNews('${item.id}')" title="Apagar">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         `).join('');
@@ -257,18 +264,29 @@ class FitnessApp {
         const content = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
                 <h2 style="margin:0;"><i class="fas fa-bullhorn"></i> Gerir Notícias & Novidades</h2>
-                <button class="btn btn-ghost" onclick="app.closeModal()"><i class="fas fa-times"></i></button>
+                <button class="btn btn-ghost" onclick="app.editingNewsId=null; app.closeModal()"><i class="fas fa-times"></i></button>
             </div>
 
-            <div class="glass-panel" style="padding:1.5rem; margin-bottom:2rem; background:rgba(255,255,255,0.03);">
-                <h3 style="margin-top:0; font-size:1rem; margin-bottom:1rem;">Publicar Nova Notícia</h3>
+            <div class="glass-panel" style="padding:1.5rem; margin-bottom:2rem; background:rgba(255,255,255,0.03); border: ${editingItem ? '1px solid var(--primary)' : '1px solid transparent'}">
+                <h3 style="margin-top:0; font-size:1rem; margin-bottom:1rem; color:${editingItem ? 'var(--primary)' : '#fff'}">
+                    ${editingItem ? '<i class="fas fa-edit"></i> Editar Notícia' : 'Publicar Nova Notícia'}
+                </h3>
                 <div style="display:flex; flex-direction:column; gap:1rem;">
-                    <input type="text" id="news-title-input" placeholder="Título da notícia..." class="search-bar" style="width:100% !important; padding-left:15px !important;">
+                    <input type="text" id="news-title-input" placeholder="Título da notícia..." class="search-bar" 
+                        style="width:100% !important; padding-left:15px !important;" value="${editingItem ? editingItem.title : ''}">
                     <textarea id="news-content-input" placeholder="Conteúdo da novidade..." 
-                        style="width:100%; height:100px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:12px; padding:12px; outline:none; font-family:inherit; resize:none;"></textarea>
-                    <button class="btn btn-primary" onclick="app.addNews()">
-                        <i class="fas fa-paper-plane"></i> Publicar Agora
-                    </button>
+                        style="width:100%; height:100px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:12px; padding:12px; outline:none; font-family:inherit; resize:none;">${editingItem ? editingItem.content : ''}</textarea>
+                    
+                    <div style="display:flex; gap:0.5rem;">
+                        <button class="btn btn-primary" onclick="app.addNews()" style="flex:1;">
+                            <i class="fas ${editingItem ? 'fa-save' : 'fa-paper-plane'}"></i> ${editingItem ? 'Guardar Alterações' : 'Publicar Agora'}
+                        </button>
+                        ${editingItem ? `
+                            <button class="btn btn-secondary" onclick="app.editingNewsId=null; app.showManageNewsModal()">
+                                Cancelar
+                            </button>
+                        ` : ''}
+                    </div>
                 </div>
             </div>
 
@@ -278,6 +296,11 @@ class FitnessApp {
             </div>
         `;
         this.showModal(content, '600px');
+    }
+
+    startEditNews(id) {
+        this.editingNewsId = id;
+        this.showManageNewsModal();
     }
 
     addNews() {
@@ -290,17 +313,31 @@ class FitnessApp {
 
         if (!this.state.news) this.state.news = [];
 
-        const newEntry = {
-            id: Date.now().toString(),
-            title: title,
-            content: content,
-            date: new Date().toLocaleDateString('pt-PT') + ' ' + new Date().toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'})
-        };
+        if (this.editingNewsId) {
+            // Modo Edição
+            const idx = this.state.news.findIndex(n => n.id === this.editingNewsId);
+            if (idx !== -1) {
+                this.state.news[idx].title = title;
+                this.state.news[idx].content = content;
+                // Opcionalmente atualizar a data, mas mantemos a original para historico se desejar
+                this.state.news[idx].updatedAt = new Date().toLocaleDateString('pt-PT') + ' ' + new Date().toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'});
+            }
+            this.editingNewsId = null;
+            this.showToast('Notícia atualizada!', 'success');
+        } else {
+            // Modo Criação
+            const newEntry = {
+                id: Date.now().toString(),
+                title: title,
+                content: content,
+                date: new Date().toLocaleDateString('pt-PT') + ' ' + new Date().toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'})
+            };
+            this.state.news.push(newEntry);
+            this.showToast('Notícia publicada com sucesso!', 'success');
+        }
 
-        this.state.news.push(newEntry);
         this.saveState();
         this.showManageNewsModal(); // Atualizar lista no modal
-        this.showToast('Notícia publicada com sucesso!', 'success');
     }
 
     deleteNews(id) {
