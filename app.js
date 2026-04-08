@@ -1392,10 +1392,7 @@ Bons treinos!`;
             navItems = [
                 { id: 'dashboard', icon: 'fa-chart-pie', label: 'Inicio' },
                 { id: 'classes', icon: 'fa-calendar-alt', label: 'Aulas' },
-                { id: 'clients', icon: 'fa-user-friends', label: 'Alunos' },
                 { id: 'chat', icon: 'fa-comment-alt', label: 'Msgs' },
-                { id: 'exercises', icon: 'fa-play-circle', label: 'Exercícios' },
-                { id: 'foods', icon: 'fa-apple-alt', label: 'Alim.' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'Perfil' }
             ];
         } else {
@@ -1444,10 +1441,7 @@ Bons treinos!`;
             navItems = [
                 { id: 'dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
                 { id: 'classes', icon: 'fa-calendar-alt', label: 'Gestão de Aulas' },
-                { id: 'clients', icon: 'fa-user-friends', label: 'Meus Alunos' },
                 { id: 'anamnesis', icon: 'fa-notes-medical', label: 'Anamnese' },
-                { id: 'exercises', icon: 'fa-play-circle', label: 'Biblioteca Exercícios' },
-                { id: 'foods', icon: 'fa-apple-alt', label: 'Base de Alimentos' },
                 { id: 'chat', icon: 'fa-comment-alt', label: 'Mensagens' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
             ];
@@ -2167,29 +2161,50 @@ Bons treinos!`;
                     </div>
                     
                     <div class="stats-grid">
-                        <div class="glass-card" style="border-left: 4px solid var(--primary);">
+                        <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--primary); cursor:pointer; transition: transform 0.2s ease, background 0.2s ease;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Meus Alunos</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--primary);">${teacherClients.length}</div>
                         </div>
                         
-                        <div class="glass-card" style="border-left: 4px solid var(--accent);">
+                        <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--accent); cursor:pointer;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Avaliações</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--accent);">${monthEvals}</div>
                         </div>
 
-                        <div class="glass-card" style="border-left: 4px solid var(--success);">
+                        <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--success); cursor:pointer;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Planos Treino</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--success);">${monthTraining}</div>
                         </div>
 
-                        <div class="glass-card" style="border-left: 4px solid #60a5fa;">
+                        <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid #60a5fa; cursor:pointer;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Planos Dieta</small>
                             <div style="font-size:1.8rem; font-weight:800; color:#60a5fa;">${monthMeals}</div>
                         </div>
 
-                        <div class="glass-card" style="border-left: 4px solid var(--primary);">
+                        <div class="glass-card" onclick="app.setView('anamnesis')" style="border-left: 4px solid var(--primary); cursor:pointer;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Anamneses</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--primary);">${monthAnamnesis}</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:2.5rem; display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem;">
+                        <div class="glass-card" onclick="app.setView('exercises')" style="cursor:pointer; display:flex; align-items:center; gap:1rem; border:1px solid rgba(var(--primary-rgb), 0.2); background:rgba(var(--primary-rgb), 0.05);">
+                            <div style="background:var(--primary); color:#fff; width:45px; height:45px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">
+                                <i class="fas fa-play-circle"></i>
+                            </div>
+                            <div>
+                                <h4 style="margin:0; font-size:1rem;">Exercícios</h4>
+                                <small style="color:var(--text-muted);">Biblioteca de Vídeos</small>
+                            </div>
+                        </div>
+                        <div class="glass-card" onclick="app.setView('foods')" style="cursor:pointer; display:flex; align-items:center; gap:1rem; border:1px solid rgba(16, 185, 129, 0.2); background:rgba(16, 185, 129, 0.05);">
+                            <div style="background:var(--success); color:#fff; width:45px; height:45px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">
+                                <i class="fas fa-apple-alt"></i>
+                            </div>
+                            <div>
+                                <h4 style="margin:0; font-size:1rem;">Alimentos</h4>
+                                <small style="color:var(--text-muted);">Base de Dados</small>
+                            </div>
                         </div>
                     </div>
 
