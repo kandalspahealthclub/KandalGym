@@ -1556,24 +1556,36 @@ Bons treinos!`;
         for (let i = 7; i <= 22; i++) hoursCount[i] = 0;
 
         let totalHoje = 0;
+        let liveOccupancy = 0;
+
         qrClientsArray.forEach(c => {
             if (c.histórico) {
                 const histArray = Object.values(c.histórico);
-                histArray.forEach(entry => {
-                    const isoDate = typeof entry === 'string' ? entry : entry.d;
-                    const type = typeof entry === 'string' ? 'in' : entry.t;
+                // Ordenar por data descendente para ver o movimento mais recente
+                const sortedHist = histArray.map(h => ({
+                    d: new Date(typeof h === 'string' ? h : h.d),
+                    t: typeof h === 'string' ? 'in' : h.t
+                })).sort((a,b) => b.d - a.d);
 
-                    if (type === 'in') {
-                        const d = new Date(isoDate);
-                        if (!isNaN(d.getTime()) && d >= todayStart && d <= todayEnd) {
-                            const h = d.getHours();
-                            if (h >= 7 && h <= 22) {
-                                hoursCount[h]++;
-                                totalHoje++;
-                            }
+                // Contagem para o Histograma (Frequência Horária)
+                sortedHist.forEach(entry => {
+                    if (entry.t === 'in' && entry.d >= todayStart && entry.d <= todayEnd) {
+                        const h = entry.d.getHours();
+                        if (h >= 7 && h <= 22) {
+                            hoursCount[h]++;
                         }
                     }
                 });
+
+                // Cálculo da Ocupação em Direto (Quem ainda está lá?)
+                const lastMoveToday = sortedHist.find(h => h.d >= todayStart && h.d <= todayEnd);
+                if (lastMoveToday && lastMoveToday.t === 'in') {
+                    liveOccupancy++;
+                }
+
+                // Total de Visitas Únicas Hoje
+                const hasVisitToday = sortedHist.some(h => h.t === 'in' && h.d >= todayStart && h.d <= todayEnd);
+                if (hasVisitToday) totalHoje++;
             }
         });
 
@@ -1597,9 +1609,18 @@ Bons treinos!`;
 
         return `
             <div class="glass-panel animate-fade-in" style="margin-bottom:2rem; padding:1.5rem;">
-                <h3 style="margin-top:0; color:var(--text-base); display:flex; align-items:center; gap:0.5rem; justify-content:space-between; margin-bottom:1.5rem;">
-                    <span><i class="fas fa-chart-line" style="color:var(--accent);"></i> Afluência Hoje</span>
-                    ${showTotal ? `<span style="font-size:0.8rem; background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:12px;">Total: <strong>${totalHoje}</strong></span>` : ''}
+                <h3 style="margin-top:0; color:var(--text-base); display:flex; align-items:center; gap:0.5rem; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap;">
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <i class="fas fa-chart-line" style="color:var(--accent);"></i> 
+                        <span>Afluência Estimada</span>
+                    </div>
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                        <div style="background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.2); padding:6px 12px; border-radius:12px; display:flex; align-items:center; gap:6px;">
+                            <span class="pulse-green" style="width:8px; height:8px; background:#10b981; border-radius:50%;"></span>
+                            <span style="font-size:0.8rem; color:#10b981; font-weight:700;">No Ginásio: ${liveOccupancy}</span>
+                        </div>
+                        ${showTotal ? `<span style="font-size:0.8rem; background:rgba(255,255,255,0.05); color:var(--text-muted); padding:6px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">Total Visitas: <strong>${totalHoje}</strong></span>` : ''}
+                    </div>
                 </h3>
                 <div style="display:flex; gap:2px; justify-content:space-between; align-items:flex-end; padding-top:10px; overflow-x:auto; padding-bottom:5px;">
                     ${barsHTML}
