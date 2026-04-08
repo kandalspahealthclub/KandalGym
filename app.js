@@ -3414,16 +3414,21 @@ Bons treinos!`;
                                     </div>
                                 </div>
                                 
-                                <div style="display:flex; flex-wrap:wrap; gap:1rem; align-items:flex-end;">
-                                    <div style="flex:1; min-width:70px; max-width:110px;">
+                                <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;">
+                                    <div style="flex:1; min-width:85px; max-width:110px;">
                                         <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Séries</label>
                                         <input type="text" value="${ex.sets || ''}" placeholder="Ex: 4" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'sets', this.value)"
                                             style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:600;">
                                     </div>
-                                    <div style="flex:1; min-width:70px; max-width:110px;">
+                                    <div style="flex:1; min-width:85px; max-width:110px;">
                                         <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Reps</label>
                                         <input type="text" value="${ex.reps || ''}" placeholder="Ex: 12" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'reps', this.value)"
-                                            style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:600;">
+                                            style="width:100%; height:45px; background:rgba(255,255,255,0.05); color:#fff; border:2px solid var(--primary); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:700;">
+                                    </div>
+                                    <div style="flex:1; min-width:105px; max-width:130px;">
+                                        <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Descanso</label>
+                                        <input type="text" value="${ex.rest || ''}" placeholder="Ex: 60s" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'rest', this.value)"
+                                            style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 12px; text-align:center; font-size:1.1rem; color:var(--accent);">
                                     </div>
                                     <div style="flex:3; min-width:240px;">
                                         <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Observações (opcional)</label>
@@ -3433,6 +3438,13 @@ Bons treinos!`;
                                 </div>
                             </div>
                         `).join('')}
+                    </div>
+                    
+                    <div style="margin-top:2rem; padding:1.5rem; background:rgba(255,255,255,0.02); border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                        <label style="display:block; font-size:0.8rem; color:var(--accent); font-weight:600; text-transform:uppercase; margin-bottom:8px;">Observações do ${currentDay.title || `Plano ${String.fromCharCode(65 + this.editingDayIdx)}`}</label>
+                        <textarea oninput="app.updateEditorDayNotes(${this.editingDayIdx}, this.value)"
+                            placeholder="Notas específicas para este dia de treino... (ex: Cardio no fim, focar na postura, etc.)"
+                            style="width:100%; min-height:100px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:12px; font-size:1rem; font-family:inherit; resize:vertical;">${currentDay.notes || ''}</textarea>
                     </div>
                     
                     <div id="day-${this.editingDayIdx}-exercises-footer" style="display:flex; justify-content:space-between; align-items:center; margin-top:2.5rem; margin-bottom:1rem; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,0.05); flex-wrap:wrap; gap:1.25rem;">
@@ -3498,6 +3510,13 @@ Bons treinos!`;
         this.saveTrainingDraft();
         this.renderTrainingEditor();
         this.showToast('Ordem do exercício alterada.');
+    }
+
+    updateEditorDayNotes(dayIdx, value) {
+        if (this.editingPlan[dayIdx]) {
+            this.editingPlan[dayIdx].notes = value;
+            this.saveTrainingDraft();
+        }
     }
 
     updateEditorExercise(dayIdx, exIdx, field, value) {
