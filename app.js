@@ -2623,6 +2623,8 @@ Bons treinos!`;
     }
 
     renderNotificationsManager(container) {
+        let clientsList = this.state.clients || [];
+        
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <h2><i class="fas fa-paper-plane" style="color:var(--primary);"></i> Envio de Comunicados</h2>
@@ -2631,22 +2633,20 @@ Bons treinos!`;
                 
                 <div>
                     <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Destinatários:</label>
-                    
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;">
-                        <input type="text" id="notify-search-input" placeholder="Pesquisar aluno..." oninput="app.filterNotifyList(this.value)" style="flex:1; min-width:200px; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); border-radius: 8px; color: #fff;">
-                        
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn btn-sm btn-secondary" onclick="app.quickSelectNotify('all')">Marcar Todos</button>
-                            <button class="btn btn-sm btn-secondary" onclick="app.quickSelectNotify('none')">Desmarcar</button>
+                    <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--surface-border); border-radius: 8px; padding: 10px; background: rgba(0,0,0,0.2);">
+                        <div style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--surface-border);">
+                            <input type="checkbox" id="selectAllToNotify" onchange="app.toggleAllNotifyClients(this.checked)" style="margin-right: 8px;">
+                            <label for="selectAllToNotify" style="font-weight:bold; cursor:pointer;">Selecionar Todos os Alunos</label>
+                        </div>
+                        <div id="notify-clients-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
+                            ${clientsList.map(c => `
+                                <div>
+                                    <input type="checkbox" id="notify_${c.id}" class="notify-client-checkbox" value="${c.id}" data-name="${c.name}" data-email="${c.email}" data-phone="${c.phone || ''}" style="margin-right: 5px;">
+                                    <label for="notify_${c.id}" style="font-size:0.9rem;">${c.name}</label>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
-
-                    <div style="max-height: 250px; overflow-y: auto; border: 1px solid var(--surface-border); border-radius: 8px; padding: 10px; background: rgba(0,0,0,0.2);">
-                        <div id="notify-clients-list" style="display: flex; flex-direction: column; gap: 8px;">
-                            ${this.renderNotifyClientCards()}
-                        </div>
-                    </div>
-                    <small style="color:var(--text-muted); margin-top:5px; display:block;" id="notify-count-indicator">Alunos selecionados: 0</small>
                 </div>
 
                 <div>
@@ -2655,68 +2655,15 @@ Bons treinos!`;
                 </div>
 
                 <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                    <button class="btn btn-primary" onclick="app.sendBulkNotification('sms')" style="flex:1; background: #3b82f6;">
-                        <i class="fas fa-comment-sms"></i> Smartphone (SMS)
-                    </button>
-                    <button class="btn btn-primary" onclick="app.sendBulkNotification('whatsapp')" style="flex:1; background: #25D366;">
-                        <i class="fab fa-whatsapp"></i> Preparar WhatsApp
+                    <button class="btn btn-primary" onclick="app.sendBulkNotification('whatsapp')" style="flex:1;">
+                        <i class="fab fa-whatsapp"></i> Preparar envio WhatsApp
                     </button>
                     <button class="btn btn-secondary" onclick="app.sendBulkNotification('email')" style="flex:1;">
-                        <i class="fas fa-envelope"></i> App Email (Cópia Oculta)
+                        <i class="fas fa-envelope"></i> Abrir cliente Email (BCC)
                     </button>
                 </div>
             </div>
         `;
-    }
-
-    renderNotifyClientCards(filterVal = '') {
-        let clientsList = this.state.clients || [];
-        const query = filterVal.toLowerCase().trim();
-        
-        if (query) {
-            clientsList = clientsList.filter(c => 
-                (c.name && c.name.toLowerCase().includes(query)) || 
-                (c.phone && c.phone.includes(query))
-            );
-        }
-
-        if (clientsList.length === 0) return '<div style="color:var(--text-muted); padding:10px; text-align:center;">Nenhum aluno corresponde à pesquisa.</div>';
-
-        return clientsList.map(c => {
-            const hasPhone = c.phone && c.phone !== 'undefined' && c.phone !== '';
-            const statusColor = hasPhone ? 'var(--success)' : 'var(--danger)';
-            return \`
-                <div class="glass-card" style="padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s; border:1px solid rgba(255,255,255,0.05);" onclick="const cb=document.getElementById('notify_\${c.id}'); cb.checked=!cb.checked; app.updateNotifyCount();">
-                    <div style="display:flex; align-items:center; gap: 10px;">
-                        <input type="checkbox" id="notify_\${c.id}" class="notify-client-checkbox" value="\${c.id}" data-name="\${c.name}" data-email="\${c.email}" data-phone="\${c.phone || ''}" onclick="event.stopPropagation(); app.updateNotifyCount();" style="width:16px; height:16px; cursor:pointer;">
-                        <div>
-                            <div style="font-weight:bold; font-size: 0.95rem;">\${c.name}</div>
-                            <div style="font-size: 0.75rem; color:var(--text-muted);"><i class="fas fa-phone-alt" style="color:\${statusColor};"></i> \${c.phone || 'Sem nº'} | \${c.email || 'Sem email'}</div>
-                        </div>
-                    </div>
-                </div>
-            \`;
-        }).join('');
-    }
-
-    filterNotifyList(val) {
-        const list = document.getElementById('notify-clients-list');
-        if (list) list.innerHTML = this.renderNotifyClientCards(val);
-        this.updateNotifyCount();
-    }
-
-    quickSelectNotify(type) {
-        const checkboxes = document.querySelectorAll('.notify-client-checkbox');
-        checkboxes.forEach(cb => {
-            cb.checked = (type === 'all');
-        });
-        this.updateNotifyCount();
-    }
-
-    updateNotifyCount() {
-        const count = document.querySelectorAll('.notify-client-checkbox:checked').length;
-        const ind = document.getElementById('notify-count-indicator');
-        if (ind) ind.innerText = \`Alunos selecionados: \${count}\`;
     }
 
     toggleAllNotifyClients(checked) {
@@ -2739,39 +2686,19 @@ Bons treinos!`;
             phone: cb.dataset.phone
         }));
 
-        if (type === 'sms') {
-            const phones = clients.map(c => {
-                if (!c.phone || c.phone === 'undefined') return null;
-                let cleanPhone = c.phone.replace(/\\D/g, '');
-                // Try to use absolute numbers, drop national prefixes occasionally depending on country,
-                // but 351 is standard if local. For SMS, standard local network doesn't strictly need +351 but works fine.
-                return cleanPhone;
-            }).filter(Boolean);
-
-            if (phones.length === 0) return alert('Nenhum dos clientes selecionados possui telemóvel registado.');
-            
-            // Format SMS deep link depending on OS.
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-            const separator = isIOS ? ',' : ';';
-            const linkStart = isIOS ? '&' : '?';
-            
-            const smsLink = \`sms:\${phones.join(separator)}\${linkStart}body=\${encodeURIComponent(msg)}\`;
-            
-            // Open default SMS app
-            window.location.href = smsLink;
-
-        } else if (type === 'email') {
+        if (type === 'email') {
             const emails = clients.map(c => c.email).filter(e => e && e !== 'undefined').join(',');
             if (!emails) return alert('Nenhum dos clientes selecionados possui email registado.');
-            const mailto = \`mailto:?bcc=\${emails}&subject=KandalGym%20-%20Comunicado&body=\${encodeURIComponent(msg)}\`;
+            const mailto = `mailto:?bcc=${emails}&subject=KandalGym%20-%20Comunicado&body=${encodeURIComponent(msg)}`;
             window.location.href = mailto;
         } else if (type === 'whatsapp') {
+            // Because Popup blockers prevent multiple WhatsApp tabs, handle it via a guided modal
             if (clients.length === 1) {
                 const phone = clients[0].phone;
-                if (!phone || phone === 'undefined') return alert('O cliente selecionado não tem telemóvel registado.');
+                if (!phone) return alert('O cliente selecionado não tem telemóvel registado.');
                 let cleanPhone = phone.replace(/\\D/g, '');
                 if (!cleanPhone.startsWith('351') && cleanPhone.length === 9) cleanPhone = '351' + cleanPhone;
-                window.open(\`https://wa.me/\${cleanPhone}?text=\${encodeURIComponent(msg)}\`, '_blank');
+                window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
             } else {
                 this.showWhatsAppBulkModal(clients, msg);
             }
