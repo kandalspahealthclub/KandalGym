@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.09.v41'; // Versão de controlo para Hard Reset v41
+        this.appVersion = '2026.04.09.v42'; // Versão de controlo para Hard Reset v42
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v41'; // Forçar v41 para limpeza de navegação e menu simplificado
+            const targetV = 'v42'; // Forçar v42 para remoção do ícone de mensagens na spy_view
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v41)...");
+                console.warn("Forçando atualização total da App (KandalGym v42)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -4667,8 +4667,7 @@ Bons treinos!`;
                     {id:'training', icon:'fa-dumbbell', label:'Treino'},
                     {id:'meal', icon:'fa-apple-alt', label:'Dieta'},
                     {id:'evaluation', icon:'fa-chart-line', label:'Aval.'},
-                    {id:'anamnesis', icon:'fa-notes-medical', label:'Anamn.'},
-                    {id:'messages', icon:'fa-comment-dots', label:'Msgs'}
+                    {id:'anamnesis', icon:'fa-notes-medical', label:'Anamn.'}
                 ].map(item => `
                     <button class="btn btn-sm" onclick="app.setSpySubView('${item.id}')" 
                         style="flex:1; min-width:70px; padding:8px 4px; display:flex; flex-direction:column; gap:4px; border-radius:10px; font-size:0.65rem; transition:all 0.3s;
