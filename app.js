@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.09.v45'; // Versão de controlo para Hard Reset v45
+        this.appVersion = '2026.04.09.v47'; // Versão de controlo para Hard Reset v47
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v45'; // Forçar v45 para correção de icon dos ombros
+            const targetV = 'v47'; // Forçar v47 para aviso de séries incompletas
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v45)...");
+                console.warn("Forçando atualização total da App (KandalGym v47)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -3091,11 +3091,15 @@ Bons treinos!`;
                                         </div>
                                     </div>
 
-                                    <!-- Load Badge (Teacher View) -->
-                                    ${!isClient && ex.weightLog ? `
-                                        <div style="text-align:right;">
-                                            <span style="display:block; font-size:0.5rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Prev</span>
-                                            <span style="font-size:0.85rem; font-weight:800; color:var(--success);">${Math.max(...Object.values(ex.weightLog).map(v => parseFloat(v) || 0))}kg</span>
+                                    <!-- Registo de Cargas por Série (Teacher View) -->
+                                    ${!isClient && ex.weightLog && Object.keys(ex.weightLog).length > 0 ? `
+                                        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:2px; flex-shrink:0;">
+                                            <span style="font-size:0.5rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:2px;">Cargas</span>
+                                            <div style="display:flex; gap:4px; flex-wrap:wrap; justify-content:flex-end; max-width:120px;">
+                                                ${Object.entries(ex.weightLog).sort((a,b) => Number(a[0])-Number(b[0])).map(([sIdx, val]) => val ? `
+                                                    <span style="background:rgba(16,185,129,0.1); color:var(--success); font-size:0.65rem; font-weight:800; padding:2px 6px; border-radius:4px; white-space:nowrap;">S${Number(sIdx)+1}: ${val}kg</span>
+                                                ` : '').join('')}
+                                            </div>
                                         </div>
                                     ` : ''}
                                 </div>
@@ -3180,25 +3184,49 @@ Bons treinos!`;
         const cid = String(clientId);
         const days = this.getTrainingDays(cid);
         const day = days ? days[dayIdx] : null;
-        if (!day) { alert('Dia de treino náo encontrado. Tente recarregar a página.'); return; }
+        if (!day) { alert('Dia de treino não encontrado. Tente recarregar a página.'); return; }
 
-        const hasWeights = day.exercises.some(ex => ex.weightLog && ex.weightLog.some(w => w !== '' && w !== null && w !== undefined));
+        // Verificar séries sem peso registado
+        const incomplete = [];
+        day.exercises.forEach((ex) => {
+            const numSets = parseInt(ex.sets) || 0;
+            if (numSets === 0) return;
+            let missing = 0;
+            for (let i = 0; i < numSets; i++) {
+                const val = ex.weightLog && ex.weightLog[i];
+                if (!val || String(val).trim() === '') missing++;
+            }
+            if (missing > 0) {
+                incomplete.push({ name: ex.name, missing, total: numSets });
+            }
+        });
 
-        if (!hasWeights) {
-            // Usar modal customizado  confirm() e bloqueado em PWA/standalone iOS
+        if (incomplete.length > 0) {
             const modal = document.createElement('div');
             modal.className = 'modal-overlay';
             modal.innerHTML = `
-                <div class="modal-content" style="max-width:380px; text-align:center; padding:2rem;">
-                    <div style="font-size:3rem; margin-bottom:1rem;"></div>
-                    <h3 style="margin:0 0 0.75rem;">Sem cargas registadas</h3>
-                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">Não registou nenhuma carga neste treino. Deseja conclui-lo na mesma?</p>
-                    <div style="display:flex; gap:1rem;">
+                <div class="modal-content" style="max-width:400px; padding:2rem;">
+                    <div style="text-align:center; margin-bottom:1.25rem;">
+                        <div style="font-size:2.5rem; margin-bottom:0.5rem;">⚠️</div>
+                        <h3 style="margin:0; color:#fff;">Séries sem peso registado</h3>
+                        <p style="color:var(--text-muted); font-size:0.85rem; margin-top:0.5rem;">Os seguintes exercícios têm séries por preencher:</p>
+                    </div>
+                    <div style="background:rgba(239,68,68,0.05); border:1px solid rgba(239,68,68,0.2); border-radius:12px; padding:1rem; margin-bottom:1.5rem; display:flex; flex-direction:column; gap:8px;">
+                        ${incomplete.map(ex => `
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:0.85rem; color:#fff; font-weight:600;">${ex.name}</span>
+                                <span style="font-size:0.75rem; background:rgba(239,68,68,0.15); color:#ef4444; padding:2px 8px; border-radius:6px; font-weight:700;">
+                                    ${ex.missing}/${ex.total} séries em falta
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div style="display:flex; gap:0.75rem;">
                         <button class="btn btn-secondary" style="flex:1;" onclick="this.closest('.modal-overlay').remove()">
-                            <i class="fas fa-times"></i> Cancelar
+                            <i class="fas fa-arrow-left"></i> Voltar
                         </button>
                         <button class="btn btn-primary" style="flex:1;" id="confirm-finish-btn">
-                            <i class="fas fa-check"></i> Concluir
+                            <i class="fas fa-check"></i> Concluir Mesmo Assim
                         </button>
                     </div>
                 </div>
