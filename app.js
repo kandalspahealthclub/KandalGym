@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.09.v47'; // Versão de controlo para Hard Reset v47
+        this.appVersion = '2026.04.09.v50'; // Versão de controlo para Hard Reset v50
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v47'; // Forçar v47 para aviso de séries incompletas
+            const targetV = 'v50'; // Forçar v50 para limpar cache PWA no smartphone
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v47)...");
+                console.warn("Forçando atualização total da App (KandalGym v50)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -3123,7 +3123,7 @@ Bons treinos!`;
                                                     <input type="number" value="${val}" placeholder="--" 
                                                         onblur="app.logWeight(${clientId}, ${this.viewingDayIdx}, ${exIdx}, ${sIdx}, this.value)"
                                                         class="no-spin"
-                                                        style="width:48px; height:34px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); border-radius:8px; color:#fff; text-align:center; font-size:0.85rem; font-weight:800; outline:none; transition:all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);">
+                                                        style="width:62px; height:38px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); border-radius:8px; color:#fff; text-align:center; font-size:0.9rem; font-weight:800; outline:none; transition:all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);">
                                                 </div>
                                             `;
                                         }).join('')}
