@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.09.v42'; // Versão de controlo para Hard Reset v42
+        this.appVersion = '2026.04.09.v44'; // Versão de controlo para Hard Reset v44
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v42'; // Forçar v42 para remoção do ícone de mensagens na spy_view
+            const targetV = 'v44'; // Forçar v44 para correção final das categorias
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v42)...");
+                console.warn("Forçando atualização total da App (KandalGym v44)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -3063,7 +3063,7 @@ Bons treinos!`;
                             if (!libEx && ex.name) {
                                 libEx = this.state.exercises.find(le => le.name.toLowerCase() === ex.name.toLowerCase());
                             }
-                            const muscleColor = libEx ? this.getMuscleColor(libEx.muscle) : 'var(--primary)';
+                            const muscleColor = libEx ? this.getMuscleColor(libEx.category || libEx.muscle) : 'var(--primary)';
 
                             return `
                             <div class="glass-card" style="padding:10px 12px; border:1px solid rgba(255,255,255,0.04); background:rgba(255,255,255,0.02); min-height:75px; display:flex; flex-direction:column; gap:10px; border-radius:14px;">
@@ -3072,7 +3072,7 @@ Bons treinos!`;
                                     <div style="width:44px; height:44px; border-radius:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.05); flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden;">
                                         ${libEx && libEx.photoUrl ? 
                                             `<img src="${libEx.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : 
-                                            `<div style="font-size:1.2rem; opacity:0.6;">${this.getExerciseIcon(libEx ? libEx.muscle : '')}</div>`
+                                            `<div style="font-size:1.2rem; opacity:0.6;">${this.getExerciseIcon(libEx ? (libEx.category || libEx.muscle) : '')}</div>`
                                         }
                                     </div>
 
@@ -3085,7 +3085,7 @@ Bons treinos!`;
                                             ` : ''}
                                         </div>
                                         <div style="display:flex; align-items:center; gap:8px;">
-                                            <span style="background:${muscleColor}22; color:${muscleColor}; font-size:0.55rem; font-weight:800; padding:2px 6px; border-radius:4px; text-transform:uppercase;">${libEx?.muscle || 'General'}</span>
+                                            <span style="background:${muscleColor}22; color:${muscleColor}; font-size:0.55rem; font-weight:800; padding:2px 6px; border-radius:4px; text-transform:uppercase;">${libEx?.category || libEx?.muscle || 'Geral'}</span>
                                             <span style="font-size:0.75rem; color:#fff; font-weight:700;">${ex.sets}<small style="color:var(--text-muted); font-weight:400; font-size:0.65rem; margin:0 3px;">x</small>${ex.reps}</span>
                                             ${ex.rest ? `<span style="font-size:0.65rem; color:var(--text-muted);"><i class="fas fa-clock" style="font-size:0.6rem;"></i> ${ex.rest}</span>` : ''}
                                         </div>
@@ -3937,40 +3937,50 @@ Bons treinos!`;
         return emojiMap[category] || '';
     }
 
-    getExerciseIcon(muscle) {
+    getExerciseIcon(cat) {
         const iconMap = {
-            'Peitorais': '💪',
-            'Costas': '👐',
-            'Ombros': '👔',
-            'Biceps': '💪',
-            'Triceps': '💪',
-            'Quadriceps': '🦵',
+            // Categorias reais do utilizador
+            'Perna':         '🦵',
+            'Costas':        '👊',
+            'Peito':         '💪',
+            'Ombros':        '👔',
+            'Cárdio':        '❤️',
+            'Abdominais':    '🔥',
+            'Alongamentos':  '🧘',
+            'Geral':         '🏋️',
+            'Bicep':         '💪',
+            'Tricep':        '💪',
+            // Músculos específicos (retrocompatibilidade)
+            'Bíceps':        '💪',
+            'Deltoides':     '👔',
+            'Dorsal':        '👊',
             'Isquiotibiais': '🦵',
-            'Gluteos': '🍑',
-            'Gemeos': '🦵',
-            'Abdominais': '🍫',
-            'Antebraco': '💪',
-            'Lombar': '背'
+            'Quadríceps':    '🦵'
         };
-        return iconMap[muscle] || '🏋️';
+        return iconMap[cat] || '🏋️';
     }
 
-    getMuscleColor(muscle) {
+    getMuscleColor(cat) {
         const colors = {
-            'Peitorais': '#3b82f6', // Blue
-            'Costas': '#8b5cf6',    // Violet
-            'Ombros': '#06b6d4',    // Cyan
-            'Biceps': '#f43f5e',    // Rose
-            'Triceps': '#ec4899',   // Pink
-            'Quadriceps': '#10b981', // Emerald
-            'Isquiotibiais': '#059669', // Green
-            'Gluteos': '#f59e0b',   // Amber
-            'Gemeos': '#d946ef',    // Fuchsia
-            'Abdominais': '#ef4444', // Red
-            'Antebraco': '#6366f1',  // Indigo
-            'Lombar': '#475569'      // Slate
+            // Categorias reais do utilizador
+            'Perna':         '#10b981', // Emerald
+            'Costas':        '#8b5cf6', // Violet
+            'Peito':         '#3b82f6', // Blue
+            'Ombros':        '#06b6d4', // Cyan
+            'Cárdio':        '#ef4444', // Red
+            'Abdominais':    '#f59e0b', // Amber
+            'Alongamentos':  '#84cc16', // Lime
+            'Geral':         '#94a3b8', // Slate
+            'Bicep':         '#f43f5e', // Rose
+            'Tricep':        '#ec4899', // Pink
+            // Músculos específicos (retrocompatibilidade)
+            'Bíceps':        '#f43f5e',
+            'Deltoides':     '#06b6d4',
+            'Dorsal':        '#8b5cf6',
+            'Isquiotibiais': '#059669',
+            'Quadríceps':    '#10b981'
         };
-        return colors[muscle] || 'var(--primary)';
+        return colors[cat] || 'var(--primary)';
     }
 
     showExerciseSelectionModal(dayIdx, exIdx) {
