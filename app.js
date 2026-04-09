@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.09.v35'; // Versão de controlo para Hard Reset v35
+        this.appVersion = '2026.04.09.v41'; // Versão de controlo para Hard Reset v41
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v35'; // Forçar v35 para Redesign Premium Denso
+            const targetV = 'v41'; // Forçar v41 para limpeza de navegação e menu simplificado
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v35)...");
+                console.warn("Forçando atualização total da App (KandalGym v41)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -2999,7 +2999,7 @@ Bons treinos!`;
                             <i class="fas fa-trash"></i> <span class="hide-mobile">Eliminar</span>
                         </button>
                     ` : ''}
-                    ${this.role !== 'client' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">Voltar</span></button>` : ''}
+                    ${this.role !== 'client' && container.id === 'main-content' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">Voltar</span></button>` : ''}
                 </div>
             </div>
 
@@ -3647,7 +3647,7 @@ Bons treinos!`;
                         <button class="btn btn-ghost btn-sm" style="color:var(--danger); border:1px solid rgba(220, 38, 38, 0.2);" onclick="app.deleteMealPlan('${c.id}')">
                             <i class="fas fa-trash"></i> <span class="hide-mobile">Eliminar</span>
                         </button>
-                        <button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">Voltar</span></button>
+                        ${container.id === 'main-content' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">Voltar</span></button>` : ''}
                     ` : ''}
                 </div>
             </div>
@@ -4326,7 +4326,7 @@ Bons treinos!`;
                 <div class="header-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     ${evals.length ? `<button class="btn btn-secondary btn-sm" onclick="app.downloadEvaluationPDF(${clientId})"><i class="fas fa-file-pdf"></i> <span class="hide-mobile">Exportar PDF</span></button>` : ''}
                     ${isTeacher ? `<button class="btn btn-primary btn-sm" onclick="app.showEvaluationModal(${clientId})"><i class="fas fa-plus"></i> <span class="hide-mobile">Nova Avaliaçáo</span></button>` : ''}
-                    ${this.role !== 'client' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">Voltar</span></button>` : ''}
+                    ${this.role !== 'client' && container.id === 'main-content' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">Voltar</span></button>` : ''}
                 </div>
             </div>
 
@@ -4654,30 +4654,31 @@ Bons treinos!`;
             })()}
                     </div>
                 </div>
-                <div style="display:flex; gap:0.5rem;">
-                    ${this.role === 'teacher' ? `<button class="btn btn-primary btn-sm" onclick="app.showTransferClientModal(${c.id})"><i class="fas fa-exchange-alt"></i> Transferir</button>` : ''}
-                    <button class="btn btn-secondary" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')">
-                        <i class="fas fa-arrow-left"></i> Voltar
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                    ${this.role === 'teacher' ? `<button class="btn btn-ghost btn-sm" style="color:var(--primary); font-size:0.8rem;" onclick="app.showTransferClientModal(${c.id})"><i class="fas fa-exchange-alt"></i> <span class="hide-mobile">Transferir</span></button>` : ''}
+                    <button class="btn btn-ghost" style="font-size: 1.4rem; padding: 0.5rem; color: var(--text-muted);" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')" title="Voltar">
+                        <i class="fas fa-arrow-left"></i>
                     </button>
                 </div>
             </div>
 
-            <div class="glass-panel" style="display:flex; gap:0.75rem; padding:0.5rem; margin-bottom:1.5rem; background:rgba(255,255,255,0.03); overflow-x: auto; scrollbar-width: none;">
-                <button class="btn btn-sm ${this.spySubView === 'training' ? 'btn-primary' : 'btn-ghost'}" onclick="app.setSpySubView('training')" style="flex:1; min-width: 100px;">
-                    <i class="fas fa-dumbbell"></i> Treino
-                </button>
-                <button class="btn btn-sm ${this.spySubView === 'meal' ? 'btn-primary' : 'btn-ghost'}" onclick="app.setSpySubView('meal')" style="flex:1; min-width: 100px;">
-                    <i class="fas fa-apple-alt"></i> Dieta
-                </button>
-                <button class="btn btn-sm ${this.spySubView === 'evaluation' ? 'btn-primary' : 'btn-ghost'}" onclick="app.setSpySubView('evaluation')" style="flex:1; min-width: 110px;">
-                    <i class="fas fa-chart-line"></i> Avaliaçáo
-                </button>
-                <button class="btn btn-sm ${this.spySubView === 'anamnesis' ? 'btn-primary' : 'btn-ghost'}" onclick="app.setSpySubView('anamnesis')" style="flex:1; min-width: 110px;">
-                    <i class="fas fa-notes-medical"></i> Anamnese
-                </button>
-                <button class="btn btn-sm ${this.spySubView === 'messages' ? 'btn-primary' : 'btn-ghost'}" onclick="app.setSpySubView('messages')" style="flex:1; min-width: 110px;">
-                    <i class="fas fa-comment-dots"></i> Mensagens
-                </button>
+            <div style="display:flex; gap:0.5rem; margin-bottom:1.5rem; background:rgba(255,255,255,0.02); padding:4px; border-radius:12px; border:1px solid rgba(255,255,255,0.05); overflow-x: auto; scrollbar-width: none;">
+                ${[
+                    {id:'training', icon:'fa-dumbbell', label:'Treino'},
+                    {id:'meal', icon:'fa-apple-alt', label:'Dieta'},
+                    {id:'evaluation', icon:'fa-chart-line', label:'Aval.'},
+                    {id:'anamnesis', icon:'fa-notes-medical', label:'Anamn.'},
+                    {id:'messages', icon:'fa-comment-dots', label:'Msgs'}
+                ].map(item => `
+                    <button class="btn btn-sm" onclick="app.setSpySubView('${item.id}')" 
+                        style="flex:1; min-width:70px; padding:8px 4px; display:flex; flex-direction:column; gap:4px; border-radius:10px; font-size:0.65rem; transition:all 0.3s;
+                        background:${this.spySubView === item.id ? 'rgba(var(--primary-rgb), 0.15)' : 'transparent'};
+                        color:${this.spySubView === item.id ? 'var(--primary)' : 'var(--text-muted)'};
+                        border: 1px solid ${this.spySubView === item.id ? 'rgba(var(--primary-rgb), 0.3)' : 'transparent'};">
+                        <i class="fas ${item.icon}" style="font-size:1rem;"></i>
+                        <span>${item.label}</span>
+                    </button>
+                `).join('')}
             </div>
 
             <div id="spy-content-área"></div>
