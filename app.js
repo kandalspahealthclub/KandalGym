@@ -4655,11 +4655,6 @@ Bons treinos!`;
                     </div>
                 </div>
                 <div style="display:flex; gap:0.5rem;">
-                    ${(this.role === 'teacher' || this.role === 'admin') ? `
-                        <button class="btn btn-ghost btn-sm" style="color:var(--accent); font-size: 1.1rem; padding: 0.5rem 0.8rem;" onclick="app.showManualNotificationModal(${c.id})" title="Enviar Notificaçáo Direta">
-                            <i class="fas fa-bell"></i>
-                        </button>
-                    ` : ''}
                     ${this.role === 'teacher' ? `<button class="btn btn-primary btn-sm" onclick="app.showTransferClientModal(${c.id})"><i class="fas fa-exchange-alt"></i> Transferir</button>` : ''}
                     <button class="btn btn-secondary" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')">
                         <i class="fas fa-arrow-left"></i> Voltar
