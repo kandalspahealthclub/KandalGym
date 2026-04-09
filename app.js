@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.09.v25'; // Versão de controlo para Hard Reset v25
+        this.appVersion = '2026.04.09.v26'; // Versão de controlo para Hard Reset v26
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v25'; // Forçar v25 para garantir aplicação das correções
+            const targetV = 'v26'; // Forçar v26 para fix de header sticky e tabs internalizadas
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v25)...");
+                console.warn("Forçando atualização total da App (KandalGym v26)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -2968,6 +2968,9 @@ Bons treinos!`;
     renderTrainingView(container, clientId) {
         if (!container) container = document.getElementById('main-content');
         if (!container) return;
+        
+        // Reset scroll position to top when changing views/plans
+        window.scrollTo(0, 0);
 
         const c = this.state.clients.find(x => x.id == clientId);
         if (!c) {
@@ -2982,7 +2985,7 @@ Bons treinos!`;
         const isClient = this.role === 'client';
 
         container.innerHTML = `
-            <div class="page-header">
+            <div class="page-header" style="position: sticky; top: -1px; background: var(--background); z-index: 100; padding: 10px 0; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
                 <div>
                     <h2>Plano de Treino</h2>
                     <h3 class="client-name">${c.name}</h3>
@@ -2998,25 +3001,23 @@ Bons treinos!`;
                     ` : ''}
                     ${this.role !== 'client' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">Voltar</span></button>` : ''}
                 </div>
-            </div>
 
-            <!-- TABS DE VISUALIZAÇÃO -->
-            ${plans && plans.length > 0 ? `
-            <div style="display:flex; gap:0.6rem; margin:1.5rem 0; overflow-x:auto; padding:5px 0 12px; -webkit-overflow-scrolling:touch; scrollbar-width: none;">
-                ${plans.map((day, dIdx) => `
-                    <button class="btn" 
-                        onclick="app.viewingDayIdx = ${dIdx}; app.renderTrainingView(null, '${clientId}');"
-                        style="padding:10px 22px; font-size:0.85rem; border-radius:100px; min-width:120px; display:flex; align-items:center; gap:8px; justify-content:center; flex-shrink:0; font-weight:700; transition:all 0.3s ease;
-                        background:${this.viewingDayIdx === dIdx ? 'var(--primary)' : 'rgba(255,255,255,0.05)'}; 
-                        color:${this.viewingDayIdx === dIdx ? '#fff' : 'var(--text-muted)'};
-                        border: 1px solid ${this.viewingDayIdx === dIdx ? 'var(--primary)' : 'rgba(255,255,255,0.1)'};
-                        box-shadow: ${this.viewingDayIdx === dIdx ? '0 4px 15px rgba(var(--primary-rgb), 0.3)' : 'none'};">
-                        <i class="fas ${this.viewingDayIdx === dIdx ? 'fa-calendar-check' : 'fa-calendar-day'}" style="font-size:0.9rem;"></i>
-                        <span style="text-transform:uppercase; letter-spacing:0.5px;">${day.title || `Plano ${String.fromCharCode(64 + (dIdx+1))}`}</span>
-                    </button>
-                `).join('')}
+                <!-- TABS DE VISUALIZAÇÃO INTERNAS AO HEADER -->
+                ${plans && plans.length > 0 ? `
+                <div style="display:flex; gap:0.6rem; margin:1rem 0 0; width:100%; overflow-x:auto; padding:5px 0 5px; -webkit-overflow-scrolling:touch; scrollbar-width: none;">
+                    ${plans.map((day, dIdx) => `
+                        <button class="btn" 
+                            onclick="app.viewingDayIdx = ${dIdx}; app.renderTrainingView(null, '${clientId}');"
+                            style="padding:8px 16px; font-size:0.75rem; border-radius:100px; min-width:100px; display:flex; align-items:center; gap:6px; justify-content:center; flex-shrink:0; font-weight:700; transition:all 0.3s ease;
+                            background:${this.viewingDayIdx === dIdx ? 'var(--primary)' : 'rgba(255,255,255,0.05)'}; 
+                            color:${this.viewingDayIdx === dIdx ? '#fff' : 'var(--text-muted)'};
+                            border: 1px solid ${this.viewingDayIdx === dIdx ? 'var(--primary)' : 'rgba(255,255,255,0.1)'};">
+                            <span>${day.title || `Plano ${String.fromCharCode(64 + (dIdx+1))}`}</span>
+                        </button>
+                    `).join('')}
+                </div>
+                ` : ''}
             </div>
-            ` : ''}
 
             ${plans && plans.length && plans[this.viewingDayIdx] ? (() => {
                 const day = plans[this.viewingDayIdx];
