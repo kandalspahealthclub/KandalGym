@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.09.v52'; // Versão de controlo para Hard Reset v52
+        this.appVersion = '2026.04.09.v53'; // Versão de controlo para Hard Reset v53
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v52'; // Forçar v52 (corrigir emojis corrompidos)
+            const targetV = 'v53'; // Forçar v53 (corrigir foco scroll e HW input)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v52)...");
+                console.warn("Forçando atualização total da App (KandalGym v53)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -6892,12 +6892,12 @@ Bons treinos!`;
             setTimeout(() => {
                 const hwInput = document.getElementById('hardware-scanner-input');
                 if (hwInput) {
-                    hwInput.focus();
-                    // Manter foco apenas se NáÆ’O estivermos a interagir com outros campos
+                    hwInput.focus({ preventScroll: true });
+                    // Manter foco apenas se NÃO estivermos a interagir com outros campos
                     document.onmousedown = (e) => { 
                         if (this.activeView !== 'qr_manager' || !hwInput) return;
                         
-                        // Lista de elementos que NáÆ’O devem ser interrompidos
+                        // Lista de elementos que NÃO devem ser interrompidos
                         const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'];
                         if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button')) {
                             return; // Deixa o utilizador interagir com o campo
@@ -6905,7 +6905,7 @@ Bons treinos!`;
 
                         setTimeout(() => { 
                             if (this.activeView === 'qr_manager' && hwInput && document.activeElement.tagName !== 'INPUT') {
-                                hwInput.focus(); 
+                                hwInput.focus({ preventScroll: true }); 
                             }
                         }, 100);
                     };
