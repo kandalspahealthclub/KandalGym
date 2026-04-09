@@ -1,7 +1,7 @@
 // Service Worker - KandalGym PWA Cache
 // Push notifications removidas (a reimplementar futuramente)
 
-const CACHE_NAME = 'kandalgym-v44';
+const CACHE_NAME = 'kandalgym-v45';
 const ASSETS = [
     './',
     './index.html',

@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.09.v44'; // Versão de controlo para Hard Reset v44
+        this.appVersion = '2026.04.09.v45'; // Versão de controlo para Hard Reset v45
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v44'; // Forçar v44 para correção final das categorias
+            const targetV = 'v45'; // Forçar v45 para correção de icon dos ombros
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v44)...");
+                console.warn("Forçando atualização total da App (KandalGym v45)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -3943,7 +3943,7 @@ Bons treinos!`;
             'Perna':         '🦵',
             'Costas':        '👊',
             'Peito':         '💪',
-            'Ombros':        '👔',
+            'Ombros':        '🤷',
             'Cárdio':        '❤️',
             'Abdominais':    '🔥',
             'Alongamentos':  '🧘',
@@ -3952,7 +3952,7 @@ Bons treinos!`;
             'Tricep':        '💪',
             // Músculos específicos (retrocompatibilidade)
             'Bíceps':        '💪',
-            'Deltoides':     '👔',
+            'Deltoides':     '🤷',
             'Dorsal':        '👊',
             'Isquiotibiais': '🦵',
             'Quadríceps':    '🦵'
