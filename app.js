@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.09.v51'; // Versão de controlo para Hard Reset v51
+        this.appVersion = '2026.04.09.v52'; // Versão de controlo para Hard Reset v52
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v51'; // Forçar v51
+            const targetV = 'v52'; // Forçar v52 (corrigir emojis corrompidos)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v51)...");
+                console.warn("Forçando atualização total da App (KandalGym v52)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -1936,10 +1936,10 @@ Bons treinos!`;
 
         if (imported > 0) {
             this.saveState();
-            this.showToast(`Importaçáo concluída! ${imported} novos clientes.`);
+            this.showToast(`Importação concluída! ${imported} novos clientes.`);
         }
 
-        alert(`Resumo da Importaçáo:\n\nÃ¢Å“â€¦ Sucesso: ${imported}\nÃ¢Å¡Â Ã¯Â¸Â Ignorados (Já existem): ${skipped}\nÃ¢ÂÅ’ Erros (Campos em falta): ${errors}`);
+        alert(`Resumo da Importação:\n\n✅ Sucesso: ${imported}\n⚠️ Ignorados (Já existem): ${skipped}\nÃ¢ÂÅ’ Erros (Campos em falta): ${errors}`);
         
         const modal = document.querySelector('.modal-overlay');
         if (modal) modal.remove();
@@ -2002,7 +2002,7 @@ Bons treinos!`;
                 });
 
                 this.saveState();
-                alert(`Backup Restaurado!\n\nÃ¢Å“â€¦ ${added} novos clientes adicionados.`);
+                alert(`Backup Restaurado!\n\n✅ ${added} novos clientes adicionados.`);
                 this.renderContent();
             } catch (err) {
                 console.error("Erro no Backup:", err);
@@ -6793,8 +6793,8 @@ Bons treinos!`;
                             <input type="text" id="casual-name" placeholder="Nome do Cliente" class="qr-input-sleek">
                             <div style="display: flex; gap: 8px;">
                                 <select id="casual-type" class="qr-input-sleek" style="flex: 2; height: 42px;">
-                                    <option value="Semanal">Ã°Å¸â€”â€œÃ¯Â¸Â Semanal (7 Dias)</option>
-                                    <option value="Mensal">Ã°Å¸â€œâ€¦ Mensal (30 Dias)</option>
+                                    <option value="Semanal">🗓️ Semanal (7 Dias)</option>
+                                    <option value="Mensal">📅 Mensal (30 Dias)</option>
                                 </select>
                                 <button class="btn btn-primary" onclick="app.createCasualPass()" style="flex: 1; height: 42px; border-radius: 6px;">
                                     Criar <i class="fas fa-plus"></i>
@@ -7056,7 +7056,7 @@ Bons treinos!`;
                         </label>
                     </td>
                     <td>
-                        ${isStaff ? '<div style="text-align:center; font-weight:800; color:var(--accent); font-size:1.5rem;">Ã¢Ë†Å¾</div>' : `
+                        ${isStaff ? '<div style="text-align:center; font-weight:800; color:var(--accent); font-size:1.5rem;">∞</div>' : `
                         <div style="background:rgba(0,0,0,0.2); border-radius:8px; display:flex; align-items:center; justify-content:space-between; padding:4px; border:1px solid rgba(255,255,255,0.05);">
                             <button onclick="app.editQRCredit('${c.id}', -1)" style="width:28px; height:28px; border-radius:6px; border:none; background:rgba(255,255,255,0.05); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;"><i class="fas fa-minus"></i></button>
                             <input type="number" value="${c.ent}" onchange="app.updateQRClientField('${c.id}', 'ent', parseInt(this.value) || 0)" class="no-spin" style="background:transparent; border:none; color:#fff; font-weight:800; width:35px; text-align:center; outline:none; font-size:1rem; padding:0;">
@@ -8339,18 +8339,18 @@ Bons treinos!`;
 
         if (restrictions) {
             if (!restrictions.allowClasses) {
-                const force = confirm(`Ã¢Å¡Â Ã¯Â¸Â AVISO: O plano "${plano}" deste aluno náo permite a marcaçáo de aulas.\n\nDeseja inscrever mesmo assim?`);
+                const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno náo permite a marcaçáo de aulas.\n\nDeseja inscrever mesmo assim?`);
                 if (!force) return;
             } else if (restrictions.filter && restrictions.filter.length > 0) {
                 const isAllowed = restrictions.filter.some(f => cls && cls.name.toLowerCase().includes(f.toLowerCase()));
                 if (!isAllowed) {
-                    const force = confirm(`Ã¢Å¡Â Ã¯Â¸Â AVISO: O plano "${plano}" deste aluno apenas permite: ${restrictions.filter.join(', ')}.\n\nDeseja inscrever mesmo assim?`);
+                    const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno apenas permite: ${restrictions.filter.join(', ')}.\n\nDeseja inscrever mesmo assim?`);
                     if (!force) return;
                 }
             } else if (restrictions.exclude && restrictions.exclude.length > 0) {
                 const isExcluded = restrictions.exclude.some(ex => cls && cls.name.toLowerCase().includes(ex.toLowerCase()));
                 if (isExcluded) {
-                    const force = confirm(`Ã¢Å¡Â Ã¯Â¸Â AVISO: O plano "${plano}" deste aluno náo permite reservar aulas desta categoria.\n\nDeseja inscrever mesmo assim?`);
+                    const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno náo permite reservar aulas desta categoria.\n\nDeseja inscrever mesmo assim?`);
                     if (!force) return;
                 }
             }
