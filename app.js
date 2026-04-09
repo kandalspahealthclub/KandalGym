@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.09.v54'; // Versão de controlo para Hard Reset v54
+        this.appVersion = '2026.04.09.v55'; // Versão de controlo para Hard Reset v55
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v54'; // Forçar v54 (corrigir etiquetas visuais categorias/músculos obsoletos)
+            const targetV = 'v55'; // Forçar v55 (Envio de Comunicados)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v54)...");
+                console.warn("Forçando atualização total da App (KandalGym v55)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -1436,6 +1436,7 @@ Bons treinos!`;
                 { id: 'exercises', icon: 'fa-play-circle', label: 'Biblioteca Exercícios' },
                 { id: 'foods', icon: 'fa-apple-alt', label: 'Base de Alimentos' },
                 { id: 'all-clients', icon: 'fa-search', label: 'Acesso Global' },
+                { id: 'notifications_manager', icon: 'fa-paper-plane', label: 'Comunicados' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
             ];
         } else if (this.role === 'teacher') {
@@ -1750,6 +1751,9 @@ Bons treinos!`;
                 break;
             case 'foods':
                 this.renderFoodDatabase(container);
+                break;
+            case 'notifications_manager':
+                this.renderNotificationsManager(container);
                 break;
             case 'all-clients':
                 container.innerHTML = `
@@ -2616,6 +2620,120 @@ Bons treinos!`;
             this.renderContent();
             alert('Exercício removido. ');
         }
+    }
+
+    renderNotificationsManager(container) {
+        let clientsList = this.state.clients || [];
+        
+        container.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <h2><i class="fas fa-paper-plane" style="color:var(--primary);"></i> Envio de Comunicados</h2>
+            </div>
+            <div class="glass-panel" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
+                
+                <div>
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Destinatários:</label>
+                    <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--surface-border); border-radius: 8px; padding: 10px; background: rgba(0,0,0,0.2);">
+                        <div style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--surface-border);">
+                            <input type="checkbox" id="selectAllToNotify" onchange="app.toggleAllNotifyClients(this.checked)" style="margin-right: 8px;">
+                            <label for="selectAllToNotify" style="font-weight:bold; cursor:pointer;">Selecionar Todos os Alunos</label>
+                        </div>
+                        <div id="notify-clients-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
+                            ${clientsList.map(c => `
+                                <div>
+                                    <input type="checkbox" id="notify_${c.id}" class="notify-client-checkbox" value="${c.id}" data-name="${c.name}" data-email="${c.email}" data-phone="${c.phone || ''}" style="margin-right: 5px;">
+                                    <label for="notify_${c.id}" style="font-size:0.9rem;">${c.name}</label>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Mensagem:</label>
+                    <textarea id="bulk-notify-message" rows="6" placeholder="Escreva aqui a sua mensagem..." style="width: 100%; border: 1px solid var(--surface-border); border-radius: 8px; padding: 12px; background: rgba(0,0,0,0.3); color: #fff; resize: vertical;"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="app.sendBulkNotification('whatsapp')" style="flex:1;">
+                        <i class="fab fa-whatsapp"></i> Preparar envio WhatsApp
+                    </button>
+                    <button class="btn btn-secondary" onclick="app.sendBulkNotification('email')" style="flex:1;">
+                        <i class="fas fa-envelope"></i> Abrir cliente Email (BCC)
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    toggleAllNotifyClients(checked) {
+        document.querySelectorAll('.notify-client-checkbox').forEach(cb => {
+            cb.checked = checked;
+        });
+    }
+
+    sendBulkNotification(type) {
+        const checkboxes = document.querySelectorAll('.notify-client-checkbox:checked');
+        const msg = document.getElementById('bulk-notify-message').value.trim();
+        
+        if (checkboxes.length === 0) return alert('Selecione pelo menos um destinatário.');
+        if (!msg) return alert('A mensagem não pode estar vazia.');
+
+        const clients = Array.from(checkboxes).map(cb => ({
+            id: cb.value,
+            name: cb.dataset.name,
+            email: cb.dataset.email,
+            phone: cb.dataset.phone
+        }));
+
+        if (type === 'email') {
+            const emails = clients.map(c => c.email).filter(e => e && e !== 'undefined').join(',');
+            if (!emails) return alert('Nenhum dos clientes selecionados possui email registado.');
+            const mailto = `mailto:?bcc=${emails}&subject=KandalGym%20-%20Comunicado&body=${encodeURIComponent(msg)}`;
+            window.location.href = mailto;
+        } else if (type === 'whatsapp') {
+            // Because Popup blockers prevent multiple WhatsApp tabs, handle it via a guided modal
+            if (clients.length === 1) {
+                const phone = clients[0].phone;
+                if (!phone) return alert('O cliente selecionado não tem telemóvel registado.');
+                let cleanPhone = phone.replace(/\\D/g, '');
+                if (!cleanPhone.startsWith('351') && cleanPhone.length === 9) cleanPhone = '351' + cleanPhone;
+                window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+            } else {
+                this.showWhatsAppBulkModal(clients, msg);
+            }
+        }
+    }
+
+    showWhatsAppBulkModal(clients, msg) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay animate-fade-in';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px;">
+                <h2 style="margin-top:0;">Fila de Envio WhatsApp</h2>
+                <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom: 1.5rem;">Como os navegadores bloqueiam a abertura de muitas janelas ao mesmo tempo, clique em "Enviar" um por um.</p>
+                <div style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
+                    ${clients.map(c => {
+                        let cleanPhone = '';
+                        if (c.phone) {
+                            cleanPhone = c.phone.replace(/\\D/g, '');
+                            if (!cleanPhone.startsWith('351') && cleanPhone.length === 9) cleanPhone = '351' + cleanPhone;
+                        }
+                        const hasPhone = c.phone && c.phone !== 'undefined' && c.phone !== '';
+                        return `
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                                <span style="font-weight:bold; font-size: 0.95rem;">${c.name}</span>
+                                ${hasPhone 
+                                    ? `<button class="btn btn-sm" style="background:#25D366; color:#fff;" onclick="window.open('https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}', '_blank'); this.innerHTML='<i class=\\'fas fa-check\\'></i> Enviado'; this.style.opacity='0.6';"><i class="fab fa-whatsapp"></i> Enviar</button>` 
+                                    : `<span style="font-size:0.8rem; color:var(--danger);"><i class="fas fa-times-circle"></i> Sem número</span>`}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                <button class="btn btn-secondary" style="width:100%; margin-top:1.5rem;" onclick="this.closest('.modal-overlay').remove()">Concluir / Fechar</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
     }
 
     renderFoodDatabase(container) {
