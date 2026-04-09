@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.09.v50'; // Versão de controlo para Hard Reset v50
+        this.appVersion = '2026.04.09.v51'; // Versão de controlo para Hard Reset v51
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v50'; // Forçar v50 para limpar cache PWA no smartphone
+            const targetV = 'v51'; // Forçar v51
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v50)...");
+                console.warn("Forçando atualização total da App (KandalGym v51)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -3057,32 +3057,49 @@ Bons treinos!`;
 
                     <!-- LISTA DE EXERCICIOS DENSE & PROFESSIONAL -->
                     <div style="display:flex; flex-direction:column; gap:8px;">
-                        ${day.exercises.map((ex, exIdx) => {
-                            const numSets = parseInt(ex.sets) || 0;
-                            let libEx = this.state.exercises.find(le => le.id == ex.id);
-                            if (!libEx && ex.name) {
-                                libEx = this.state.exercises.find(le => le.name.toLowerCase() === ex.name.toLowerCase());
+                        ${(() => {
+                            let firstPendingIdx = -1;
+                            if (isClient) {
+                                firstPendingIdx = day.exercises.findIndex(ex => {
+                                    const numSets = parseInt(ex.sets) || 0;
+                                    if (numSets === 0) return false;
+                                    for (let s = 0; s < numSets; s++) {
+                                        if (!ex.weightLog || String(ex.weightLog[s] || '').trim() === '') return true;
+                                    }
+                                    return false;
+                                });
                             }
-                            const muscleColor = libEx ? this.getMuscleColor(libEx.category || libEx.muscle) : 'var(--primary)';
 
-                            return `
-                            <div class="glass-card" style="padding:10px 12px; border:1px solid rgba(255,255,255,0.04); background:rgba(255,255,255,0.02); min-height:75px; display:flex; flex-direction:column; gap:10px; border-radius:14px;">
-                                <div style="display:flex; align-items:center; gap:12px;">
-                                    <!-- Mini Image/Icon -->
-                                    <div style="width:44px; height:44px; border-radius:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.05); flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-                                        ${libEx && libEx.photoUrl ? 
-                                            `<img src="${libEx.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : 
-                                            `<div style="font-size:1.2rem; opacity:0.6;">${this.getExerciseIcon(libEx ? (libEx.category || libEx.muscle) : '')}</div>`
-                                        }
-                                    </div>
+                            return day.exercises.map((ex, exIdx) => {
+                                const numSets = parseInt(ex.sets) || 0;
+                                let libEx = this.state.exercises.find(le => le.id == ex.id);
+                                if (!libEx && ex.name) {
+                                    libEx = this.state.exercises.find(le => le.name.toLowerCase() === ex.name.toLowerCase());
+                                }
+                                const muscleColor = libEx ? this.getMuscleColor(libEx.category || libEx.muscle) : 'var(--primary)';
+                                
+                                const isCurrent = isClient && exIdx === firstPendingIdx;
+                                const outlineStyle = isCurrent ? `border:1px solid var(--primary); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);` : `border:1px solid rgba(255,255,255,0.04);`;
 
-                                    <!-- Core Info -->
-                                    <div style="flex:1; min-width:0;">
-                                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                                            <span style="font-weight:700; font-size:0.92rem; color:#fff; display:block; margin-bottom:2px; line-height:1.2;">${ex.name}</span>
-                                            ${libEx && libEx.videoUrl ? `
-                                                <i class="fas fa-play-circle" onclick="app.viewExerciseVideo('${libEx.videoUrl}', '${ex.name}')" style="color:var(--primary); font-size:1rem; opacity:0.8; padding:2px;"></i>
-                                            ` : ''}
+                                return `
+                                <div class="glass-card" style="padding:10px 12px; ${outlineStyle} background:rgba(255,255,255,0.02); min-height:75px; display:flex; flex-direction:column; gap:10px; border-radius:14px; position:relative;">
+                                    ${isCurrent ? `<div style="position:absolute; top:-8px; right:12px; background:var(--primary); color:#fff; font-size:0.6rem; font-weight:800; padding:2px 8px; border-radius:10px; text-transform:uppercase; letter-spacing:1px; box-shadow:0 2px 5px rgba(0,0,0,0.5);"><i class="fas fa-play" style="font-size:0.5rem; margin-right:3px;"></i> A Realizar</div>` : ''}
+                                    <div style="display:flex; align-items:center; gap:12px;">
+                                        <!-- Mini Image/Icon -->
+                                        <div style="width:44px; height:44px; border-radius:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.05); flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                                            ${libEx && libEx.photoUrl ? 
+                                                `<img src="${libEx.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : 
+                                                `<div style="font-size:1.2rem; opacity:0.6;">${this.getExerciseIcon(libEx ? (libEx.category || libEx.muscle) : '')}</div>`
+                                            }
+                                        </div>
+
+                                        <!-- Core Info -->
+                                        <div style="flex:1; min-width:0;">
+                                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                                <span style="font-weight:700; font-size:0.92rem; color:#fff; display:block; margin-bottom:2px; line-height:1.2; ${isCurrent ? 'color:var(--primary);' : ''}">${ex.name}</span>
+                                                ${libEx && libEx.videoUrl ? `
+                                                    <i class="fas fa-play-circle" onclick="app.viewExerciseVideo('${libEx.videoUrl}', '${ex.name}')" style="color:var(--primary); font-size:1rem; opacity:0.8; padding:2px;"></i>
+                                                ` : ''}
                                         </div>
                                         <div style="display:flex; align-items:center; gap:8px;">
                                             <span style="background:${muscleColor}22; color:${muscleColor}; font-size:0.55rem; font-weight:800; padding:2px 6px; border-radius:4px; text-transform:uppercase;">${libEx?.category || libEx?.muscle || 'Geral'}</span>
@@ -3138,7 +3155,8 @@ Bons treinos!`;
                                 ` : ''}
                             </div>
                             `;
-                        }).join('')}
+                        }).join('');
+                        })()}
                     </div>
 
                     <!-- Client Interaction Footer -->
