@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.09.v30'; // Versão de controlo para Hard Reset v30
+        this.appVersion = '2026.04.09.v35'; // Versão de controlo para Hard Reset v35
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v30'; // Forçar v30 para limpeza visual após feedback
+            const targetV = 'v35'; // Forçar v35 para Redesign Premium Denso
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v30)...");
+                console.warn("Forçando atualização total da App (KandalGym v35)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -3024,27 +3024,39 @@ Bons treinos!`;
                 const day = plans[this.viewingDayIdx];
                 return `
                 <div class="animate-fade-in" style="margin-bottom:2rem;">
-                    <!-- INFO DO PLANO (RESUMO CABEÇALHO) -->
-                    <div class="glass-panel" style="padding:1.25rem; margin-bottom:1.5rem; border-left:4px solid var(--primary); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                    <!-- RESUMO COMPACTO DO PLANO (PREMIUM) -->
+                    <div style="background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); padding: 12px 16px; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between;">
                         <div>
-                            <h3 style="color:#fff; margin:0; font-weight:800; font-size:1.2rem; text-transform:uppercase; letter-spacing:1px;">
-                                ${day.title || `Plano ${String.fromCharCode(65 + this.viewingDayIdx)}`}
+                            <span style="font-size:0.6rem; color:var(--primary); font-weight:800; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:2px;">Plan Details</span>
+                            <h3 style="color:#fff; margin:0; font-weight:800; font-size:1.1rem; line-height:1;">
+                                ${day.title || `Treino ${String.fromCharCode(65 + this.viewingDayIdx)}`}
                             </h3>
-                            <div style="display:flex; gap:12px; margin-top:5px; align-items:center;">
-                                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;"><i class="fas fa-dumbbell" style="color:var(--primary);"></i> ${day.exercises.length} EXERCÍCIOS</span>
-                                ${day.rest ? `<span style="font-size:0.75rem; color:var(--accent); font-weight:600;"><i class="fas fa-clock"></i> DESCANSO: ${day.rest}</span>` : ''}
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="display:flex; gap:12px; align-items:center; justify-content:flex-end;">
+                                <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                                    <span style="font-size:0.8rem; font-weight:800; color:#fff;">${day.exercises.length}</span>
+                                    <span style="font-size:0.55rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Excl.</span>
+                                </div>
+                                ${day.rest ? `
+                                <div style="width:1px; height:20px; background:rgba(255,255,255,0.1);"></div>
+                                <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                                    <span style="font-size:0.8rem; font-weight:800; color:var(--accent);">${day.rest}</span>
+                                    <span style="font-size:0.55rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Rest</span>
+                                </div>
+                                ` : ''}
                             </div>
                         </div>
-                        ${day.notes ? `
-                            <div style="flex:1; min-width:250px; background:rgba(255,255,255,0.03); padding:10px 15px; border-radius:10px; border:1px solid rgba(255,255,255,0.05); position:relative;">
-                                <i class="fas fa-quote-left" style="position:absolute; top:8px; left:8px; font-size:0.6rem; opacity:0.3; color:var(--primary);"></i>
-                                <div style="color:var(--text-muted); font-size:0.85rem; font-style:italic; padding-left:12px; line-height:1.4;">"${day.notes}"</div>
-                            </div>
-                        ` : ''}
                     </div>
 
-                    <!-- TABELA / LISTA DE EXERCICIOS (LEAN & PREMIUM) -->
-                    <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                    ${day.notes ? `
+                    <div style="background:rgba(196, 162, 77, 0.05); border-left:3px solid var(--accent); padding:10px 14px; border-radius:4px 10px 10px 4px; margin-bottom:1.5rem; font-size:0.85rem; color:var(--text-muted); font-style:italic;">
+                        <i class="fas fa-info-circle" style="color:var(--accent); margin-right:5px; font-size:0.75rem;"></i> "${day.notes}"
+                    </div>
+                    ` : ''}
+
+                    <!-- LISTA DE EXERCICIOS DENSE & PROFESSIONAL -->
+                    <div style="display:flex; flex-direction:column; gap:8px;">
                         ${day.exercises.map((ex, exIdx) => {
                             const numSets = parseInt(ex.sets) || 0;
                             let libEx = this.state.exercises.find(le => le.id == ex.id);
@@ -3054,91 +3066,90 @@ Bons treinos!`;
                             const muscleColor = libEx ? this.getMuscleColor(libEx.muscle) : 'var(--primary)';
 
                             return `
-                            <div class="glass-card" style="padding:0; overflow:hidden; border:1px solid rgba(255,255,255,0.05); transition:transform 0.2s ease; border-radius:12px; display:flex; flex-direction:column;">
-                                <div style="display:flex; align-items:center; padding:0.75rem 1rem; gap:15px; position:relative;">
-                                    <!-- Faixa Lateral de Cor por Grupo Muscular -->
-                                    <div style="position:absolute; left:0; top:0; bottom:0; width:4px; background:${muscleColor}; opacity:0.8;"></div>
-                                    
-                                    <!-- Foto/Icon -->
-                                    <div style="width:50px; height:50px; border-radius:10px; overflow:hidden; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+                            <div class="glass-card" style="padding:10px 12px; border:1px solid rgba(255,255,255,0.04); background:rgba(255,255,255,0.02); min-height:75px; display:flex; flex-direction:column; gap:10px; border-radius:14px;">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <!-- Mini Image/Icon -->
+                                    <div style="width:44px; height:44px; border-radius:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.05); flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden;">
                                         ${libEx && libEx.photoUrl ? 
                                             `<img src="${libEx.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : 
-                                            `<div style="font-size:1.4rem; opacity:0.6;">${this.getExerciseIcon(libEx ? libEx.muscle : '')}</div>`
+                                            `<div style="font-size:1.2rem; opacity:0.6;">${this.getExerciseIcon(libEx ? libEx.muscle : '')}</div>`
                                         }
                                     </div>
 
-                                    <!-- Nome e Info Básica -->
+                                    <!-- Core Info -->
                                     <div style="flex:1; min-width:0;">
-                                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                                            <span style="font-weight:700; font-size:0.95rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">${ex.name}</span>
+                                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                            <span style="font-weight:700; font-size:0.92rem; color:#fff; display:block; margin-bottom:2px; line-height:1.2;">${ex.name}</span>
                                             ${libEx && libEx.videoUrl ? `
-                                                <i class="fas fa-video" onclick="app.viewExerciseVideo('${libEx.videoUrl}', '${ex.name}')" style="color:var(--primary); cursor:pointer; font-size:0.85rem; opacity:0.7; padding:5px;"></i>
+                                                <i class="fas fa-play-circle" onclick="app.viewExerciseVideo('${libEx.videoUrl}', '${ex.name}')" style="color:var(--primary); font-size:1rem; opacity:0.8; padding:2px;"></i>
                                             ` : ''}
                                         </div>
-                                        <div style="display:flex; gap:10px; align-items:center; margin-top:3px;">
-                                            <span style="font-size:0.7rem; color:${muscleColor}; font-weight:800; text-transform:uppercase;">${libEx?.muscle || 'Geral'}</span>
-                                            <span style="width:3px; height:3px; border-radius:50%; background:rgba(255,255,255,0.2);"></span>
-                                            <span style="font-size:0.75rem; color:#fff; font-weight:700;">${ex.sets} SETS <span style="color:var(--text-muted);">x</span> ${ex.reps} REPS</span>
+                                        <div style="display:flex; align-items:center; gap:8px;">
+                                            <span style="background:${muscleColor}22; color:${muscleColor}; font-size:0.55rem; font-weight:800; padding:2px 6px; border-radius:4px; text-transform:uppercase;">${libEx?.muscle || 'General'}</span>
+                                            <span style="font-size:0.75rem; color:#fff; font-weight:700;">${ex.sets}<small style="color:var(--text-muted); font-weight:400; font-size:0.65rem; margin:0 3px;">x</small>${ex.reps}</span>
+                                            ${ex.rest ? `<span style="font-size:0.65rem; color:var(--text-muted);"><i class="fas fa-clock" style="font-size:0.6rem;"></i> ${ex.rest}</span>` : ''}
                                         </div>
                                     </div>
-                                    
-                                    <!-- Badge de Cargas (Mobile Friendly) -->
+
+                                    <!-- Load Badge (Teacher View) -->
                                     ${!isClient && ex.weightLog ? `
-                                        <div style="text-align:right; flex-shrink:0;">
-                                            <small style="display:block; font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:2px;">Última Carga</small>
-                                            <span style="font-size:0.9rem; font-weight:800; color:var(--success);">${Math.max(...Object.values(ex.weightLog).map(v => parseFloat(v) || 0))}kg</span>
+                                        <div style="text-align:right;">
+                                            <span style="display:block; font-size:0.5rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Prev</span>
+                                            <span style="font-size:0.85rem; font-weight:800; color:var(--success);">${Math.max(...Object.values(ex.weightLog).map(v => parseFloat(v) || 0))}kg</span>
                                         </div>
                                     ` : ''}
                                 </div>
 
-                                <!-- Observações (Expansível ou Compacta) -->
+                                <!-- Observations (Subtle Row) -->
                                 ${ex.observations ? `
-                                    <div style="background:rgba(0,0,0,0.15); padding:6px 1rem; border-top:1px solid rgba(255,255,255,0.03); display:flex; gap:8px; align-items:center;">
-                                        <i class="fas fa-info-circle" style="font-size:0.7rem; color:var(--accent);"></i>
-                                        <span style="font-size:0.75rem; color:var(--text-muted); line-height:1.2;">${ex.observations}</span>
-                                    </div>
+                                <div style="font-size:0.72rem; color:var(--text-muted); background:rgba(255,255,255,0.03); padding:4px 8px; border-radius:6px; display:flex; gap:6px; align-items:center;">
+                                    <i class="fas fa-lightbulb" style="color:var(--accent); font-size:0.6rem;"></i> <span>${ex.observations}</span>
+                                </div>
                                 ` : ''}
 
-                                <!-- Se for Cliente: Área de Registo Compacta -->
+                                <!-- Input Section for Client (More Premium & Inline) -->
                                 ${isClient ? `
-                                    <div style="padding:1rem; background:rgba(0,0,0,0.2); border-top:1px solid rgba(255,255,255,0.05);">
-                                        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap:0.4rem; margin-bottom:0.75rem;">
-                                            ${Array.from({ length: numSets }).map((_, sIdx) => {
-                                                const val = (ex.weightLog && ex.weightLog[sIdx]) || '';
-                                                return `
-                                                    <input type="number" value="${val}" placeholder="S${sIdx + 1}" 
+                                <div style="border-top:1px solid rgba(255,255,255,0.03); padding-top:8px; margin-top:2px;">
+                                    <div style="display:flex; overflow-x:auto; gap:8px; padding:2px 5px 8px; scrollbar-width: none;">
+                                        ${Array.from({ length: numSets }).map((_, sIdx) => {
+                                            const val = (ex.weightLog && ex.weightLog[sIdx]) || '';
+                                            return `
+                                                <div style="flex-shrink:0;">
+                                                    <span style="display:block; font-size:0.55rem; color:var(--text-muted); text-align:center; font-weight:800;">S${sIdx + 1}</span>
+                                                    <input type="number" value="${val}" placeholder="--" 
                                                         onblur="app.logWeight(${clientId}, ${this.viewingDayIdx}, ${exIdx}, ${sIdx}, this.value)"
                                                         class="no-spin"
-                                                        style="width:100%; height:32px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:#fff; text-align:center; font-size:0.8rem; font-weight:700; outline:none;">
-                                                `;
-                                            }).join('')}
-                                        </div>
-                                        <div style="position:relative;">
-                                            <input type="text" value="${ex.clientNotes || ''}" placeholder="Adicionar nota rápida..."
-                                                onblur="app.saveExerciseNote(${clientId}, ${this.viewingDayIdx}, ${exIdx}, this.value)"
-                                                style="width:100%; height:32px; background:rgba(0,0,0,0.1); border:1px solid rgba(255,255,255,0.03); border-radius:8px; color:#fff; padding:0 10px 0 28px; font-size:0.8rem; font-family:inherit; outline:none;">
-                                            <i class="fas fa-edit" style="position:absolute; left:10px; top:9px; font-size:0.7rem; color:var(--text-muted);"></i>
-                                        </div>
+                                                        style="width:48px; height:34px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); border-radius:8px; color:#fff; text-align:center; font-size:0.85rem; font-weight:800; outline:none; transition:all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);">
+                                                </div>
+                                            `;
+                                        }).join('')}
                                     </div>
+                                    <div style="position:relative; margin-top:4px;">
+                                        <i class="fas fa-pen" style="position:absolute; left:12px; top:11px; font-size:0.65rem; color:var(--text-muted); opacity:0.5;"></i>
+                                        <input type="text" value="${ex.clientNotes || ''}" placeholder="Técnica, dificuldades..."
+                                            onblur="app.saveExerciseNote(${clientId}, ${this.viewingDayIdx}, ${exIdx}, this.value)"
+                                            style="width:100%; height:34px; background:rgba(255,255,255,0.02); border:1px solid transparent; border-radius:10px; color:var(--text-muted); padding:0 12px 0 32px; font-size:0.75rem; font-family:inherit; outline:none;">
+                                    </div>
+                                </div>
                                 ` : ''}
                             </div>
                             `;
                         }).join('')}
                     </div>
 
-                    <!-- Finalização para Cliente -->
+                    <!-- Client Interaction Footer -->
                     ${isClient ? `
-                        <div class="glass-panel" style="background: rgba(var(--primary-rgb), 0.05); border: 1px solid rgba(var(--primary-rgb), 0.2); margin-top:2rem; padding:1.25rem; border-radius:15px;">
-                            <h4 style="margin: 0 0 1rem; font-size: 0.9rem; color: var(--primary); display:flex; align-items:center; gap:8px;">
-                                <i class="fas fa-comment-dots"></i> Feedback Geral do Treino
+                        <div class="glass-panel" style="background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.1), rgba(0,0,0,0.2)); border: 1px solid rgba(var(--primary-rgb), 0.15); margin-top:2rem; padding:1.5rem; border-radius:18px; text-align:center;">
+                            <h4 style="margin: 0 0 1rem; font-size: 0.95rem; color: #fff; display:flex; align-items:center; justify-content:center; gap:8px;">
+                                <i class="fas fa-check-circle" style="color:var(--primary);"></i> Como correu o treino?
                             </h4>
                             <textarea id="workout-global-note-${clientId}-${this.viewingDayIdx}" 
-                                placeholder="Notas gerais sobre o treino de hoje..."
-                                style="width:100%; min-height:80px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#fff; padding:12px; font-size:0.9rem; resize:vertical; font-family:inherit; outline:none; transition:all 0.3s;"></textarea>
+                                placeholder="Notas de performance, cansaço, etc..."
+                                style="width:100%; min-height:90px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#fff; padding:12px; font-size:0.9rem; resize:none; font-family:inherit; outline:none;"></textarea>
                             
                             <button class="btn btn-primary" onclick="app.finishWorkout('${clientId}', ${this.viewingDayIdx})" 
-                                style="width:100%; height:55px; margin-top:1.5rem; font-size:1.05rem; font-weight:800; border-radius:16px; background: linear-gradient(135deg, var(--primary), var(--accent)); border:none; box-shadow:0 8px 25px rgba(var(--primary-rgb),0.4); display:flex; align-items:center; justify-content:center; gap:12px;">
-                                <i class="fas fa-check-double" style="font-size:1.2rem;"></i> Finalizar Treino
+                                style="width:100%; height:58px; margin-top:1.5rem; font-size:1.1rem; font-weight:800; border-radius:18px; background: var(--primary); border:none; box-shadow:0 8px 30px rgba(var(--primary-rgb),0.3); display:flex; align-items:center; justify-content:center; gap:12px;">
+                                FINALIZAR TREINO
                             </button>
                         </div>
                     ` : ''}
@@ -3147,7 +3158,7 @@ Bons treinos!`;
             })() : `
                 <div class="glass-panel" style="padding:4rem; text-align:center;">
                     <i class="fas fa-dumbbell" style="font-size:3rem; color:var(--text-muted); opacity:0.2; margin-bottom:1.5rem;"></i>
-                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Este plano náo tem exercícios definidos.</p>
+                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Este plano não tem exercícios definidos.</p>
                     ${isTeacher ? `<button class="btn btn-primary" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-plus"></i> Criar Plano de Treino</button>` : ''}
                 </div>
                 `}
