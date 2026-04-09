@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.08.v20'; // Versão de controlo para Hard Reset
+        this.appVersion = '2026.04.09.v21'; // Versão de controlo para Hard Reset
         this.checkForForceUpdate();
 
         this.role = 'client';
@@ -149,7 +149,7 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v20'; // Forçar v20 para entregar novo design de planos
+            const targetV = 'v21'; // Forçar v21 para corrigir bug de índice de planos
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
                 console.warn("Forçando atualizaçáo total da App (KandalGym v18)...");
@@ -2975,6 +2975,7 @@ Bons treinos!`;
         }
 
         const plans = this.getTrainingDays(clientId);
+        if (this.viewingDayIdx >= plans.length) this.viewingDayIdx = 0;
 
         const isTeacher = this.role === 'teacher' || this.role === 'admin';
         const isClient = this.role === 'client';
@@ -3143,7 +3144,7 @@ Bons treinos!`;
             })() : `
                 <div class="glass-panel" style="padding:4rem; text-align:center;">
                     <i class="fas fa-dumbbell" style="font-size:3rem; color:var(--text-muted); opacity:0.2; margin-bottom:1.5rem;"></i>
-                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Náo existem exercícios definidos para este praticante.</p>
+                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">Este plano náo tem exercícios definidos.</p>
                     ${isTeacher ? `<button class="btn btn-primary" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-plus"></i> Criar Plano de Treino</button>` : ''}
                 </div>
                 `}
