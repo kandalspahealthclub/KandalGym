@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.09.v53'; // Versão de controlo para Hard Reset v53
+        this.appVersion = '2026.04.09.v54'; // Versão de controlo para Hard Reset v54
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v53'; // Forçar v53 (corrigir foco scroll e HW input)
+            const targetV = 'v54'; // Forçar v54 (corrigir etiquetas visuais categorias/músculos obsoletos)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v53)...");
+                console.warn("Forçando atualização total da App (KandalGym v54)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -2342,7 +2342,7 @@ Bons treinos!`;
                     <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                         <div>
                             <strong style="font-size:1rem; color:#fff;">${ex.name}</strong><br>
-                                <small style="color:var(--text-muted);">${ex.muscle ? ex.muscle : (ex.category || 'Geral')}</small>
+                                <small style="color:var(--text-muted);">${ex.category || ex.muscle || 'Geral'}</small>
                         </div>
                         <div style="display:flex; gap:0.4rem;">
                             ${this.role === 'admin' ? `
@@ -2600,6 +2600,7 @@ Bons treinos!`;
             ex.videoUrl = finalUrl;
             ex.photoUrl = this.tempExercisePhoto || '';
             ex.category = cat || 'Geral';
+            delete ex.muscle;
 
             this.saveState();
             document.querySelector('.modal-overlay').remove();
