@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.09.v55'; // Versão de controlo para Hard Reset v55
+        this.appVersion = '2026.04.14.v56'; // Versão de controlo para Hard Reset v56
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v55'; // Forçar v55 (Envio de Comunicados)
+            const targetV = 'v56'; // Forçar v56 (Ajustes Menu Mobile)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v55)...");
+                console.warn("Forçando atualização total da App (KandalGym v56)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -1384,7 +1384,7 @@ Bons treinos!`;
                 { id: 'classes', icon: 'fa-calendar-alt', label: 'Aulas' },
                 { id: 'users', icon: 'fa-users-cog', label: 'Contas' },
                 { id: 'qr_manager', icon: 'fa-qrcode', label: 'Entradas' },
-                { id: 'monitor', icon: 'fa-desktop', label: 'Monitor' },
+                { id: 'notifications_manager', icon: 'fa-paper-plane', label: 'Comunic.' },
                 { id: 'exercises', icon: 'fa-play-circle', label: 'Exercícios' },
                 { id: 'foods', icon: 'fa-apple-alt', label: 'Alimentos' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'Perfil' }
