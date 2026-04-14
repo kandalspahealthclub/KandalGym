@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.14.v58'; // Versão de controlo para Hard Reset v58
+        this.appVersion = '2026.04.14.v59'; // Versão de controlo para Hard Reset v59
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v58'; // Forçar v58 (Bloqueio Total Registo)
+            const targetV = 'v59'; // Forçar v59 (Apoio SMS em massa)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v58)...");
+                console.warn("Forçando atualização total da App (KandalGym v59)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -2583,6 +2583,9 @@ Bons treinos!`;
                     <button class="btn btn-secondary" onclick="app.sendBulkNotification('email')" style="flex:1;">
                         <i class="fas fa-envelope"></i> Abrir cliente Email (BCC)
                     </button>
+                    <button class="btn btn-secondary" onclick="app.sendBulkNotification('sms')" style="flex:1;">
+                        <i class="fas fa-comment-alt"></i> Preparar SMS Nativo
+                    </button>
                 </div>
             </div>
         `;
@@ -2624,6 +2627,19 @@ Bons treinos!`;
             } else {
                 this.showWhatsAppBulkModal(clients, msg);
             }
+        } else if (type === 'sms') {
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const numbers = clients.map(c => {
+                if (!c.phone) return null;
+                let clean = c.phone.replace(/\D/g, '');
+                if (clean.length === 9) clean = '351' + clean;
+                return clean;
+            }).filter(n => n).join(isIOS ? ',' : ';'); // iOS uses comma, Android usually uses semicolon for bulk SMS
+
+            if (!numbers) return alert('Nenhum dos clientes selecionados possui telemóvel registado.');
+            
+            const smsUrl = `sms:${numbers}${isIOS ? '&' : '?'}body=${encodeURIComponent(msg)}`;
+            window.location.href = smsUrl;
         }
     }
 
