@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.14.v62'; // Versão de controlo para Hard Reset v62
+        this.appVersion = '2026.04.14.v63'; // Versão de controlo para Hard Reset v63
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v62'; // Forçar v62 (UI Comunicados)
+            const targetV = 'v63'; // Forçar v63 (Pesquisa Inteligente)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v62)...");
+                console.warn("Forçando atualização total da App (KandalGym v63)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -2546,6 +2546,7 @@ Bons treinos!`;
 
     renderNotificationsManager(container) {
         let clientsList = this.state.clients || [];
+        this.selectedNotifyIds = new Set(); // Reset de seleção ao entrar no menu
         
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap: wrap; gap: 1rem;">
@@ -2601,6 +2602,14 @@ Bons treinos!`;
     }
 
     toggleAllNotifyClients(checked) {
+        const clients = this.state.clients || [];
+        if (checked) {
+            clients.forEach(c => this.selectedNotifyIds.add(String(c.id)));
+        } else {
+            this.selectedNotifyIds.clear();
+        }
+        
+        // Atualizar os checkboxes que estiverem visíveis atualmente
         document.querySelectorAll('.notify-client-checkbox').forEach(cb => {
             cb.checked = checked;
         });
@@ -2608,7 +2617,7 @@ Bons treinos!`;
     }
 
     updateNotifyCount() {
-        const count = document.querySelectorAll('.notify-client-checkbox:checked').length;
+        const count = this.selectedNotifyIds.size;
         const countEl = document.getElementById('notify-selection-count');
         if (countEl) countEl.innerText = `${count} Selecionados`;
     }
@@ -2619,43 +2628,56 @@ Bons treinos!`;
         if (!listEl) return;
         
         listEl.innerHTML = this.renderNotifyClientsRows(q);
-        this.updateNotifyCount();
     }
 
     renderNotifyClientsRows(query = '') {
+        const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        const qClean = normalize(query);
+
         const clients = (this.state.clients || [])
-            .filter(c => !query || c.name.toLowerCase().includes(query))
+            .filter(c => !qClean || normalize(c.name).includes(qClean))
             .sort((a,b) => a.name.localeCompare(b.name));
 
         if (clients.length === 0) return '<div style="padding:20px; text-align:center; color:var(--text-muted); font-size:0.9rem;">Nenhum aluno encontrado.</div>';
 
-        return clients.map(c => `
-            <div class="notify-row" style="display:flex; align-items:center; gap:12px; padding:8px 12px; border-radius:8px; cursor:pointer; transition:all 0.2s; background:rgba(255,255,255,0.01);"
-                 onclick="const cb=this.querySelector('input'); cb.checked=!cb.checked; app.updateNotifyCount()">
-                <input type="checkbox" id="notify_${c.id}" class="notify-client-checkbox" value="${c.id}" 
-                       data-name="${c.name}" data-email="${c.email}" data-phone="${c.phone || ''}" 
-                       style="width:20px; height:20px; pointer-events:none;" onclick="event.stopPropagation()">
-                <div style="display:flex; flex-direction:column; pointer-events:none;">
-                    <label style="font-size:0.95rem; font-weight:600; cursor:pointer; color:#fff;">${c.name}</label>
-                    <small style="font-size:0.75rem; color:var(--text-muted);">${c.phone || 'Sem telemóvel'}</small>
+        return clients.map(c => {
+            const isChecked = this.selectedNotifyIds.has(String(c.id));
+            return `
+                <div class="notify-row" style="display:flex; align-items:center; gap:12px; padding:8px 12px; border-radius:8px; cursor:pointer; transition:all 0.2s; background:rgba(255,255,255,0.01);"
+                     onclick="app.toggleSingleNotify('${c.id}', this)">
+                    <input type="checkbox" id="notify_${c.id}" class="notify-client-checkbox" value="${c.id}" 
+                           data-name="${c.name}" data-email="${c.email}" data-phone="${c.phone || ''}" 
+                           ${isChecked ? 'checked' : ''}
+                           style="width:20px; height:20px; pointer-events:none;" onclick="event.stopPropagation()">
+                    <div style="display:flex; flex-direction:column; pointer-events:none;">
+                        <label style="font-size:0.95rem; font-weight:600; cursor:pointer; color:#fff;">${c.name}</label>
+                        <small style="font-size:0.75rem; color:var(--text-muted);">${c.phone || 'Sem telemóvel'}</small>
+                    </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
+    }
+
+    toggleSingleNotify(id, rowEl) {
+        const cb = rowEl.querySelector('input');
+        const sId = String(id);
+        if (this.selectedNotifyIds.has(sId)) {
+            this.selectedNotifyIds.delete(sId);
+            cb.checked = false;
+        } else {
+            this.selectedNotifyIds.add(sId);
+            cb.checked = true;
+        }
+        this.updateNotifyCount();
     }
 
     sendBulkNotification(type) {
-        const checkboxes = document.querySelectorAll('.notify-client-checkbox:checked');
         const msg = document.getElementById('bulk-notify-message').value.trim();
         
-        if (checkboxes.length === 0) return alert('Selecione pelo menos um destinatário.');
+        if (this.selectedNotifyIds.size === 0) return alert('Selecione pelo menos um destinatário.');
         if (!msg) return alert('A mensagem não pode estar vazia.');
 
-        const clients = Array.from(checkboxes).map(cb => ({
-            id: cb.value,
-            name: cb.dataset.name,
-            email: cb.dataset.email,
-            phone: cb.dataset.phone
-        }));
+        const clients = (this.state.clients || []).filter(c => this.selectedNotifyIds.has(String(c.id)));
 
         if (type === 'email') {
             const emails = clients.map(c => c.email).filter(e => e && e !== 'undefined').join(',');
