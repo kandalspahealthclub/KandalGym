@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.14.v60'; // Versão de controlo para Hard Reset v60
+        this.appVersion = '2026.04.14.v61'; // Versão de controlo para Hard Reset v61
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v60'; // Forçar v60 (Correção SMS iPhone)
+            const targetV = 'v61'; // Forçar v61 (SMS Modal Manager)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v60)...");
+                console.warn("Forçando atualização total da App (KandalGym v61)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -2628,25 +2628,7 @@ Bons treinos!`;
                 this.showWhatsAppBulkModal(clients, msg);
             }
         } else if (type === 'sms') {
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
-                         (window.safari !== undefined);
-
-            const numbers = clients.map(c => {
-                if (!c.phone) return null;
-                let clean = c.phone.replace(/\D/g, '');
-                if (clean.length === 9) clean = '351' + clean;
-                return clean;
-            }).filter(n => n).join(isIOS ? ',' : ';'); // iPhone obrigatoriamente vírgula
-
-            if (!numbers) return alert('Nenhum dos clientes selecionados possui telemóvel registado.');
-            
-            // Link format for iOS often requires &body instead of ?body
-            const smsUrl = isIOS 
-                ? `sms:${numbers}&body=${encodeURIComponent(msg)}`
-                : `sms:${numbers}?body=${encodeURIComponent(msg)}`;
-                
-            window.location.href = smsUrl;
+            this.showSMSBulkModal(clients, msg);
         }
     }
 
@@ -2678,7 +2660,73 @@ Bons treinos!`;
                 <button class="btn btn-secondary" style="width:100%; margin-top:1.5rem;" onclick="this.closest('.modal-overlay').remove()">Concluir / Fechar</button>
             </div>
         `;
+    }
+
+    showSMSBulkModal(clients, msg) {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+                     (window.safari !== undefined);
+
+        const allNumbers = clients.map(c => {
+            if (!c.phone) return null;
+            let clean = c.phone.replace(/\D/g, '');
+            if (clean.length === 9) clean = '351' + clean;
+            return clean;
+        }).filter(n => n).join(isIOS ? ',' : ';');
+
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay animate-fade-in';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px;">
+                <h2 style="margin-top:0;">Gestor de Envio SMS</h2>
+                
+                <div style="background:rgba(var(--primary-rgb), 0.1); border: 1px solid rgba(var(--primary-rgb), 0.2); padding: 12px; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <p style="font-size:0.85rem; margin:0 0 10px 0; color:var(--text-muted);">Tente o envio automático primeiro. Se o seu smartphone não abrir o grupo corretamente, use as opções de cópia abaixo.</p>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-primary" style="flex:1; font-size:0.85rem;" onclick="app.tryAutoGroupSMS('${allNumbers}', \`${msg}\`, ${isIOS})">
+                            <i class="fas fa-layer-group"></i> Tentar Grupo Automático
+                        </button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:5px;">Opções de Emergência:</label>
+                    <button class="btn btn-secondary" style="width:100%; font-size:0.85rem;" onclick="app.copyToClipboard('${allNumbers.replace(/;/g, ',')}'); this.innerHTML='<i class=\\'fas fa-check\\'></i> Números Copiados!';">
+                        <i class="fas fa-copy"></i> Copiar Lista de Números
+                    </button>
+                    <p style="font-size:0.7rem; color:var(--text-muted); margin-top:5px;">(Pode colá-los manualmente no campo "Para" do seu SMS)</p>
+                </div>
+
+                <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:8px;">Envio Individual (Fila):</label>
+                <div style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:5px;">
+                    ${clients.map(c => {
+                        let cleanPhone = '';
+                        if (c.phone) {
+                            cleanPhone = c.phone.replace(/\D/g, '');
+                            if (cleanPhone.length === 9) cleanPhone = '351' + cleanPhone;
+                        }
+                        const hasPhone = c.phone && c.phone !== 'undefined' && c.phone !== '';
+                        return `
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                                <span style="font-weight:bold; font-size: 0.9rem;">${c.name}</span>
+                                ${hasPhone 
+                                    ? `<button class="btn btn-sm btn-ghost" style="color:var(--primary); border: 1px solid var(--primary);" onclick="window.location.href='sms:${cleanPhone}${isIOS ? '&' : '?'}body=${encodeURIComponent(msg)}'; this.innerHTML='<i class=\\'fas fa-check\\'></i>'; this.style.opacity='0.6';">Enviar</button>` 
+                                    : `<span style="font-size:0.75rem; color:var(--danger);">Sem número</span>`}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                <button class="btn btn-secondary" style="width:100%; margin-top:1.5rem;" onclick="this.closest('.modal-overlay').remove()">Fechar</button>
+            </div>
+        `;
         document.body.appendChild(modal);
+    }
+
+    tryAutoGroupSMS(numbers, msg, isIOS) {
+        const smsUrl = isIOS 
+            ? `sms:${numbers}&body=${encodeURIComponent(msg)}`
+            : `sms:?addresses=${numbers}&body=${encodeURIComponent(msg)}`; // Try ?addresses= for Android too
+        window.location.href = smsUrl;
     }
 
     renderFoodDatabase(container) {
