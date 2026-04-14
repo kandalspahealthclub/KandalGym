@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.14.v61'; // Versão de controlo para Hard Reset v61
+        this.appVersion = '2026.04.14.v62'; // Versão de controlo para Hard Reset v62
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v61'; // Forçar v61 (SMS Modal Manager)
+            const targetV = 'v62'; // Forçar v62 (UI Comunicados)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v61)...");
+                console.warn("Forçando atualização total da App (KandalGym v62)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -2553,27 +2553,36 @@ Bons treinos!`;
             </div>
             <div class="glass-panel" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
                 
-                <div>
-                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Destinatários:</label>
-                    <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--surface-border); border-radius: 8px; padding: 10px; background: rgba(0,0,0,0.2);">
-                        <div style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed var(--surface-border);">
-                            <input type="checkbox" id="selectAllToNotify" onchange="app.toggleAllNotifyClients(this.checked)" style="margin-right: 8px;">
-                            <label for="selectAllToNotify" style="font-weight:bold; cursor:pointer;">Selecionar Todos os Alunos</label>
-                        </div>
-                        <div id="notify-clients-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
-                            ${clientsList.map(c => `
-                                <div>
-                                    <input type="checkbox" id="notify_${c.id}" class="notify-client-checkbox" value="${c.id}" data-name="${c.name}" data-email="${c.email}" data-phone="${c.phone || ''}" style="margin-right: 5px;">
-                                    <label for="notify_${c.id}" style="font-size:0.9rem;">${c.name}</label>
-                                </div>
-                            `).join('')}
-                        </div>
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 1.2rem; border-radius: 12px;">
+                    <style>
+                        .notify-row:hover { background: rgba(var(--primary-rgb), 0.1) !important; }
+                        .notify-client-checkbox:checked + div label { color: var(--primary) !important; }
+                    </style>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 1rem; flex-wrap:wrap; gap:10px;">
+                        <label style="font-weight: 600; font-size: 1rem; color: var(--primary);">1. Selecione os Destinatários:</label>
+                        <div id="notify-selection-count" style="font-size: 0.8rem; background: var(--primary); color: #000; padding: 2px 10px; border-radius: 20px; font-weight: 800;">0 Selecionados</div>
+                    </div>
+                    
+                    <div style="margin-bottom:1rem; position:relative;">
+                        <i class="fas fa-search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.9rem;"></i>
+                        <input type="text" placeholder="Filtrar por nome do aluno..." onkeyup="app.filterNotifyClients(this.value)" 
+                               style="width:100%; padding:10px 10px 10px 35px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; font-size:0.9rem;">
+                    </div>
+
+                    <div style="margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); display:flex; gap:10px; align-items:center;">
+                        <input type="checkbox" id="selectAllToNotify" onchange="app.toggleAllNotifyClients(this.checked)" style="width:18px; height:18px; cursor:pointer;">
+                        <label for="selectAllToNotify" style="font-weight:bold; cursor:pointer; font-size:0.9rem;">Selecionar Todos os Alunos</label>
+                    </div>
+
+                    <div id="notify-clients-list" style="max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-right: 5px;">
+                        ${this.renderNotifyClientsRows()}
                     </div>
                 </div>
 
-                <div>
-                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Mensagem:</label>
-                    <textarea id="bulk-notify-message" rows="6" placeholder="Escreva aqui a sua mensagem..." style="width: 100%; border: 1px solid var(--surface-border); border-radius: 8px; padding: 12px; background: rgba(0,0,0,0.3); color: #fff; resize: vertical;"></textarea>
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 1.2rem; border-radius: 12px;">
+                    <label style="font-weight: 600; margin-bottom: 0.8rem; display: block; font-size:1rem; color:var(--primary);">2. Escreva a Mensagem:</label>
+                    <textarea id="bulk-notify-message" rows="5" placeholder="Escreva aqui a sua mensagem..." 
+                              style="width: 100%; border: 1px solid var(--surface-border); border-radius: 8px; padding: 12px; background: rgba(0,0,0,0.3); color: #fff; resize: none; font-size:1rem; line-height:1.5;"></textarea>
                 </div>
 
                 <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
@@ -2595,6 +2604,43 @@ Bons treinos!`;
         document.querySelectorAll('.notify-client-checkbox').forEach(cb => {
             cb.checked = checked;
         });
+        this.updateNotifyCount();
+    }
+
+    updateNotifyCount() {
+        const count = document.querySelectorAll('.notify-client-checkbox:checked').length;
+        const countEl = document.getElementById('notify-selection-count');
+        if (countEl) countEl.innerText = `${count} Selecionados`;
+    }
+
+    filterNotifyClients(query) {
+        const q = query.toLowerCase().trim();
+        const listEl = document.getElementById('notify-clients-list');
+        if (!listEl) return;
+        
+        listEl.innerHTML = this.renderNotifyClientsRows(q);
+        this.updateNotifyCount();
+    }
+
+    renderNotifyClientsRows(query = '') {
+        const clients = (this.state.clients || [])
+            .filter(c => !query || c.name.toLowerCase().includes(query))
+            .sort((a,b) => a.name.localeCompare(b.name));
+
+        if (clients.length === 0) return '<div style="padding:20px; text-align:center; color:var(--text-muted); font-size:0.9rem;">Nenhum aluno encontrado.</div>';
+
+        return clients.map(c => `
+            <div class="notify-row" style="display:flex; align-items:center; gap:12px; padding:8px 12px; border-radius:8px; cursor:pointer; transition:all 0.2s; background:rgba(255,255,255,0.01);"
+                 onclick="const cb=this.querySelector('input'); cb.checked=!cb.checked; app.updateNotifyCount()">
+                <input type="checkbox" id="notify_${c.id}" class="notify-client-checkbox" value="${c.id}" 
+                       data-name="${c.name}" data-email="${c.email}" data-phone="${c.phone || ''}" 
+                       style="width:20px; height:20px; pointer-events:none;" onclick="event.stopPropagation()">
+                <div style="display:flex; flex-direction:column; pointer-events:none;">
+                    <label style="font-size:0.95rem; font-weight:600; cursor:pointer; color:#fff;">${c.name}</label>
+                    <small style="font-size:0.75rem; color:var(--text-muted);">${c.phone || 'Sem telemóvel'}</small>
+                </div>
+            </div>
+        `).join('');
     }
 
     sendBulkNotification(type) {
