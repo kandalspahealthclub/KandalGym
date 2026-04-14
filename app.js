@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.14.v56'; // Versão de controlo para Hard Reset v56
+        this.appVersion = '2026.04.14.v58'; // Versão de controlo para Hard Reset v58
         this.viewingDayIdx = 0; // Reset inicial de segurança
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v56'; // Forçar v56 (Ajustes Menu Mobile)
+            const targetV = 'v58'; // Forçar v58 (Bloqueio Total Registo)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v56)...");
+                console.warn("Forçando atualização total da App (KandalGym v58)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -580,86 +580,8 @@ class FitnessApp {
                         Entrar <i class="fas fa-arrow-right"></i>
                     </button>
                 </form>
-                <div class="login-footer">
-                    Ainda náo tem conta? <a href="#" onclick="app.renderRegister(); return false;">Registe-se</a>
-                </div>
             </div>
         `;
-    }
-
-    renderRegister() {
-        const loginScreen = document.getElementById('login-screen');
-        loginScreen.innerHTML = `
-            <div class="login-card">
-                <div class="login-hero">
-                    <div class="logo">
-                        <img src="logo.png" alt="KandalGym Logo">
-                    </div>
-                    <p>Crie a sua conta gratuita</p>
-                </div>
-                <form class="login-form" onsubmit="app.handleRegister(); return false;">
-                    <div class="input-icon-group">
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="reg-name" placeholder="Nome Completo" required>
-                    </div>
-                    <div class="input-icon-group">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="reg-email" placeholder="Email" required>
-                    </div>
-                    <div class="input-icon-group">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="reg-pass" placeholder="Palavra-passe" required>
-                    </div>
-                    <div class="input-icon-group">
-                        <i class="fas fa-phone"></i>
-                        <input type="tel" id="reg-phone" placeholder="Telemóvel (ex: 912345678)" required>
-                    </div>
-                    <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.5rem 0; text-align: left;">
-                        * O seu registo será como <strong>Aluno</strong>. Contas de Professor devem ser solicitadas ao Administrador.
-                    </p>
-                    <button type="submit" class="btn btn-primary" style="width:100%; margin-top:0.5rem;">
-                        Criar Conta <i class="fas fa-check"></i>
-                    </button>
-                </form>
-                <div class="login-footer">
-                    Já tem conta? <a href="#" onclick="app.renderLogin(); return false;">Faça Login</a>
-                </div>
-            </div>
-        `;
-    }
-
-    handleRegister() {
-        const name = document.getElementById('reg-name').value.trim();
-        const email = document.getElementById('reg-email').value.trim().toLowerCase();
-        const pass = document.getElementById('reg-pass').value.trim();
-        const phone = document.getElementById('reg-phone').value.trim();
-
-        if (!name || !email || !pass || !phone) {
-            alert('Por favor, preencha todos os campos, incluindo o contacto.');
-            return;
-        }
-
-        // Verificar se já existe
-        const exists = this.state.clients.some(c => c.email.toLowerCase() === email) ||
-            this.state.teachers.some(t => t.email.toLowerCase() === email);
-        if (exists) {
-            alert('Este email já está registado.');
-            return;
-        }
-
-        const newId = Date.now();
-        const newClient = { id: newId, name, email, phone, password: pass, status: 'Ativo', lastEvaluation: '-', goal: 'Novo Aluno' };
-        this.state.clients.push(newClient);
-        this.enableQRForClient(newId, false);
-        this.state.trainingPlans[newId] = [];
-        this.state.mealPlans[newId] = { title: 'Plano Alimentar', meals: [] };
-        this.state.evaluations[newId] = [];
-        this.state.trainingHistory[newId] = [];
-
-
-        this.saveState();
-        alert('Conta criada com sucesso! Já pode entrar.');
-        this.renderLogin();
     }
 
     handleLogin() {
