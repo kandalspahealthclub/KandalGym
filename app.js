@@ -23,8 +23,8 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.14.v63'; // Versão de controlo para Hard Reset v63
-        this.viewingDayIdx = 0; // Reset inicial de segurança
+        this.appVersion = '2026.04.14.v64'; // Versão de controlo para Hard Reset v64
+        this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
         this.role = 'client';
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v63'; // Forçar v63 (Pesquisa Inteligente)
+            const targetV = 'v64'; // Forçar v64 (Plano Persistente)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v63)...");
+                console.warn("Forçando atualização total da App (KandalGym v64)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -3188,7 +3188,7 @@ Bons treinos!`;
             <div style="display:flex; gap:0.6rem; margin:1.5rem 0; overflow-x:auto; padding:5px 0 12px; -webkit-overflow-scrolling:touch; scrollbar-width: none;">
                 ${plans.map((day, dIdx) => `
                     <button class="btn" 
-                        onclick="app.viewingDayIdx = ${dIdx}; app.renderTrainingView(null, '${clientId}');"
+                        onclick="app.setViewingDayIdx(${dIdx}, '${clientId}')"
                         style="padding:10px 22px; font-size:0.85rem; border-radius:100px; min-width:120px; display:flex; align-items:center; gap:8px; justify-content:center; flex-shrink:0; font-weight:700; transition:all 0.3s ease;
                         background:${this.viewingDayIdx === dIdx ? 'var(--primary)' : 'rgba(255,255,255,0.05)'}; 
                         color:${this.viewingDayIdx === dIdx ? '#fff' : 'var(--text-muted)'};
@@ -3533,6 +3533,12 @@ Bons treinos!`;
             </div>
             `;
         document.body.appendChild(modal);
+    }
+
+    setViewingDayIdx(idx, clientId) {
+        this.viewingDayIdx = idx;
+        localStorage.setItem('kandalgym_vIdx', idx);
+        this.renderTrainingView(null, clientId);
     }
 
     openTrainingEditor(clientId) {
