@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v80'; // Versão de controlo para Hard Reset v80
+        this.appVersion = '2026.04.15.v81'; // Versão de controlo para Hard Reset v81
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -150,7 +150,7 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v80'; // Forçar v80 (Delete Msg + Bordeaux Fix)
+            const targetV = 'v81'; // Forçar v81 (Deleted Placeholder)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
                 console.warn("Forçando atualização total da App (KandalGym v70)...");
@@ -5859,9 +5859,11 @@ Bons treinos!`;
                             ${isSystem ? `<strong style="display:block; margin-bottom:4px; color:var(--accent);">${m.title}</strong>` : ''}
                             ${!isSystem && !isMe ? `<div style="font-size:0.7rem; color:var(--primary); font-weight:bold; margin-bottom:2px;">${thread.user.name}</div>` : ''}
                             
-                            ${isMe ? `<i class="fas fa-trash" onclick="event.stopPropagation(); app.deleteMessage(${m.id})" style="position:absolute; top:12px; right:8px; font-size:0.7rem; opacity:0.4; cursor:pointer;" title="Apagar Mensagem"></i>` : ''}
+                            ${isMe && !m.isDeleted ? `<i class="fas fa-trash" onclick="event.stopPropagation(); app.deleteMessage(${m.id})" style="position:absolute; top:12px; right:8px; font-size:0.7rem; opacity:0.4; cursor:pointer;" title="Apagar Mensagem"></i>` : ''}
                             
-                            <div style="${isMe ? 'padding-right:15px;' : ''}">${m.body}</div>
+                            <div style="${isMe && !m.isDeleted ? 'padding-right:15px;' : ''} ${m.isDeleted ? 'font-style:italic; opacity:0.7;' : ''}">
+                                ${m.body}
+                            </div>
                             
                             <span class="message-time">
                                 ${new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -5902,11 +5904,15 @@ Bons treinos!`;
     }
 
     deleteMessage(msgId) {
-        if (!confirm('Deseja eliminar esta mensagem permanentemente?')) return;
-        this.state.notifications = (this.state.notifications || []).filter(n => n.id !== msgId);
-        this.saveState();
-        this.renderContent();
-        this.showToast('Mensagem eliminada com sucesso.');
+        if (!confirm('Deseja sinalizar esta mensagem como eliminada?')) return;
+        const msg = (this.state.notifications || []).find(n => n.id === msgId);
+        if (msg) {
+            msg.body = '🚫 Esta mensagem foi eliminada';
+            msg.isDeleted = true;
+            this.saveState();
+            this.renderContent();
+            this.showToast('Mensagem sinalizada como eliminada.');
+        }
     }
 
     sendMessageInChat(targetId) {
