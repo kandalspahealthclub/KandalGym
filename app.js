@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v76'; // Versão de controlo para Hard Reset v76
+        this.appVersion = '2026.04.15.v77'; // Versão de controlo para Hard Reset v77
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -150,7 +150,7 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v76'; // Forçar v76 (Ultra Clean Chat)
+            const targetV = 'v77'; // Forçar v77 (iOS Chat Fix)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
                 console.warn("Forçando atualização total da App (KandalGym v70)...");
@@ -5881,11 +5881,13 @@ Bons treinos!`;
 
     openChat(userId) {
         this.activeChatUserId = userId;
+        document.body.classList.add('chat-open'); // Esconder nav mobile se necessário
         this.renderContent(); // Re-render to show chat view
     }
 
     closeChat() {
         this.activeChatUserId = null;
+        document.body.classList.remove('chat-open');
         this.renderContent();
     }
 

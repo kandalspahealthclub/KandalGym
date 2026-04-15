@@ -239,6 +239,13 @@ h3 {
         justify-content: space-between;
         z-index: 1000;
         box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.5);
+        transition: transform 0.3s ease;
+    }
+
+    /* Esconder Nav quando chat aberto no Mobile */
+    body.chat-open .mobile-nav {
+        transform: translateY(100%);
+        pointer-events: none;
     }
 
     .mobile-nav-item {
@@ -1285,7 +1292,8 @@ option {
     }
 
     .chat-input-area {
-        padding-bottom: 1.5rem;
+        padding-bottom: calc(1.5rem + var(--safe-bottom));
+        background: #1e293b; /* Cor sólida para iOS não falhar no blur */
     }
 }
 
