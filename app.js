@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v86'; // Versão de controlo para Hard Reset v86
+        this.appVersion = '2026.04.15.v87'; // Versão de controlo para Hard Reset v87
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -151,7 +151,7 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v86'; // Forçar v86 (Android Layout Fix)
+            const targetV = 'v87'; // Forçar v87 (Password Recovery System)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
                 console.warn("Forçando atualização total da App (KandalGym v70)...");
@@ -580,9 +580,90 @@ class FitnessApp {
                     <button type="submit" class="btn btn-primary" style="width:100%;">
                         Entrar <i class="fas fa-arrow-right"></i>
                     </button>
+
+                    <a href="#" onclick="app.renderForgotPassword(); return false;" style="display:block; text-align:center; margin-top:1.5rem; font-size:0.85rem; color:var(--text-muted); text-decoration:none;">
+                        Esqueci-me da palavra-passe
+                    </a>
                 </form>
             </div>
         `;
+    }
+
+    renderForgotPassword() {
+        const loginScreen = document.getElementById('login-screen');
+        if (!loginScreen) return;
+
+        loginScreen.innerHTML = `
+            <div class="login-card animate-scale-in">
+                <div class="login-hero">
+                    <div class="logo">
+                        <img src="logo.png" alt="KandalGym Logo">
+                    </div>
+                    <h3>Recuperar Conta</h3>
+                    <p>Introduza o seu email para solicitar a recuperação da password.</p>
+                </div>
+                
+                <div class="login-form">
+                    <div id="recovery-msg" style="display:none; padding:1rem; border-radius:8px; margin-bottom:1rem; font-size:0.9rem; text-align:center;"></div>
+                    
+                    <div class="input-icon-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="recovery-email" placeholder="O seu email de registo" required>
+                    </div>
+
+                    <button class="btn btn-primary" style="width:100%;" onclick="app.handlePasswordRecovery()">
+                        Solicitar Recuperação
+                    </button>
+
+                    <div style="margin-top:2rem; text-align:center;">
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">Ou contacte diretamente via:</p>
+                        <a href="https://wa.me/351910000000" target="_blank" class="btn btn-ghost" style="color:#2563eb; font-size:0.9rem;">
+                            <i class="fab fa-whatsapp"></i> Suporte WhatsApp
+                        </a>
+                    </div>
+
+                    <a href="#" onclick="app.renderLogin(); return false;" style="display:block; text-align:center; margin-top:2rem; font-size:0.85rem; color:var(--text-muted);">
+                        <i class="fas fa-arrow-left"></i> Voltar ao Login
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+
+    handlePasswordRecovery() {
+        const emailInput = document.getElementById('recovery-email');
+        const msgDiv = document.getElementById('recovery-msg');
+        if (!emailInput || !msgDiv) return;
+
+        const email = emailInput.value.trim().toLowerCase();
+        if (!email) {
+            msgDiv.style.display = 'block';
+            msgDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+            msgDiv.style.color = 'var(--danger)';
+            msgDiv.innerText = 'Por favor, introduza um email válido.';
+            return;
+        }
+
+        // Tentar encontrar o utilizador
+        const user = [...this.state.clients, ...this.state.teachers, ...this.state.admins]
+            .find(u => u.email && u.email.toLowerCase() === email);
+
+        if (user) {
+            // Enviar notificação para Adms
+            const adminId = this.state.admins[0]?.id || 1;
+            this.addAppNotification(adminId, 'Pedido de Recuperação', `O utilizador ${user.name} (${email}) solicitou a recuperação da password.`, null, 'notification');
+            
+            msgDiv.style.display = 'block';
+            msgDiv.style.background = 'rgba(34, 197, 94, 0.1)';
+            msgDiv.style.color = '#22c55e';
+            msgDiv.innerHTML = `<strong>Pedido enviado com sucesso!</strong><br><br>Um administrador foi notificado e entrará em contacto para repor a sua password.`;
+            emailInput.value = '';
+        } else {
+            msgDiv.style.display = 'block';
+            msgDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+            msgDiv.style.color = 'var(--danger)';
+            msgDiv.innerText = 'Email não encontrado no sistema. Verifique se escreveu corretamente.';
+        }
     }
 
     handleLogin() {
