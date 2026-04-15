@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v82'; // Versão de controlo para Hard Reset v82
+        this.appVersion = '2026.04.15.v83'; // Versão de controlo para Hard Reset v83
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -45,6 +45,7 @@ class FitnessApp {
         this.hasLoadedData = false; // Flag para evitar flickering de "Utilizador não encontrado"
         this.isCheckingClasses = false;
         this.checkInterval = null;
+        this.replyingTo = null;
 
         // Tentar carregar estado do LocalStorage como cache inicial
         const cachedState = localStorage.getItem('kandalgym_state');
@@ -150,7 +151,7 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v82'; // Forçar v82 (Reply Button Added)
+            const targetV = 'v83'; // Forçar v83 (WhatsApp Style Reply)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
                 console.warn("Forçando atualização total da App (KandalGym v70)...");
@@ -5859,10 +5860,17 @@ Bons treinos!`;
                             ${isSystem ? `<strong style="display:block; margin-bottom:4px; color:var(--accent);">${m.title}</strong>` : ''}
                             ${!isSystem && !isMe ? `<div style="font-size:0.7rem; color:var(--primary); font-weight:bold; margin-bottom:2px;">${thread.user.name}</div>` : ''}
                             
-                            ${!isSystem && !m.isDeleted ? `<i class="fas fa-reply" onclick="event.stopPropagation(); app.showReplyModal(${m.senderId || m.targetUserId}, 'Chat: ${m.body.substring(0, 20)}...')" style="position:absolute; top:12px; left:8px; font-size:0.7rem; opacity:0.4; cursor:pointer;" title="Responder"></i>` : ''}
+                            ${!isSystem && !m.isDeleted ? `<i class="fas fa-reply" onclick="event.stopPropagation(); app.startReply(${m.id})" style="position:absolute; top:12px; left:8px; font-size:0.7rem; opacity:0.4; cursor:pointer;" title="Responder"></i>` : ''}
                             
                             ${isMe && !m.isDeleted ? `<i class="fas fa-trash" onclick="event.stopPropagation(); app.deleteMessage(${m.id})" style="position:absolute; top:12px; right:8px; font-size:0.7rem; opacity:0.4; cursor:pointer;" title="Apagar Mensagem"></i>` : ''}
                             
+                            ${m.replyToBody ? `
+                                <div style="background:rgba(0,0,0,0.2); border-left:3px solid var(--primary); padding:5px 8px; margin-bottom:8px; font-size:0.8rem; border-radius:4px; opacity:0.8;">
+                                    <div style="font-weight:bold; color:var(--primary); font-size:0.7rem;">${m.replyToSenderName || 'Resposta'}</div>
+                                    <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.replyToBody}</div>
+                                </div>
+                            ` : ''}
+
                             <div style="${!isSystem ? 'padding: 0 15px;' : ''} ${m.isDeleted ? 'font-style:italic; opacity:0.7;' : ''}">
                                 ${m.body}
                             </div>
@@ -5876,12 +5884,21 @@ Bons treinos!`;
             </div>
 
             ${activeChatId !== 'system' ? `
-            <div class="chat-input-area">
-                <input type="text" id="chat-input-text" placeholder="Escreva uma mensagem..." onkeypress="app.handleChatInput(event, '${activeChatId}')">
-                <button class="btn btn-primary btn-sm" style="border-radius:50%; width:40px; height:40px; padding:0; display:flex; align-items:center; justify-content:center;" 
-                    onclick="app.sendMessageInChat('${activeChatId}')">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
+            <div class="chat-input-area" style="flex-direction:column; align-items:stretch; padding:10px;">
+                ${this.replyingTo ? `
+                    <div style="background:rgba(255,255,255,0.05); border-left:3px solid var(--primary); padding:8px 12px; margin-bottom:10px; border-radius:8px; position:relative; display:flex; flex-direction:column;">
+                        <i class="fas fa-times" onclick="app.cancelReply()" style="position:absolute; top:8px; right:10px; cursor:pointer; opacity:0.5;"></i>
+                        <span style="font-size:0.7rem; color:var(--primary); font-weight:bold; margin-bottom:2px;">A responder a ${this.replyingTo.senderName || 'Mensagem'}</span>
+                        <span style="font-size:0.8rem; opacity:0.7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:20px;">${this.replyingTo.body}</span>
+                    </div>
+                ` : ''}
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <input type="text" id="chat-input-text" placeholder="Escreva uma mensagem..." onkeypress="app.handleChatInput(event, '${activeChatId}')">
+                    <button class="btn btn-primary btn-sm" style="border-radius:50%; width:40px; height:40px; padding:0; display:flex; align-items:center; justify-content:center;" 
+                        onclick="app.sendMessageInChat('${activeChatId}')">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
             </div>
             ` : '<div style="padding:1rem; text-align:center; color:var(--text-muted); background:rgba(0,0,0,0.2);">Este é um canal de notificações do sistema.</div>'}
         `;
@@ -5917,16 +5934,65 @@ Bons treinos!`;
         }
     }
 
+    startReply(msgId) {
+        const msg = (this.state.notifications || []).find(n => n.id === msgId);
+        if (msg) {
+            // Encontrar nome do sender
+            let senderName = 'Mensagem';
+            if (msg.senderId) {
+                const user = this.state.clients.find(c => c.id == msg.senderId) || 
+                             this.state.teachers.find(t => t.id == msg.senderId) || 
+                             this.state.admins.find(a => a.id == msg.senderId);
+                if (user) senderName = user.name;
+            } else if (String(msg.senderId) === String(this.currentUser.id)) {
+                senderName = 'Eu';
+            }
+            
+            this.replyingTo = { ...msg, senderName };
+            this.renderContent();
+            // Focar input
+            setTimeout(() => document.getElementById('chat-input-text')?.focus(), 50);
+        }
+    }
+
+    cancelReply() {
+        this.replyingTo = null;
+        this.renderContent();
+    }
+
     sendMessageInChat(targetId) {
         const input = document.getElementById('chat-input-text');
         const text = input.value.trim();
         if (!text) return;
 
+        // Metadata para Resposta (WhatsApp Style)
+        const replyMeta = this.replyingTo ? {
+            replyToId: this.replyingTo.id,
+            replyToBody: this.replyingTo.body,
+            replyToSenderName: this.replyingTo.senderName
+        } : {};
+
         // Add message
-        this.addAppNotification(targetId, `Nova mensagem`, text, this.currentUser.id, 'message');
+        const newMsg = {
+            id: Date.now() + Math.random(),
+            targetUserId: Number(targetId),
+            senderId: this.currentUser.id,
+            type: 'message',
+            title: `Nova mensagem`,
+            body: text,
+            createdAt: new Date().toISOString(),
+            ...replyMeta
+        };
+
+        if (!this.state.notifications) this.state.notifications = [];
+        this.state.notifications.push(newMsg);
+        
+        // Limpar estado de resposta
+        this.replyingTo = null;
+        this.saveState();
 
         // Refresh view
-        input.value = ''; // Clean input first to feel responsive
+        input.value = ''; 
         this.renderContent();
 
         // Timeout to ensure scroll happens after render
