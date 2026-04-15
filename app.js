@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v72'; // Versão de controlo para Hard Reset v72
+        this.appVersion = '2026.04.15.v73'; // Versão de controlo para Hard Reset v73
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
