@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v67'; // Versão de controlo para Hard Reset v67
+        this.appVersion = '2026.04.15.v70'; // Versão de controlo para Hard Reset v70
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v67'; // Forçar v67 (Fix Youtube & Fallback)
+            const targetV = 'v70'; // Forçar v70 (Clean Video UI)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v67)...");
+                console.warn("Forçando atualização total da App (KandalGym v70)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -1547,6 +1547,33 @@ Bons treinos!`;
         `;
     }
 
+    normalizeYoutubeUrl(url) {
+        if (!url) return { embedUrl: '', videoId: '', thumbUrl: '' };
+        let videoId = '';
+        
+        try {
+            if (url.includes('/shorts/')) {
+                videoId = url.split('/shorts/')[1].split(/[?&]/)[0];
+            } else if (url.includes('v=')) {
+                videoId = url.split('v=')[1].split(/[?&]/)[0];
+            } else if (url.includes('youtu.be/')) {
+                videoId = url.split('youtu.be/')[1].split(/[?&]/)[0];
+            } else if (url.includes('/embed/')) {
+                videoId = url.split('/embed/')[1].split(/[?&]/)[0];
+            }
+        } catch (e) { console.error("Erro ao normalizar Youtube URL:", e); }
+
+        if (videoId) {
+            videoId = videoId.trim();
+            return {
+                embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0`,
+                videoId: videoId,
+                thumbUrl: `https://img.youtube.com/vi/${videoId}/0.jpg`
+            };
+        }
+        return { embedUrl: url, videoId: '', thumbUrl: '' };
+    }
+
     renderAdminContent(container) {
         if (!this.hasLoadedData) {
             container.innerHTML = `<div style="padding:5rem; text-align:center;"><div class="loader" style="margin:0 auto;"></div></div>`;
@@ -2247,16 +2274,18 @@ Bons treinos!`;
                     <h3 style="color:var(--primary); font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px; margin-bottom:15px;">${catName}</h3>
                     <div class="video-grid">
                         ${exercises.map(ex => {
-                let cleanUrl = ex.videoUrl || '';
-                const hasVideo = cleanUrl && (cleanUrl.includes('youtube') || cleanUrl.includes('embed'));
-                if (hasVideo && !cleanUrl.includes('modestbranding')) {
-                    const params = "modestbranding=1&rel=0&showinfo=0";
-                    cleanUrl += (cleanUrl.includes('?') ? '&' : '?') + params;
-                }
+                const yt = this.normalizeYoutubeUrl(ex.videoUrl);
+                const hasVideo = !!yt.videoId;
 
                 return `
                                 <div class="glass-card" style="padding:0; overflow:hidden; position:relative; border-top: 3px solid var(--primary);">
-                                    ${hasVideo ? `<iframe width="100%" height="150" src="${cleanUrl}" frameborder="0" allowfullscreen></iframe>` : `
+                                    ${hasVideo ? `
+                                        <div style="width:100%; height:150px; position:relative; cursor:pointer;" onclick="app.viewExerciseVideo('${ex.videoUrl}', '${ex.name}')">
+                                            <img src="${yt.thumbUrl}" style="width:100%; height:100%; object-fit:cover; opacity:0.7;">
+                                            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#fff; font-size:2.8rem; text-shadow:0 0 15px rgba(0,0,0,0.6); opacity:0.9;">
+                                                <i class="fas fa-play-circle"></i>
+                                            </div>
+                                        </div>` : `
                                         <div style="width:100%; height:150px; background:rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; flex-direction: column; gap: 10px;">
                                             ${ex.photoUrl ? `<img src="${ex.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : `
                                                 <i class="fas fa-video-slash" style="font-size:1.5rem; opacity: 0.3;"></i>
@@ -3512,29 +3541,9 @@ Bons treinos!`;
     }
 
     viewExerciseVideo(url, name) {
-        let cleanUrl = url;
-        let videoId = '';
+        const yt = this.normalizeYoutubeUrl(url);
         const originalUrl = url;
-
-        // Estratégia de extração robusta de ID
-        try {
-            if (url.includes('/shorts/')) {
-                videoId = url.split('/shorts/')[1].split(/[?&]/)[0];
-            } else if (url.includes('v=')) {
-                videoId = url.split('v=')[1].split(/[?&]/)[0];
-            } else if (url.includes('youtu.be/')) {
-                videoId = url.split('youtu.be/')[1].split(/[?&]/)[0];
-            } else if (url.includes('/embed/')) {
-                videoId = url.split('/embed/')[1].split(/[?&]/)[0];
-            }
-        } catch (e) { console.error("Erro ao processar link Youtube:", e); }
-
-        if (videoId) {
-            cleanUrl = `https://www.youtube.com/embed/${videoId.trim()}`;
-        }
-
-        const params = "autoplay=1&modestbranding=1&rel=0";
-        cleanUrl += (cleanUrl.includes('?') ? '&' : '?') + params;
+        const cleanUrl = yt.embedUrl || url;
 
         const modal = document.createElement('div');
         modal.className = 'modal-overlay animate-fade-in';
@@ -3549,11 +3558,6 @@ Bons treinos!`;
                 <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:12px; background:#000;">
                     <iframe src="${cleanUrl}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen
                         style="position:absolute; top:0; left:0; width:100%; height:100%;"></iframe>
-                </div>
-                <div style="margin-top:1rem; text-align:center;">
-                    <a href="${originalUrl}" target="_blank" class="btn btn-ghost" style="font-size:0.8rem; color:var(--text-muted);">
-                        <i class="fab fa-youtube"></i> Não consegue ver o vídeo? Abrir no YouTube
-                    </a>
                 </div>
             </div>
             `;
