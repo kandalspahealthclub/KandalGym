@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v71'; // Versão de controlo para Hard Reset v71
+        this.appVersion = '2026.04.15.v72'; // Versão de controlo para Hard Reset v72
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -5850,7 +5850,7 @@ Bons treinos!`;
             <div class="chat-messages">
                 ${msgs.length === 0 ? '<div style="text-align:center; color:var(--text-muted); margin-top:2rem;">Inicio da conversa.</div>' : ''}
                 ${msgs.map(m => {
-                        const isMe = m.senderId === Number(this.currentUser.id);
+                        const isMe = String(m.senderId) === String(this.currentUser.id);
                         const isSystem = !m.senderId;
                         const bubbleClass = isSystem ? 'message-received' : (isMe ? 'message-sent' : 'message-received');
 
@@ -5868,7 +5868,7 @@ Bons treinos!`;
             </div>
 
             ${activeChatId !== 'system' ? `
-            <div class="chat-input-área">
+            <div class="chat-input-area">
                 <input type="text" id="chat-input-text" placeholder="Escreva uma mensagem..." onkeypress="app.handleChatInput(event, '${activeChatId}')">
                 <button class="btn btn-primary btn-sm" style="border-radius:50%; width:40px; height:40px; padding:0; display:flex; align-items:center; justify-content:center;" 
                     onclick="app.sendMessageInChat('${activeChatId}')">
