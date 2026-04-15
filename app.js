@@ -7855,7 +7855,7 @@ Bons treinos!`;
         const agora = new Date();
         const hj = agora.toISOString().split('T')[0];
 
-        // Determinar se é ENTRADA ou SAáÂDA
+        // Determinar se é ENTRADA ou SAÍDA
         const lastLog = (c.histórico && c.histórico.length > 0) ? c.histórico[0] : null;
         let isExit = false;
 
@@ -7901,7 +7901,7 @@ Bons treinos!`;
 
             new BroadcastChannel('kandal_access').postMessage({
                 type: 'access_event',
-                data: { name: c.nome, msg: 'ATáâ€° amanhãÆ’! (SAáÂDA)', valid: true, photo: c.photoUrl || null }
+                data: { name: c.nome, msg: 'ATÉ AMANHÃ! (SAÍDA)', valid: true, photo: c.photoUrl || null }
             });
             this.sendToArduino('A');
 
@@ -7924,7 +7924,7 @@ Bons treinos!`;
                     this.showQRMsg(`${c.nome}: Sem créditos`, "bg-qr-danger");
                     new BroadcastChannel('kandal_access').postMessage({
                         type: 'access_event',
-                        data: { name: c.nome, msg: 'SEM CRáâ€°DITOS', valid: false, photo: c.photoUrl || null }
+                        data: { name: c.nome, msg: 'SEM CRÉDITOS', valid: false, photo: c.photoUrl || null }
                     });
                     this.sendToArduino('B');
                     return;
@@ -7944,7 +7944,7 @@ Bons treinos!`;
                     this.showQRMsg(`${c.nome}: Limite diário atingido`, "bg-qr-warning");
                     new BroadcastChannel('kandal_access').postMessage({
                         type: 'access_event',
-                        data: { name: c.nome, msg: 'LIMITE DIáÂRIO', valid: false, photo: c.photoUrl || null }
+                        data: { name: c.nome, msg: 'LIMITE DIÁRIO', valid: false, photo: c.photoUrl || null }
                     });
                     this.sendToArduino('B');
                     return;
@@ -8015,7 +8015,7 @@ Bons treinos!`;
                                         </td>
                                         <td style="padding: 12px 15px; text-align:center;">
                                             <span style="display:inline-flex; align-items:center; gap:6px; background: ${isIn ? 'rgba(38,222,129, 0.1)' : 'rgba(255,159,67, 0.1)'}; color: ${isIn ? '#26de81' : '#ff9f43'}; padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; border: 1px solid ${isIn ? 'rgba(38,222,129, 0.2)' : 'rgba(255,159,67, 0.2)'};">
-                                                <i class="fas ${isIn ? 'fa-sign-in-alt' : 'fa-sign-out-alt'}"></i> ${isIn ? 'ENTRADA' : 'SAáÂDA'}
+                                                <i class="fas ${isIn ? 'fa-sign-in-alt' : 'fa-sign-out-alt'}"></i> ${isIn ? 'ENTRADA' : 'SAÍDA'}
                                             </span>
                                         </td>
                                     </tr>
