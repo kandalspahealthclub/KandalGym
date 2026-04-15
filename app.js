@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v84'; // Versão de controlo para Hard Reset v84
+        this.appVersion = '2026.04.15.v85'; // Versão de controlo para Hard Reset v85
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -151,7 +151,7 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v84'; // Forçar v84 (Visual Reply Fix)
+            const targetV = 'v85'; // Forçar v85 (Layout Polish)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
                 console.warn("Forçando atualização total da App (KandalGym v70)...");
@@ -5858,14 +5858,14 @@ Bons treinos!`;
                         return `
                         <div class="message-bubble ${bubbleClass}" style="${isSystem ? 'background: #334155; width:100%; max-width:100%; text-align:center; font-size:0.85rem;' : ''}">
                             ${isSystem ? `<strong style="display:block; margin-bottom:4px; color:var(--accent);">${m.title}</strong>` : ''}
-                            ${!isSystem && !isMe ? `<div style="font-size:0.7rem; color:var(--primary); font-weight:bold; margin-bottom:2px;">${thread.user.name}</div>` : ''}
+                            ${!isSystem && !isMe ? `<div style="font-size:0.7rem; color:var(--primary); font-weight:bold; margin-bottom:5px; padding-left:25px;">${thread.user.name}</div>` : ''}
                             
-                            ${!isSystem && !m.isDeleted ? `<i class="fas fa-reply" onclick="event.stopPropagation(); app.startReply(${m.id})" style="position:absolute; top:10px; left:8px; font-size:0.85rem; opacity:1; color:var(--primary); cursor:pointer; background:rgba(0,0,0,0.2); width:24px; height:24px; display:flex; align-items:center; justify-content:center; border-radius:50%;" title="Responder"></i>` : ''}
+                            ${!isSystem && !m.isDeleted ? `<i class="fas fa-reply" onclick="event.stopPropagation(); app.startReply(${m.id})" style="position:absolute; top:8px; left:8px; font-size:0.8rem; opacity:1; color:var(--primary); cursor:pointer; background:rgba(0,0,0,0.25); width:22px; height:22px; display:flex; align-items:center; justify-content:center; border-radius:50%;" title="Responder"></i>` : ''}
                             
-                            ${isMe && !m.isDeleted ? `<i class="fas fa-trash" onclick="event.stopPropagation(); app.deleteMessage(${m.id})" style="position:absolute; top:10px; right:8px; font-size:0.85rem; opacity:1; color:#ff4444; cursor:pointer; background:rgba(0,0,0,0.2); width:24px; height:24px; display:flex; align-items:center; justify-content:center; border-radius:50%;" title="Apagar Mensagem"></i>` : ''}
+                            ${isMe && !m.isDeleted ? `<i class="fas fa-trash" onclick="event.stopPropagation(); app.deleteMessage(${m.id})" style="position:absolute; top:8px; right:8px; font-size:0.8rem; opacity:1; color:#ff4444; cursor:pointer; background:rgba(0,0,0,0.25); width:22px; height:22px; display:flex; align-items:center; justify-content:center; border-radius:50%;" title="Apagar Mensagem"></i>` : ''}
                             
                             ${m.replyToBody ? `
-                                <div style="background:rgba(0,0,0,0.2); border-left:3px solid var(--primary); padding:5px 8px; margin-bottom:8px; font-size:0.8rem; border-radius:4px; opacity:0.8; margin-top:15px;">
+                                <div style="background:rgba(0,0,0,0.2); border-left:3px solid var(--primary); padding:5px 8px; margin-bottom:8px; font-size:0.8rem; border-radius:4px; opacity:0.8; margin-top:${!isSystem && !isMe ? '5px' : '15px'};">
                                     <div style="font-weight:bold; color:var(--primary); font-size:0.7rem;">${m.replyToSenderName || 'Resposta'}</div>
                                     <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.replyToBody}</div>
                                 </div>
@@ -5873,7 +5873,6 @@ Bons treinos!`;
 
                             <div style="${!isSystem ? 'padding: 5px 25px;' : ''} ${m.isDeleted ? 'font-style:italic; opacity:0.7;' : ''}">
                                 ${m.body}
-                                ${m.isDeleted ? '' : ''}
                             </div>
                             
                             <span class="message-time">
