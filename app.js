@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v85'; // Versão de controlo para Hard Reset v85
+        this.appVersion = '2026.04.15.v86'; // Versão de controlo para Hard Reset v86
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -151,7 +151,7 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v85'; // Forçar v85 (Layout Polish)
+            const targetV = 'v86'; // Forçar v86 (Android Layout Fix)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
                 console.warn("Forçando atualização total da App (KandalGym v70)...");
@@ -5858,7 +5858,7 @@ Bons treinos!`;
                         return `
                         <div class="message-bubble ${bubbleClass}" style="${isSystem ? 'background: #334155; width:100%; max-width:100%; text-align:center; font-size:0.85rem;' : ''}">
                             ${isSystem ? `<strong style="display:block; margin-bottom:4px; color:var(--accent);">${m.title}</strong>` : ''}
-                            ${!isSystem && !isMe ? `<div style="font-size:0.7rem; color:var(--primary); font-weight:bold; margin-bottom:5px; padding-left:25px;">${thread.user.name}</div>` : ''}
+                            ${!isSystem && !isMe ? `<div style="font-size:0.7rem; color:var(--primary); font-weight:bold; margin-bottom:5px; padding-left:35px;">${thread.user.name}</div>` : ''}
                             
                             ${!isSystem && !m.isDeleted ? `<i class="fas fa-reply" onclick="event.stopPropagation(); app.startReply(${m.id})" style="position:absolute; top:8px; left:8px; font-size:0.8rem; opacity:1; color:var(--primary); cursor:pointer; background:rgba(0,0,0,0.25); width:22px; height:22px; display:flex; align-items:center; justify-content:center; border-radius:50%;" title="Responder"></i>` : ''}
                             
