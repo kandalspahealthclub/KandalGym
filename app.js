@@ -2015,7 +2015,7 @@ Bons treinos!`;
             '<div id="user-display" class="user-card">' +
             '<div id="user-photo-frame" class="photo-frame"><img id="user-photo" src="" style="display:none;"><i id="user-icon" class="fas fa-user"></i></div>' +
             '<h1 id="user-name" class="name">NOME DO CLIENTE</h1>' +
-            '<div id="user-status" class="status">ENTRADA VáÂLIDA</div></div></div>' +
+            '<div id="user-status" class="status">ENTRADA VÁLIDA</div></div></div>' +
             '<script>' +
             'const bc = new BroadcastChannel("kandal_access"); let timeout; ' +
             'bc.onmessage = (ev) => { const { type, data } = ev.data; if (type === "access_event") { ' +
