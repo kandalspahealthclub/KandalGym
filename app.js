@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v79'; // Versão de controlo para Hard Reset v79
+        this.appVersion = '2026.04.15.v80'; // Versão de controlo para Hard Reset v80
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -150,7 +150,7 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v79'; // Forçar v79 (Bordeaux Chat)
+            const targetV = 'v80'; // Forçar v80 (Delete Msg + Bordeaux Fix)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
                 console.warn("Forçando atualização total da App (KandalGym v70)...");
@@ -5858,7 +5858,11 @@ Bons treinos!`;
                         <div class="message-bubble ${bubbleClass}" style="${isSystem ? 'background: #334155; width:100%; max-width:100%; text-align:center; font-size:0.85rem;' : ''}">
                             ${isSystem ? `<strong style="display:block; margin-bottom:4px; color:var(--accent);">${m.title}</strong>` : ''}
                             ${!isSystem && !isMe ? `<div style="font-size:0.7rem; color:var(--primary); font-weight:bold; margin-bottom:2px;">${thread.user.name}</div>` : ''}
-                            ${m.body}
+                            
+                            ${isMe ? `<i class="fas fa-trash" onclick="event.stopPropagation(); app.deleteMessage(${m.id})" style="position:absolute; top:12px; right:8px; font-size:0.7rem; opacity:0.4; cursor:pointer;" title="Apagar Mensagem"></i>` : ''}
+                            
+                            <div style="${isMe ? 'padding-right:15px;' : ''}">${m.body}</div>
+                            
                             <span class="message-time">
                                 ${new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
@@ -5895,6 +5899,14 @@ Bons treinos!`;
         if (e.key === 'Enter') {
             this.sendMessageInChat(targetId);
         }
+    }
+
+    deleteMessage(msgId) {
+        if (!confirm('Deseja eliminar esta mensagem permanentemente?')) return;
+        this.state.notifications = (this.state.notifications || []).filter(n => n.id !== msgId);
+        this.saveState();
+        this.renderContent();
+        this.showToast('Mensagem eliminada com sucesso.');
     }
 
     sendMessageInChat(targetId) {

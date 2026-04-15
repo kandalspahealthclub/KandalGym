@@ -1216,10 +1216,10 @@ option {
 
 .message-sent {
     align-self: flex-end;
-    background: var(--primary); /* Bordo KandalGym */
-    color: #ffffff;
+    background: #911B2B !important; /* Forçar Bordo KandalGym */
+    color: #ffffff !important;
     border-bottom-right-radius: 2px;
-    box-shadow: 0 4px 12px rgba(145, 27, 43, 0.15);
+    box-shadow: 0 4px 12px rgba(145, 27, 43, 0.2);
 }
 
 .message-time {
