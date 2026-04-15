@@ -1208,16 +1208,18 @@ option {
 
 .message-received {
     align-self: flex-start;
-    background: #202c33;
+    background: #232323;
     color: #e9edef;
     border-bottom-left-radius: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .message-sent {
     align-self: flex-end;
-    background: #005c4b;
-    color: #e9edef;
+    background: var(--primary); /* Bordo KandalGym */
+    color: #ffffff;
     border-bottom-right-radius: 2px;
+    box-shadow: 0 4px 12px rgba(145, 27, 43, 0.15);
 }
 
 .message-time {

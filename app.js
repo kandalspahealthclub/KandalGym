@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v78'; // Versão de controlo para Hard Reset v78
+        this.appVersion = '2026.04.15.v79'; // Versão de controlo para Hard Reset v79
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -150,7 +150,7 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v78'; // Forçar v78 (iOS Back Button Fix)
+            const targetV = 'v79'; // Forçar v79 (Bordeaux Chat)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
                 console.warn("Forçando atualização total da App (KandalGym v70)...");
