@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v87'; // Versão de controlo para Hard Reset v87
+        this.appVersion = '2026.04.15.v88'; // Versão de controlo para Hard Reset v88
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -151,7 +151,7 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v87'; // Forçar v87 (Password Recovery System)
+            const targetV = 'v88'; // Forçar v88 (WhatsApp & FAB Update)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
                 console.warn("Forçando atualização total da App (KandalGym v70)...");
@@ -617,7 +617,7 @@ class FitnessApp {
 
                     <div style="margin-top:2rem; text-align:center;">
                         <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">Ou contacte diretamente via:</p>
-                        <a href="https://wa.me/351910000000" target="_blank" class="btn btn-ghost" style="color:#2563eb; font-size:0.9rem;">
+                        <a href="https://wa.me/351963939017" target="_blank" class="btn btn-ghost" style="color:#2563eb; font-size:0.9rem;">
                             <i class="fab fa-whatsapp"></i> Suporte WhatsApp
                         </a>
                     </div>
@@ -839,24 +839,7 @@ class FitnessApp {
     renderFAB() {
         const existingFab = document.querySelector('.fab');
         if (existingFab) existingFab.remove();
-
-        if (this.role === 'admin') {
-            const fab = document.createElement('button');
-            fab.className = 'fab animate-fade-in';
-            fab.innerHTML = '<i class="fas fa-plus"></i>';
-            fab.onclick = () => {
-                if (this.activeView === 'users' || this.activeView === 'dashboard') {
-                    this.showAddUserModal();
-                } else if (this.activeView === 'exercises') {
-                    this.showAddExerciseModal();
-                } else if (this.activeView === 'foods') {
-                    this.showAddFoodModal();
-                } else {
-                    this.showAddUserModal();
-                }
-            };
-            document.body.appendChild(fab);
-        }
+        // Botão flutuante removido a pedido do utilizador (círculo vermelho com logo)
     }
 
     showAddUserModal() {
