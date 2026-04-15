@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v70'; // Versão de controlo para Hard Reset v70
+        this.appVersion = '2026.04.15.v71'; // Versão de controlo para Hard Reset v71
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -7515,22 +7515,26 @@ Bons treinos!`;
         const searchInput = document.getElementById('qr-search-input');
         const filterVal = searchInput ? searchInput.value : '';
 
-        // 1. Capturar scroll do contentor
         const scrollY = container.scrollTop;
+        const windowY = window.pageYOffset || document.documentElement.scrollTop;
 
-        // 2. Travar altura
+        // 2. Travar altura para evitar saltos
         container.style.minHeight = container.scrollHeight + 'px';
 
         // 3. Atualizar a tabela mantendo o filtro ativo
         grid.innerHTML = this.renderQRClientCards(filterVal);
 
-        // 4. Restaurar imediatamente
+        // 4. Restaurar imediatamente (ambos os sistemas de scroll)
         container.scrollTop = scrollY;
+        window.scrollTo(0, windowY);
 
-        // 5. Confirmar no próximo frame
+        // 5. Confirmar nos próximos frames para garantir estabilidade
         requestAnimationFrame(() => {
             container.scrollTop = scrollY;
+            window.scrollTo(0, windowY);
             requestAnimationFrame(() => {
+                container.scrollTop = scrollY;
+                window.scrollTo(0, windowY);
                 container.style.minHeight = '';
             });
         });
