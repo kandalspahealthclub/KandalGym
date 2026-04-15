@@ -6,8 +6,8 @@ window.onerror = function (message, source, lineno, colno, error) {
         container.innerHTML = `
             <div class="glass-card" style="margin:2rem; padding:2rem; border:2px solid var(--danger); text-align:center;">
                 <i class="fas fa-exclamation-circle" style="font-size:3rem; color:var(--danger); margin-bottom:1rem;"></i>
-                <h2 style="color:#fff;">Ocorreu um erro na aplicaçáo</h2>
-                <p style="color:var(--text-muted);">A página náo conseguiu carregar corretamente.</p>
+                <h2 style="color:#fff;">Ocorreu um erro na aplicação</h2>
+                <p style="color:var(--text-muted);">A página não conseguiu carregar corretamente.</p>
                 <div style="background:rgba(0,0,0,0.3); padding:1rem; border-radius:8px; margin:1rem 0; text-align:left; font-family:monospace; font-size:0.75rem; color:var(--danger); overflow-x:auto;">
                     Erro: ${message}<br>
                     Arquivo: ${source}<br>
@@ -37,12 +37,12 @@ class FitnessApp {
         this.editingDayIdx = 0; // Controla qual o dia (Plano A, B...) a ser mostrado no editor
         this.editingNewsId = null; // Controla se estamos a editar uma noticia
         this.planRestrictions = {
-            'Musculaçáo': { allowClasses: false },
+            'Musculação': { allowClasses: false },
             'Pilates': { allowClasses: true, filter: ['Pilates'] },
             'Aulas Geral': { allowClasses: true, exclude: ['Pilates', 'Dance Kids'] },
             'Dance Kids': { allowClasses: true, filter: ['Dance Kids'] }
         };
-        this.hasLoadedData = false; // Flag para evitar flickering de "Utilizador náo encontrado"
+        this.hasLoadedData = false; // Flag para evitar flickering de "Utilizador não encontrado"
         this.isCheckingClasses = false;
         this.checkInterval = null;
 
@@ -129,14 +129,14 @@ class FitnessApp {
                         this.serialWriter = writableStream.getWriter();
                         console.log("Arduino auto-conectado com sucesso.");
                     } catch (e) {
-                        console.warn("Falha na auto-conexáo Serial:", e);
+                        console.warn("Falha na auto-conexão Serial:", e);
                     }
                 }
             });
         }
 
         // 3. Failsafe: Se após 8 segundos ainda estiver "Sincronizando", forçamos o carregamento
-        // para náo bloquear o utilizador, usando os dados do cache local se necessário.
+        // para não bloquear o utilizador, usando os dados do cache local se necessário.
         setTimeout(() => {
             if (!this.hasLoadedData) {
                 console.warn("Failsafe: Forçando carregamento após timeout de sincronização.");
@@ -183,7 +183,7 @@ class FitnessApp {
 
     async connectArduino() {
         if (!("serial" in navigator)) {
-            alert("O seu navegador náo suporta a Web Serial API. Use o Google Chrome ou Microsoft Edge.");
+            alert("O seu navegador não suporta a Web Serial API. Use o Google Chrome ou Microsoft Edge.");
             return;
         }
 
@@ -196,7 +196,7 @@ class FitnessApp {
             this.serialWriter = writableStream.getWriter();
 
             this.showToast("Arduino ligado com sucesso!", "success");
-            this.renderContent(); // Re-render para atualizar o estado do botáo
+            this.renderContent(); // Re-render para atualizar o estado do botão
         } catch (err) {
             console.error("Erro ao ligar ao Arduino:", err);
             alert("Não foi possível conectar ao Arduino.");
@@ -315,7 +315,7 @@ class FitnessApp {
         if (!this.state.news) this.state.news = [];
 
         if (this.editingNewsId) {
-            // Modo Ediçáo
+            // Modo Edição
             const idx = this.state.news.findIndex(n => n.id === this.editingNewsId);
             if (idx !== -1) {
                 this.state.news[idx].title = title;
@@ -326,7 +326,7 @@ class FitnessApp {
             this.editingNewsId = null;
             this.showToast('Notícia atualizada!', 'success');
         } else {
-            // Modo Criaçáo
+            // Modo Criação
             const newEntry = {
                 id: Date.now().toString(),
                 title: title,
@@ -390,7 +390,7 @@ class FitnessApp {
                 this.hasLoadedData = true;
 
                 const data = snapshot.val();
-                // Só sobrescreve o estado local se náo estivermos no meio de uma gravaçáo nossa
+                // Só sobrescreve o estado local se não estivermos no meio de uma gravação nossa
                 // para evitar conflitos de latência (compensation)
                 if (data && !this.isSaving) {
                     this.state = data;
@@ -422,20 +422,20 @@ class FitnessApp {
                     });
                 }
 
-                // 3. Sincronizaçáo de Utilizadores QR
+                // 3. Sincronização de Utilizadores QR
                 if (this.isLoggedIn) {
                     this.syncQRUsers();
                 }
 
-                // 4. Sincronizaçáo local e UI
+                // 4. Sincronização local e UI
                 try {
                     localStorage.setItem('kandalgym_state', JSON.stringify(this.state));
                 } catch (e) { }
 
                 this.syncSessionWithState();
 
-                // Atualizar UI apenas se logado, náo houver modais abertas,
-                // E NáÆ’O estivermos no meio de uma gravaçáo nossa (evita reset de scroll)
+                // Atualizar UI apenas se logado, não houver modais abertas,
+                // E NáÆ’O estivermos no meio de uma gravação nossa (evita reset de scroll)
                 if (this.isLoggedIn && !document.querySelector('.modal-overlay') && !this.isSaving) {
                     this.renderContent();
                 }
@@ -740,7 +740,7 @@ class FitnessApp {
             }
 
         } catch (e) {
-            console.error("Erro ao restaurar sessáo:", e);
+            console.error("Erro ao restaurar sessão:", e);
             localStorage.removeItem('kandalgym_session');
         }
     }
@@ -904,7 +904,7 @@ class FitnessApp {
 
         const hasAccess = (uid) => {
             if (!uid) return true;
-            // Comparaçáo frouxa (string/number) para garantir deteçáo mesmo com tipos mistos
+            // Comparação frouxa (string/number) para garantir deteção mesmo com tipos mistos
             return this.state.qrClients.some(q => q && String(q.clientId) == String(uid));
         };
 
@@ -1015,7 +1015,7 @@ class FitnessApp {
                 this.state.evaluations[newId] = [];
                 this.state.trainingHistory[newId] = [];
 
-                // Notificar o professor da nova Inscriçáo (sem gravar ainda)
+                // Notificar o professor da nova Inscrição (sem gravar ainda)
                 if (teacherId) {
                     this.addAppNotification(teacherId, 'Novo Aluno Inscrito!', `O aluno ${name} foi registado no sistema.`, null, 'notification', false);
                 }
@@ -1061,7 +1061,7 @@ class FitnessApp {
 
 A sua conta de ${label} na KandalGym foi criada com sucesso!
 
-Esta App ainda encontra-se em fase de teste, mas poderá já usufruir de várias funcionalidades como: a marcaçáo de aulas, consulta dos seus planos de treino, avaliações físicas e planos alimentares.
+Esta App ainda encontra-se em fase de teste, mas poderá já usufruir de várias funcionalidades como: a marcação de aulas, consulta dos seus planos de treino, avaliações físicas e planos alimentares.
 
 Poderá aceder a plataforma através do seguinte endereço: https://kandalspahealthclub.github.io/KandalGym/
 
@@ -1078,7 +1078,7 @@ Equipa KandalGym`;
 
 Olá ${name}, a sua conta de ${label} foi criada!
 
-_A App está em fase de teste, mas já pode usar a marcaçáo de aulas, os planos de treino, avaliações físicas e planos alimentares._
+_A App está em fase de teste, mas já pode usar a marcação de aulas, os planos de treino, avaliações físicas e planos alimentares._
 
  Aceda aqui: https://kandalspahealthclub.github.io/KandalGym/
 
@@ -1175,7 +1175,7 @@ Bons treinos!`;
 
     handleExercisePhotoUpload(input, previewId) {
         if (input.files && input.files[0]) {
-            // Compressáo EXTREMA para poupar espaço: 300px max, qualidade 0.6
+            // Compressão EXTREMA para poupar espaço: 300px max, qualidade 0.6
             this.processImage(input.files[0], 300, 0.6, (base64) => {
                 this.tempExercisePhoto = base64;
                 const preview = document.getElementById(previewId);
@@ -1352,8 +1352,8 @@ Bons treinos!`;
             navItems = [
                 { id: 'dashboard', icon: 'fa-shield-alt', label: 'Painel Admin' },
                 { id: 'classes', icon: 'fa-calendar-alt', label: 'Horário & Aulas' },
-                { id: 'users', icon: 'fa-users-cog', label: 'Gestáo Contas' },
-                { id: 'qr_manager', icon: 'fa-qrcode', label: 'Gestáo de Entradas' },
+                { id: 'users', icon: 'fa-users-cog', label: 'Gestão Contas' },
+                { id: 'qr_manager', icon: 'fa-qrcode', label: 'Gestão de Entradas' },
                 { id: 'monitor', icon: 'fa-desktop', label: 'Monitor de Acesso' },
                 { id: 'exercises', icon: 'fa-play-circle', label: 'Biblioteca Exercícios' },
                 { id: 'foods', icon: 'fa-apple-alt', label: 'Base de Alimentos' },
@@ -1364,7 +1364,7 @@ Bons treinos!`;
         } else if (this.role === 'teacher') {
             navItems = [
                 { id: 'dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
-                { id: 'classes', icon: 'fa-calendar-alt', label: 'Gestáo de Aulas' },
+                { id: 'classes', icon: 'fa-calendar-alt', label: 'Gestão de Aulas' },
                 { id: 'anamnesis', icon: 'fa-notes-medical', label: 'Anamnese' },
                 { id: 'chat', icon: 'fa-comment-alt', label: 'Mensagens' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
@@ -1375,7 +1375,7 @@ Bons treinos!`;
                 { id: 'classes', icon: 'fa-calendar-alt', label: 'Horário de Aulas' },
                 { id: 'training', icon: 'fa-dumbbell', label: 'Meu Treino' },
                 { id: 'meal', icon: 'fa-apple-alt', label: 'Minha Dieta' },
-                { id: 'evaluation', icon: 'fa-chart-line', label: 'Avaliaçáo Física' },
+                { id: 'evaluation', icon: 'fa-chart-line', label: 'Avaliação Física' },
                 { id: 'chat', icon: 'fa-comment-alt', label: 'Mensagens' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
             ];
@@ -1387,7 +1387,7 @@ Bons treinos!`;
             </button>
         `).join('') + `
         <button class="btn btn-ghost" onclick="app.handleLogout()" style="margin-top:auto; color:var(--danger); gap: 10px;">
-                <i class="fas fa-sign-out-alt"></i> <span>Terminar Sessáo</span>
+                <i class="fas fa-sign-out-alt"></i> <span>Terminar Sessão</span>
             </button>
         `;
     }
@@ -1411,7 +1411,7 @@ Bons treinos!`;
         const container = document.getElementById('main-content');
         if (!container) return;
 
-        // Se ainda náo carregamos dados frescos do Firebase, mostramos um loader
+        // Se ainda não carregamos dados frescos do Firebase, mostramos um loader
         // em vez de mostrar dados potencialmente obsoletos do cache (evita aulas que "aparecem e desaparecem")
         if (!this.hasLoadedData) {
             container.innerHTML = `
@@ -1495,7 +1495,7 @@ Bons treinos!`;
                     }
                 });
 
-                // Cálculo da Ocupaçáo em Direto (Quem ainda está lá?)
+                // Cálculo da Ocupação em Direto (Quem ainda está lá?)
                 const lastMoveToday = sortedHist.find(h => h.d >= todayStart && h.d <= todayEnd);
                 if (lastMoveToday && lastMoveToday.t === 'in') {
                     liveOccupancy++;
@@ -1657,7 +1657,7 @@ Bons treinos!`;
             case 'users':
                 container.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h2 style="margin:0;">Gestáo de Contas</h2>
+                        <h2 style="margin:0;">Gestão de Contas</h2>
                         <button class="btn btn-primary" onclick="app.showAddUserModal()"><i class="fas fa-plus"></i> Novo Utilizador</button>
                     </div>
 
@@ -1784,7 +1784,7 @@ Bons treinos!`;
                 </div>
                 
                 <div style="margin-top: 1.5rem; background: rgba(255,193,7,0.1); border-left: 4px solid #ffc107; padding: 0.8rem; font-size: 0.8rem;">
-                    <i class="fas fa-info-circle"></i> <strong>Nota:</strong> O sistema irá gerar emails automáticos (ex: 912345678@kandalgym.pt) e definir a password padráo: <strong>Kandal123</strong>.
+                    <i class="fas fa-info-circle"></i> <strong>Nota:</strong> O sistema irá gerar emails automáticos (ex: 912345678@kandalgym.pt) e definir a password padrão: <strong>Kandal123</strong>.
                 </div>
 
                 <div id="bulk-import-cancel" style="margin-top: 1.5rem; text-align: center;">
@@ -1803,7 +1803,7 @@ Bons treinos!`;
             try {
                 const data = JSON.parse(e.target.result);
                 const array = Array.isArray(data) ? data : (data.clients || data.alunos || []);
-                if (array.length === 0) throw new Error("O ficheiro JSON está vazio ou náo contém uma lista de clientes válida.");
+                if (array.length === 0) throw new Error("O ficheiro JSON está vazio ou não contém uma lista de clientes válida.");
                 
                 this.addClientsInBatch(array);
             } catch (err) {
@@ -1855,7 +1855,7 @@ Bons treinos!`;
                 continue;
             }
 
-            // Normalizar telefone para verificaçáo de duplicados
+            // Normalizar telefone para verificação de duplicados
             const cleanPhone = phone.replace(/\s+/g, '');
             const exists = (this.state.clients || []).some(c => (c.phone || '').replace(/\s+/g, '') === cleanPhone);
 
@@ -1936,7 +1936,7 @@ Bons treinos!`;
                 const newClients = Array.isArray(data) ? data : (data.clients || []);
                 const newQRClients = Array.isArray(data) ? [] : (data.qrClients || []);
 
-                if (newClients.length === 0) throw new Error("Ficheiro náo contém clientes válidos.");
+                if (newClients.length === 0) throw new Error("Ficheiro não contém clientes válidos.");
 
                 // Merge seguro (evitar duplicados por ID ou email)
                 let added = 0;
@@ -1972,13 +1972,13 @@ Bons treinos!`;
                     <i class="fas fa-desktop" style="font-size: 4rem; color: var(--primary); margin-bottom: 2rem;"></i>
                     <h2 style="font-size: 2rem; margin-bottom: 1rem;">Monitor de Acesso</h2>
                     <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2rem;">
-                        Esta funcionalidade foi desenhada para um segundo ecrá (TV ou Monitor) virado para o cliente na receçáo.
+                        Esta funcionalidade foi desenhada para um segundo ecrã (TV ou Monitor) virado para o cliente na receção.
                     </p>
                     <button class="btn btn-primary btn-lg" onclick="app.openAccessMonitor()" style="padding: 1.5rem 3rem; font-size: 1.2rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);">
                         <i class="fas fa-external-link-alt"></i> Abrir Ecra de Cliente
                     </button>
                     <p style="margin-top: 2rem; font-size: 0.9rem; color: var(--text-muted);">
-                        <i class="fas fa-info-circle"></i> Após abrir, arraste a nova janela para o segundo monitor e coloque em ecrá inteiro (tecla F11).
+                        <i class="fas fa-info-circle"></i> Após abrir, arraste a nova janela para o segundo monitor e coloque em ecrã inteiro (tecla F11).
                     </p>
                 </div>
             </div>
@@ -2171,7 +2171,7 @@ Bons treinos!`;
             case 'anamnesis':
                 container.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:10px;">
-                        <h2 style="margin:0;"><i class="fas fa-notes-medical"></i> Gestáo de Anamneses</h2>
+                        <h2 style="margin:0;"><i class="fas fa-notes-medical"></i> Gestão de Anamneses</h2>
                         <button class="btn btn-primary" onclick="app.showAddAnamnesisModal()"><i class="fas fa-plus"></i> Nova Anamnese</button>
                     </div>
                     
@@ -3577,7 +3577,7 @@ Bons treinos!`;
         if (draft) {
             const draftData = JSON.parse(draft);
             if (draftData.clientId === clientId) {
-                if (confirm('Detetamos um rascunho náo guardado deste treino. Deseja recupera-lo?')) {
+                if (confirm('Detetamos um rascunho não guardado deste treino. Deseja recupera-lo?')) {
                     this.editingPlan = draftData.plan;
                     this.editingClientId = clientId;
                     this.editingDayIdx = 0;
@@ -3649,7 +3649,7 @@ Bons treinos!`;
             <div style="margin-bottom:1.5rem; display:flex; gap:1rem; align-items:center; flex-wrap: wrap;">
                 <div>
                     <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase;">Objetivo do Plano</label>
-                    <input type="text" id="edit-training-goal" value="${c.goal || ''}" placeholder="Ex: Hipertrofia, Reduçáo de Massa Gorda..."
+                    <input type="text" id="edit-training-goal" value="${c.goal || ''}" placeholder="Ex: Hipertrofia, Redução de Massa Gorda..."
                         onchange="app.state.clients.find(x => x.id === app.editingClientId).goal = this.value; app.saveState();"
                         style="width:300px; height:40px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 12px; font-size:0.95rem;">
                 </div>
@@ -3808,7 +3808,7 @@ Bons treinos!`;
 
         if (targetIdx < 0 || targetIdx >= exercises.length) return;
 
-        // Trocar posiçáo
+        // Trocar posição
         [exercises[exIdx], exercises[targetIdx]] = [exercises[targetIdx], exercises[exIdx]];
 
         this.saveTrainingDraft();
@@ -3842,7 +3842,7 @@ Bons treinos!`;
     }
 
     saveTrainingPlan() {
-        // Filtrar exercícios sem ID (linhas em branco que o utilizador náo preencheu)
+        // Filtrar exercícios sem ID (linhas em branco que o utilizador não preencheu)
         const cleanDays = this.editingPlan
             .map(day => ({
                 ...day,
@@ -3863,7 +3863,7 @@ Bons treinos!`;
         // Notificar o aluno do novo plano de treino (App)
         this.addAppNotification(this.editingClientId, 'Novo Plano de Treino!', 'O seu professor atualizou o seu plano de treino.');
 
-        // Perguntar método de notificaçáo externa
+        // Perguntar método de notificação externa
         this.askNotificationMethod(this.editingClientId, 'Plano de Treino');
 
 
@@ -3887,7 +3887,7 @@ Bons treinos!`;
         // Usar comparacao loosa (==) para garantir que encontra mesmo se for string vs number
         const c = this.state.clients.find(x => x.id == clientId);
         if (!c) {
-            container.innerHTML = '<p class="text-muted">Erro: Cliente náo encontrado.</p>';
+            container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
             return;
         }
         const cid = String(clientId); // Firebase normaliza chaves para string
@@ -3942,7 +3942,7 @@ Bons treinos!`;
                 }).join('') : `
                         <div style="text-align:center; padding:3rem 1rem;">
                             <i class="fas fa-utensils" style="font-size:3rem; color:var(--text-muted); opacity:0.3; margin-bottom:1rem;"></i>
-                            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda náo tem plano alimentar atribuído.</p>
+                            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda não tem plano alimentar atribuído.</p>
                             ${canEdit ? `<button class="btn btn-primary" onclick="app.openMealEditor('${c.id}')"><i class="fas fa-plus"></i> Criar Plano Alimentar</button>` : ''}
                         </div>
                     `;
@@ -3982,7 +3982,7 @@ Bons treinos!`;
         existing.meals.forEach(m => {
             m.items = m.items || '';
             m.time = m.time || '08:00';
-            m.name = m.name || 'Refeiçáo';
+            m.name = m.name || 'Refeição';
         });
 
         this.editingMeal = JSON.parse(JSON.stringify(existing));
@@ -3994,17 +3994,17 @@ Bons treinos!`;
         if (!container) return;
 
         try {
-            // Se o ID de ediçáo sumiu, tenta recuperar do ID atual da ficha
+            // Se o ID de edição sumiu, tenta recuperar do ID atual da ficha
             if (!this.editingClientId && this.currentClientId) {
                 this.editingClientId = this.currentClientId;
             }
 
             if (!this.editingClientId) {
-                throw new Error("ID do aluno náo identificado. Por favor, volte a ficha do aluno e tente novamente.");
+                throw new Error("ID do aluno não identificado. Por favor, volte a ficha do aluno e tente novamente.");
             }
 
             const c = this.state.clients.find(x => Number(x.id) === Number(this.editingClientId));
-            if (!c) throw new Error(`Aluno com ID ${this.editingClientId} náo encontrado.`);
+            if (!c) throw new Error(`Aluno com ID ${this.editingClientId} não encontrado.`);
 
             // Garantir que a estrutura basica existe
             if (!this.editingMeal.meals) this.editingMeal.meals = [];
@@ -4102,13 +4102,13 @@ Bons treinos!`;
                                         </div>
 
                                         <button class="btn btn-primary btn-sm" onclick="app.addSelectedFoodToMeal(${idx})" style="width:100%; height:40px; background:var(--success); border:none;">
-                                            <i class="fas fa-plus"></i> Adicionar áÂ  Refeiçáo
+                                            <i class="fas fa-plus"></i> Adicionar áÂ  Refeição
                                         </button>
                                     </div>
                                 </div>
                                 
                                 <div>
-                                    <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Resumo da Refeiçáo</label>
+                                    <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Resumo da Refeição</label>
                                     <textarea id="meal-items-${idx}" placeholder="Os alimentos inseridos aparecerao aqui..." oninput="app.editingMeal.meals[${idx}].items = this.value" onblur="app.renderMealEditor()"
                                         style="width:100%; min-height:120px; background:rgba(0,0,0,0.2); color:rgba(255,255,255,0.95); border:1px solid rgba(255,255,255,0.05); border-radius:12px; padding:15px; font-family:inherit; resize:vertical; line-height:1.6; font-size:0.95rem;">${m.items}</textarea>
                                 </div>
@@ -4126,7 +4126,7 @@ Bons treinos!`;
                 </div>
 
                 <button class="btn btn-ghost" style="color:var(--success); width:100%; border:1px dashed var(--success); padding:1rem;" onclick="app.addMealToEditor()">
-                    <i class="fas fa-plus"></i> Adicionar Refeiçáo
+                    <i class="fas fa-plus"></i> Adicionar Refeição
                 </button>
             </div>
         `;
@@ -4352,7 +4352,7 @@ Bons treinos!`;
         const modal = document.querySelector('.modal-overlay');
         if (modal) modal.remove();
 
-        // Renderizar novamente para atualizar o nome no botáo
+        // Renderizar novamente para atualizar o nome no botão
         this.renderTrainingEditor();
     }
 
@@ -4493,7 +4493,7 @@ Bons treinos!`;
         // Notificar o aluno
         this.addAppNotification(this.editingClientId, 'Nova Dieta Disponível!', 'O seu professor atualizou o seu plano alimentar.');
 
-        // Perguntar método de notificaçáo externa
+        // Perguntar método de notificação externa
         this.askNotificationMethod(this.editingClientId, 'Plano Alimentar');
 
 
@@ -4552,7 +4552,7 @@ Bons treinos!`;
         const key = event.key;
         const cursorPos = input.selectionStart;
 
-        // Permitir teclas de navegaçáo e controle
+        // Permitir teclas de navegação e controle
         if (['ArrowLeft', 'ArrowRight', 'Tab', 'Delete'].includes(key)) {
             // Se tentar deletar os dois pontos, pular para o próximo caractere
             if (key === 'Delete' && cursorPos === 2) {
@@ -4562,7 +4562,7 @@ Bons treinos!`;
             return;
         }
 
-        // Backspace: náo permitir apagar os dois pontos
+        // Backspace: não permitir apagar os dois pontos
         if (key === 'Backspace') {
             if (cursorPos === 3) {
                 // Se estiver logo apos os dois pontos, voltar para antes
@@ -4581,7 +4581,7 @@ Bons treinos!`;
     renderEvaluationView(container, clientId) {
         const c = this.state.clients.find(x => x.id == clientId);
         if (!c) {
-            container.innerHTML = '<p class="text-muted">Erro: Cliente náo encontrado.</p>';
+            container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
             return;
         }
         const cid = String(clientId); // Firebase usa chaves de string
@@ -4591,12 +4591,12 @@ Bons treinos!`;
         container.innerHTML = `
             <div class="page-header" style="margin-bottom: 2rem;">
                 <div>
-                    <h2 style="margin:0;">Avaliaçáo Física</h2>
+                    <h2 style="margin:0;">Avaliação Física</h2>
                     <h3 class="client-name">${c.name}</h3>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     ${evals.length ? `<button class="btn btn-secondary btn-sm" onclick="app.downloadEvaluationPDF(${clientId})"><i class="fas fa-file-pdf"></i> <span class="hide-mobile">Exportar PDF</span></button>` : ''}
-                    ${isTeacher ? `<button class="btn btn-primary btn-sm" onclick="app.showEvaluationModal(${clientId})"><i class="fas fa-plus"></i> <span class="hide-mobile">Nova Avaliaçáo</span></button>` : ''}
+                    ${isTeacher ? `<button class="btn btn-primary btn-sm" onclick="app.showEvaluationModal(${clientId})"><i class="fas fa-plus"></i> <span class="hide-mobile">Nova Avaliação</span></button>` : ''}
                     ${this.role !== 'client' && container.id === 'main-content' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">Voltar</span></button>` : ''}
                 </div>
             </div>
@@ -4605,7 +4605,7 @@ Bons treinos!`;
                 ${evals.length ? evals.map((ev, idx) => this.renderEvaluationCard(ev, idx, clientId, isTeacher)).join('') : `
                     <div class="glass-panel" style="padding: 4rem 1rem; text-align: center; color: var(--text-muted);">
                         <i class="fas fa-chart-line" style="font-size: 3rem; opacity: 0.2; margin-bottom: 1.5rem; display: block;"></i>
-                        Ainda náo existem avaliações registadas.
+                        Ainda não existem avaliações registadas.
                     </div>
                 `}
             </div>
@@ -4627,20 +4627,20 @@ Bons treinos!`;
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <button class="btn btn-ghost btn-sm" style="color: var(--text-muted);" onclick="app.downloadEvaluationPDF(${clientId}, ${idx})" title="Exportar está Avaliaçáo">
+                        <button class="btn btn-ghost btn-sm" style="color: var(--text-muted);" onclick="app.downloadEvaluationPDF(${clientId}, ${idx})" title="Exportar está Avaliação">
                             <i class="fas fa-file-pdf"></i>
                         </button>
                         ${isTeacher ? `
                             <button class="btn btn-ghost btn-sm" style="color: var(--accent);" onclick="app.showEvaluationModal(${clientId}, ${idx})"><i class="fas fa-edit"></i></button>
                             <button class="btn btn-ghost btn-sm" style="color: var(--danger);" onclick="app.deleteEvaluation(${clientId}, ${idx})"><i class="fas fa-trash-alt"></i></button>
                         ` : ''}
-                        <span class="badge badge-blue">Bioimpedáncia</span>
+                        <span class="badge badge-blue">Bioimpedância</span>
                     </div>
                 </div>
 
                 <div style="margin-bottom: 1.5rem;">
                     <h4 style="font-size: 0.8rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-bolt"></i> Bioimpedáncia
+                        <i class="fas fa-bolt"></i> Bioimpedância
                     </h4>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); gap: 0.75rem;">
                         <div class="macro-box">
@@ -4732,8 +4732,8 @@ Bons treinos!`;
             <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
                     <div>
-                        <h2 style="margin: 0;">${index === null ? 'Nova Avaliaçáo' : 'Editar Avaliaçáo'}</h2>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px;">Registe os dados da bioimpedáncia e medidas.</p>
+                        <h2 style="margin: 0;">${index === null ? 'Nova Avaliação' : 'Editar Avaliação'}</h2>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px;">Registe os dados da bioimpedância e medidas.</p>
                     </div>
                     <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">
                         <i class="fas fa-times"></i>
@@ -4742,13 +4742,13 @@ Bons treinos!`;
                 
                 <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                     <div>
-                        <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Data da Avaliaçáo</label>
+                        <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Data da Avaliação</label>
                         <input type="date" id="ev-date" value="${ev.date}" style="color-scheme: dark;">
                     </div>
 
                     <div>
                         <h4 style="font-size: 0.85rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 5px;">
-                            <i class="fas fa-bolt"></i> Bioimpedáncia
+                            <i class="fas fa-bolt"></i> Bioimpedância
                         </h4>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div>
@@ -4821,7 +4821,7 @@ Bons treinos!`;
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; align-items: center;">
                         <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
                         <button class="btn btn-primary" onclick="app.saveEvaluation(${clientId}, ${index})">
-                            ${index === null ? 'Guardar Avaliaçáo' : 'Atualizar Dados'}
+                            ${index === null ? 'Guardar Avaliação' : 'Atualizar Dados'}
                         </button>
                     </div>
 
@@ -4857,7 +4857,7 @@ Bons treinos!`;
         };
 
         if (!entry.weight) {
-            alert('O peso é obrigatório para registar a Avaliaçáo.');
+            alert('O peso é obrigatório para registar a Avaliação.');
             return;
         }
 
@@ -4879,11 +4879,11 @@ Bons treinos!`;
         this.saveState();
 
         // Notificar aluno (App interna)
-        this.addAppNotification(clientId, 'Nova Avaliaçáo Física!', 'A sua avaliaçáo física foi atualizada.', null, 'evaluation', false);
+        this.addAppNotification(clientId, 'Nova Avaliação Física!', 'A sua avaliação física foi atualizada.', null, 'evaluation', false);
 
 
-        // Perguntar método de notificaçáo externa
-        this.askNotificationMethod(clientId, 'Avaliaçáo Física');
+        // Perguntar método de notificação externa
+        this.askNotificationMethod(clientId, 'Avaliação Física');
 
         this.closeModal();
         this.renderContent();
@@ -4892,11 +4892,11 @@ Bons treinos!`;
 
 
     async deleteEvaluation(clientId, index) {
-        if (confirm('Tem a certeza que deseja eliminar este registo de Avaliaçáo?')) {
+        if (confirm('Tem a certeza que deseja eliminar este registo de Avaliação?')) {
             this.state.evaluations[String(clientId)].splice(index, 1);
             this.saveState();
             this.renderContent();
-            alert('Avaliaçáo removida.');
+            alert('Avaliação removida.');
         }
     }
 
@@ -4967,7 +4967,7 @@ Bons treinos!`;
             this.renderClientNotificationsView(área, this.currentClientId);
         }
 
-        // O cabecalho agora e mantido para dar acesso ao botáo de ediçáo
+        // O cabecalho agora e mantido para dar acesso ao botão de edição
     }
 
     renderClientNotificationsView(container, clientId) {
@@ -4983,7 +4983,7 @@ Bons treinos!`;
                 ${notifications.length === 0 ? `
                     <div class="glass-card" style="text-align:center; padding:3rem; opacity:0.6;">
                         <i class="fas fa-bell-slash" style="font-size:3rem; margin-bottom:1rem; display:block;"></i>
-                        <p>Ainda náo foram enviadas notificações personalizadas para este aluno.</p>
+                        <p>Ainda não foram enviadas notificações personalizadas para este aluno.</p>
                     </div>
                 ` : notifications.map(n => `
                     <div class="glass-card animate-fade-in" style="border-left: 4px solid var(--accent);">
@@ -4999,7 +4999,7 @@ Bons treinos!`;
     }
 
     renderClientContent(container) {
-        // Mostrar loader apenas se náo houver dados nenhuns (nem cache nem servidor)
+        // Mostrar loader apenas se não houver dados nenhuns (nem cache nem servidor)
         const hasClients = this.state.clients && this.state.clients.length > 0;
         if (!this.hasLoadedData && !hasClients) {
             container.innerHTML = `
@@ -5020,7 +5020,7 @@ Bons treinos!`;
                     <div style="background: rgba(239, 68, 68, 0.1); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;">
                         <i class="fas fa-user-slash" style="font-size:2.5rem; color:var(--danger);"></i>
                     </div>
-                    <h2 style="color:#fff; margin-bottom: 1rem;">Perfil náo encontrado</h2>
+                    <h2 style="color:#fff; margin-bottom: 1rem;">Perfil não encontrado</h2>
                     <p style="color:var(--text-muted); margin-bottom:2rem; line-height: 1.6;">
                         Não conseguimos encontrar os seus dados de acesso (ID: ${this.currentClientId}). 
                         Isto pode acontecer se a sua conta foi alterada ou se existe um erro na memória temporária do seu telemóvel.
@@ -5074,7 +5074,7 @@ Bons treinos!`;
                         </div>
                         <div class="glass-card" onclick="app.setView('evaluation')" style="cursor:pointer;">
                             <i class="fas fa-chart-line" style="font-size:1.5rem; color:var(--accent); margin-bottom:1rem;"></i>
-                            <h3>Avaliaçáo Física</h3>
+                            <h3>Avaliação Física</h3>
                             <small>Ver peso e medidas</small>
                         </div>
                     </div>
@@ -5127,7 +5127,7 @@ Bons treinos!`;
                         <i class="fas fa-calendar-times" style="font-size:2rem; opacity:0.3;"></i>
                     </div>
                     <p style="font-size:1.1rem; font-weight:600; color:#fff; margin-bottom:0.5rem;">Sem Histórico</p>
-                    Ainda náo concluiu nenhum treino.
+                    Ainda não concluiu nenhum treino.
                 </div>
             ` : history.map(session => `
                 <div class="glass-panel" style="padding:1.5rem; margin-bottom:1.5rem; border-left:4px solid var(--primary); position:relative; overflow:hidden;">
@@ -5231,7 +5231,7 @@ Bons treinos!`;
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px; color-scheme:dark;">
                 </div>
                 <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Profissáo</label>
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Profissão</label>
                     <input type="text" id="edit-profession" value="${user.profession || ''}" placeholder="Ex: Engenheiro, Professor, etc."
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
                 </div>
@@ -5252,15 +5252,15 @@ Bons treinos!`;
                 const qrInfo = (this.state.qrClients || []).find(q => q.clientId === user.id || q.nome === user.name);
                 if (!qrInfo && this.role === 'client') return ''; // Só mostra pros clientes se já tiverem QR
 
-                const displayId = qrInfo ? qrInfo.id : "A" + user.id; // Fallback prefixo A para Admin/Prof se náo tiver QR?
-                // Na verdade, se for staff e náo tiver QR, talvez náo devamos mostrar nada ou mostrar um botáo?
+                const displayId = qrInfo ? qrInfo.id : "A" + user.id; // Fallback prefixo A para Admin/Prof se não tiver QR?
+                // Na verdade, se for staff e não tiver QR, talvez não devamos mostrar nada ou mostrar um botão?
                 // O utilizador pediu para apresentar como nos clientes.
 
                 if (!qrInfo && (this.role === 'teacher' || this.role === 'admin')) {
                     return `
                         <div class="glass-card" style="margin-top:2rem; padding:1.5rem; text-align:center; border: 1px dashed var(--text-muted); background: rgba(255,255,255,0.02);">
                             <h4 style="margin-bottom:1rem; color:var(--text-muted); opacity:0.8;"><i class="fas fa-qrcode"></i> Acesso QR Não Ativado</h4>
-                            <p style="font-size:0.8rem; color:var(--text-muted);">Como Staff, pode ativar o seu acesso na aba de Gestáo de Entradas.</p>
+                            <p style="font-size:0.8rem; color:var(--text-muted);">Como Staff, pode ativar o seu acesso na aba de Gestão de Entradas.</p>
                         </div>
                      `;
                 }
@@ -5269,7 +5269,7 @@ Bons treinos!`;
                     <div class="glass-card" style="margin-top:2rem; padding:1.5rem; text-align:center; border: 1px dashed var(--accent); background: rgba(196, 162, 77, 0.05);">
                         <h4 style="margin-bottom:1rem; color:var(--accent);"><i class="fas fa-qrcode"></i> O Meu Código de Acesso</h4>
                         <div id="profile-qr-container" style="background: white; padding: 12px; border-radius: 12px; display: inline-block; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2);"></div>
-                        <p style="font-size:0.8rem; color:var(--text-muted);">Apresente este código na receçáo para registar a sua entrada.</p>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Apresente este código na receção para registar a sua entrada.</p>
                         <div style="font-size: 0.7rem; color: var(--accent); opacity: 0.8; font-family: monospace; font-weight: 700;">ID: ${qrInfo ? qrInfo.id : 'N/A'}</div>
                     </div>
                 `;
@@ -5343,7 +5343,7 @@ Bons treinos!`;
 
     handlePhotoUpload(input) {
         if (input.files && input.files[0]) {
-            // Compressáo EXTREMA para poupar espaço: 200px max, qualidade 0.5
+            // Compressão EXTREMA para poupar espaço: 200px max, qualidade 0.5
             this.processImage(input.files[0], 200, 0.5, (base64) => {
                 this.currentUser.photoUrl = base64;
                 const preview = document.getElementById('profile-photo-preview');
@@ -5362,7 +5362,7 @@ Bons treinos!`;
         const btn = document.querySelector('button[onclick="app.updateProfile()"]');
 
         if (!name || !email || !pass) {
-            return alert('Nome, Email e Palavra-passe sáo obrigatórios.');
+            return alert('Nome, Email e Palavra-passe são obrigatórios.');
         }
 
         if (btn) {
@@ -5394,7 +5394,7 @@ Bons treinos!`;
                     user.photoUrl = this.currentUser.photoUrl;
                 }
 
-                // Atualizar utilizador atual na sessáo
+                // Atualizar utilizador atual na sessão
                 this.currentUser = { ...user };
                 await this.saveState();
                 this.persistLogin();
@@ -5510,7 +5510,7 @@ Bons treinos!`;
                             ` : `
                                 <div style="text-align: center; padding: 2rem 1rem; color: var(--text-muted); background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1); flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
                                     <i class="fas fa-ban" style="font-size: 2.5rem; opacity: 0.5; margin-bottom: 1rem;"></i>
-                                    <span style="font-size: 0.9rem;">Este plano náo tem permissáo para usar o sistema de reservas online.</span>
+                                    <span style="font-size: 0.9rem;">Este plano não tem permissão para usar o sistema de reservas online.</span>
                                 </div>
                             `}
                         </div>
@@ -5521,8 +5521,8 @@ Bons treinos!`;
             <div style="margin-top:2.5rem; padding:1.2rem 1.5rem; background:rgba(38,222,129,0.05); border-radius:12px; border:1px solid rgba(38,222,129,0.2); display: flex; align-items: flex-start; gap: 1.2rem;">
                 <i class="fas fa-lightbulb" style="color: #26de81; font-size: 1.5rem; margin-top: 2px;"></i> 
                 <div>
-                    <strong style="color: #26de81; display: block; margin-bottom: 6px;">Como funciona a gestáo inteligente?</strong>
-                    <small style="color: var(--text-muted); font-size:0.85rem; line-height: 1.4;">As regras sáo aplicadas no momento exato em que o aluno tenta marcar a aula. Pode configurar planos exclusivos para Pilates ou impedir a marcaçáo de aulas Premium num plano Básico, bloqueando automaticamente a app do cliente.</small>
+                    <strong style="color: #26de81; display: block; margin-bottom: 6px;">Como funciona a gestão inteligente?</strong>
+                    <small style="color: var(--text-muted); font-size:0.85rem; line-height: 1.4;">As regras são aplicadas no momento exato em que o aluno tenta marcar a aula. Pode configurar planos exclusivos para Pilates ou impedir a marcação de aulas Premium num plano Básico, bloqueando automaticamente a app do cliente.</small>
                 </div>
             </div>
         `;
@@ -5814,7 +5814,7 @@ Bons treinos!`;
         }
 
         let thread = threads.find(t => t.id == activeChatId);
-        // Fallback: se a thread náo existe (ex: aluno <-> professor novo), cria objeto temporario
+        // Fallback: se a thread não existe (ex: aluno <-> professor novo), cria objeto temporario
         if (!thread) {
             // Tentar encontrar user info
             const uid = Number(activeChatId);
@@ -5825,7 +5825,7 @@ Bons treinos!`;
             if (user) {
                 thread = { id: uid, user: user, messages: [] };
             } else {
-                return '<div class="chat-empty-state">Utilizador náo encontrado.</div>';
+                return '<div class="chat-empty-state">Utilizador não encontrado.</div>';
             }
         }
 
@@ -5987,7 +5987,7 @@ Bons treinos!`;
 
         if (!subject || !body) return alert('Preencha o assunto é a mensagem.');
 
-        // Enviar notificaçáo para o professor
+        // Enviar notificação para o professor
         this.addAppNotification(teacherId, `Mensagem de ${this.currentUser.name}`, `${subject}\n\n${body}`, this.currentUser.id, 'message');
 
         this.closeModal();
@@ -6049,9 +6049,9 @@ Bons treinos!`;
     }
 
     async deleteUser(type, id, name) {
-        if (confirm(`Tem a certeza que deseja eliminar o utilizador ${name}?\nAVISO: Todos os planos, histórico e avaliações associados seráo removidos permanentemente.`)) {
+        if (confirm(`Tem a certeza que deseja eliminar o utilizador ${name}?\nAVISO: Todos os planos, histórico e avaliações associados serão removidos permanentemente.`)) {
             if (type === 'admin') {
-                if (id === 1) return alert('O administrador principal náo pode ser removido.');
+                if (id === 1) return alert('O administrador principal não pode ser removido.');
                 if (id === this.currentUser.id) return alert('Não pode remover a sua própria conta enquanto estiver logado.');
                 this.state.admins = this.state.admins.filter(u => u.id !== id);
             } else if (type === 'teacher') {
@@ -6107,7 +6107,7 @@ Bons treinos!`;
                 </select>
 
                 <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.5rem;">
-                    <i class="fas fa-info-circle"></i> O histórico, planos e avaliações seráo mantidos. Os administradores seráo notificados desta transferência.
+                    <i class="fas fa-info-circle"></i> O histórico, planos e avaliações serão mantidos. Os administradores serão notificados desta transferência.
                 </p>
 
                 <div style="display:flex; justify-content:flex-end; gap:10px;">
@@ -6131,7 +6131,7 @@ Bons treinos!`;
             client.teacherId = Number(newTeacherId);
 
             // Notify Admins
-            const msgText = ` TRANSFERáÅ NCIA DE ALUNO: O aluno ${client.name} foi transferido de ${oldTeacherName} para ${newTeacher.name} em ${new Date().toLocaleString()}.`;
+            const msgText = ` TRANSFERÊNCIAÅ NCIA DE ALUNO: O aluno ${client.name} foi transferido de ${oldTeacherName} para ${newTeacher.name} em ${new Date().toLocaleString()}.`;
 
             // Allow storing admin notifications in messages or a separate log. 
             // Using 'messages' with specific 'to' for admin viewing if implemented, 
@@ -6345,7 +6345,7 @@ Bons treinos!`;
 
     showAddAnamnesisModal() {
         const myClients = this.state.clients.filter(c => c.teacherId === this.currentUser.id);
-        if (myClients.length === 0) return alert('Ainda náo tem alunos atribuídos.');
+        if (myClients.length === 0) return alert('Ainda não tem alunos atribuídos.');
 
         this.showModal(`
             <h3 style="margin-top:0;">Nova Anamnese</h3>
@@ -6460,7 +6460,7 @@ Bons treinos!`;
                         <div style="display: flex; flex-direction: column; gap: 2rem;">
                             <div class="input-group">
                                 <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Histórico de Saúde / Doenças</label>
-                                <textarea id="anam-health" class="search-bar" placeholder="Ex: Hipertensáo, Diabetes..." style="height:120px; padding: 15px; background: rgba(255,255,255,0.03);">${anam.healthHistory}</textarea>
+                                <textarea id="anam-health" class="search-bar" placeholder="Ex: Hipertensão, Diabetes..." style="height:120px; padding: 15px; background: rgba(255,255,255,0.03);">${anam.healthHistory}</textarea>
                             </div>
                             <div class="input-group">
                                 <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Cirurgias ou Lesões Recentes</label>
@@ -6472,11 +6472,11 @@ Bons treinos!`;
                     <div id="anam-section-3">
                         <h3 style="color: var(--primary); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
                             <span style="width: 30px; height: 30px; border-radius: 50%; background: rgba(145, 27, 43, 0.1); display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">3</span>
-                            Medicaçáo e Outros
+                            Medicação e Outros
                         </h3>
                         <div style="display: flex; flex-direction: column; gap: 2rem;">
                             <div class="input-group">
-                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Medicaçáo Atual</label>
+                                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Medicação Atual</label>
                                 <input type="text" id="anam-meds" value="${anam.medications}" class="search-bar" placeholder="Liste medicamentos em uso..." style="background: rgba(255,255,255,0.03);">
                             </div>
                             <div class="input-group" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
@@ -6547,10 +6547,10 @@ Bons treinos!`;
 
             this.saveState();
 
-            // Notificaçáo App Interna
+            // Notificação App Interna
             this.addAppNotification(clientId, 'Resumo Clínico!', 'A sua anamnese foi atualizada.', null, 'notes-medical', false);
 
-            // Perguntar método de notificaçáo externa
+            // Perguntar método de notificação externa
             this.askNotificationMethod(clientId, 'Anamnese / Resumo Clínico');
 
             this.closeModal();
@@ -6803,7 +6803,7 @@ Bons treinos!`;
         const evals = this.state.evaluations[clientId] || [];
 
         if (!client || !evals.length) {
-            return alert('Ainda náo existem avaliações para exportar.');
+            return alert('Ainda não existem avaliações para exportar.');
         }
 
         const evalsToPrint = index !== null ? [evals[index]] : evals;
@@ -6811,12 +6811,12 @@ Bons treinos!`;
         let html = `
             <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #911B2B; padding-bottom: 10px;">
                 <h1 style="color: #911B2B; margin: 0;">KandalGym</h1>
-                <p style="color: #666; margin: 5px 0;">Relatório de Avaliaçáo Física</p>
+                <p style="color: #666; margin: 5px 0;">Relatório de Avaliação Física</p>
             </div>
 
             <div style="margin-bottom: 25px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
                 <h2 style="margin: 0; font-size: 18px; color: #333;">Aluno: ${client.name}</h2>
-                <p style="margin: 5px 0; font-size: 14px;"><strong>Data de Emissáo:</strong> ${new Date().toLocaleDateString('pt-PT')}</p>
+                <p style="margin: 5px 0; font-size: 14px;"><strong>Data de Emissão:</strong> ${new Date().toLocaleDateString('pt-PT')}</p>
             </div>
         `;
 
@@ -6824,11 +6824,11 @@ Bons treinos!`;
             html += `
                 <div style="margin-bottom: 30px; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; page-break-inside: avoid;">
                     <div style="background: #911B2B; color: white; padding: 10px 15px; font-weight: bold; font-size: 16px; display: flex; justify-content: space-between;">
-                        <span>Avaliaçáo de ${ev.date}</span>
+                        <span>Avaliação de ${ev.date}</span>
                     </div>
                     
                     <div style="padding: 15px;">
-                        <h4 style="color: #911B2B; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 5px; text-transform: uppercase; font-size: 12px;">Bioimpedáncia</h4>
+                        <h4 style="color: #911B2B; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 5px; text-transform: uppercase; font-size: 12px;">Bioimpedância</h4>
                         <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px;">
                             <tr>
                                 <td style="padding: 6px; border-bottom: 1px solid #f0f0f0; width: 33%;"><strong>Peso:</strong> ${ev.weight || '-'} kg</td>
@@ -6853,7 +6853,7 @@ Bons treinos!`;
 
         // 3. Imprimir usando o navegador (Reset para nativo)
         const printWindow = window.open('', '_blank');
-        const docTitle = index !== null ? `Avaliaçáo - ${client.name}` : `Histórico de Avaliações - ${client.name}`;
+        const docTitle = index !== null ? `Avaliação - ${client.name}` : `Histórico de Avaliações - ${client.name}`;
         printWindow.document.write(`
             <html>
                 <head><title>${docTitle}</title></head>
@@ -6874,7 +6874,7 @@ Bons treinos!`;
         const entries = this.state.anamnesis[clientId] || [];
         const entry = entries[index];
 
-        if (!client || !entry) return alert('Registo náo encontrado.');
+        if (!client || !entry) return alert('Registo não encontrado.');
 
         const html = `
             <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #911B2B; padding-bottom: 10px;">
@@ -6915,7 +6915,7 @@ Bons treinos!`;
             </div>
 
             <div style="margin-top:20px; border:1px solid #eee; padding:15px; border-radius:8px;">
-                <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Medicaçáo</h4>
+                <h4 style="color:#911B2B; margin-top:0; border-bottom:1px solid #eee; padding-bottom:5px; text-transform:uppercase; font-size:12px;">Medicação</h4>
                 <div style="font-size:13px; line-height:1.5;">${entry.medications || 'Nenhuma.'}</div>
             </div>
 
@@ -6962,7 +6962,7 @@ Bons treinos!`;
         try {
             container.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                    <h2 style="margin: 0;"><i class="fas fa-qrcode"></i> Gestáo de Entradas</h2>
+                    <h2 style="margin: 0;"><i class="fas fa-qrcode"></i> Gestão de Entradas</h2>
                 </div>
 
                 <div class="dashboard" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; margin-top: 20px;">
@@ -7129,7 +7129,7 @@ Bons treinos!`;
 
         } catch (error) {
             console.error("Erro ao renderizar QR Manager:", error);
-            container.innerHTML = `<div class="glass-card danger">Erro ao carregar Gestáo de Entradas.</div>`;
+            container.innerHTML = `<div class="glass-card danger">Erro ao carregar Gestão de Entradas.</div>`;
         }
     }
 
@@ -7207,7 +7207,7 @@ Bons treinos!`;
 
             const avatarLetra = c.nome ? c.nome.substring(0, 1).toUpperCase() : '?';
 
-            // Deteçáo inteligente de envio/atividade (manual, login ou treinos registados)
+            // Deteção inteligente de envio/atividade (manual, login ou treinos registados)
             const hasLastLogin = realUser && realUser.lastLogin;
             const hasHistory = c.clientId && this.state.trainingHistory && this.state.trainingHistory[c.clientId] && this.state.trainingHistory[c.clientId].length > 0;
             const showIcon = c.inviteSent || hasLastLogin || hasHistory;
@@ -7253,7 +7253,7 @@ Bons treinos!`;
                     const plans = Object.keys(this.state.planRestrictions || {});
                     if (plans.length === 0) {
                         return `
-                                        <option value="Livre Tránsito" ${c.plano === 'Livre Tránsito' ? 'selected' : ''}>Livre Tránsito</option>
+                                        <option value="Livre Trânsito" ${c.plano === 'Livre Trânsito' ? 'selected' : ''}>Livre Trânsito</option>
                                         <option value="3x Semana" ${c.plano === '3x Semana' ? 'selected' : ''}>3x Semana</option>
                                         <option value="2x Semana" ${c.plano === '2x Semana' ? 'selected' : ''}>2x Semana</option>
                                         <option value="Pontual" ${c.plano === 'Pontual' ? 'selected' : ''}>Pontual</option>
@@ -7290,7 +7290,7 @@ Bons treinos!`;
                         `}
                     </td>
                     <td style="text-align:center;">
-                        ${isStaff ? '<span style="font-weight:800; color:var(--accent); font-size:0.7rem; background:rgba(var(--accent-rgb),0.1); padding:4px 8px; border-radius:4px;">VITALáÂCIO</span>' : `
+                        ${isStaff ? '<span style="font-weight:800; color:var(--accent); font-size:0.7rem; background:rgba(var(--accent-rgb),0.1); padding:4px 8px; border-radius:4px;">VITALÍCIOÂCIO</span>' : `
                         <input type="date" value="${c.validade}" onchange="app.updateQRClientField('${c.id}', 'validade', this.value)" class="qr-input-sleek"
                             style="color:${hoje > c.validade ? 'var(--danger)' : '#fff'} !important; border-color:${hoje > c.validade ? 'rgba(var(--danger-rgb),0.5)' : ''} !important;">
                         `}
@@ -7342,7 +7342,7 @@ Bons treinos!`;
         const allUsers = [...(this.state.clients || []), ...(this.state.teachers || []), ...(this.state.admins || [])];
         const user = allUsers.find(u => Number(u.id) === Number(qrClient.clientId));
 
-        if (!user) return alert("Os dados da conta original náo foram encontrados.");
+        if (!user) return alert("Os dados da conta original não foram encontrados.");
 
         // Determinar o tipo para o modal
         const isStaff = (this.state.teachers || []).some(t => Number(t.id) === Number(user.id));
@@ -7498,8 +7498,8 @@ Bons treinos!`;
         if (idx !== -1) {
             this.state.qrClients[idx][field] = value;
             this.saveState();
-            // Nome, telemóvel e PLANO náo precisam de refresh:
-            // o input/select já mostra o novo valor Ã¢â‚¬â€ refrescar destruiria o elemento focado e causaria salto de ecrá
+            // Nome, telemóvel e PLANO não precisam de refresh:
+            // o input/select já mostra o novo valor Ã¢â‚¬â€ refrescar destruiria o elemento focado e causaria salto de ecrã
             if (field === 'ent' || field === 'validade' || field === 'ativo') {
                 this.refreshQRTableUI();
             }
@@ -7511,7 +7511,7 @@ Bons treinos!`;
         const container = document.getElementById('main-content');
         if (!grid || !container) return;
 
-        // Capturar o valor atual da pesquisa para náo perder o filtro
+        // Capturar o valor atual da pesquisa para não perder o filtro
         const searchInput = document.getElementById('qr-search-input');
         const filterVal = searchInput ? searchInput.value : '';
 
@@ -7537,7 +7537,7 @@ Bons treinos!`;
     }
 
     editQRClientData(id) {
-        // Obsoleto - Usando ediçáo inline agora
+        // Obsoleto - Usando edição inline agora
     }
 
     async deleteQRClient(id) {
@@ -7550,7 +7550,7 @@ Bons treinos!`;
 
             // Se for um aluno real (clientId != 0)
             if (clientId && clientId != 0) {
-                const deleteMain = confirm("Este utilizador tem uma conta ativa na App. Deseja ELIMINAR TAMBáâ€°M a conta do aluno e todo o seu histórico?");
+                const deleteMain = confirm("Este utilizador tem uma conta ativa na App. Deseja ELIMINAR TAMBÉMâ€°M a conta do aluno e todo o seu histórico?");
                 if (deleteMain) {
                     // Eliminar do sistema principal (clientes, professores ou admins)
                     this.state.clients = (this.state.clients || []).filter(c => String(c.id) !== String(clientId));
@@ -7631,13 +7631,13 @@ Bons treinos!`;
             const btnCam = document.getElementById("btnCam");
 
             if (typeof jsQR === 'undefined') {
-                throw new Error("A biblioteca de leitura de QR náo foi carregada. Verifique a sua ligação áÂ  internet.");
+                throw new Error("A biblioteca de leitura de QR não foi carregada. Verifique a sua ligação áÂ  internet.");
             }
 
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                let errorMsg = "O seu navegador náo suporta acesso áÂ  cámara.";
+                let errorMsg = "O seu navegador não suporta acesso áÂ  câmara.";
                 if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                    errorMsg = "ERRO DE SEGURANáâ€¡A: O scanner live só funciona em ligações seguras (HTTPS disponível em KandalGym.com). Sugerimos usar o botáo 'Tirar Foto' ou 'Entrada Manual'.";
+                    errorMsg = "ERRO DE SEGURANÇA: O scanner live só funciona em ligações seguras (HTTPS disponível em KandalGym.com). Sugerimos usar o botão 'Tirar Foto' ou 'Entrada Manual'.";
                 }
                 throw new Error(errorMsg);
             }
@@ -7668,7 +7668,7 @@ Bons treinos!`;
             }
 
             container.style.display = "block";
-            btnCam.innerHTML = '<i class="fas fa-stop"></i> Parar Cámara';
+            btnCam.innerHTML = '<i class="fas fa-stop"></i> Parar câmara';
             btnCam.onclick = () => this.pararLeitorQR(stream);
 
             this.qrScannerAtivo = true;
@@ -7678,21 +7678,21 @@ Bons treinos!`;
             scanStatus.className = "";
         } catch (e) {
             console.error(e);
-            let msg = "Erro ao aceder áÂ  cámara: ";
-            if (e.name === 'NotAllowedError') msg = " Permissáo Negada: Por favor, autorize o acesso áÂ  cámara nas definições do seu navegador.";
-            else if (e.name === 'NotFoundError') msg = " Cámara náo encontrada no dispositivo.";
+            let msg = "Erro ao aceder áÂ  câmara: ";
+            if (e.name === 'NotAllowedError') msg = " Permissão Negada: Por favor, autorize o acesso áÂ  câmara nas definições do seu navegador.";
+            else if (e.name === 'NotFoundError') msg = " câmara não encontrada no dispositivo.";
             else msg = e.message;
 
             this.showQRMsg(msg, "bg-qr-danger");
             alert(msg);
         } finally {
-            this.isRequestingCámara = false;
+            this.isRequestingcâmara = false;
         }
     }
 
     escanearPorFoto() {
         if (typeof jsQR === 'undefined') {
-            return alert("A biblioteca de leitura de QR náo está pronta. Tente novamente em instantes.");
+            return alert("A biblioteca de leitura de QR não está pronta. Tente novamente em instantes.");
         }
 
         const input = document.createElement('input');
@@ -7772,7 +7772,7 @@ Bons treinos!`;
         if (video) video.srcObject = null;
         if (container) container.style.display = "none";
 
-        // Se houver vídeo, forçamos o preto para náo carregar a última imagem
+        // Se houver vídeo, forçamos o preto para não carregar a última imagem
         if (video) video.style.background = "#000";
 
         this.qrScannerAtivo = false;
@@ -7780,7 +7780,7 @@ Bons treinos!`;
         clearTimeout(this.qrRequestAnimationFrameId);
 
         if (btnCam) {
-            btnCam.innerHTML = '<i class="fas fa-video"></i> Ativar Cámara';
+            btnCam.innerHTML = '<i class="fas fa-video"></i> Ativar câmara';
             btnCam.onclick = () => this.iniciarLeitorQR();
         }
 
@@ -7829,10 +7829,10 @@ Bons treinos!`;
         const c = this.state.qrClients.find(cli => String(cli.id).toUpperCase() === formattedId);
 
         if (!c) {
-            this.showQRMsg(" Codigo náo reconhecido", "bg-qr-danger");
+            this.showQRMsg(" Codigo não reconhecido", "bg-qr-danger");
             new BroadcastChannel('kandal_access').postMessage({
                 type: 'access_event',
-                data: { name: 'INVáÂLIDO', msg: 'Cáâ€œDIGO DESCONHECIDO', valid: false, photo: null }
+                data: { name: 'INVÁLIDOÂLIDO', msg: 'Cáâ€œDIGO DESCONHECIDO', valid: false, photo: null }
             });
             this.sendToArduino('B');
             this.lastProcessedQR = formattedId;
@@ -7896,12 +7896,12 @@ Bons treinos!`;
             if (!c.histórico) c.histórico = [];
             c.histórico.unshift({ d: agora.toISOString(), t: 'out' });
 
-            this.showQRMsg(`Até amanhá, ${c.nome}! Saída registada.`, "bg-qr-warning");
+            this.showQRMsg(`Até amanhã, ${c.nome}! Saída registada.`, "bg-qr-warning");
             this.showToast(`Saída registada: ${c.nome}`, "info");
 
             new BroadcastChannel('kandal_access').postMessage({
                 type: 'access_event',
-                data: { name: c.nome, msg: 'ATáâ€° AMANHáÆ’! (SAáÂDA)', valid: true, photo: c.photoUrl || null }
+                data: { name: c.nome, msg: 'ATáâ€° amanhãÆ’! (SAáÂDA)', valid: true, photo: c.photoUrl || null }
             });
             this.sendToArduino('A');
 
@@ -7970,7 +7970,7 @@ Bons treinos!`;
         this.lastProcessedTime = Date.now();
         this.saveState();
 
-        // ATUALIZAÇÃO SEGURA: Apenas a tabela, náo a página toda para náo desligar a cámara
+        // ATUALIZAÇÃO SEGURA: Apenas a tabela, não a página toda para não desligar a câmara
         const grid = document.getElementById("gridQRClientes");
         if (grid) {
             grid.innerHTML = this.renderQRClientCards();
@@ -8107,7 +8107,7 @@ Bons treinos!`;
         if (!this.state.qrClients || this.state.qrClients.length === 0) return;
         let changed = false;
 
-        // 1. Garantir que todos os registos QR estáo ligados a um ID de cliente interno (timestamp)
+        // 1. Garantir que todos os registos QR estão ligados a um ID de cliente interno (timestamp)
         this.state.qrClients.forEach(c => {
             if (!c.clientId) {
                 // Tentar extrair do ID antigo se for longo (K + timestamp)
@@ -8171,8 +8171,8 @@ Bons treinos!`;
                         <div style="font-size:3rem; margin-bottom:1rem;"></div>
                         <h3 style="margin:0 0 1rem; color:var(--primary);">Instalar no iPhone / iPad</h3>
                         <div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:1.2rem; text-align:left; line-height:2;">
-                            <p style="margin:0;"><strong>1.</strong> Toque no botáo <strong>Partilhar</strong>  na barra do Safari</p>
-                            <p style="margin:0;"><strong>2.</strong> Toque em <strong>"Adicionar ao ecrá Principal"</strong> </p>
+                            <p style="margin:0;"><strong>1.</strong> Toque no botão <strong>Partilhar</strong>  na barra do Safari</p>
+                            <p style="margin:0;"><strong>2.</strong> Toque em <strong>"Adicionar ao ecrã Principal"</strong> </p>
                             <p style="margin:0;"><strong>3.</strong> Toque em <strong>"Adicionar"</strong> no canto superior direito</p>
                         </div>
                         <button class="btn btn-primary" onclick="app.closeModal()" style="width:100%; margin-top:1.5rem;">Entendido!</button>
@@ -8185,7 +8185,7 @@ Bons treinos!`;
                         <h3 style="margin:0 0 1rem; color:var(--primary);">Instalar no Android</h3>
                         <div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:1.2rem; text-align:left; line-height:2;">
                             <p style="margin:0;"><strong>1.</strong> Toque nos <strong>3 pontos</strong> no canto do Chrome </p>
-                            <p style="margin:0;"><strong>2.</strong> Toque em <strong>"Adicionar ao ecrá principal"</strong></p>
+                            <p style="margin:0;"><strong>2.</strong> Toque em <strong>"Adicionar ao ecrã principal"</strong></p>
                             <p style="margin:0;"><strong>3.</strong> Confirme tocando em <strong>"Instalar"</strong></p>
                         </div>
                         <button class="btn btn-primary" onclick="app.closeModal()" style="width:100%; margin-top:1.5rem;">Entendido!</button>
@@ -8198,16 +8198,16 @@ Bons treinos!`;
     // --- CLASSES & SCHEDULING ---
 
     async checkFinishedClasses() {
-        // SEGURANáâ€¡A: Garantir que o estado existe e temos dados carregados
+        // SEGURANÇA: Garantir que o estado existe e temos dados carregados
         if (!this.state || !this.state.classes || !this.hasLoadedData || this.isCheckingClasses) return;
 
-        // Se for cliente, podemos correr a manutençáo mas de forma silenciosa e facultativa
+        // Se for cliente, podemos correr a manutenção mas de forma silenciosa e facultativa
         // Staff corre prioritariamente.
 
         this.isCheckingClasses = true;
         try {
             const now = new Date();
-            const gracePeriod = 70 * 60 * 1000; // 1h aula + 10m toleráncia
+            const gracePeriod = 70 * 60 * 1000; // 1h aula + 10m tolerância
 
             // IMPORTANTE: Firebase RTDB pode converter arrays com buracos em objetos. 
             // Converter sempre para array para iterar com segurança.
@@ -8299,10 +8299,10 @@ Bons treinos!`;
                 this.renderContent();
             }
         } catch (err) {
-            console.error("Falha na manutençáo de aulas:", err);
+            console.error("Falha na manutenção de aulas:", err);
         } finally {
             this.isCheckingClasses = false;
-            // Dar tempo ao Firebase echo antes de permitir nova gravaçáo
+            // Dar tempo ao Firebase echo antes de permitir nova gravação
             setTimeout(() => { this.isSaving = false; }, 1200);
         }
     }
@@ -8361,7 +8361,7 @@ Bons treinos!`;
             container.innerHTML = `
                 <div class="glass-card" style="text-align:center; padding:3rem;">
                     <i class="fas fa-calendar-times" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
-                    <p>Ainda náo foram criadas aulas.</p>
+                    <p>Ainda não foram criadas aulas.</p>
                     <button class="btn btn-primary btn-sm" onclick="app.showClassModal()" style="margin-top:1rem;">Criar Primeira Aula</button>
                 </div>
             `;
@@ -8554,7 +8554,7 @@ Bons treinos!`;
 
         if (restrictions) {
             if (!restrictions.allowClasses) {
-                const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno náo permite a marcaçáo de aulas.\n\nDeseja inscrever mesmo assim?`);
+                const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno não permite a marcação de aulas.\n\nDeseja inscrever mesmo assim?`);
                 if (!force) return;
             } else if (restrictions.filter && restrictions.filter.length > 0) {
                 const isAllowed = restrictions.filter.some(f => cls && cls.name.toLowerCase().includes(f.toLowerCase()));
@@ -8565,14 +8565,14 @@ Bons treinos!`;
             } else if (restrictions.exclude && restrictions.exclude.length > 0) {
                 const isExcluded = restrictions.exclude.some(ex => cls && cls.name.toLowerCase().includes(ex.toLowerCase()));
                 if (isExcluded) {
-                    const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno náo permite reservar aulas desta categoria.\n\nDeseja inscrever mesmo assim?`);
+                    const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno não permite reservar aulas desta categoria.\n\nDeseja inscrever mesmo assim?`);
                     if (!force) return;
                 }
             }
         }
 
         if (cls && participants.length >= (cls.capacity || 20)) {
-            if (!confirm('A aula já está na capacidade máxima. Tem a certeza que pretende forçar a inscriçáo?')) return;
+            if (!confirm('A aula já está na capacidade máxima. Tem a certeza que pretende forçar a inscrição?')) return;
         }
 
         participants.push(clientId);
@@ -8725,7 +8725,7 @@ Bons treinos!`;
                         </select>
                     </div>
                     <div>
-                        <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">lotaçáo Max.</label>
+                        <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">lotação Max.</label>
                         <input type="number" id="cls-capacity" value="${c ? c.capacity : 20}">
                     </div>
                 </div>
@@ -8801,14 +8801,14 @@ Bons treinos!`;
     }
 
     async enrollInClass(classId) {
-        console.log("Iniciando inscriçáo na aula:", classId);
+        console.log("Iniciando inscrição na aula:", classId);
         const actualClassId = Number(classId);
         const classIdStr = String(actualClassId);
 
         const cls = this.state.classes.find(x => Number(x.id) === actualClassId);
         if (cls && this.isClassFinished(cls)) {
-            console.warn("Inscriçáo recusada: Aula já terminou.");
-            return alert('Está aula já terminou e náo aceita mais inscrições.');
+            console.warn("Inscrição recusada: Aula já terminou.");
+            return alert('Está aula já terminou e não aceita mais inscrições.');
         }
 
         if (!this.state.enrollments[classIdStr]) this.state.enrollments[classIdStr] = [];
@@ -8816,26 +8816,26 @@ Bons treinos!`;
         const participants = this.state.enrollments[classIdStr];
         const clientId = Number(this.currentClientId);
 
-        console.log("Client ID para inscriçáo:", clientId);
+        console.log("Client ID para inscrição:", clientId);
         if (!clientId) {
-            console.error("Erro: currentClientId náo encontrado.");
-            return alert("Sessáo inválida. Por favor saia e entre novamente na conta.");
+            console.error("Erro: currentClientId não encontrado.");
+            return alert("Sessão inválida. Por favor saia e entre novamente na conta.");
         }
 
         if (participants.map(id => Number(id)).includes(clientId)) return;
 
         if (cls && participants.length >= (cls.capacity || 20)) {
-            return alert('Está aula já atingiu a lotaçáo máxima.');
+            return alert('Está aula já atingiu a lotação máxima.');
         }
 
-        // VALIDAR RESTRIáâ€¡áâ€¢ES DE PLANO
+        // VALIDAR RESTRIçáâ€¢ES DE PLANO
         const qrInfo = (this.state.qrClients || []).find(q => Number(q.clientId) === Number(clientId));
-        const plano = qrInfo ? qrInfo.plano : 'Livre Tránsito';
+        const plano = qrInfo ? qrInfo.plano : 'Livre Trânsito';
         const restrictions = (this.state.planRestrictions || {})[plano];
 
         if (restrictions) {
             if (!restrictions.allowClasses) {
-                return alert(`O plano ${plano} náo permite a marcaçáo de aulas.`);
+                return alert(`O plano ${plano} não permite a marcação de aulas.`);
             }
 
             // Validar Filtro (Apenas pode estas)
@@ -8846,11 +8846,11 @@ Bons treinos!`;
                 }
             }
 
-            // Validar Exclusáo (Não pode estas)
+            // Validar Exclusão (Não pode estas)
             if (restrictions.exclude && restrictions.exclude.length > 0) {
                 const isExcluded = restrictions.exclude.some(ex => cls.name.toLowerCase().includes(ex.toLowerCase()));
                 if (isExcluded) {
-                    return alert(`O seu plano (${plano}) náo permite a reserva de aulas desta categoria.`);
+                    return alert(`O seu plano (${plano}) não permite a reserva de aulas desta categoria.`);
                 }
             }
         }
@@ -8859,23 +8859,23 @@ Bons treinos!`;
 
         // Notificar professor
         if (cls && cls.teacherId) {
-            this.addAppNotification(cls.teacherId, 'Nova Inscriçáo em Aula', `O aluno ${this.currentUser.name} inscreveu-se na aula de ${cls.name} (${this.getDayName(cls.day)} - ${cls.time}).`, null, 'notification', false);
+            this.addAppNotification(cls.teacherId, 'Nova Inscrição em Aula', `O aluno ${this.currentUser.name} inscreveu-se na aula de ${cls.name} (${this.getDayName(cls.day)} - ${cls.time}).`, null, 'notification', false);
         }
 
         await this.saveState();
         this.renderContent();
-        this.showToast('Inscriçáo confirmada!');
+        this.showToast('Inscrição confirmada!');
     }
 
     async leaveClass(classId) {
-        if (!confirm('Deseja cancelar a sua Inscriçáo nesta aula?')) return;
+        if (!confirm('Deseja cancelar a sua Inscrição nesta aula?')) return;
         const classIdStr = String(classId);
 
         if (this.state.enrollments[classIdStr]) {
             this.state.enrollments[classIdStr] = this.state.enrollments[classIdStr].filter(id => Number(id) !== Number(this.currentClientId));
             await this.saveState();
             this.renderContent();
-            this.showToast('Inscriçáo cancelada.');
+            this.showToast('Inscrição cancelada.');
         }
     }
 
@@ -8902,7 +8902,7 @@ Bons treinos!`;
                     <div style="width: 64px; height: 64px; background: linear-gradient(135deg, rgba(var(--danger-rgb), 0.2), rgba(var(--accent-rgb), 0.2)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; border: 1px solid rgba(var(--danger-rgb), 0.4); box-shadow: 0 8px 20px rgba(var(--danger-rgb), 0.15);">
                         <i class="fas fa-question-circle" style="font-size: 2.2rem; color: var(--danger);"></i>
                     </div>
-                    <h3 style="margin-bottom: 1rem; color: #fff; font-size: 1.25rem; font-weight: 800;">Confirmaçáo</h3>
+                    <h3 style="margin-bottom: 1rem; color: #fff; font-size: 1.25rem; font-weight: 800;">Confirmação</h3>
                     <p style="color: #e0e0e0; font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem; font-weight: 400;">${msg.replace(/\n/g, '<br>')}</p>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <button id="btn-custom-cancel" class="btn btn-secondary" style="border-radius: 12px; font-weight: 600;">Cancelar</button>
@@ -9010,7 +9010,7 @@ Bons treinos!`;
 
         if (type === 'whatsapp') {
             let phone = (c.phone || '').replace(/\s/g, '').replace('+', '');
-            if (!phone) return alert('O cliente náo tem telemóvel registado!');
+            if (!phone) return alert('O cliente não tem telemóvel registado!');
 
             // Adicionar prefixo PT se estiver em falta
             if (phone.length === 9 && (phone.startsWith('91') || phone.startsWith('92') || phone.startsWith('93') || phone.startsWith('96'))) {
@@ -9021,8 +9021,8 @@ Bons treinos!`;
             window.open(waUrl, '_blank');
         } else if (type === 'email') {
             const email = c.email;
-            if (!email) return alert('O cliente náo tem e-mail registado!');
-            const mailUrl = `mailto:${email}?subject=KandalGym - Atualizaçáo de ${topic}&body=${encodeURIComponent(message)}`;
+            if (!email) return alert('O cliente não tem e-mail registado!');
+            const mailUrl = `mailto:${email}?subject=KandalGym - Atualização de ${topic}&body=${encodeURIComponent(message)}`;
             window.location.href = mailUrl;
         }
     }
