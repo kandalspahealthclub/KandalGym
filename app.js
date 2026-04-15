@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v83'; // Versão de controlo para Hard Reset v83
+        this.appVersion = '2026.04.15.v84'; // Versão de controlo para Hard Reset v84
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -151,7 +151,7 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v83'; // Forçar v83 (WhatsApp Style Reply)
+            const targetV = 'v84'; // Forçar v84 (Visual Reply Fix)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
                 console.warn("Forçando atualização total da App (KandalGym v70)...");
@@ -5860,19 +5860,20 @@ Bons treinos!`;
                             ${isSystem ? `<strong style="display:block; margin-bottom:4px; color:var(--accent);">${m.title}</strong>` : ''}
                             ${!isSystem && !isMe ? `<div style="font-size:0.7rem; color:var(--primary); font-weight:bold; margin-bottom:2px;">${thread.user.name}</div>` : ''}
                             
-                            ${!isSystem && !m.isDeleted ? `<i class="fas fa-reply" onclick="event.stopPropagation(); app.startReply(${m.id})" style="position:absolute; top:12px; left:8px; font-size:0.7rem; opacity:0.4; cursor:pointer;" title="Responder"></i>` : ''}
+                            ${!isSystem && !m.isDeleted ? `<i class="fas fa-reply" onclick="event.stopPropagation(); app.startReply(${m.id})" style="position:absolute; top:10px; left:8px; font-size:0.85rem; opacity:1; color:var(--primary); cursor:pointer; background:rgba(0,0,0,0.2); width:24px; height:24px; display:flex; align-items:center; justify-content:center; border-radius:50%;" title="Responder"></i>` : ''}
                             
-                            ${isMe && !m.isDeleted ? `<i class="fas fa-trash" onclick="event.stopPropagation(); app.deleteMessage(${m.id})" style="position:absolute; top:12px; right:8px; font-size:0.7rem; opacity:0.4; cursor:pointer;" title="Apagar Mensagem"></i>` : ''}
+                            ${isMe && !m.isDeleted ? `<i class="fas fa-trash" onclick="event.stopPropagation(); app.deleteMessage(${m.id})" style="position:absolute; top:10px; right:8px; font-size:0.85rem; opacity:1; color:#ff4444; cursor:pointer; background:rgba(0,0,0,0.2); width:24px; height:24px; display:flex; align-items:center; justify-content:center; border-radius:50%;" title="Apagar Mensagem"></i>` : ''}
                             
                             ${m.replyToBody ? `
-                                <div style="background:rgba(0,0,0,0.2); border-left:3px solid var(--primary); padding:5px 8px; margin-bottom:8px; font-size:0.8rem; border-radius:4px; opacity:0.8;">
+                                <div style="background:rgba(0,0,0,0.2); border-left:3px solid var(--primary); padding:5px 8px; margin-bottom:8px; font-size:0.8rem; border-radius:4px; opacity:0.8; margin-top:15px;">
                                     <div style="font-weight:bold; color:var(--primary); font-size:0.7rem;">${m.replyToSenderName || 'Resposta'}</div>
                                     <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.replyToBody}</div>
                                 </div>
                             ` : ''}
 
-                            <div style="${!isSystem ? 'padding: 0 15px;' : ''} ${m.isDeleted ? 'font-style:italic; opacity:0.7;' : ''}">
+                            <div style="${!isSystem ? 'padding: 5px 25px;' : ''} ${m.isDeleted ? 'font-style:italic; opacity:0.7;' : ''}">
                                 ${m.body}
+                                ${m.isDeleted ? '' : ''}
                             </div>
                             
                             <span class="message-time">
