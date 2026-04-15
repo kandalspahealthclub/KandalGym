@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v66'; // Versão de controlo para Hard Reset v66
+        this.appVersion = '2026.04.15.v67'; // Versão de controlo para Hard Reset v67
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v66'; // Forçar v66 (Fix Youtube Shorts)
+            const targetV = 'v67'; // Forçar v67 (Fix Youtube & Fallback)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v66)...");
+                console.warn("Forçando atualização total da App (KandalGym v67)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -3514,17 +3514,20 @@ Bons treinos!`;
     viewExerciseVideo(url, name) {
         let cleanUrl = url;
         let videoId = '';
+        const originalUrl = url;
 
-        // Extrair ID do Video de qualquer formato YouTube
-        if (url.includes('/shorts/')) {
-            videoId = url.split('/shorts/')[1].split(/[?&]/)[0];
-        } else if (url.includes('v=')) {
-            videoId = url.split('v=')[1].split(/[?&]/)[0];
-        } else if (url.includes('youtu.be/')) {
-            videoId = url.split('youtu.be/')[1].split(/[?&]/)[0];
-        } else if (url.includes('/embed/')) {
-            videoId = url.split('/embed/')[1].split(/[?&]/)[0];
-        }
+        // Estratégia de extração robusta de ID
+        try {
+            if (url.includes('/shorts/')) {
+                videoId = url.split('/shorts/')[1].split(/[?&]/)[0];
+            } else if (url.includes('v=')) {
+                videoId = url.split('v=')[1].split(/[?&]/)[0];
+            } else if (url.includes('youtu.be/')) {
+                videoId = url.split('youtu.be/')[1].split(/[?&]/)[0];
+            } else if (url.includes('/embed/')) {
+                videoId = url.split('/embed/')[1].split(/[?&]/)[0];
+            }
+        } catch (e) { console.error("Erro ao processar link Youtube:", e); }
 
         if (videoId) {
             cleanUrl = `https://www.youtube.com/embed/${videoId.trim()}`;
@@ -3546,6 +3549,11 @@ Bons treinos!`;
                 <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:12px; background:#000;">
                     <iframe src="${cleanUrl}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen
                         style="position:absolute; top:0; left:0; width:100%; height:100%;"></iframe>
+                </div>
+                <div style="margin-top:1rem; text-align:center;">
+                    <a href="${originalUrl}" target="_blank" class="btn btn-ghost" style="font-size:0.8rem; color:var(--text-muted);">
+                        <i class="fab fa-youtube"></i> Não consegue ver o vídeo? Abrir no YouTube
+                    </a>
                 </div>
             </div>
             `;
