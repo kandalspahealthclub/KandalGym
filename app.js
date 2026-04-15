@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v81'; // Versão de controlo para Hard Reset v81
+        this.appVersion = '2026.04.15.v82'; // Versão de controlo para Hard Reset v82
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -150,7 +150,7 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v81'; // Forçar v81 (Deleted Placeholder)
+            const targetV = 'v82'; // Forçar v82 (Reply Button Added)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
                 console.warn("Forçando atualização total da App (KandalGym v70)...");
@@ -5859,9 +5859,11 @@ Bons treinos!`;
                             ${isSystem ? `<strong style="display:block; margin-bottom:4px; color:var(--accent);">${m.title}</strong>` : ''}
                             ${!isSystem && !isMe ? `<div style="font-size:0.7rem; color:var(--primary); font-weight:bold; margin-bottom:2px;">${thread.user.name}</div>` : ''}
                             
+                            ${!isSystem && !m.isDeleted ? `<i class="fas fa-reply" onclick="event.stopPropagation(); app.showReplyModal(${m.senderId || m.targetUserId}, 'Chat: ${m.body.substring(0, 20)}...')" style="position:absolute; top:12px; left:8px; font-size:0.7rem; opacity:0.4; cursor:pointer;" title="Responder"></i>` : ''}
+                            
                             ${isMe && !m.isDeleted ? `<i class="fas fa-trash" onclick="event.stopPropagation(); app.deleteMessage(${m.id})" style="position:absolute; top:12px; right:8px; font-size:0.7rem; opacity:0.4; cursor:pointer;" title="Apagar Mensagem"></i>` : ''}
                             
-                            <div style="${isMe && !m.isDeleted ? 'padding-right:15px;' : ''} ${m.isDeleted ? 'font-style:italic; opacity:0.7;' : ''}">
+                            <div style="${!isSystem ? 'padding: 0 15px;' : ''} ${m.isDeleted ? 'font-style:italic; opacity:0.7;' : ''}">
                                 ${m.body}
                             </div>
                             
