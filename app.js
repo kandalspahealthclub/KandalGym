@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.14.v64'; // Versão de controlo para Hard Reset v64
+        this.appVersion = '2026.04.15.v65'; // Versão de controlo para Hard Reset v65
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -150,10 +150,10 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v64'; // Forçar v64 (Plano Persistente)
+            const targetV = 'v65'; // Forçar v65 (Suporte Youtube Shorts)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
-                console.warn("Forçando atualização total da App (KandalGym v64)...");
+                console.warn("Forçando atualização total da App (KandalGym v65)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
                 localStorage.removeItem('kandalgym_state'); 
@@ -3513,6 +3513,18 @@ Bons treinos!`;
 
     viewExerciseVideo(url, name) {
         let cleanUrl = url;
+        
+        // Normalização de links YouTube (Shorts, Links de partilha, Links normais)
+        if (cleanUrl.includes('youtube.com/shorts/')) {
+            cleanUrl = cleanUrl.replace('youtube.com/shorts/', 'youtube.com/embed/');
+        } else if (cleanUrl.includes('youtube.com/watch?v=')) {
+            const videoId = cleanUrl.split('v=')[1].split('&')[0];
+            cleanUrl = `https://www.youtube.com/embed/${videoId}`;
+        } else if (cleanUrl.includes('youtu.be/')) {
+            const videoId = cleanUrl.split('youtu.be/')[1].split('?')[0];
+            cleanUrl = `https://www.youtube.com/embed/${videoId}`;
+        }
+
         const params = "autoplay=1&modestbranding=1&rel=0";
         cleanUrl += (cleanUrl.includes('?') ? '&' : '?') + params;
 
