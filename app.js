@@ -1,4 +1,4 @@
-// Tratador de Erros Global - Deve ser o primeiro a carregar
+﻿// Tratador de Erros Global - Deve ser o primeiro a carregar
 window.onerror = function (message, source, lineno, colno, error) {
     console.error("Erro detectado:", message, "em", source, ":", lineno);
     const container = document.getElementById('main-content');
@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v88'; // Versão de controlo para Hard Reset v88
+        this.appVersion = '2026.04.15.v89'; // Versão de controlo para Hard Reset v89
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -151,20 +151,20 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v88'; // Forçar v88 (WhatsApp & FAB Update)
+            const targetV = 'v89'; // Forçar v89 (FAB Hide & Notification Fix)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
                 console.warn("Forçando atualização total da App (KandalGym v70)...");
                 localStorage.setItem('kg_v', targetV);
                 localStorage.removeItem('kandalgym_session');
-                localStorage.removeItem('kandalgym_state'); 
-                
+                localStorage.removeItem('kandalgym_state');
+
                 if ('caches' in window) {
                     caches.keys().then((names) => {
                         for (let name of names) caches.delete(name);
                     }).catch(e => console.warn("Cache delete failed:", e));
                 }
-                
+
                 // Dar um tempo para o localStorage gravar antes de recarregar
                 setTimeout(() => {
                     window.location.reload();
@@ -240,7 +240,7 @@ class FitnessApp {
     showManageNewsModal() {
         const newsList = (this.state.news || []).slice().reverse();
         const editingItem = this.editingNewsId ? this.state.news.find(n => n.id === this.editingNewsId) : null;
-        
+
         let newsHtml = newsList.map((item, idx) => `
             <div class="glass-card" style="margin-bottom:1rem; padding:1rem; border-left:3px solid var(--accent); transition: all 0.3s ease; ${this.editingNewsId === item.id ? 'border: 1px solid var(--primary); box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.2);' : ''}">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
@@ -322,7 +322,7 @@ class FitnessApp {
                 this.state.news[idx].title = title;
                 this.state.news[idx].content = content;
                 // Opcionalmente atualizar a data, mas mantemos a original para historico se desejar
-                this.state.news[idx].updatedAt = new Date().toLocaleDateString('pt-PT') + ' ' + new Date().toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'});
+                this.state.news[idx].updatedAt = new Date().toLocaleDateString('pt-PT') + ' ' + new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
             }
             this.editingNewsId = null;
             this.showToast('Notícia atualizada!', 'success');
@@ -332,7 +332,7 @@ class FitnessApp {
                 id: Date.now().toString(),
                 title: title,
                 content: content,
-                date: new Date().toLocaleDateString('pt-PT') + ' ' + new Date().toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'})
+                date: new Date().toLocaleDateString('pt-PT') + ' ' + new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })
             };
             this.state.news.push(newEntry);
             this.showToast('Notícia publicada com sucesso!', 'success');
@@ -399,9 +399,9 @@ class FitnessApp {
 
                 // 1. Integridade local
                 const collections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes', 'news'];
-                collections.forEach(coll => { 
+                collections.forEach(coll => {
                     if (!this.state[coll]) {
-                        this.state[coll] = []; 
+                        this.state[coll] = [];
                     } else if (typeof this.state[coll] === 'object' && !Array.isArray(this.state[coll])) {
                         // Garantir que é um Array (Firebase por vezes converte para objeto com chaves numéricas)
                         this.state[coll] = Object.values(this.state[coll]);
@@ -652,7 +652,7 @@ class FitnessApp {
             // Enviar notificação para Adms
             const adminId = this.state.admins[0]?.id || 1;
             this.addAppNotification(adminId, 'Pedido de Recuperação', `O utilizador ${user.name} (${email}) solicitou a recuperação da password.`, null, 'notification');
-            
+
             msgDiv.style.display = 'block';
             msgDiv.style.background = 'rgba(34, 197, 94, 0.1)';
             msgDiv.style.color = '#22c55e';
@@ -1464,7 +1464,7 @@ Bons treinos!`;
         this.renderSidebar();
         this.renderContent();
         this.renderFAB();
-        
+
         const container = document.getElementById('main-content');
         if (!skipScroll) {
             window.scrollTo({ top: 0, behavior: 'instant' });
@@ -1548,7 +1548,7 @@ Bons treinos!`;
                 const sortedHist = histArray.map(h => ({
                     d: new Date(typeof h === 'string' ? h : h.d),
                     t: typeof h === 'string' ? 'in' : h.t
-                })).sort((a,b) => b.d - a.d);
+                })).sort((a, b) => b.d - a.d);
 
                 // Contagem para o Histograma (Frequência Horária)
                 sortedHist.forEach(entry => {
@@ -1615,7 +1615,7 @@ Bons treinos!`;
     normalizeYoutubeUrl(url) {
         if (!url) return { embedUrl: '', videoId: '', thumbUrl: '' };
         let videoId = '';
-        
+
         try {
             if (url.includes('/shorts/')) {
                 videoId = url.split('/shorts/')[1].split(/[?&]/)[0];
@@ -1702,7 +1702,7 @@ Bons treinos!`;
 
                         <div class="glass-panel" style="padding: 1.5rem;">
                             <h3 style="margin-top: 0; color: var(--secondary); display: flex; align-items: center; gap: 0.5rem;">
-                                <i class="fas fa-user-friends"></i> áÅ¡ltimos Alunos Registados
+                                <i class="fas fa-user-friends"></i> Últimos Alunos Registados
                             </h3>
                             <div class="client-list">
                                 ${this.state.clients.slice(-3).reverse().map(c => `
@@ -1869,7 +1869,7 @@ Bons treinos!`;
                 const data = JSON.parse(e.target.result);
                 const array = Array.isArray(data) ? data : (data.clients || data.alunos || []);
                 if (array.length === 0) throw new Error("O ficheiro JSON está vazio ou não contém uma lista de clientes válida.");
-                
+
                 this.addClientsInBatch(array);
             } catch (err) {
                 console.error("Erro no JSON:", err);
@@ -1900,7 +1900,7 @@ Bons treinos!`;
                 phone: parts[1].trim()
             });
         }
-        
+
         this.addClientsInBatch(clientsToImport);
     }
 
@@ -1958,7 +1958,7 @@ Bons treinos!`;
         }
 
         alert(`Resumo da Importação:\n\n✅ Sucesso: ${imported}\n⚠️ Ignorados (Já existem): ${skipped}\nÃ¢ÂÅ’ Erros (Campos em falta): ${errors}`);
-        
+
         const modal = document.querySelector('.modal-overlay');
         if (modal) modal.remove();
 
@@ -1989,14 +1989,14 @@ Bons treinos!`;
     importClientDatabase(input) {
         if (!input.files || !input.files[0]) return;
         const file = input.files[0];
-        
+
         if (!confirm("Tem a certeza que deseja restaurar este backup? Isto irá juntar os dados do ficheiro áÂ  base de dados atual.")) return;
 
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
                 const data = JSON.parse(e.target.result);
-                
+
                 // Suportar tanto o formato de exportacao novo quanto um array simples
                 const newClients = Array.isArray(data) ? data : (data.clients || []);
                 const newQRClients = Array.isArray(data) ? [] : (data.qrClients || []);
@@ -2641,7 +2641,7 @@ Bons treinos!`;
     renderNotificationsManager(container) {
         let clientsList = this.state.clients || [];
         this.selectedNotifyIds = new Set(); // Reset de seleção ao entrar no menu
-        
+
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <h2><i class="fas fa-paper-plane" style="color:var(--primary);"></i> Envio de Comunicados</h2>
@@ -2702,7 +2702,7 @@ Bons treinos!`;
         } else {
             this.selectedNotifyIds.clear();
         }
-        
+
         // Atualizar os checkboxes que estiverem visíveis atualmente
         document.querySelectorAll('.notify-client-checkbox').forEach(cb => {
             cb.checked = checked;
@@ -2720,7 +2720,7 @@ Bons treinos!`;
         const q = query.toLowerCase().trim();
         const listEl = document.getElementById('notify-clients-list');
         if (!listEl) return;
-        
+
         listEl.innerHTML = this.renderNotifyClientsRows(q);
     }
 
@@ -2730,7 +2730,7 @@ Bons treinos!`;
 
         const clients = (this.state.clients || [])
             .filter(c => !qClean || normalize(c.name).includes(qClean))
-            .sort((a,b) => a.name.localeCompare(b.name));
+            .sort((a, b) => a.name.localeCompare(b.name));
 
         if (clients.length === 0) return '<div style="padding:20px; text-align:center; color:var(--text-muted); font-size:0.9rem;">Nenhum aluno encontrado.</div>';
 
@@ -2767,7 +2767,7 @@ Bons treinos!`;
 
     sendBulkNotification(type) {
         const msg = document.getElementById('bulk-notify-message').value.trim();
-        
+
         if (this.selectedNotifyIds.size === 0) return alert('Selecione pelo menos um destinatário.');
         if (!msg) return alert('A mensagem não pode estar vazia.');
 
@@ -2803,21 +2803,21 @@ Bons treinos!`;
                 <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom: 1.5rem;">Como os navegadores bloqueiam a abertura de muitas janelas ao mesmo tempo, clique em "Enviar" um por um.</p>
                 <div style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
                     ${clients.map(c => {
-                        let cleanPhone = '';
-                        if (c.phone) {
-                            cleanPhone = c.phone.replace(/\\D/g, '');
-                            if (!cleanPhone.startsWith('351') && cleanPhone.length === 9) cleanPhone = '351' + cleanPhone;
-                        }
-                        const hasPhone = c.phone && c.phone !== 'undefined' && c.phone !== '';
-                        return `
+            let cleanPhone = '';
+            if (c.phone) {
+                cleanPhone = c.phone.replace(/\\D/g, '');
+                if (!cleanPhone.startsWith('351') && cleanPhone.length === 9) cleanPhone = '351' + cleanPhone;
+            }
+            const hasPhone = c.phone && c.phone !== 'undefined' && c.phone !== '';
+            return `
                             <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px;">
                                 <span style="font-weight:bold; font-size: 0.95rem;">${c.name}</span>
-                                ${hasPhone 
-                                    ? `<button class="btn btn-sm" style="background:#25D366; color:#fff;" onclick="window.open('https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}', '_blank'); this.innerHTML='<i class=\\'fas fa-check\\'></i> Enviado'; this.style.opacity='0.6';"><i class="fab fa-whatsapp"></i> Enviar</button>` 
-                                    : `<span style="font-size:0.8rem; color:var(--danger);"><i class="fas fa-times-circle"></i> Sem número</span>`}
+                                ${hasPhone
+                    ? `<button class="btn btn-sm" style="background:#25D366; color:#fff;" onclick="window.open('https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}', '_blank'); this.innerHTML='<i class=\\'fas fa-check\\'></i> Enviado'; this.style.opacity='0.6';"><i class="fab fa-whatsapp"></i> Enviar</button>`
+                    : `<span style="font-size:0.8rem; color:var(--danger);"><i class="fas fa-times-circle"></i> Sem número</span>`}
                             </div>
                         `;
-                    }).join('')}
+        }).join('')}
                 </div>
                 <button class="btn btn-secondary" style="width:100%; margin-top:1.5rem;" onclick="this.closest('.modal-overlay').remove()">Concluir / Fechar</button>
             </div>
@@ -2825,9 +2825,9 @@ Bons treinos!`;
     }
 
     showSMSBulkModal(clients, msg) {
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
-                     (window.safari !== undefined);
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+            (window.safari !== undefined);
 
         const allNumbers = clients.map(c => {
             if (!c.phone) return null;
@@ -2862,21 +2862,21 @@ Bons treinos!`;
                 <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:8px;">Envio Individual (Fila):</label>
                 <div style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:5px;">
                     ${clients.map(c => {
-                        let cleanPhone = '';
-                        if (c.phone) {
-                            cleanPhone = c.phone.replace(/\D/g, '');
-                            if (cleanPhone.length === 9) cleanPhone = '351' + cleanPhone;
-                        }
-                        const hasPhone = c.phone && c.phone !== 'undefined' && c.phone !== '';
-                        return `
+            let cleanPhone = '';
+            if (c.phone) {
+                cleanPhone = c.phone.replace(/\D/g, '');
+                if (cleanPhone.length === 9) cleanPhone = '351' + cleanPhone;
+            }
+            const hasPhone = c.phone && c.phone !== 'undefined' && c.phone !== '';
+            return `
                             <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
                                 <span style="font-weight:bold; font-size: 0.9rem;">${c.name}</span>
-                                ${hasPhone 
-                                    ? `<button class="btn btn-sm btn-ghost" style="color:var(--primary); border: 1px solid var(--primary);" onclick="window.location.href='sms:${cleanPhone}${isIOS ? '&' : '?'}body=${encodeURIComponent(msg)}'; this.innerHTML='<i class=\\'fas fa-check\\'></i>'; this.style.opacity='0.6';">Enviar</button>` 
-                                    : `<span style="font-size:0.75rem; color:var(--danger);">Sem número</span>`}
+                                ${hasPhone
+                    ? `<button class="btn btn-sm btn-ghost" style="color:var(--primary); border: 1px solid var(--primary);" onclick="window.location.href='sms:${cleanPhone}${isIOS ? '&' : '?'}body=${encodeURIComponent(msg)}'; this.innerHTML='<i class=\\'fas fa-check\\'></i>'; this.style.opacity='0.6';">Enviar</button>`
+                    : `<span style="font-size:0.75rem; color:var(--danger);">Sem número</span>`}
                             </div>
                         `;
-                    }).join('')}
+        }).join('')}
                 </div>
                 <button class="btn btn-secondary" style="width:100%; margin-top:1.5rem;" onclick="this.closest('.modal-overlay').remove()">Fechar</button>
             </div>
@@ -2885,7 +2885,7 @@ Bons treinos!`;
     }
 
     tryAutoGroupSMS(numbers, msg, isIOS) {
-        const smsUrl = isIOS 
+        const smsUrl = isIOS
             ? `sms:${numbers}&body=${encodeURIComponent(msg)}`
             : `sms:?addresses=${numbers}&body=${encodeURIComponent(msg)}`; // Try ?addresses= for Android too
         window.location.href = smsUrl;
@@ -3242,7 +3242,7 @@ Bons treinos!`;
     renderTrainingView(container, clientId) {
         if (!container) container = document.getElementById('main-content');
         if (!container) return;
-        
+
         // Reset scroll position to top when changing views/plans
         window.scrollTo(0, 0);
 
@@ -3288,7 +3288,7 @@ Bons treinos!`;
                         color:${this.viewingDayIdx === dIdx ? '#fff' : 'var(--text-muted)'};
                         border: 1px solid ${this.viewingDayIdx === dIdx ? 'var(--primary)' : 'rgba(255,255,255,0.1)'};">
                         <i class="fas ${this.viewingDayIdx === dIdx ? 'fa-calendar-check' : 'fa-calendar-day'}" style="font-size:0.9rem;"></i>
-                        <span style="text-transform:uppercase; letter-spacing:0.5px;">${day.title || `Plano ${String.fromCharCode(64 + (dIdx+1))}`}</span>
+                        <span style="text-transform:uppercase; letter-spacing:0.5px;">${day.title || `Plano ${String.fromCharCode(64 + (dIdx + 1))}`}</span>
                     </button>
                 `).join('')}
             </div>
@@ -3332,39 +3332,39 @@ Bons treinos!`;
                     <!-- LISTA DE EXERCICIOS DENSE & PROFESSIONAL -->
                     <div style="display:flex; flex-direction:column; gap:8px;">
                         ${(() => {
-                            let firstPendingIdx = -1;
-                            if (isClient) {
-                                firstPendingIdx = day.exercises.findIndex(ex => {
-                                    const numSets = parseInt(ex.sets) || 0;
-                                    if (numSets === 0) return false;
-                                    for (let s = 0; s < numSets; s++) {
-                                        if (!ex.weightLog || String(ex.weightLog[s] || '').trim() === '') return true;
-                                    }
-                                    return false;
-                                });
-                            }
-
-                            return day.exercises.map((ex, exIdx) => {
+                        let firstPendingIdx = -1;
+                        if (isClient) {
+                            firstPendingIdx = day.exercises.findIndex(ex => {
                                 const numSets = parseInt(ex.sets) || 0;
-                                let libEx = this.state.exercises.find(le => le.id == ex.id);
-                                if (!libEx && ex.name) {
-                                    libEx = this.state.exercises.find(le => le.name.toLowerCase() === ex.name.toLowerCase());
+                                if (numSets === 0) return false;
+                                for (let s = 0; s < numSets; s++) {
+                                    if (!ex.weightLog || String(ex.weightLog[s] || '').trim() === '') return true;
                                 }
-                                const muscleColor = libEx ? this.getMuscleColor(libEx.category || libEx.muscle) : 'var(--primary)';
-                                
-                                const isCurrent = isClient && exIdx === firstPendingIdx;
-                                const outlineStyle = isCurrent ? `border:1px solid var(--primary); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);` : `border:1px solid rgba(255,255,255,0.04);`;
+                                return false;
+                            });
+                        }
 
-                                return `
+                        return day.exercises.map((ex, exIdx) => {
+                            const numSets = parseInt(ex.sets) || 0;
+                            let libEx = this.state.exercises.find(le => le.id == ex.id);
+                            if (!libEx && ex.name) {
+                                libEx = this.state.exercises.find(le => le.name.toLowerCase() === ex.name.toLowerCase());
+                            }
+                            const muscleColor = libEx ? this.getMuscleColor(libEx.category || libEx.muscle) : 'var(--primary)';
+
+                            const isCurrent = isClient && exIdx === firstPendingIdx;
+                            const outlineStyle = isCurrent ? `border:1px solid var(--primary); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);` : `border:1px solid rgba(255,255,255,0.04);`;
+
+                            return `
                                 <div class="glass-card" style="padding:10px 12px; ${outlineStyle} background:rgba(255,255,255,0.02); min-height:75px; display:flex; flex-direction:column; gap:10px; border-radius:14px; position:relative;">
                                     ${isCurrent ? `<div style="position:absolute; top:-8px; right:12px; background:var(--primary); color:#fff; font-size:0.6rem; font-weight:800; padding:2px 8px; border-radius:10px; text-transform:uppercase; letter-spacing:1px; box-shadow:0 2px 5px rgba(0,0,0,0.5);"><i class="fas fa-play" style="font-size:0.5rem; margin-right:3px;"></i> A Realizar</div>` : ''}
                                     <div style="display:flex; align-items:center; gap:12px;">
                                         <!-- Mini Image/Icon -->
                                         <div style="width:44px; height:44px; border-radius:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.05); flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-                                            ${libEx && libEx.photoUrl ? 
-                                                `<img src="${libEx.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : 
-                                                `<div style="font-size:1.2rem; opacity:0.6;">${this.getExerciseIcon(libEx ? (libEx.category || libEx.muscle) : '')}</div>`
-                                            }
+                                            ${libEx && libEx.photoUrl ?
+                                    `<img src="${libEx.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` :
+                                    `<div style="font-size:1.2rem; opacity:0.6;">${this.getExerciseIcon(libEx ? (libEx.category || libEx.muscle) : '')}</div>`
+                                }
                                         </div>
 
                                         <!-- Core Info -->
@@ -3387,8 +3387,8 @@ Bons treinos!`;
                                         <div style="display:flex; flex-direction:column; align-items:flex-end; gap:2px; flex-shrink:0;">
                                             <span style="font-size:0.5rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:2px;">Cargas</span>
                                             <div style="display:flex; gap:4px; flex-wrap:wrap; justify-content:flex-end; max-width:120px;">
-                                                ${Object.entries(ex.weightLog).sort((a,b) => Number(a[0])-Number(b[0])).map(([sIdx, val]) => val ? `
-                                                    <span style="background:rgba(16,185,129,0.1); color:var(--success); font-size:0.65rem; font-weight:800; padding:2px 6px; border-radius:4px; white-space:nowrap;">S${Number(sIdx)+1}: ${val}kg</span>
+                                                ${Object.entries(ex.weightLog).sort((a, b) => Number(a[0]) - Number(b[0])).map(([sIdx, val]) => val ? `
+                                                    <span style="background:rgba(16,185,129,0.1); color:var(--success); font-size:0.65rem; font-weight:800; padding:2px 6px; border-radius:4px; white-space:nowrap;">S${Number(sIdx) + 1}: ${val}kg</span>
                                                 ` : '').join('')}
                                             </div>
                                         </div>
@@ -3407,8 +3407,8 @@ Bons treinos!`;
                                 <div style="border-top:1px solid rgba(255,255,255,0.03); padding-top:8px; margin-top:2px;">
                                     <div style="display:flex; overflow-x:auto; gap:8px; padding:2px 5px 8px; scrollbar-width: none;">
                                         ${Array.from({ length: numSets }).map((_, sIdx) => {
-                                            const val = (ex.weightLog && ex.weightLog[sIdx]) || '';
-                                            return `
+                                    const val = (ex.weightLog && ex.weightLog[sIdx]) || '';
+                                    return `
                                                 <div style="flex-shrink:0;">
                                                     <span style="display:block; font-size:0.55rem; color:var(--text-muted); text-align:center; font-weight:800;">S${sIdx + 1}</span>
                                                     <input type="number" value="${val}" placeholder="--" 
@@ -3417,7 +3417,7 @@ Bons treinos!`;
                                                         style="width:62px; height:38px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); border-radius:8px; color:#fff; text-align:center; font-size:0.9rem; font-weight:800; outline:none; transition:all 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);">
                                                 </div>
                                             `;
-                                        }).join('')}
+                                }).join('')}
                                     </div>
                                     <div style="position:relative; margin-top:4px;">
                                         <i class="fas fa-pen" style="position:absolute; left:12px; top:11px; font-size:0.65rem; color:var(--text-muted); opacity:0.5;"></i>
@@ -3430,7 +3430,7 @@ Bons treinos!`;
                             </div>
                             `;
                         }).join('');
-                        })()}
+                    })()}
                     </div>
 
                     <!-- Client Interaction Footer -->
@@ -4266,22 +4266,22 @@ Bons treinos!`;
     getExerciseIcon(cat) {
         const iconMap = {
             // Categorias reais do utilizador
-            'Perna':         '🦵',
-            'Costas':        '👊',
-            'Peito':         '💪',
-            'Ombros':        '🤷',
-            'Cárdio':        '❤️',
-            'Abdominais':    '🔥',
-            'Alongamentos':  '🧘',
-            'Geral':         '🏋️',
-            'Bicep':         '💪',
-            'Tricep':        '💪',
+            'Perna': '🦵',
+            'Costas': '👊',
+            'Peito': '💪',
+            'Ombros': '🤷',
+            'Cárdio': '❤️',
+            'Abdominais': '🔥',
+            'Alongamentos': '🧘',
+            'Geral': '🏋️',
+            'Bicep': '💪',
+            'Tricep': '💪',
             // Músculos específicos (retrocompatibilidade)
-            'Bíceps':        '💪',
-            'Deltoides':     '🤷',
-            'Dorsal':        '👊',
+            'Bíceps': '💪',
+            'Deltoides': '🤷',
+            'Dorsal': '👊',
             'Isquiotibiais': '🦵',
-            'Quadríceps':    '🦵'
+            'Quadríceps': '🦵'
         };
         return iconMap[cat] || '🏋️';
     }
@@ -4289,22 +4289,22 @@ Bons treinos!`;
     getMuscleColor(cat) {
         const colors = {
             // Categorias reais do utilizador
-            'Perna':         '#10b981', // Emerald
-            'Costas':        '#8b5cf6', // Violet
-            'Peito':         '#3b82f6', // Blue
-            'Ombros':        '#06b6d4', // Cyan
-            'Cárdio':        '#ef4444', // Red
-            'Abdominais':    '#f59e0b', // Amber
-            'Alongamentos':  '#84cc16', // Lime
-            'Geral':         '#94a3b8', // Slate
-            'Bicep':         '#f43f5e', // Rose
-            'Tricep':        '#ec4899', // Pink
+            'Perna': '#10b981', // Emerald
+            'Costas': '#8b5cf6', // Violet
+            'Peito': '#3b82f6', // Blue
+            'Ombros': '#06b6d4', // Cyan
+            'Cárdio': '#ef4444', // Red
+            'Abdominais': '#f59e0b', // Amber
+            'Alongamentos': '#84cc16', // Lime
+            'Geral': '#94a3b8', // Slate
+            'Bicep': '#f43f5e', // Rose
+            'Tricep': '#ec4899', // Pink
             // Músculos específicos (retrocompatibilidade)
-            'Bíceps':        '#f43f5e',
-            'Deltoides':     '#06b6d4',
-            'Dorsal':        '#8b5cf6',
+            'Bíceps': '#f43f5e',
+            'Deltoides': '#06b6d4',
+            'Dorsal': '#8b5cf6',
             'Isquiotibiais': '#059669',
-            'Quadríceps':    '#10b981'
+            'Quadríceps': '#10b981'
         };
         return colors[cat] || 'var(--primary)';
     }
@@ -4312,10 +4312,10 @@ Bons treinos!`;
     showExerciseSelectionModal(dayIdx, exIdx) {
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
-        
+
         // Obter todas as categorias únicas de exercícios
         const categories = this.state.exerciseCategories || [];
-        
+
         modal.innerHTML = `
             <div class="modal-content" style="max-width:850px; max-height:85vh; display:flex; flex-direction:column;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
@@ -5000,11 +5000,11 @@ Bons treinos!`;
 
             <div style="display:flex; gap:0.5rem; margin-bottom:1.5rem; background:rgba(255,255,255,0.02); padding:4px; border-radius:12px; border:1px solid rgba(255,255,255,0.05); overflow-x: auto; scrollbar-width: none;">
                 ${[
-                    {id:'training', icon:'fa-dumbbell', label:'Treino'},
-                    {id:'meal', icon:'fa-apple-alt', label:'Dieta'},
-                    {id:'evaluation', icon:'fa-chart-line', label:'Aval.'},
-                    {id:'anamnesis', icon:'fa-notes-medical', label:'Anamn.'}
-                ].map(item => `
+                { id: 'training', icon: 'fa-dumbbell', label: 'Treino' },
+                { id: 'meal', icon: 'fa-apple-alt', label: 'Dieta' },
+                { id: 'evaluation', icon: 'fa-chart-line', label: 'Aval.' },
+                { id: 'anamnesis', icon: 'fa-notes-medical', label: 'Anamn.' }
+            ].map(item => `
                     <button class="btn btn-sm" onclick="app.setSpySubView('${item.id}')" 
                         style="flex:1; min-width:70px; padding:8px 4px; display:flex; flex-direction:column; gap:4px; border-radius:10px; font-size:0.65rem; transition:all 0.3s;
                         background:${this.spySubView === item.id ? 'rgba(var(--primary-rgb), 0.15)' : 'transparent'};
@@ -6004,14 +6004,14 @@ Bons treinos!`;
             // Encontrar nome do sender
             let senderName = 'Mensagem';
             if (msg.senderId) {
-                const user = this.state.clients.find(c => c.id == msg.senderId) || 
-                             this.state.teachers.find(t => t.id == msg.senderId) || 
-                             this.state.admins.find(a => a.id == msg.senderId);
+                const user = this.state.clients.find(c => c.id == msg.senderId) ||
+                    this.state.teachers.find(t => t.id == msg.senderId) ||
+                    this.state.admins.find(a => a.id == msg.senderId);
                 if (user) senderName = user.name;
             } else if (String(msg.senderId) === String(this.currentUser.id)) {
                 senderName = 'Eu';
             }
-            
+
             this.replyingTo = { ...msg, senderName };
             this.renderContent();
             // Focar input
@@ -6050,13 +6050,13 @@ Bons treinos!`;
 
         if (!this.state.notifications) this.state.notifications = [];
         this.state.notifications.push(newMsg);
-        
+
         // Limpar estado de resposta
         this.replyingTo = null;
         this.saveState();
 
         // Refresh view
-        input.value = ''; 
+        input.value = '';
         this.renderContent();
 
         // Timeout to ensure scroll happens after render
@@ -7102,7 +7102,7 @@ Bons treinos!`;
 
         // --- PRESERVAR SCROLL DO CONTENTOR (CSS garante scroll interno no PC) ---
         const scrollPosCont = container.scrollTop;
-        
+
         // Bloquear altura mínima para evitar colapso durante o re-render
         container.style.minHeight = container.scrollHeight + 'px';
 
@@ -7246,7 +7246,7 @@ Bons treinos!`;
                 const newStatusEl = document.getElementById('scan-status');
                 if (newStatusEl) newStatusEl.className = prevClass;
             }
-            
+
             // Confirmar no próximo frame e libertar a trava de altura
             requestAnimationFrame(() => {
                 container.scrollTop = scrollPosCont;
@@ -7261,18 +7261,18 @@ Bons treinos!`;
                 if (hwInput) {
                     hwInput.focus({ preventScroll: true });
                     // Manter foco apenas se NÃO estivermos a interagir com outros campos
-                    document.onmousedown = (e) => { 
+                    document.onmousedown = (e) => {
                         if (this.activeView !== 'qr_manager' || !hwInput) return;
-                        
+
                         // Lista de elementos que NÃO devem ser interrompidos
                         const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'];
                         if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button')) {
                             return; // Deixa o utilizador interagir com o campo
                         }
 
-                        setTimeout(() => { 
+                        setTimeout(() => {
                             if (this.activeView === 'qr_manager' && hwInput && document.activeElement.tagName !== 'INPUT') {
-                                hwInput.focus({ preventScroll: true }); 
+                                hwInput.focus({ preventScroll: true });
                             }
                         }, 100);
                     };
@@ -7363,7 +7363,7 @@ Bons treinos!`;
             const hasLastLogin = realUser && realUser.lastLogin;
             const hasHistory = c.clientId && this.state.trainingHistory && this.state.trainingHistory[c.clientId] && this.state.trainingHistory[c.clientId].length > 0;
             const showIcon = c.inviteSent || hasLastLogin || hasHistory;
-            
+
             let tooltipText = "";
             if (hasLastLogin) tooltipText = `Acedeu áÂ  App em: ${realUser.lastLogin}`;
             else if (hasHistory) tooltipText = "Atividade detetada (Registou treinos/pesos)";
@@ -7722,7 +7722,7 @@ Bons treinos!`;
 
             // Remover da lista de QR
             this.state.qrClients = this.state.qrClients.filter(c => String(c.id).trim().toLowerCase() !== targetId);
-            
+
             this.saveState();
             this.refreshQRTableUI();
             this.showToast('Registo QR removido com sucesso.');
