@@ -7365,7 +7365,7 @@ Bons treinos!`;
             const showIcon = c.inviteSent || hasLastLogin || hasHistory;
 
             let tooltipText = "";
-            if (hasLastLogin) tooltipText = `Acedeu áÂ  App em: ${realUser.lastLogin}`;
+            if (hasLastLogin) tooltipText = `Acedeu à App em: ${realUser.lastLogin}`;
             else if (hasHistory) tooltipText = "Atividade detetada (Registou treinos/pesos)";
             else if (c.inviteSent) tooltipText = `App Enviada em: ${c.inviteSent}`;
 
