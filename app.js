@@ -1476,6 +1476,13 @@ Bons treinos!`;
         const container = document.getElementById('main-content');
         if (!container) return;
 
+        // PRESERVAR SCROLL (Critico para UX)
+        const scrollY = container.scrollTop;
+        const windowY = window.pageYOffset || document.documentElement.scrollTop;
+
+        // Travar altura para evitar saltos durante o render
+        container.style.minHeight = container.scrollHeight + 'px';
+
         // Se ainda não carregamos dados frescos do Firebase, mostramos um loader
         // em vez de mostrar dados potencialmente obsoletos do cache (evita aulas que "aparecem e desaparecem")
         if (!this.hasLoadedData) {
@@ -1523,6 +1530,16 @@ Bons treinos!`;
         } else {
             this.renderClientContent(container);
         }
+
+        // RESTAURAR SCROLL
+        requestAnimationFrame(() => {
+            container.scrollTop = scrollY;
+            window.scrollTo(0, windowY);
+            // Libertar altura após restauro
+            requestAnimationFrame(() => {
+                container.style.minHeight = '';
+            });
+        });
     }
 
     getOccupancyHTML(showTotal = true) {
@@ -7465,6 +7482,10 @@ Bons treinos!`;
                 return dateStr.startsWith(hoje) && type === 'in';
             }).length;
 
+            const limitDiario = (this.state.planRestrictions && c.plano && this.state.planRestrictions[c.plano] && this.state.planRestrictions[c.plano].maxDailyEntrances !== undefined) 
+                                ? this.state.planRestrictions[c.plano].maxDailyEntrances 
+                                : 2;
+
             const statusColor = c.ativo ? 'var(--success)' : 'var(--danger)';
 
             const isStaff = (this.state.teachers || []).some(t => Number(t.id) === Number(c.clientId)) ||
@@ -7553,13 +7574,13 @@ Bons treinos!`;
                     </td>
                     <td>
                         ${isStaff ? '<div style="text-align:center; color:var(--primary);"><i class="fas fa-infinity"></i></div>' : `
-                        <div style="display: flex; align-items: center; justify-content:center; gap: 4px;">
-                            <button onclick="app.editQREntryHj('${c.id}', -1)" style="width:22px; height:22px; border-radius:5px; border:none; background:rgba(255,255,255,0.07); color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.75rem; transition:0.2s;" onmouseover="this.style.background='rgba(255,71,87,0.2)'; this.style.color='var(--danger)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'; this.style.color='var(--text-muted)'"><i class="fas fa-minus"></i></button>
-                            <div style="background:${entHj >= 2 ? 'rgba(var(--danger-rgb),0.2)' : 'rgba(255,255,255,0.05)'}; color:${entHj >= 2 ? 'var(--danger)' : '#fff'}; width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.9rem; border:1px solid ${entHj >= 2 ? 'var(--danger)' : 'transparent'};">
-                                ${entHj}
+                        <div style="display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); padding: 3px; border-radius: 8px; gap: 2px; width: fit-content; margin: 0 auto; border: 1px solid rgba(255,255,255,0.05);">
+                            <button onclick="app.editQREntryHj('${c.id}', -1)" style="width: 24px; height: 24px; border-radius: 6px; border: none; background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(255,71,87,0.4)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'"><i class="fas fa-minus" style="font-size: 0.65rem;"></i></button>
+                            <div style="padding: 0 6px; display: flex; align-items: center; gap: 4px; min-width: 45px; justify-content: center;">
+                                <span style="font-weight: 800; font-size: 0.95rem; color: ${entHj >= limitDiario ? 'var(--danger)' : '#fff'};">${entHj}</span>
+                                <span style="color: var(--text-muted); font-size: 0.7rem; font-weight: 600; opacity: 0.6;">/ ${limitDiario}</span>
                             </div>
-                            <span style="font-weight:700; color:var(--text-muted); font-size:0.75rem;">/ 2</span>
-                            <button onclick="app.editQREntryHj('${c.id}', 1)" style="width:22px; height:22px; border-radius:5px; border:none; background:rgba(255,255,255,0.07); color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.75rem; transition:0.2s;" onmouseover="this.style.background='rgba(38,222,129,0.2)'; this.style.color='var(--success)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'; this.style.color='var(--text-muted)'"><i class="fas fa-plus"></i></button>
+                            <button onclick="app.editQREntryHj('${c.id}', 1)" style="width: 24px; height: 24px; border-radius: 6px; border: none; background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(38,222,129,0.4)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'"><i class="fas fa-plus" style="font-size: 0.65rem;"></i></button>
                         </div>
                         `}
                     </td>
