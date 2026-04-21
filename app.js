@@ -1481,17 +1481,18 @@ Bons treinos!`;
         const scrollY = container.scrollTop || this.lastScrollY || 0;
         const windowY = window.pageYOffset || document.documentElement.scrollTop || this.lastWindowY || 0;
 
-        // Travar altura para evitar saltos durante o render
-        container.style.minHeight = container.scrollHeight + 'px';
+        // BLOQUEIO TOTAL DE LAYOUT (Previne saltos)
+        const currentHeight = container.offsetHeight;
+        container.style.height = currentHeight + 'px';
+        container.style.minHeight = currentHeight + 'px';
+        container.style.overflow = 'hidden'; // Evita scrollbars temporárias
 
         // Se ainda não carregamos dados frescos do Firebase, mostramos um loader
-        // em vez de mostrar dados potencialmente obsoletos do cache (evita aulas que "aparecem e desaparecem")
         if (!this.hasLoadedData) {
             container.innerHTML = `
                 <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:5rem; gap:1.5rem; text-align:center;">
                     <div class="loader"></div>
                     <p style="color:var(--text-muted); font-size:1.1rem;">Sincronizando com o servidor...</p>
-                    <small style="color:var(--text-muted); opacity:0.7;">Isto garante que vê as inscrições e horários mais recentes.</small>
                 </div>
             `;
             return;
@@ -1499,52 +1500,28 @@ Bons treinos!`;
 
         container.innerHTML = '';
 
-        if (this.activeView === 'edit_training') {
-            this.renderTrainingEditor();
-            return;
-        }
+        if (this.activeView === 'edit_training') this.renderTrainingEditor();
+        else if (this.activeView === 'edit_meal') this.renderMealEditor();
+        else if (this.activeView === 'spy_view') this.renderSpyView(container);
+        else if (this.activeView === 'classes') this.renderClassesView(container);
+        else if (this.role === 'admin') this.renderAdminContent(container);
+        else if (this.role === 'teacher') this.renderTeacherContent(container);
+        else this.renderClientContent(container);
 
-        if (this.activeView === 'edit_meal') {
-            this.renderMealEditor();
-            return;
-        }
+        // RESTAURAR SCROLL IMEDIATO
+        container.scrollTop = scrollY;
+        window.scrollTo(0, windowY);
 
-        if (this.activeView === 'spy_view') {
-            this.renderSpyView(container);
-            return;
-        }
-
-        if (this.activeView === 'classes') {
-            this.renderClassesView(container);
-            return;
-        }
-
-        if (this.role === 'admin') {
-            try {
-                this.renderAdminContent(container);
-            } catch (e) {
-                console.error("Critical error rendering admin content:", e);
-                container.innerHTML = `<div class="glass-card" style="color:var(--danger); padding:2rem;">Erro ao carregar conteudo: ${e.message}</div>`;
-            }
-        } else if (this.role === 'teacher') {
-            this.renderTeacherContent(container);
-        } else {
-            this.renderClientContent(container);
-        }
-
-        // RESTAURAR SCROLL (Estratégia de 3 fases para robustez total)
-        const restore = () => {
+        // DESBLOQUEAR EM FASES
+        requestAnimationFrame(() => {
             container.scrollTop = scrollY;
             window.scrollTo(0, windowY);
-        };
-
-        restore(); // 1. Imediato
-        
-        requestAnimationFrame(() => {
-            restore(); // 2. Próximo frame
             requestAnimationFrame(() => {
-                restore(); // 3. Estabilização final
+                container.scrollTop = scrollY;
+                window.scrollTo(0, windowY);
+                container.style.height = '';
                 container.style.minHeight = '';
+                container.style.overflow = '';
                 this.lastScrollY = null;
                 this.lastWindowY = null;
             });
@@ -7790,7 +7767,7 @@ Bons treinos!`;
         const idx = this.state.qrClients.findIndex(c => c.id === id);
         if (idx === -1) return;
 
-        // Backup de segurança para o scroll antes da operação
+        // Backup de segurança para o scroll 
         const container = document.getElementById('main-content');
         if (container) this.lastScrollY = container.scrollTop;
         this.lastWindowY = window.pageYOffset || document.documentElement.scrollTop;
@@ -7798,10 +7775,25 @@ Bons treinos!`;
         const hj = new Date().toISOString().split('T')[0];
         if (v === 1) {
             if (!this.state.qrClients[idx].histórico) this.state.qrClients[idx].histórico = [];
-            this.state.qrClients[idx].histórico.unshift(new Date().toISOString());
+            this.state.qrClients[idx].histórico.unshift({ d: new Date().toISOString(), t: 'in' });
         } else {
-            const hIdx = (this.state.qrClients[idx].histórico || []).findIndex(h => h.startsWith(hj));
-            if (hIdx !== -1) this.state.qrClients[idx].histórico.splice(hIdx, 1);
+            // Encontrar e remover a última entrada (IN) de hoje
+            const hIdx = (this.state.qrClients[idx].histórico || []).findIndex(h => {
+                const dateStr = typeof h === 'string' ? h : h.d;
+                const type = typeof h === 'string' ? 'in' : h.t;
+                return dateStr.startsWith(hj) && type === 'in';
+            });
+            
+            if (hIdx !== -1) {
+                this.state.qrClients[idx].histórico.splice(hIdx, 1);
+            } else {
+                // Se não encontrar 'in', remove qualquer coisa de hoje para permitir chegar a 0
+                const anyHjIdx = (this.state.qrClients[idx].histórico || []).findIndex(h => {
+                    const d = typeof h === 'string' ? h : h.d;
+                    return d.startsWith(hj);
+                });
+                if (anyHjIdx !== -1) this.state.qrClients[idx].histórico.splice(anyHjIdx, 1);
+            }
         }
         this.saveState();
         this.refreshQRTableUI();
@@ -7850,31 +7842,38 @@ Bons treinos!`;
         const container = document.getElementById('main-content');
         if (!grid || !container) return;
 
-        // Capturar o valor atual da pesquisa para não perder o filtro
         const searchInput = document.getElementById('qr-search-input');
         const filterVal = searchInput ? searchInput.value : '';
 
-        const scrollY = container.scrollTop;
-        const windowY = window.pageYOffset || document.documentElement.scrollTop;
+        // 1. Capturar scroll (prioridade para backup se existir)
+        const scrollY = container.scrollTop || this.lastScrollY || 0;
+        const windowY = window.pageYOffset || document.documentElement.scrollTop || this.lastWindowY || 0;
 
-        // 2. Travar altura para evitar saltos
-        container.style.minHeight = container.scrollHeight + 'px';
+        // 2. BLOQUEIO TOTAL DE LAYOUT
+        const currentHeight = container.offsetHeight;
+        container.style.height = currentHeight + 'px';
+        container.style.minHeight = currentHeight + 'px';
+        container.style.overflow = 'hidden';
 
-        // 3. Atualizar a tabela mantendo o filtro ativo
+        // 3. Atualizar a tabela
         grid.innerHTML = this.renderQRClientCards(filterVal);
 
-        // 4. Restaurar imediatamente (ambos os sistemas de scroll)
+        // 4. Restaurar imediatamente
         container.scrollTop = scrollY;
         window.scrollTo(0, windowY);
 
-        // 5. Confirmar nos próximos frames para garantir estabilidade
+        // 5. Confirmar nos próximos frames
         requestAnimationFrame(() => {
             container.scrollTop = scrollY;
             window.scrollTo(0, windowY);
             requestAnimationFrame(() => {
                 container.scrollTop = scrollY;
                 window.scrollTo(0, windowY);
+                container.style.height = '';
                 container.style.minHeight = '';
+                container.style.overflow = '';
+                this.lastScrollY = null;
+                this.lastWindowY = null;
             });
         });
     }
