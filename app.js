@@ -7601,8 +7601,8 @@ Bons treinos!`;
                         <div id="canvas-${idx}" style="background: white; padding: 15px; border-radius: 12px; display: inline-block; margin: 10px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></div>
                         <div style="font-size: 0.85rem; font-weight:700; color: var(--accent); margin-bottom: 12px;">Código de Acesso: ${c.id}</div>
                         <div style="display: flex; justify-content: center; gap: 10px;">
-                            <button class="btn btn-secondary btn-sm" onclick="app.downloadQRCode('canvas-${idx}', '${c.nome.replace(/'/g, "\\'")}_QR')" style="background: white; color: black; border-color: #ddd;">
-                                <i class="fas fa-download"></i> Descarregar Imagem para Imprimir
+                            <button class="btn btn-secondary btn-sm download-btn-qr" onclick="app.downloadQRCode('canvas-${idx}', '${c.nome.replace(/'/g, "\\'")}_QR', this)" style="background: white; color: black; border-color: #ddd;">
+                                <i class="fas fa-download"></i> Descarregar Imagem
                             </button>
                             <button class="btn btn-ghost btn-sm" onclick="app.toggleQRCodeDisplay('qr-row-area-${idx}', '${c.id}')">
                                 <i class="fas fa-times"></i> Fechar
@@ -7939,24 +7939,40 @@ Bons treinos!`;
         }
     }
 
-    downloadQRCode(containerId, filename) {
+    downloadQRCode(containerId, filename, btn) {
         const container = document.getElementById(containerId);
-        // QRCodejs creates a canvas inside the container
         const canvas = container.querySelector('canvas');
+        let success = false;
+
         if (canvas) {
             const link = document.createElement('a');
             link.download = filename + '.png';
             link.href = canvas.toDataURL("image/png");
             link.click();
+            success = true;
         } else {
-            // Backup for browsers where QRCodejs creates an img instead (some situations)
             const img = container.querySelector('img');
             if (img) {
                 const link = document.createElement('a');
                 link.download = filename + '.png';
                 link.href = img.src;
                 link.click();
+                success = true;
             }
+        }
+
+        // Se for smartphone (ou qualquer dispositivo), podemos esconder ou alterar o botão
+        if (success && btn) {
+            btn.innerHTML = '<i class="fas fa-check"></i> Guardado';
+            btn.style.background = '#26de81';
+            btn.style.color = '#fff';
+            btn.style.borderColor = '#26de81';
+            btn.disabled = true;
+            
+            // Opcional: Esconder após 3 segundos
+            setTimeout(() => {
+                btn.style.opacity = '0.5';
+            }, 3000);
         }
     }
 
