@@ -5597,7 +5597,10 @@ Bons treinos!`;
                                 <h4 style="margin: 0; font-size: 1.3rem; display: flex; align-items: center; gap: 8px;">
                                     <i class="fas fa-id-card" style="color: var(--accent); opacity: 0.8;"></i> ${p}
                                 </h4>
-                                <button class="btn-icon danger" style="background: rgba(255,71,87,0.1);" onclick="app.deletePlanRestriction('${p}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                                <div style="display:flex; gap:8px;">
+                                    <button class="btn-icon" style="background: rgba(255,255,255,0.1); color:#fff;" onclick="app.renamePlanRestriction('${p}')" title="Editar Nome do Plano"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-icon danger" style="background: rgba(255,71,87,0.1);" onclick="app.deletePlanRestriction('${p}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                                </div>
                             </div>
 
                             <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-bottom:0.5rem;">
@@ -5732,6 +5735,34 @@ Bons treinos!`;
         this.state.planRestrictions[name] = { allowClasses: true, filter: '', exclude: [] };
         this.saveState();
         this.switchAdminTab('plans');
+    }
+
+    async renamePlanRestriction(oldName) {
+        const newName = await this.customPrompt(`Introduza o novo nome para o plano "${oldName}":`, oldName);
+        if (!newName || newName.trim() === '' || newName === oldName) return;
+        
+        if (this.state.planRestrictions[newName]) {
+            return alert("Já existe um plano com esse nome. Escolha um nome diferente.");
+        }
+
+        // Transferir todas as definições (créditos, regras das aulas, etc) para a nova chave
+        this.state.planRestrictions[newName] = this.state.planRestrictions[oldName];
+        delete this.state.planRestrictions[oldName];
+
+        // Atualizar nos clientes que tinham o plano antigo para não desconfigurar na lista de alunos
+        let updatedCount = 0;
+        if (this.state.qrClients) {
+            this.state.qrClients.forEach(c => {
+                if (c.plano === oldName) {
+                    c.plano = newName;
+                    updatedCount++;
+                }
+            });
+        }
+
+        this.saveState();
+        this.switchAdminTab('plans');
+        this.showToast(`Plano renomeado. ${updatedCount} aluno(s) atualizado(s).`, 'success');
     }
 
     deletePlanRestriction(plan) {
