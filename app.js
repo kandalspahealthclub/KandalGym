@@ -5600,7 +5600,7 @@ Bons treinos!`;
                                 <button class="btn-icon danger" style="background: rgba(255,71,87,0.1);" onclick="app.deletePlanRestriction('${p}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                             </div>
 
-                            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-bottom:0.5rem;">
                                 <div>
                                     <span style="font-weight: 600; display: block; margin-bottom: 3px;">Permite Aulas?</span>
                                     <span style="font-size: 0.75rem; color: var(--text-muted);">Acesso geral a reservas</span>
@@ -5609,6 +5609,14 @@ Bons treinos!`;
                                     <input type="checkbox" ${r.allowClasses ? 'checked' : ''} onchange="app.updatePlanRestriction('${p}', 'allowClasses', this.checked); app.switchAdminTab('plans')">
                                     <span class="slider round"></span>
                                 </label>
+                            </div>
+
+                            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                                <div>
+                                    <span style="font-weight: 600; display: block; margin-bottom: 3px;">Créditos Fixos</span>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">No momento do reset</span>
+                                </div>
+                                <input type="number" min="0" value="${r.maxCredits !== undefined ? r.maxCredits : 30}" onchange="app.updatePlanRestriction('${p}', 'maxCredits', parseInt(this.value) || 0)" style="width: 70px; text-align: center; border-radius: 8px; padding: 6px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; font-weight: bold; outline:none;">
                             </div>
 
                             ${r.allowClasses ? `
@@ -7361,15 +7369,23 @@ Bons treinos!`;
             const client = this.state.qrClients.find(q => q.id === qrId);
             if (client) {
                 client.validade = newDateStr;
-                // Auto-reset de créditos
+                // Auto-reset de créditos inteligente
                 const planoStr = client.plano || '';
                 let defaultEnt = 30;
-                if (planoStr.includes('Staff')) defaultEnt = 999;
-                else if (planoStr.includes('Semanal')) defaultEnt = 99;
-                else if (planoStr.includes('Mensal') || planoStr.includes('Livre')) defaultEnt = 100;
-                else if (planoStr.includes('Pontual')) defaultEnt = 1;
-                else if (planoStr.includes('2x Semana')) defaultEnt = 8;
-                else if (planoStr.includes('3x Semana')) defaultEnt = 12;
+                
+                // 1º Prioridade: Verificar se o admin configurou os créditos fixos nas regras do plano
+                const regras = (this.state.planRestrictions || {})[planoStr];
+                if (regras && typeof regras.maxCredits === 'number') {
+                    defaultEnt = regras.maxCredits;
+                } else {
+                    // Fallback para nomes de planos antigos caso não estejam mapeados
+                    if (planoStr.includes('Staff')) defaultEnt = 999;
+                    else if (planoStr.includes('Semanal')) defaultEnt = 99;
+                    else if (planoStr.includes('Mensal') || planoStr.includes('Livre')) defaultEnt = 100;
+                    else if (planoStr.includes('Pontual') || planoStr.includes('1 Dia')) defaultEnt = 1;
+                    else if (planoStr.includes('2x Semana')) defaultEnt = 8;
+                    else if (planoStr.includes('3x Semana')) defaultEnt = 12;
+                }
                 
                 client.ent = defaultEnt;
             }
@@ -7718,12 +7734,18 @@ Bons treinos!`;
             if (field === 'validade') {
                 const planoStr = this.state.qrClients[idx].plano || '';
                 let defaultEnt = 30;
-                if (planoStr.includes('Staff')) defaultEnt = 999;
-                else if (planoStr.includes('Semanal')) defaultEnt = 99;
-                else if (planoStr.includes('Mensal') || planoStr.includes('Livre')) defaultEnt = 100;
-                else if (planoStr.includes('Pontual')) defaultEnt = 1;
-                else if (planoStr.includes('2x Semana')) defaultEnt = 8;
-                else if (planoStr.includes('3x Semana')) defaultEnt = 12;
+
+                const regras = (this.state.planRestrictions || {})[planoStr];
+                if (regras && typeof regras.maxCredits === 'number') {
+                    defaultEnt = regras.maxCredits;
+                } else {
+                    if (planoStr.includes('Staff')) defaultEnt = 999;
+                    else if (planoStr.includes('Semanal')) defaultEnt = 99;
+                    else if (planoStr.includes('Mensal') || planoStr.includes('Livre')) defaultEnt = 100;
+                    else if (planoStr.includes('Pontual') || planoStr.includes('1 Dia')) defaultEnt = 1;
+                    else if (planoStr.includes('2x Semana')) defaultEnt = 8;
+                    else if (planoStr.includes('3x Semana')) defaultEnt = 12;
+                }
                 
                 this.state.qrClients[idx].ent = defaultEnt;
             }
