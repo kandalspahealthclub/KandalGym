@@ -7828,9 +7828,9 @@ Bons treinos!`;
             btnCam.onclick = () => this.pararLeitorQR(stream);
 
             this.qrScannerAtivo = true;
-            this.qrRequestAnimationFrameId = setTimeout(() => this.loopLeitorQR(video), 200);
+            this.qrRequestAnimationFrameId = setTimeout(() => this.loopLeitorQR(video), 50);
 
-            scanStatus.innerHTML = "<span style='color: var(--success)'> Scanner Ativo</span><br>Otimizado (2 scans/seg)";
+            scanStatus.innerHTML = "<span style='color: var(--success)'> Scanner Ativo</span><br>Modo Rápido";
             scanStatus.className = "";
         } catch (e) {
             console.error(e);
@@ -7970,8 +7970,8 @@ Bons treinos!`;
         }
 
         if (this.qrScannerAtivo) {
-            // Aumentando a performance: scanning a cada 100ms (10 vezes por segundo)
-            this.qrRequestAnimationFrameId = setTimeout(() => this.loopLeitorQR(v), 100);
+            // Aumentando a performance: scanning a cada 50ms (20 vezes por segundo)
+            this.qrRequestAnimationFrameId = setTimeout(() => this.loopLeitorQR(v), 50);
         }
     }
 
