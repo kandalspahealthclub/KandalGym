@@ -5408,15 +5408,61 @@ Bons treinos!`;
 
     handlePhotoUpload(input) {
         if (input.files && input.files[0]) {
-            // Compressão EXTREMA para poupar espaço: 200px max, qualidade 0.5
-            this.processImage(input.files[0], 200, 0.5, (base64) => {
-                this.currentUser.photoUrl = base64;
-                const preview = document.getElementById('profile-photo-preview');
-                if (preview) {
-                    preview.innerHTML = `<img src="${base64}" style="width:100%; height:100%; object-fit:cover;">`;
-                }
-            });
+            const file = input.files[0];
+            if (file.size > 10 * 1024 * 1024) {
+                return alert("A imagem é demasiado grande (Máximo 10MB).");
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.showCropModal(e.target.result, (croppedBase64) => {
+                    this.currentUser.photoUrl = croppedBase64;
+                    const preview = document.getElementById('profile-photo-preview');
+                    if (preview) {
+                        preview.innerHTML = `<img src="${croppedBase64}" style="width:100%; height:100%; object-fit:cover;">`;
+                    }
+                });
+            };
+            reader.readAsDataURL(file);
         }
+    }
+
+    showCropModal(imgSrc, callback) {
+        const modalHtml = `
+            <div style="text-align: center;">
+                <h3 style="margin-top:0; margin-bottom:1rem;">Ajustar Foto</h3>
+                <div style="max-height: 50vh; overflow: hidden; margin-bottom: 1.5rem; background:#000;">
+                    <img id="cropper-image" src="${imgSrc}" style="max-width: 100%; display:block;">
+                </div>
+                <div style="display:flex; justify-content:center; gap:10px;">
+                    <button class="btn btn-secondary" onclick="app.closeModal()">Cancelar</button>
+                    <button class="btn btn-primary" id="btn-crop-confirm"><i class="fas fa-crop"></i> Recortar e Guardar</button>
+                </div>
+            </div>
+        `;
+        this.showModal(modalHtml);
+
+        setTimeout(() => {
+            const image = document.getElementById('cropper-image');
+            const cropper = new Cropper(image, {
+                aspectRatio: 1, // Quadrado
+                viewMode: 1,
+                autoCropArea: 0.9,
+                dragMode: 'move',
+            });
+
+            document.getElementById('btn-crop-confirm').onclick = () => {
+                const canvas = cropper.getCroppedCanvas({
+                    width: 500, // Aumentada a resolução
+                    height: 500,
+                    imageSmoothingEnabled: true,
+                    imageSmoothingQuality: 'high',
+                });
+                const base64 = canvas.toDataURL('image/jpeg', 0.85); // Maior qualidade em 85%
+                app.closeModal();
+                callback(base64);
+            };
+        }, 150);
     }
 
     async updateProfile() {
