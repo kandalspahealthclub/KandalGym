@@ -5429,10 +5429,10 @@ Bons treinos!`;
 
     showCropModal(imgSrc, callback) {
         const modalHtml = `
-            <div style="text-align: center;">
+            <div style="text-align: center; width: 100%;">
                 <h3 style="margin-top:0; margin-bottom:1rem;">Ajustar Foto</h3>
-                <div style="max-height: 50vh; overflow: hidden; margin-bottom: 1.5rem; background:#000;">
-                    <img id="cropper-image" src="${imgSrc}" style="max-width: 100%; display:block;">
+                <div style="height: 60vh; margin-bottom: 1.5rem; background:#000; position:relative; width: 100%; display: flex; align-items:center; justify-content:center;">
+                    <img id="cropper-image" src="${imgSrc}" style="max-width: 100%; max-height: 100%; display:block;">
                 </div>
                 <div style="display:flex; justify-content:center; gap:10px;">
                     <button class="btn btn-secondary" onclick="app.closeModal()">Cancelar</button>
@@ -5440,25 +5440,33 @@ Bons treinos!`;
                 </div>
             </div>
         `;
-        this.showModal(modalHtml);
+        this.showModal(modalHtml, '500px'); // Ensure modal has enough width
 
         setTimeout(() => {
             const image = document.getElementById('cropper-image');
-            const cropper = new Cropper(image, {
+            if (window.cropperInstance) {
+                window.cropperInstance.destroy();
+            }
+            window.cropperInstance = new Cropper(image, {
                 aspectRatio: 1, // Quadrado
                 viewMode: 1,
                 autoCropArea: 0.9,
-                dragMode: 'move',
+                background: false,
+                movable: true,
+                zoomable: true,
+                rotatable: false,
+                scalable: false,
             });
 
             document.getElementById('btn-crop-confirm').onclick = () => {
-                const canvas = cropper.getCroppedCanvas({
+                const canvas = window.cropperInstance.getCroppedCanvas({
                     width: 500, // Aumentada a resolução
                     height: 500,
                     imageSmoothingEnabled: true,
                     imageSmoothingQuality: 'high',
                 });
                 const base64 = canvas.toDataURL('image/jpeg', 0.85); // Maior qualidade em 85%
+                window.cropperInstance.destroy();
                 app.closeModal();
                 callback(base64);
             };
