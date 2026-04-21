@@ -8291,6 +8291,15 @@ Bons treinos!`;
                     </h3>
                     <button class="btn-icon" onclick="app.closeModal()"><i class="fas fa-times"></i></button>
                 </div>
+
+                <div style="display:flex; gap:10px; margin-bottom:1.2rem;">
+                    <button class="btn btn-primary" style="flex:1; font-size:0.85rem; padding:0.6rem;" onclick="app.addManualQREntry('${id}', 'in')">
+                        <i class="fas fa-sign-in-alt"></i> Registar Entrada
+                    </button>
+                    <button class="btn btn-secondary" style="flex:1; font-size:0.85rem; padding:0.6rem; border-color:rgba(255,159,67,0.5); color:#ff9f43;" onclick="app.addManualQREntry('${id}', 'out')">
+                        <i class="fas fa-sign-out-alt"></i> Registar Saída
+                    </button>
+                </div>
                 
                 <div style="max-height: 50vh; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); scrollbar-width: thin;">
                     <table style="width:100%; border-collapse: collapse;">
@@ -8298,25 +8307,31 @@ Bons treinos!`;
                             <tr>
                                 <th style="text-align:left; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Data e Hora</th>
                                 <th style="text-align:center; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Tipo</th>
+                                <th style="text-align:center; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; width:50px;"></th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${logs.length === 0 ? '<tr><td colspan="2" style="padding: 4rem 2rem; text-align: center; color: var(--text-muted);"><i class="fas fa-ghost" style="font-size:2rem; display:block; margin-bottom:1rem; opacity:0.3;"></i> Sem registos de acesso para este utilizador.</td></tr>' : logs.map(l => {
+                            ${logs.length === 0 ? '<tr><td colspan="3" style="padding: 4rem 2rem; text-align: center; color: var(--text-muted);"><i class="fas fa-ghost" style="font-size:2rem; display:block; margin-bottom:1rem; opacity:0.3;"></i> Sem registos de acesso para este utilizador.</td></tr>' : logs.map((l, idx) => {
             const dateStr = typeof l === 'string' ? l : l.d;
             const type = typeof l === 'string' ? 'in' : l.t;
             const d = new Date(dateStr);
             const isIn = type === 'in';
 
             return `
-                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,185,255,0.02)'" onmouseout="this.style.background='transparent'">
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
                                         <td style="padding: 12px 15px;">
                                             <div style="font-weight:600; font-size:0.9rem; color:#fff;">${d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })}</div>
                                             <div style="font-size: 0.75rem; color:var(--text-muted);">${d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</div>
                                         </td>
                                         <td style="padding: 12px 15px; text-align:center;">
-                                            <span style="display:inline-flex; align-items:center; gap:6px; background: ${isIn ? 'rgba(38,222,129, 0.1)' : 'rgba(255,159,67, 0.1)'}; color: ${isIn ? '#26de81' : '#ff9f43'}; padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; border: 1px solid ${isIn ? 'rgba(38,222,129, 0.2)' : 'rgba(255,159,67, 0.2)'};">
+                                            <span style="display:inline-flex; align-items:center; gap:6px; background: ${isIn ? 'rgba(38,222,129, 0.1)' : 'rgba(255,159,67, 0.1)'}; color: ${isIn ? '#26de81' : '#ff9f43'}; padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; border: 1px solid ${isIn ? 'rgba(38,222,129, 0.2)' : 'rgba(255,159,67, 0.2)'}; ">
                                                 <i class="fas ${isIn ? 'fa-sign-in-alt' : 'fa-sign-out-alt'}"></i> ${isIn ? 'ENTRADA' : 'SAÍDA'}
                                             </span>
+                                        </td>
+                                        <td style="padding: 12px 15px; text-align:center;">
+                                            <button onclick="app.removeQRLogEntry('${id}', ${idx})" style="background:rgba(255,71,87,0.1); border:1px solid rgba(255,71,87,0.2); color:var(--danger); border-radius:6px; width:28px; height:28px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:0.2s;" title="Remover registo" onmouseover="this.style.background='rgba(255,71,87,0.25)'" onmouseout="this.style.background='rgba(255,71,87,0.1)'">
+                                                <i class="fas fa-trash" style="font-size:0.7rem;"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                 `;
@@ -8332,9 +8347,43 @@ Bons treinos!`;
                 </div>
             </div>
         `;
-        this.showModal(content, '450px');
+        this.showModal(content, '500px');
     }
 
+    addManualQREntry(id, type) {
+        const client = (this.state.qrClients || []).find(c => c.id === id);
+        if (!client) return;
+
+        if (!client.histórico) client.histórico = [];
+        client.histórico.unshift({ d: new Date().toISOString(), t: type, manual: true });
+
+        // Ajustar créditos: entrada manual desconta, saída manual não desconta
+        if (type === 'in') {
+            client.ent = Math.max(0, (client.ent || 0) - 1);
+        }
+
+        this.saveState();
+        this.showUserQRLogs(id); // Re-abrir o modal atualizado
+        this.showToast(type === 'in' ? `Entrada manual adicionada para ${client.nome}` : `Saída manual adicionada para ${client.nome}`, 'success');
+    }
+
+    removeQRLogEntry(id, idx) {
+        const client = (this.state.qrClients || []).find(c => c.id === id);
+        if (!client || !client.histórico) return;
+
+        const entry = client.histórico[idx];
+        const type = typeof entry === 'string' ? 'in' : entry.t;
+
+        // Restaurar crédito se era uma entrada
+        if (type === 'in') {
+            client.ent = (client.ent || 0) + 1;
+        }
+
+        client.histórico.splice(idx, 1);
+        this.saveState();
+        this.showUserQRLogs(id); // Re-abrir o modal atualizado
+        this.showToast('Registo eliminado.', 'info');
+    }
 
     renderQRMsgHTML() {
         if (!this.currentQRMsg) {
@@ -8342,7 +8391,7 @@ Bons treinos!`;
         }
 
         const { text, cls } = this.currentQRMsg;
-        let bg = 'rgba(255,b255,255,0.05)';
+        let bg = 'rgba(255,255,255,0.05)';
         let color = '#fff';
         let icon = 'fa-info-circle';
 
