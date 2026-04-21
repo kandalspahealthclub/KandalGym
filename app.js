@@ -1477,8 +1477,9 @@ Bons treinos!`;
         if (!container) return;
 
         // PRESERVAR SCROLL (Critico para UX)
-        const scrollY = container.scrollTop;
-        const windowY = window.pageYOffset || document.documentElement.scrollTop;
+        // Tentamos capturar a posição atual, ou usamos o backup se existir
+        const scrollY = container.scrollTop || this.lastScrollY || 0;
+        const windowY = window.pageYOffset || document.documentElement.scrollTop || this.lastWindowY || 0;
 
         // Travar altura para evitar saltos durante o render
         container.style.minHeight = container.scrollHeight + 'px';
@@ -1531,13 +1532,21 @@ Bons treinos!`;
             this.renderClientContent(container);
         }
 
-        // RESTAURAR SCROLL
-        requestAnimationFrame(() => {
+        // RESTAURAR SCROLL (Estratégia de 3 fases para robustez total)
+        const restore = () => {
             container.scrollTop = scrollY;
             window.scrollTo(0, windowY);
-            // Libertar altura após restauro
+        };
+
+        restore(); // 1. Imediato
+        
+        requestAnimationFrame(() => {
+            restore(); // 2. Próximo frame
             requestAnimationFrame(() => {
+                restore(); // 3. Estabilização final
                 container.style.minHeight = '';
+                this.lastScrollY = null;
+                this.lastWindowY = null;
             });
         });
     }
@@ -7585,7 +7594,7 @@ Bons treinos!`;
                         `}
                     </td>
                     <td style="text-align:center;">
-                        ${isStaff ? '<span style="font-weight:800; color:var(--accent); font-size:0.7rem; background:rgba(var(--accent-rgb),0.1); padding:4px 8px; border-radius:4px;">VITALÍCIOÂCIO</span>' : `
+                        ${isStaff ? '<span style="font-weight:800; color:var(--accent); font-size:0.75rem; background:rgba(var(--accent-rgb),0.1); padding:5px 10px; border-radius:6px; letter-spacing:0.5px;">VITALÍCIO</span>' : `
                         <input type="date" value="${c.validade}" onchange="app.updateQRClientField('${c.id}', 'validade', this.value)" class="qr-input-sleek"
                             style="color:${hoje > c.validade ? 'var(--danger)' : '#fff'} !important; border-color:${hoje > c.validade ? 'rgba(var(--danger-rgb),0.5)' : ''} !important;">
                         `}
@@ -7766,6 +7775,11 @@ Bons treinos!`;
     editQRCredit(id, val) {
         const idx = this.state.qrClients.findIndex(c => c.id === id);
         if (idx !== -1) {
+            // Backup de scroll
+            const container = document.getElementById('main-content');
+            if (container) this.lastScrollY = container.scrollTop;
+            this.lastWindowY = window.pageYOffset || document.documentElement.scrollTop;
+
             this.state.qrClients[idx].ent = Math.max(0, (this.state.qrClients[idx].ent || 0) + val);
             this.saveState();
             this.refreshQRTableUI();
@@ -7775,6 +7789,11 @@ Bons treinos!`;
     editQREntryHj(id, v) {
         const idx = this.state.qrClients.findIndex(c => c.id === id);
         if (idx === -1) return;
+
+        // Backup de segurança para o scroll antes da operação
+        const container = document.getElementById('main-content');
+        if (container) this.lastScrollY = container.scrollTop;
+        this.lastWindowY = window.pageYOffset || document.documentElement.scrollTop;
 
         const hj = new Date().toISOString().split('T')[0];
         if (v === 1) {
@@ -7791,6 +7810,11 @@ Bons treinos!`;
     updateQRClientField(id, field, value) {
         const idx = this.state.qrClients.findIndex(c => c.id === id);
         if (idx !== -1) {
+            // Backup de scroll antes de salvar e refrescar
+            const container = document.getElementById('main-content');
+            if (container) this.lastScrollY = container.scrollTop;
+            this.lastWindowY = window.pageYOffset || document.documentElement.scrollTop;
+
             this.state.qrClients[idx][field] = value;
             
             if (field === 'validade') {
