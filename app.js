@@ -7772,27 +7772,41 @@ Bons treinos!`;
         if (container) this.lastScrollY = container.scrollTop;
         this.lastWindowY = window.pageYOffset || document.documentElement.scrollTop;
 
-        const hj = new Date().toISOString().split('T')[0];
+        // Usar data LOCAL para correspondência fiel ao que o utilizador vê
+        const agora = new Date();
+        const hjLocal = agora.getFullYear() + '-' + String(agora.getMonth() + 1).padStart(2, '0') + '-' + String(agora.getDate()).padStart(2, '0');
+
         if (v === 1) {
             if (!this.state.qrClients[idx].histórico) this.state.qrClients[idx].histórico = [];
-            this.state.qrClients[idx].histórico.unshift({ d: new Date().toISOString(), t: 'in' });
+            // Adicionar no início (mais recente)
+            this.state.qrClients[idx].histórico.unshift({ d: agora.toISOString(), t: 'in' });
         } else {
-            // Encontrar e remover a última entrada (IN) de hoje
-            const hIdx = (this.state.qrClients[idx].histórico || []).findIndex(h => {
+            // Remover a entrada mais RECENTE de hoje (priorizando IN para limpar a ocupação)
+            const hist = this.state.qrClients[idx].histórico || [];
+            let targetIdx = -1;
+
+            // 1. Procurar primeiro o IN mais recente de hoje (o que está a contar para o gráfico)
+            targetIdx = hist.findIndex(h => {
                 const dateStr = typeof h === 'string' ? h : h.d;
                 const type = typeof h === 'string' ? 'in' : h.t;
-                return dateStr.startsWith(hj) && type === 'in';
+                // Converter a data do log para local para comparar
+                const logDate = new Date(dateStr);
+                const logLocal = logDate.getFullYear() + '-' + String(logDate.getMonth() + 1).padStart(2, '0') + '-' + String(logDate.getDate()).padStart(2, '0');
+                return logLocal === hjLocal && type === 'in';
             });
-            
-            if (hIdx !== -1) {
-                this.state.qrClients[idx].histórico.splice(hIdx, 1);
-            } else {
-                // Se não encontrar 'in', remove qualquer coisa de hoje para permitir chegar a 0
-                const anyHjIdx = (this.state.qrClients[idx].histórico || []).findIndex(h => {
-                    const d = typeof h === 'string' ? h : h.d;
-                    return d.startsWith(hj);
+
+            // 2. Se não houver IN, remover qualquer movimento de hoje (OUT ou log simples)
+            if (targetIdx === -1) {
+                targetIdx = hist.findIndex(h => {
+                    const dateStr = typeof h === 'string' ? h : h.d;
+                    const logDate = new Date(dateStr);
+                    const logLocal = logDate.getFullYear() + '-' + String(logDate.getMonth() + 1).padStart(2, '0') + '-' + String(logDate.getDate()).padStart(2, '0');
+                    return logLocal === hjLocal;
                 });
-                if (anyHjIdx !== -1) this.state.qrClients[idx].histórico.splice(anyHjIdx, 1);
+            }
+
+            if (targetIdx !== -1) {
+                this.state.qrClients[idx].histórico.splice(targetIdx, 1);
             }
         }
         this.saveState();
@@ -7857,6 +7871,27 @@ Bons treinos!`;
 
         // 3. Atualizar a tabela
         grid.innerHTML = this.renderQRClientCards(filterVal);
+
+        // EXTRA: Se existir um contentor de ocupação/estatísticas no topo (Dashboard), atualizá-lo também
+        const occupancyContainer = document.querySelector('.occupancy-container');
+        if (occupancyContainer) {
+            // No Dashboard o showTotal costuma ser true
+            occupancyContainer.outerHTML = this.getOccupancyHTML(true);
+        }
+        // Para o Dashboard do Trainer que pode ter showTotal=false
+        const occupancyMini = document.querySelector('.occupancy-mini'); // Se houver uma classe específica
+        if (occupancyMini) {
+            occupancyMini.outerHTML = this.getOccupancyHTML(false);
+        }
+        
+        // Se houver widgets de estatísticas isolados (como no Inicio)
+        const statsWidgets = document.querySelectorAll('.dashboard .glass-panel');
+        statsWidgets.forEach(w => {
+            if (w.innerHTML.includes('getOccupancyHTML') || w.innerHTML.includes('No Ginásio')) {
+                // Infelizmente getOccupancyHTML gera um div completo, mas podemos tentar refrescar a área
+                // Como não queremos re-renderizar tudo, isto é um fallback
+            }
+        });
 
         // 4. Restaurar imediatamente
         container.scrollTop = scrollY;
