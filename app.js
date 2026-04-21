@@ -5614,12 +5614,20 @@ Bons treinos!`;
                                 </label>
                             </div>
 
-                            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 0.5rem;">
                                 <div>
                                     <span style="font-weight: 600; display: block; margin-bottom: 3px;">Créditos Fixos</span>
                                     <span style="font-size: 0.75rem; color: var(--text-muted);">No momento do reset</span>
                                 </div>
                                 <input type="number" min="0" value="${r.maxCredits !== undefined ? r.maxCredits : 30}" onchange="app.updatePlanRestriction('${p}', 'maxCredits', parseInt(this.value) || 0)" style="width: 70px; text-align: center; border-radius: 8px; padding: 6px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; font-weight: bold; outline:none;">
+                            </div>
+
+                            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                                <div>
+                                    <span style="font-weight: 600; display: block; margin-bottom: 3px;">Acessos Diários</span>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Limite de passagens na catraca/dia</span>
+                                </div>
+                                <input type="number" min="1" value="${r.maxDailyEntrances !== undefined ? r.maxDailyEntrances : 2}" onchange="app.updatePlanRestriction('${p}', 'maxDailyEntrances', parseInt(this.value) || 2)" style="width: 70px; text-align: center; border-radius: 8px; padding: 6px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; font-weight: bold; outline:none;">
                             </div>
 
                             ${r.allowClasses ? `
@@ -8228,7 +8236,11 @@ Bons treinos!`;
                     return d.startsWith(hj) && t === 'in';
                 }).length;
 
-                if (entriesHj >= 2) {
+                const limitDiario = (this.state.planRestrictions && c.plano && this.state.planRestrictions[c.plano] && this.state.planRestrictions[c.plano].maxDailyEntrances !== undefined) 
+                                    ? this.state.planRestrictions[c.plano].maxDailyEntrances 
+                                    : 2;
+
+                if (entriesHj >= limitDiario) {
                     this.showQRMsg(`${c.nome}: Limite diário atingido`, "bg-qr-warning");
                     new BroadcastChannel('kandal_access').postMessage({
                         type: 'access_event',
