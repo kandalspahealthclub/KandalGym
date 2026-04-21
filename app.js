@@ -7552,6 +7552,7 @@ Bons treinos!`;
                         `}
                     </td>
                     <td>
+                        ${isStaff ? '<div style="text-align:center; color:var(--primary);"><i class="fas fa-infinity"></i></div>' : `
                         <div style="display: flex; align-items: center; justify-content:center; gap: 4px;">
                             <button onclick="app.editQREntryHj('${c.id}', -1)" style="width:22px; height:22px; border-radius:5px; border:none; background:rgba(255,255,255,0.07); color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.75rem; transition:0.2s;" onmouseover="this.style.background='rgba(255,71,87,0.2)'; this.style.color='var(--danger)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'; this.style.color='var(--text-muted)'"><i class="fas fa-minus"></i></button>
                             <div style="background:${entHj >= 2 ? 'rgba(var(--danger-rgb),0.2)' : 'rgba(255,255,255,0.05)'}; color:${entHj >= 2 ? 'var(--danger)' : '#fff'}; width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.9rem; border:1px solid ${entHj >= 2 ? 'var(--danger)' : 'transparent'};">
