@@ -1,4 +1,4 @@
-﻿// Tratador de Erros Global - Deve ser o primeiro a carregar
+// Tratador de Erros Global - Deve ser o primeiro a carregar
 window.onerror = function (message, source, lineno, colno, error) {
     console.error("Erro detectado:", message, "em", source, ":", lineno);
     const container = document.getElementById('main-content');
@@ -9161,7 +9161,7 @@ Bons treinos!`;
         const c = this.state.clients.find(cl => cl.id == clientId);
         if (!c) return;
 
-        const appUrl = "https://kandalgympro.web.app";
+        const appUrl = "https://kandalspahealthclub.github.io/KandalGym/";
         const message = `Olá ${c.name}, o seu professor atualizou o seu ${topic} no KandalGym! Aceda aqui para ver: ${appUrl}`;
 
         if (type === 'whatsapp') {
