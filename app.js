@@ -7361,6 +7361,17 @@ Bons treinos!`;
             const client = this.state.qrClients.find(q => q.id === qrId);
             if (client) {
                 client.validade = newDateStr;
+                // Auto-reset de créditos
+                const planoStr = client.plano || '';
+                let defaultEnt = 30;
+                if (planoStr.includes('Staff')) defaultEnt = 999;
+                else if (planoStr.includes('Semanal')) defaultEnt = 99;
+                else if (planoStr.includes('Mensal') || planoStr.includes('Livre')) defaultEnt = 100;
+                else if (planoStr.includes('Pontual')) defaultEnt = 1;
+                else if (planoStr.includes('2x Semana')) defaultEnt = 8;
+                else if (planoStr.includes('3x Semana')) defaultEnt = 12;
+                
+                client.ent = defaultEnt;
             }
         });
 
@@ -7703,6 +7714,20 @@ Bons treinos!`;
         const idx = this.state.qrClients.findIndex(c => c.id === id);
         if (idx !== -1) {
             this.state.qrClients[idx][field] = value;
+            
+            if (field === 'validade') {
+                const planoStr = this.state.qrClients[idx].plano || '';
+                let defaultEnt = 30;
+                if (planoStr.includes('Staff')) defaultEnt = 999;
+                else if (planoStr.includes('Semanal')) defaultEnt = 99;
+                else if (planoStr.includes('Mensal') || planoStr.includes('Livre')) defaultEnt = 100;
+                else if (planoStr.includes('Pontual')) defaultEnt = 1;
+                else if (planoStr.includes('2x Semana')) defaultEnt = 8;
+                else if (planoStr.includes('3x Semana')) defaultEnt = 12;
+                
+                this.state.qrClients[idx].ent = defaultEnt;
+            }
+
             this.saveState();
             // Nome, telemóvel e PLANO não precisam de refresh:
             // o input/select já mostra o novo valor Ã¢â‚¬â€ refrescar destruiria o elemento focado e causaria salto de ecrã
