@@ -1,4 +1,4 @@
-// Tratador de Erros Global - Deve ser o primeiro a carregar
+﻿// Tratador de Erros Global - Deve ser o primeiro a carregar
 window.onerror = function (message, source, lineno, colno, error) {
     console.error("Erro detectado:", message, "em", source, ":", lineno);
     const container = document.getElementById('main-content');
@@ -619,7 +619,7 @@ class FitnessApp {
 
                     <div style="margin-top:1.5rem; text-align:center;">
                         <button onclick="app.contactSupportViaWA()" class="btn btn-ghost" style="color:#25d366; font-size:0.85rem; border: 1px solid rgba(37, 211, 102, 0.2); width: 100%;">
-                            <i class="fab fa-whatsapp"></i> Mensagem Whatsapp
+                            <i class="fa-brands fa-whatsapp"></i> Mensagem Whatsapp
                         </button>
                         <p style="font-size:0.7rem; color:var(--text-muted); margin-top:0.5rem;">
                             * Ao enviar Whatsapp, indique o seu email para identificarmos a sua conta.
