@@ -617,7 +617,7 @@ class FitnessApp {
 
                     <div style="margin-top:2rem; text-align:center;">
                         <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">Ou contacte diretamente via:</p>
-                        <a href="https://wa.me/351963939017" target="_blank" class="btn btn-ghost" style="color:#2563eb; font-size:0.9rem;">
+                        <a href="javascript:void(0)" onclick="app.contactSupportViaWA()" class="btn btn-ghost" style="color:#2563eb; font-size:0.9rem;">
                             <i class="fab fa-whatsapp"></i> Suporte WhatsApp
                         </a>
                     </div>
@@ -656,7 +656,14 @@ class FitnessApp {
             msgDiv.style.display = 'block';
             msgDiv.style.background = 'rgba(34, 197, 94, 0.1)';
             msgDiv.style.color = '#22c55e';
-            msgDiv.innerHTML = `<strong>Pedido enviado com sucesso!</strong><br><br>Um administrador foi notificado e entrará em contacto para repor a sua password.`;
+            msgDiv.innerHTML = `
+                <strong>Pedido enviado com sucesso!</strong><br><br>
+                Um administrador foi notificado. Para acelerar o processo, pode também contactar-nos via WhatsApp:
+                <br><br>
+                <button class="btn btn-primary btn-sm" onclick="app.contactSupportViaWA()" style="background:#25d366; border-color:#25d366;">
+                    <i class="fab fa-whatsapp"></i> Enviar p/ WhatsApp
+                </button>
+            `;
             emailInput.value = '';
         } else {
             msgDiv.style.display = 'block';
@@ -664,6 +671,32 @@ class FitnessApp {
             msgDiv.style.color = 'var(--danger)';
             msgDiv.innerText = 'Email não encontrado no sistema. Verifique se escreveu corretamente.';
         }
+    }
+
+    contactSupportViaWA() {
+        // Obter o email digitado, se houver
+        const emailInput = document.getElementById('recovery-email');
+        const email = emailInput ? emailInput.value.trim() : '';
+        
+        let user = null;
+        if (email) {
+            // Procurar no estado se o email pertence a alguém conhecido
+            const allUsers = [...(this.state.clients || []), ...(this.state.teachers || []), ...(this.state.admins || [])];
+            user = allUsers.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+        }
+
+        let message = "Olá KandalGym! Gostaria de solicitar a recuperação da minha palavra-passe.";
+        
+        if (user) {
+            // Se encontrarmos o utilizador, enviamos Nome e Email
+            message = `Olá KandalGym! O meu nome é ${user.name}, o meu email é ${user.email} e gostaria de solicitar a recuperação da minha palavra-passe.`;
+        } else if (email) {
+            // Se só tivermos o email, enviamos só o email
+            message = `Olá KandalGym! O meu email é ${email} e gostaria de solicitar a recuperação da minha palavra-passe.`;
+        }
+
+        const waUrl = `https://wa.me/351963939017?text=${encodeURIComponent(message)}`;
+        window.open(waUrl, '_blank');
     }
 
     handleLogin() {
