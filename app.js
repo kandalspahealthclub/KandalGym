@@ -600,7 +600,9 @@ class FitnessApp {
                         <img src="logo.png" alt="KandalGym Logo">
                     </div>
                     <h3>Recuperar Conta</h3>
-                    <p>Introduza o seu email para solicitar a recuperação da password.</p>
+                    <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5; margin-top:0.5rem; padding: 0 1rem;">
+                        Introduza o seu email de registo. Um administrador será notificado para repor a sua conta. Se preferir, pode agilizar o processo via WhatsApp.
+                    </p>
                 </div>
                 
                 <div class="login-form">
@@ -615,14 +617,13 @@ class FitnessApp {
                         Solicitar Recuperação
                     </button>
 
-                    <div style="margin-top:2rem; text-align:center;">
-                        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">Ou contacte diretamente via:</p>
-                        <a href="javascript:void(0)" onclick="app.contactSupportViaWA()" class="btn btn-ghost" style="color:#2563eb; font-size:0.9rem;">
-                            <i class="fab fa-whatsapp"></i> Suporte WhatsApp
-                        </a>
+                    <div style="margin-top:1.5rem; text-align:center;">
+                        <button onclick="app.contactSupportViaWA()" class="btn btn-ghost" style="color:var(--primary); font-size:0.85rem; border: 1px solid rgba(145, 27, 43, 0.2); width: 100%;">
+                            <i class="fas fa-headset"></i> Falar com Suporte Técnico
+                        </button>
                     </div>
 
-                    <a href="#" onclick="app.renderLogin(); return false;" style="display:block; text-align:center; margin-top:2rem; font-size:0.85rem; color:var(--text-muted);">
+                    <a href="#" onclick="app.renderLogin(); return false;" style="display:block; text-align:center; margin-top:2rem; font-size:0.85rem; color:var(--text-muted); text-decoration: none;">
                         <i class="fas fa-arrow-left"></i> Voltar ao Login
                     </a>
                 </div>
