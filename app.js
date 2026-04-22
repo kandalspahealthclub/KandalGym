@@ -1418,6 +1418,7 @@ Bons treinos!`;
                 { id: 'dashboard', icon: 'fa-shield-alt', label: 'Painel Admin' },
                 { id: 'classes', icon: 'fa-calendar-alt', label: 'Horário & Aulas' },
                 { id: 'users', icon: 'fa-users-cog', label: 'Gestão Contas' },
+                { id: 'chat', icon: 'fa-comment-alt', label: 'Mensagens / Chat' },
                 { id: 'qr_manager', icon: 'fa-qrcode', label: 'Gestão de Entradas' },
                 { id: 'monitor', icon: 'fa-desktop', label: 'Monitor de Acesso' },
                 { id: 'exercises', icon: 'fa-play-circle', label: 'Biblioteca Exercícios' },
@@ -1806,6 +1807,9 @@ Bons treinos!`;
                 break;
             case 'monitor':
                 this.renderMonitorView(container);
+                break;
+            case 'chat':
+                this.renderChat(container);
                 break;
             case 'profile':
                 this.renderProfileView(container);
@@ -5871,6 +5875,18 @@ Bons treinos!`;
             const myClients = this.state.clients.filter(c => c.teacherId === myId);
             myClients.forEach(c => {
                 threads[c.id] = { id: c.id, messages: [], user: c, lastMsg: { body: 'Inicie uma conversa...', createdAt: new Date(0).toISOString() } };
+            });
+        } else if (this.role === 'admin') {
+            // Admin: Ver todos os professores e outros administradores como contactos iniciais
+            this.state.teachers.forEach(t => {
+                if (Number(t.id) !== myId) {
+                    threads[t.id] = { id: t.id, messages: [], user: t, lastMsg: { body: 'Equipa técnica / Staff', createdAt: new Date(0).toISOString() } };
+                }
+            });
+            this.state.admins.forEach(a => {
+                if (Number(a.id) !== myId) {
+                    threads[a.id] = { id: a.id, messages: [], user: a, lastMsg: { body: 'Administrador', createdAt: new Date(0).toISOString() } };
+                }
             });
         }
 
