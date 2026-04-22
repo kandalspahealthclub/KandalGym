@@ -618,9 +618,12 @@ class FitnessApp {
                     </button>
 
                     <div style="margin-top:1.5rem; text-align:center;">
-                        <button onclick="app.contactSupportViaWA()" class="btn btn-ghost" style="color:var(--primary); font-size:0.85rem; border: 1px solid rgba(145, 27, 43, 0.2); width: 100%;">
-                            <i class="fas fa-headset"></i> Falar com Suporte Técnico
+                        <button onclick="app.contactSupportViaWA()" class="btn btn-ghost" style="color:#25d366; font-size:0.85rem; border: 1px solid rgba(37, 211, 102, 0.2); width: 100%;">
+                            <i class="fab fa-whatsapp"></i> Mensagem Whatsapp
                         </button>
+                        <p style="font-size:0.7rem; color:var(--text-muted); margin-top:0.5rem;">
+                            * Ao enviar Whatsapp, indique o seu email para identificarmos a sua conta.
+                        </p>
                     </div>
 
                     <a href="#" onclick="app.renderLogin(); return false;" style="display:block; text-align:center; margin-top:2rem; font-size:0.85rem; color:var(--text-muted); text-decoration: none;">
