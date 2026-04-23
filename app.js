@@ -1,4 +1,4 @@
-﻿// Tratador de Erros Global - Deve ser o primeiro a carregar
+// Tratador de Erros Global - Deve ser o primeiro a carregar
 window.onerror = function (message, source, lineno, colno, error) {
     console.error("Erro detectado:", message, "em", source, ":", lineno);
     const container = document.getElementById('main-content');
@@ -25,6 +25,231 @@ class FitnessApp {
     constructor() {
         this.appVersion = '2026.04.15.v89'; // Versão de controlo para Hard Reset v89
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
+        this.lang = localStorage.getItem('kg_lang') || 'pt';
+        this.translations = {
+            pt: {
+                dashboard: 'Início',
+                classes: 'Horário / Aulas',
+                chat: 'Mensagens / Chat',
+                training: 'Treino Online',
+                meal: 'Plano Alimentar',
+                evaluation: 'Avaliações F.',
+                profile: 'O Meu Perfil',
+                logout: 'Sair',
+                welcome: 'Bem-vindo(a)',
+                loading: 'Carregando...',
+                users_admin: 'Gestão Contas',
+                qr_admin: 'Gestão de Entradas',
+                monitor_admin: 'Monitor de Acesso',
+                exercises_admin: 'Exercícios',
+                foods_admin: 'Alimentos',
+                global_access: 'Acesso Global',
+                notifications_admin: 'Comunicados',
+                news: 'Feed KandalGym',
+                hello: 'Olá',
+                my_trainer: 'O meu preparador',
+                last_eval: 'Última Avaliação',
+                performance: 'O Teu Rendimento',
+                active_plan: 'Plano Ativo',
+                current_goal: 'Objetivo Atual',
+                switch_lang: 'Mudar para Inglês',
+                save: 'Gravar',
+                cancel: 'Cancelar',
+                edit: 'Editar',
+                delete: 'Apagar',
+                search: 'Pesquisar...',
+                no_data: 'Sem dados para mostrar.',
+                dashboard_admin: 'Painel Admin',
+                classes_schedule: 'Horário de Aulas',
+                classes_mgmt: 'Gestão de Aulas',
+                anamnesis: 'Anamnese',
+                chat_simple: 'Mensagens',
+                logout_session: 'Terminar Sessão',
+                welcome_subtitle: 'Este é o seu painel de acompanhamento KandalGym.',
+                my_training_sub: 'Ver exercícios e séries',
+                my_diet_sub: 'Ver plano alimentar',
+                eval_sub: 'Ver peso e medidas',
+                news_title: 'Notícias & Novidades',
+                trainer_label: 'O seu Professor',
+                login_subtitle: 'Entre na sua conta para continuar',
+                remember_me: 'Lembrar-me',
+                enter: 'Entrar',
+                forgot_pass: 'Esqueci-me da palavra-passe',
+                recovery_title: 'Recuperar Conta',
+                recovery_subtitle: 'Introduza o seu email de registo. Um administrador será notificado para repor a sua conta. Se preferir, pode agilizar o processo via WhatsApp.',
+                request_recovery: 'Solicitar Recuperação',
+                wa_message: 'Mensagem Whatsapp',
+                wa_identification: '* Ao enviar Whatsapp, indique o seu email para identificarmos a sua conta.',
+                back_login: 'Voltar ao Login',
+                email_placeholder: 'Email',
+                pass_placeholder: 'Password',
+                recovery_email_placeholder: 'O seu email de registo',
+                classes_subtitle: 'Consulte e inscreva-se nas aulas de grupo',
+                new_class: 'Nova Aula',
+                no_classes: 'Ainda não foram criadas aulas.',
+                create_first_class: 'Criar Primeira Aula',
+                table_date: 'Data',
+                table_time: 'Hora',
+                table_class: 'Classe',
+                table_teacher: 'Professor',
+                table_enrolled: 'Inscritos',
+                table_actions: 'Ações',
+                finished: 'Finalizada',
+                view_list: 'Ver Lista / Inscritos',
+                plan_training: 'Plano de Treino',
+                history: 'Histórico',
+                manage: 'Gerir',
+                back: 'Voltar',
+                plan_rest: 'Descanso',
+                plan_exercises: 'Exercícios',
+                plan_details: 'Detalhes do Plano',
+                plan_meal_title: 'Plano Alimentar',
+                created_by: 'Criado por',
+                on_date: 'em',
+                nutrition_prot: 'Prot',
+                nutrition_carb: 'Carb',
+                nutrition_fat: 'Gord',
+                no_meal_plan: 'Ainda não tem plano alimentar atribuído.',
+                create_meal_plan: 'Criar Plano Alimentar',
+                macro_kcal: 'Kcal Total',
+                macro_prot: 'Proteina',
+                macro_carb: 'Hidratos',
+                macro_fat: 'Gordura',
+                eval_conducted_on: 'Realizada em',
+                export_pdf: 'Exportar PDF',
+                new_eval: 'Nova Avaliação',
+                no_evals: 'Ainda não existem avaliações registadas.',
+                by_author: 'Por',
+                eval_weight: 'Peso',
+                eval_height: 'Altura',
+                eval_muscle: 'Músculo',
+                eval_fat: 'Gordura',
+                eval_water: 'Água',
+                eval_bone: 'Óssea',
+                eval_visceral: 'Gord. Visceral',
+                eval_met_age: 'Idade Met.',
+                eval_basal: 'Met. Basal',
+                eval_chest: 'Tórax',
+                eval_waist: 'Cintura',
+                eval_abdominal: 'Abdominal',
+                eval_hip: 'Quadril',
+                eval_thigh: 'Coxa',
+                wa_recovery_msg: 'Olá KandalGym! Gostaria de solicitar a recuperação da minha palavra-passe.',
+                wa_recovery_user_msg: 'Olá KandalGym! O meu nome é %name, o meu email é %email e gostaria de solicitar a recuperação da minha palavra-passe.',
+                wa_recovery_email_msg: 'Olá KandalGym! O meu email é %email e gostaria de solicitar a recuperação da minha palavra-passe.'
+            },
+            en: {
+                dashboard: 'Home',
+                classes: 'Schedule / Classes',
+                chat: 'Messages / Chat',
+                training: 'Training Plan',
+                meal: 'Nutrition Plan',
+                evaluation: 'Physical Eval.',
+                profile: 'My Profile',
+                logout: 'Logout',
+                welcome: 'Welcome',
+                loading: 'Loading...',
+                users_admin: 'Account Mgmt',
+                qr_admin: 'Access Mgmt',
+                monitor_admin: 'Access Monitor',
+                exercises_admin: 'Exercises',
+                foods_admin: 'Foods',
+                global_access: 'Global Access',
+                notifications_admin: 'Announcements',
+                news: 'KandalGym Feed',
+                hello: 'Hello',
+                my_trainer: 'My Trainer',
+                last_eval: 'Last Evaluation',
+                performance: 'Your Performance',
+                active_plan: 'Active Plan',
+                current_goal: 'Current Goal',
+                switch_lang: 'Switch to Portuguese',
+                save: 'Save',
+                cancel: 'Cancel',
+                edit: 'Edit',
+                delete: 'Delete',
+                search: 'Search...',
+                no_data: 'No data to show.',
+                dashboard_admin: 'Admin Panel',
+                classes_schedule: 'Class Schedule',
+                classes_mgmt: 'Class Mgmt',
+                anamnesis: 'Anamnesis',
+                chat_simple: 'Messages',
+                logout_session: 'Logout',
+                welcome_subtitle: 'This is your KandalGym monitoring dashboard.',
+                my_training_sub: 'View exercises and sets',
+                my_diet_sub: 'View meal plan',
+                eval_sub: 'View weight and measures',
+                news_title: 'News & Updates',
+                trainer_label: 'Your Trainer',
+                login_subtitle: 'Sign in to your account to continue',
+                remember_me: 'Remember me',
+                enter: 'Login',
+                forgot_pass: 'Forgot my password',
+                recovery_title: 'Account Recovery',
+                recovery_subtitle: 'Enter your registered email. An admin will be notified to reset your account. If you prefer, expedite the process via WhatsApp.',
+                request_recovery: 'Request Recovery',
+                wa_message: 'WhatsApp Message',
+                wa_identification: '* When sending via WhatsApp, include your email for account identification.',
+                back_login: 'Back to Login',
+                email_placeholder: 'Email',
+                pass_placeholder: 'Password',
+                recovery_email_placeholder: 'Your registered email',
+                classes_subtitle: 'Check and sign up for group classes',
+                new_class: 'New Class',
+                no_classes: 'No classes have been created yet.',
+                create_first_class: 'Create First Class',
+                table_date: 'Date',
+                table_time: 'Time',
+                table_class: 'Class',
+                table_teacher: 'Teacher',
+                table_enrolled: 'Enrolled',
+                table_actions: 'Actions',
+                finished: 'Finished',
+                view_list: 'View List / Enrolled',
+                plan_training: 'Training Plan',
+                history: 'History',
+                manage: 'Manage',
+                back: 'Back',
+                plan_rest: 'Rest',
+                plan_exercises: 'Exercises',
+                plan_details: 'Plan Details',
+                plan_meal_title: 'Nutrition Plan',
+                created_by: 'Created by',
+                on_date: 'on',
+                nutrition_prot: 'Prot',
+                nutrition_carb: 'Carb',
+                nutrition_fat: 'Fat',
+                no_meal_plan: 'No nutrition plan assigned yet.',
+                create_meal_plan: 'Create Nutrition Plan',
+                macro_kcal: 'Total Kcal',
+                macro_prot: 'Protein',
+                macro_carb: 'Carbs',
+                macro_fat: 'Fat',
+                eval_conducted_on: 'Conducted on',
+                export_pdf: 'Export PDF',
+                new_eval: 'New Evaluation',
+                no_evals: 'No evaluations recorded yet.',
+                by_author: 'By',
+                eval_weight: 'Weight',
+                eval_height: 'Height',
+                eval_muscle: 'Muscle',
+                eval_fat: 'Fat',
+                eval_water: 'Water',
+                eval_bone: 'Bone',
+                eval_visceral: 'Visc. Fat',
+                eval_met_age: 'Met. Age',
+                eval_basal: 'Basal Met.',
+                eval_chest: 'Chest',
+                eval_waist: 'Waist',
+                eval_abdominal: 'Abdominal',
+                eval_hip: 'Hip',
+                eval_thigh: 'Thigh',
+                wa_recovery_msg: 'Hello KandalGym! I would like to request my password recovery.',
+                wa_recovery_user_msg: 'Hello KandalGym! My name is %name, my email is %email and I would like to request my password recovery.',
+                wa_recovery_email_msg: 'Hello KandalGym! My email is %email and I would like to request my password recovery.'
+            }
+        };
         this.checkForForceUpdate();
 
         this.role = 'client';
@@ -531,17 +756,30 @@ class FitnessApp {
 
         container.innerHTML = `
             <div style="display:flex; align-items:center; gap:0.5rem;">
+                <button class="btn btn-ghost btn-sm" onclick="app.toggleLanguage()" title="${this.t('switch_lang')}" style="padding: 4px 8px; border-radius: 8px; font-size: 1.1rem; display: flex; align-items: center; border: 1px solid var(--surface-border); background:rgba(255,255,255,0.03);">
+                    ${this.lang === 'pt' ? '🇺🇸' : '🇵🇹'}
+                </button>
                 <div class="avatar" style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; border: 2px solid var(--surface-border); overflow: hidden;">
                     ${photo ? `<img src="${photo}" style="width:100%; height:100%; object-fit:cover;">` : initials}
                 </div>
                 <button class="btn btn-ghost btn-sm" onclick="app.installPWA()" title="Instalar App" style="color: var(--primary); padding: 6px 10px; border: 1px solid var(--primary); border-radius: 8px;">
                     <i class="fas fa-download"></i>
                 </button>
-                <button class="btn btn-ghost btn-sm" onclick="app.handleLogout()" title="Sair" style="color:var(--text-muted);">
+                <button class="btn btn-ghost btn-sm" onclick="app.handleLogout()" title="${this.t('logout')}" style="color:var(--text-muted);">
                     <i class="fas fa-sign-out-alt"></i>
                 </button>
             </div>
         `;
+    }
+
+    t(key) {
+        return (this.translations[this.lang] && this.translations[this.lang][key]) ? this.translations[this.lang][key] : key;
+    }
+
+    toggleLanguage() {
+        this.lang = this.lang === 'pt' ? 'en' : 'pt';
+        localStorage.setItem('kg_lang', this.lang);
+        location.reload();
     }
 
     renderLogin() {
@@ -559,30 +797,30 @@ class FitnessApp {
                     <div class="logo">
                         <img src="logo.png" alt="KandalGym Logo">
                     </div>
-                    <p>Entre na sua conta para continuar</p>
+                    <p>${this.t('login_subtitle')}</p>
                 </div>
                 <form class="login-form" onsubmit="app.handleLogin(); return false;">
                     <div id="login-error-msg" style="display:none; color:var(--danger); background:rgba(239, 68, 68, 0.1); padding:0.8rem; border-radius:8px; margin-bottom:1rem; font-size:0.9rem; text-align:center; border: 1px solid rgba(239, 68, 68, 0.3);"></div>
                     <div class="input-icon-group">
                         <i class="fas fa-envelope"></i>
-                        <input type="email" id="login-email" placeholder="Email" value="${savedCreds.email || ''}" required>
+                        <input type="email" id="login-email" placeholder="${this.t('email_placeholder')}" value="${savedCreds.email || ''}" required>
                     </div>
                     <div class="input-icon-group">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="login-pass" placeholder="Password" value="${savedCreds.pass || ''}" required>
+                        <input type="password" id="login-pass" placeholder="${this.t('pass_placeholder')}" value="${savedCreds.pass || ''}" required>
                     </div>
 
                     <div style="display:flex; align-items:center; gap:8px; margin:0.2rem 0 1.2rem 4px; cursor:pointer;">
                         <input type="checkbox" id="remember-me" style="width:16px; height:16px; cursor:pointer;" ${rememberChecked ? 'checked' : ''}>
-                        <label for="remember-me" style="font-size:0.85rem; color:var(--text-muted); cursor:pointer;">Lembrar-me</label>
+                        <label for="remember-me" style="font-size:0.85rem; color:var(--text-muted); cursor:pointer;">${this.t('remember_me')}</label>
                     </div>
 
                     <button type="submit" class="btn btn-primary" style="width:100%;">
-                        Entrar <i class="fas fa-arrow-right"></i>
+                        ${this.t('enter')} <i class="fas fa-arrow-right"></i>
                     </button>
 
                     <a href="#" onclick="app.renderForgotPassword(); return false;" style="display:block; text-align:center; margin-top:1.5rem; font-size:0.85rem; color:var(--text-muted); text-decoration:none;">
-                        Esqueci-me da palavra-passe
+                        ${this.t('forgot_pass')}
                     </a>
                 </form>
             </div>
@@ -599,9 +837,9 @@ class FitnessApp {
                     <div class="logo">
                         <img src="logo.png" alt="KandalGym Logo">
                     </div>
-                    <h3>Recuperar Conta</h3>
+                    <h3>${this.t('recovery_title')}</h3>
                     <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5; margin-top:0.5rem; padding: 0 1rem;">
-                        Introduza o seu email de registo. Um administrador será notificado para repor a sua conta. Se preferir, pode agilizar o processo via WhatsApp.
+                        ${this.t('recovery_subtitle')}
                     </p>
                 </div>
                 
@@ -610,24 +848,24 @@ class FitnessApp {
                     
                     <div class="input-icon-group">
                         <i class="fas fa-envelope"></i>
-                        <input type="email" id="recovery-email" placeholder="O seu email de registo" required>
+                        <input type="email" id="recovery-email" placeholder="${this.t('recovery_email_placeholder')}" required>
                     </div>
 
                     <button class="btn btn-primary" style="width:100%;" onclick="app.handlePasswordRecovery()">
-                        Solicitar Recuperação
+                        ${this.t('request_recovery')}
                     </button>
 
                     <div style="margin-top:1.5rem; text-align:center;">
                         <button onclick="app.contactSupportViaWA()" class="btn btn-ghost" style="color:#25d366; font-size:0.85rem; border: 1px solid rgba(37, 211, 102, 0.2); width: 100%;">
-                            <i class="fa-brands fa-whatsapp"></i> Mensagem Whatsapp
+                            <i class="fa-brands fa-whatsapp"></i> ${this.t('wa_message')}
                         </button>
                         <p style="font-size:0.7rem; color:var(--text-muted); margin-top:0.5rem;">
-                            * Ao enviar Whatsapp, indique o seu email para identificarmos a sua conta.
+                            ${this.t('wa_identification')}
                         </p>
                     </div>
 
                     <a href="#" onclick="app.renderLogin(); return false;" style="display:block; text-align:center; margin-top:2rem; font-size:0.85rem; color:var(--text-muted); text-decoration: none;">
-                        <i class="fas fa-arrow-left"></i> Voltar ao Login
+                        <i class="fas fa-arrow-left"></i> ${this.t('back_login')}
                     </a>
                 </div>
             </div>
@@ -681,7 +919,7 @@ class FitnessApp {
         // Obter o email digitado, se houver
         const emailInput = document.getElementById('recovery-email');
         const email = emailInput ? emailInput.value.trim() : '';
-        
+
         let user = null;
         if (email) {
             // Procurar no estado se o email pertence a alguém conhecido
@@ -689,14 +927,14 @@ class FitnessApp {
             user = allUsers.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
         }
 
-        let message = "Olá KandalGym! Gostaria de solicitar a recuperação da minha palavra-passe.";
-        
+        let message = this.t('wa_recovery_msg');
+
         if (user) {
             // Se encontrarmos o utilizador, enviamos Nome e Email
-            message = `Olá KandalGym! O meu nome é ${user.name}, o meu email é ${user.email} e gostaria de solicitar a recuperação da minha palavra-passe.`;
+            message = this.t('wa_recovery_user_msg').replace('%name', user.name).replace('%email', user.email);
         } else if (email) {
             // Se só tivermos o email, enviamos só o email
-            message = `Olá KandalGym! O meu email é ${email} e gostaria de solicitar a recuperação da minha palavra-passe.`;
+            message = this.t('wa_recovery_email_msg').replace('%email', email);
         }
 
         const waUrl = `https://wa.me/351963939017?text=${encodeURIComponent(message)}`;
@@ -1452,35 +1690,35 @@ Bons treinos!`;
         let navItems = [];
         if (this.role === 'admin') {
             navItems = [
-                { id: 'dashboard', icon: 'fa-shield-alt', label: 'Painel Admin' },
-                { id: 'classes', icon: 'fa-calendar-alt', label: 'Horário & Aulas' },
-                { id: 'users', icon: 'fa-users-cog', label: 'Gestão Contas' },
-                { id: 'chat', icon: 'fa-comment-alt', label: 'Mensagens / Chat' },
-                { id: 'qr_manager', icon: 'fa-qrcode', label: 'Gestão de Entradas' },
-                { id: 'monitor', icon: 'fa-desktop', label: 'Monitor de Acesso' },
-                { id: 'exercises', icon: 'fa-play-circle', label: 'Biblioteca Exercícios' },
-                { id: 'foods', icon: 'fa-apple-alt', label: 'Base de Alimentos' },
-                { id: 'all-clients', icon: 'fa-search', label: 'Acesso Global' },
-                { id: 'notifications_manager', icon: 'fa-paper-plane', label: 'Comunicados' },
-                { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
+                { id: 'dashboard', icon: 'fa-shield-alt', label: this.t('dashboard_admin') || 'Painel Admin' },
+                { id: 'classes', icon: 'fa-calendar-alt', label: this.t('classes') },
+                { id: 'users', icon: 'fa-users-cog', label: this.t('users_admin') },
+                { id: 'chat', icon: 'fa-comment-alt', label: this.t('chat') },
+                { id: 'qr_manager', icon: 'fa-qrcode', label: this.t('qr_admin') },
+                { id: 'monitor', icon: 'fa-desktop', label: this.t('monitor_admin') },
+                { id: 'exercises', icon: 'fa-play-circle', label: this.t('exercises_admin') },
+                { id: 'foods', icon: 'fa-apple-alt', label: this.t('foods_admin') },
+                { id: 'all-clients', icon: 'fa-search', label: this.t('global_access') },
+                { id: 'notifications_manager', icon: 'fa-paper-plane', label: this.t('notifications_admin') },
+                { id: 'profile', icon: 'fa-user-circle', label: this.t('profile') }
             ];
         } else if (this.role === 'teacher') {
             navItems = [
                 { id: 'dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
-                { id: 'classes', icon: 'fa-calendar-alt', label: 'Gestão de Aulas' },
-                { id: 'anamnesis', icon: 'fa-notes-medical', label: 'Anamnese' },
-                { id: 'chat', icon: 'fa-comment-alt', label: 'Mensagens' },
-                { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
+                { id: 'classes', icon: 'fa-calendar-alt', label: this.t('classes_mgmt') || 'Gestão de Aulas' },
+                { id: 'anamnesis', icon: 'fa-notes-medical', label: this.t('anamnesis') || 'Anamnese' },
+                { id: 'chat', icon: 'fa-comment-alt', label: this.t('chat_simple') || 'Mensagens' },
+                { id: 'profile', icon: 'fa-user-circle', label: this.t('profile') }
             ];
         } else {
             navItems = [
-                { id: 'dashboard', icon: 'fa-home', label: 'Inicio' },
-                { id: 'classes', icon: 'fa-calendar-alt', label: 'Horário de Aulas' },
-                { id: 'training', icon: 'fa-dumbbell', label: 'Meu Treino' },
-                { id: 'meal', icon: 'fa-apple-alt', label: 'Minha Dieta' },
-                { id: 'evaluation', icon: 'fa-chart-line', label: 'Avaliação Física' },
-                { id: 'chat', icon: 'fa-comment-alt', label: 'Mensagens' },
-                { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
+                { id: 'dashboard', icon: 'fa-home', label: this.t('dashboard') },
+                { id: 'classes', icon: 'fa-calendar-alt', label: this.t('classes_schedule') || 'Horário de Aulas' },
+                { id: 'training', icon: 'fa-dumbbell', label: this.t('training') },
+                { id: 'meal', icon: 'fa-apple-alt', label: this.t('meal') },
+                { id: 'evaluation', icon: 'fa-chart-line', label: this.t('evaluation') },
+                { id: 'chat', icon: 'fa-comment-alt', label: this.t('chat_simple') || 'Mensagens' },
+                { id: 'profile', icon: 'fa-user-circle', label: this.t('profile') }
             ];
         }
 
@@ -1490,7 +1728,7 @@ Bons treinos!`;
             </button>
         `).join('') + `
         <button class="btn btn-ghost" onclick="app.handleLogout()" style="margin-top:auto; color:var(--danger); gap: 10px;">
-                <i class="fas fa-sign-out-alt"></i> <span>Terminar Sessão</span>
+                <i class="fas fa-sign-out-alt"></i> <span>${this.t('logout_session') || 'Terminar Sessão'}</span>
             </button>
         `;
     }
@@ -3292,7 +3530,7 @@ Bons treinos!`;
 
         const c = this.state.clients.find(x => x.id == clientId);
         if (!c) {
-            container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
+            container.innerHTML = `<p class="text-muted">${this.t('no_data')}</p>`;
             return;
         }
 
@@ -3305,19 +3543,19 @@ Bons treinos!`;
         container.innerHTML = `
             <div class="page-header">
                 <div>
-                    <h2>Plano de Treino</h2>
+                    <h2>${this.t('plan_training')}</h2>
                     <h3 class="client-name">${c.name}</h3>
                 </div>
                 <div class="header-actions">
                     <button class="btn btn-secondary btn-sm" onclick="app.downloadTrainingPDF('${clientId}')" title="Download PDF"><i class="fas fa-file-pdf"></i> <span class="hide-mobile">PDF</span></button>
-                    ${isClient ? `<button class="btn btn-secondary btn-sm" onclick="app.setView('training_history')"><i class="fas fa-history"></i> <span class="hide-mobile">Histórico</span></button>` : ''}
+                    ${isClient ? `<button class="btn btn-secondary btn-sm" onclick="app.setView('training_history')"><i class="fas fa-history"></i> <span class="hide-mobile">${this.t('history')}</span></button>` : ''}
                     ${isTeacher ? `
-                        <button class="btn btn-primary btn-sm" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-edit"></i> <span class="hide-mobile">Gerir</span></button>
+                        <button class="btn btn-primary btn-sm" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-edit"></i> <span class="hide-mobile">${this.t('manage')}</span></button>
                         <button class="btn btn-ghost btn-sm" style="color:var(--danger); border:1px solid rgba(220, 38, 38, 0.2);" onclick="app.deleteTrainingPlan('${clientId}')">
-                            <i class="fas fa-trash"></i> <span class="hide-mobile">Eliminar</span>
+                            <i class="fas fa-trash"></i> <span class="hide-mobile">${this.t('delete')}</span>
                         </button>
                     ` : ''}
-                    ${this.role !== 'client' && container.id === 'main-content' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">Voltar</span></button>` : ''}
+                    ${this.role !== 'client' && container.id === 'main-content' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">${this.t('back')}</span></button>` : ''}
                 </div>
             </div>
 
@@ -3345,22 +3583,22 @@ Bons treinos!`;
                     <!-- RESUMO COMPACTO DO PLANO (PREMIUM) -->
                     <div style="background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); padding: 12px 16px; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between;">
                         <div>
-                            <span style="font-size:0.6rem; color:var(--primary); font-weight:800; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:2px;">Plan Details</span>
+                            <span style="font-size:0.6rem; color:var(--primary); font-weight:800; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:2px;">${this.t('plan_details')}</span>
                             <h3 style="color:#fff; margin:0; font-weight:800; font-size:1.1rem; line-height:1;">
-                                ${day.title || `Treino ${String.fromCharCode(65 + this.viewingDayIdx)}`}
+                                ${day.title || `${this.lang === 'pt' ? 'Treino' : 'Training'} ${String.fromCharCode(65 + this.viewingDayIdx)}`}
                             </h3>
                         </div>
                         <div style="text-align:right;">
                             <div style="display:flex; gap:12px; align-items:center; justify-content:flex-end;">
                                 <div style="display:flex; flex-direction:column; align-items:flex-end;">
                                     <span style="font-size:0.8rem; font-weight:800; color:#fff;">${day.exercises.length}</span>
-                                    <span style="font-size:0.55rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Excl.</span>
+                                    <span style="font-size:0.55rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">${this.t('plan_exercises')}</span>
                                 </div>
                                 ${day.rest ? `
                                 <div style="width:1px; height:20px; background:rgba(255,255,255,0.1);"></div>
                                 <div style="display:flex; flex-direction:column; align-items:flex-end;">
                                     <span style="font-size:0.8rem; font-weight:800; color:var(--accent);">${day.rest}</span>
-                                    <span style="font-size:0.55rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Rest</span>
+                                    <span style="font-size:0.55rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">${this.t('plan_rest')}</span>
                                 </div>
                                 ` : ''}
                             </div>
@@ -3996,7 +4234,7 @@ Bons treinos!`;
         // Usar comparacao loosa (==) para garantir que encontra mesmo se for string vs number
         const c = this.state.clients.find(x => x.id == clientId);
         if (!c) {
-            container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
+            container.innerHTML = `<p class="text-muted">${this.t('no_data')}</p>`;
             return;
         }
         const cid = String(clientId); // Firebase normaliza chaves para string
@@ -4006,18 +4244,18 @@ Bons treinos!`;
         container.innerHTML = `
             <div class="page-header">
                 <div>
-                    <h2>Plano Alimentar</h2>
+                    <h2>${this.t('plan_meal_title')}</h2>
                     <h3 class="client-name">${c.name}</h3>
-                    ${meal && meal.author ? `<small style="color:var(--text-muted); display:block; margin-top:5px;">Criado por: ${meal.author} em ${meal.updatedAt || ''}</small>` : ''}
+                    ${meal && meal.author ? `<small style="color:var(--text-muted); display:block; margin-top:5px;">${this.t('created_by')}: ${meal.author} ${this.t('on_date')} ${meal.updatedAt || ''}</small>` : ''}
                 </div>
                 <div class="header-actions">
                     <button class="btn btn-secondary btn-sm" onclick="app.downloadMealPDF('${c.id}')" title="Download PDF"><i class="fas fa-file-pdf"></i> <span class="hide-mobile">PDF</span></button>
                     ${canEdit ? `
-                        <button class="btn btn-primary btn-sm" onclick="app.openMealEditor('${c.id}')"><i class="fas fa-edit"></i> <span class="hide-mobile">Gerir</span></button>
+                        <button class="btn btn-primary btn-sm" onclick="app.openMealEditor('${c.id}')"><i class="fas fa-edit"></i> <span class="hide-mobile">${this.t('manage')}</span></button>
                         <button class="btn btn-ghost btn-sm" style="color:var(--danger); border:1px solid rgba(220, 38, 38, 0.2);" onclick="app.deleteMealPlan('${c.id}')">
-                            <i class="fas fa-trash"></i> <span class="hide-mobile">Eliminar</span>
+                            <i class="fas fa-trash"></i> <span class="hide-mobile">${this.t('delete')}</span>
                         </button>
-                        ${container.id === 'main-content' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">Voltar</span></button>` : ''}
+                        ${container.id === 'main-content' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">${this.t('back')}</span></button>` : ''}
                     ` : ''}
                 </div>
             </div>
@@ -4051,17 +4289,17 @@ Bons treinos!`;
                 }).join('') : `
                         <div style="text-align:center; padding:3rem 1rem;">
                             <i class="fas fa-utensils" style="font-size:3rem; color:var(--text-muted); opacity:0.3; margin-bottom:1rem;"></i>
-                            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda não tem plano alimentar atribuído.</p>
-                            ${canEdit ? `<button class="btn btn-primary" onclick="app.openMealEditor('${c.id}')"><i class="fas fa-plus"></i> Criar Plano Alimentar</button>` : ''}
+                            <p style="color:var(--text-muted); margin-bottom:1.5rem;">${this.t('no_meal_plan')}</p>
+                            ${canEdit ? `<button class="btn btn-primary" onclick="app.openMealEditor('${c.id}')"><i class="fas fa-plus"></i> ${this.t('create_meal_plan')}</button>` : ''}
                         </div>
                     `;
 
                 return (dailyTotal.kcal > 0 ? `
                         <div class="daily-macros-bar">
-                            <div class="macro-box"><small>Kcal Total</small><strong>${Math.round(dailyTotal.kcal)}</strong></div>
-                            <div class="macro-box"><small>Proteina</small><strong>${Math.round(dailyTotal.prot)}g</strong></div>
-                            <div class="macro-box"><small>Hidratos</small><strong>${Math.round(dailyTotal.carb)}g</strong></div>
-                            <div class="macro-box"><small>Gordura</small><strong>${Math.round(dailyTotal.fat)}g</strong></div>
+                            <div class="macro-box"><small>${this.t('macro_kcal')}</small><strong>${Math.round(dailyTotal.kcal)}</strong></div>
+                            <div class="macro-box"><small>${this.t('macro_prot')}</small><strong>${Math.round(dailyTotal.prot)}g</strong></div>
+                            <div class="macro-box"><small>${this.t('macro_carb')}</small><strong>${Math.round(dailyTotal.carb)}g</strong></div>
+                            <div class="macro-box"><small>${this.t('macro_fat')}</small><strong>${Math.round(dailyTotal.fat)}g</strong></div>
                         </div>
                     ` : '') + mealsHtml;
             })()}
@@ -4144,10 +4382,10 @@ Bons treinos!`;
 
                     return dailyTotal.kcal > 0 ? `
                         <div class="daily-macros-bar" style="margin-bottom:2rem;">
-                            <div class="macro-box"><small>Kcal Total</small><strong>${Math.round(dailyTotal.kcal)}</strong></div>
-                            <div class="macro-box"><small>Proteina</small><strong>${Math.round(dailyTotal.prot)}g</strong></div>
-                            <div class="macro-box"><small>Hidratos</small><strong>${Math.round(dailyTotal.carb)}g</strong></div>
-                            <div class="macro-box"><small>Gordura</small><strong>${Math.round(dailyTotal.fat)}g</strong></div>
+                            <div class="macro-box"><small>${this.t('macro_kcal')}</small><strong>${Math.round(dailyTotal.kcal)}</strong></div>
+                            <div class="macro-box"><small>${this.t('macro_prot')}</small><strong>${Math.round(dailyTotal.prot)}g</strong></div>
+                            <div class="macro-box"><small>${this.t('macro_carb')}</small><strong>${Math.round(dailyTotal.carb)}g</strong></div>
+                            <div class="macro-box"><small>${this.t('macro_fat')}</small><strong>${Math.round(dailyTotal.fat)}g</strong></div>
                         </div>
                     ` : '';
                 })()}
@@ -4690,7 +4928,7 @@ Bons treinos!`;
     renderEvaluationView(container, clientId) {
         const c = this.state.clients.find(x => x.id == clientId);
         if (!c) {
-            container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
+            container.innerHTML = `<p class="text-muted">${this.t('no_data')}</p>`;
             return;
         }
         const cid = String(clientId); // Firebase usa chaves de string
@@ -4700,13 +4938,13 @@ Bons treinos!`;
         container.innerHTML = `
             <div class="page-header" style="margin-bottom: 2rem;">
                 <div>
-                    <h2 style="margin:0;">Avaliação Física</h2>
+                    <h2 style="margin:0;">${this.t('eval_title')}</h2>
                     <h3 class="client-name">${c.name}</h3>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    ${evals.length ? `<button class="btn btn-secondary btn-sm" onclick="app.downloadEvaluationPDF(${clientId})"><i class="fas fa-file-pdf"></i> <span class="hide-mobile">Exportar PDF</span></button>` : ''}
-                    ${isTeacher ? `<button class="btn btn-primary btn-sm" onclick="app.showEvaluationModal(${clientId})"><i class="fas fa-plus"></i> <span class="hide-mobile">Nova Avaliação</span></button>` : ''}
-                    ${this.role !== 'client' && container.id === 'main-content' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">Voltar</span></button>` : ''}
+                    ${evals.length ? `<button class="btn btn-secondary btn-sm" onclick="app.downloadEvaluationPDF(${clientId})"><i class="fas fa-file-pdf"></i> <span class="hide-mobile">${this.t('export_pdf')}</span></button>` : ''}
+                    ${isTeacher ? `<button class="btn btn-primary btn-sm" onclick="app.showEvaluationModal(${clientId})"><i class="fas fa-plus"></i> <span class="hide-mobile">${this.t('new_eval')}</span></button>` : ''}
+                    ${this.role !== 'client' && container.id === 'main-content' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">${this.t('back')}</span></button>` : ''}
                 </div>
             </div>
 
@@ -4714,7 +4952,7 @@ Bons treinos!`;
                 ${evals.length ? evals.map((ev, idx) => this.renderEvaluationCard(ev, idx, clientId, isTeacher)).join('') : `
                     <div class="glass-panel" style="padding: 4rem 1rem; text-align: center; color: var(--text-muted);">
                         <i class="fas fa-chart-line" style="font-size: 3rem; opacity: 0.2; margin-bottom: 1.5rem; display: block;"></i>
-                        Ainda não existem avaliações registadas.
+                        ${this.t('no_evals')}
                     </div>
                 `}
             </div>
@@ -4731,8 +4969,8 @@ Bons treinos!`;
                         </div>
                         <div>
                             <strong style="font-size: 1.1rem; display: block;">${ev.date}</strong>
-                            <small style="color: var(--text-muted);">Realizada em ${ev.date}</small>
-                            ${ev.author ? `<small style="color: var(--accent); display:block; margin-top:2px;">Por: ${ev.author}</small>` : ''}
+                            <small style="color: var(--text-muted);">${this.t('eval_conducted_on')} ${ev.date}</small>
+                            ${ev.author ? `<small style="color: var(--accent); display:block; margin-top:2px;">${this.t('by_author')}: ${ev.author}</small>` : ''}
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -4753,32 +4991,133 @@ Bons treinos!`;
                     </h4>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); gap: 0.75rem;">
                         <div class="macro-box">
-                            <small>Peso</small>
+                            <small>${this.t('eval_weight')}</small>
                             <strong>${ev.weight || '-'} <span style="font-size: 0.65rem; font-weight: normal;">kg</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>Altura</small>
+                            <small>${this.t('eval_height')}</small>
                             <strong>${ev.height || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>Musculo</small>
+                            <small>${this.t('eval_muscle')}</small>
                             <strong style="color: var(--success);">${ev.muscleMass || '-'} <span style="font-size: 0.65rem; font-weight: normal; color: var(--text-muted);">kg</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>Gordura</small>
+                            <small>${this.t('eval_fat')}</small>
                             <strong style="color: var(--danger);">${ev.fatPercentage || '-'} <span style="font-size: 0.65rem; font-weight: normal; color: var(--text-muted);">%</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>áÂgua</small>
+                            <small>${this.t('eval_water')}</small>
                             <strong style="color: #60a5fa;">${ev.water || '-'} <span style="font-size: 0.65rem; font-weight: normal; color: var(--text-muted);">%</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>áâ€œssea</small>
+                            <small>${this.t('eval_bone')}</small>
                             <strong>${ev.boneMass || '-'}</strong>
                         </div>
                         <div class="macro-box">
-                            <small>Gord. Visceral</small>
+                            <small>${this.t('eval_visceral')}</small>
                             <strong>${ev.visceralFat || '-'}</strong>
+                        </div>
+                        <div class="macro-box">
+                            <small>${this.t('eval_met_age')}</small>
+                            <strong>${ev.metabolicAge || '-'}</strong>
+                        </div>
+                        <div class="macro-box">
+                            <small>${this.t('eval_basal')}</small>
+                            <strong>${ev.basalMetabolism || '-'}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 style="font-size: 0.8rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--surface-border); padding-top: 1rem;">
+                        <i class="fas fa-ruler-combined"></i> Medidas Corporais
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); gap: 0.75rem;">
+                        <div class="macro-box">
+                            <small>${this.t('eval_chest')}</small>
+                            <strong>${ev.chest || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
+                        </div>
+                        <div class="macro-box">
+                            <small>${this.t('eval_waist')}</small>
+                            <strong>${ev.waist || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
+                        </div>
+                        <div class="macro-box">
+                            <small>${this.t('eval_abdominal')}</small>
+                            <strong>${ev.abdominal || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
+                        </div>
+                        <div class="macro-box">
+                            <small>${this.t('eval_hip')}</small>
+                            <strong>${ev.hip || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
+                        </div>
+                        <div class="macro-box">
+                            <small>${this.t('eval_thigh')}</small>
+                            <strong>${ev.thigh || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+    renderEvaluationCard(ev, idx, clientId, isTeacher) {
+        return `
+            <div class="glass-panel" style="padding: 1.5rem; position: relative; border-left: 4px solid var(--primary);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="background: rgba(145, 27, 43, 0.1); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--primary);">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div>
+                            <strong style="font-size: 1.1rem; display: block;">${ev.date}</strong>
+                            <small style="color: var(--text-muted);">${this.t('eval_conducted_on')} ${ev.date}</small>
+                            ${ev.author ? `<small style="color: var(--accent); display:block; margin-top:2px;">${this.t('by_author')}: ${ev.author}</small>` : ''}
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button class="btn btn-ghost btn-sm" style="color: var(--text-muted);" onclick="app.downloadEvaluationPDF(${clientId}, ${idx})" title="Exportar está Avaliação">
+                            <i class="fas fa-file-pdf"></i>
+                        </button>
+                        ${isTeacher ? `
+                            <button class="btn btn-ghost btn-sm" style="color: var(--accent);" onclick="app.showEvaluationModal(${clientId}, ${idx})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-ghost btn-sm" style="color: var(--danger);" onclick="app.deleteEvaluation(${clientId}, ${idx})"><i class="fas fa-trash-alt"></i></button>
+                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); gap: 0.75rem;">
+                        <div class="macro-box">
+                            <small>${this.t('eval_weight')}</small>
+                            <strong>${ev.weight || '-'} <span style="font-size: 0.65rem; font-weight: normal;">kg</span></strong>
+                        </div>
+                        <div class="macro-box">
+                            <small>${this.t('eval_height')}</small>
+                            <strong>${ev.height || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
+                        </div>
+                        <div class="macro-box">
+                            <small>${this.t('eval_muscle')}</small>
+                            <strong style="color: var(--success);">${ev.muscleMass || '-'} <span style="font-size: 0.65rem; font-weight: normal; color: var(--text-muted);">kg</span></strong>
+                        </div>
+                        <div class="macro-box">
+                            <small>${this.t('eval_fat')}</small>
+                            <strong style="color: var(--danger);">${ev.fatPercentage || '-'} <span style="font-size: 0.65rem; font-weight: normal; color: var(--text-muted);">%</span></strong>
+                        </div>
+                        <div class="macro-box">
+                            <small>${this.t('eval_water')}</small>
+                            <strong style="color: #60a5fa;">${ev.water || '-'} <span style="font-size: 0.65rem; font-weight: normal; color: var(--text-muted);">%</span></strong>
+                        </div>
+                        <div class="macro-box">
+                            <small>${this.t('eval_bone')}</small>
+                            <strong>${ev.boneMass || '-'}</strong>
+                        </div>
+                        <div class="macro-box">
+                            <small>${this.t('eval_visceral')}</small>
+                            <strong>${ev.visceralFat || '-'}</strong>
+                        </div>
+                        <div class="macro-box">
+                            <small>${this.t('eval_met_age')}</small>
+                            <strong>${ev.metabolicAge || '-'}</strong>
+                        </div>
+                        <div class="macro-box">
+                            <small>${this.t('eval_basal')}</small>
+                            <strong>${ev.basalMetabolism || '-'}</strong>
+                        </div>
+                    </div>
+sceralFat || '-'}</strong>
                         </div>
                         <div class="macro-box">
                             <small>Idade Met.</small>
@@ -4797,23 +5136,23 @@ Bons treinos!`;
                     </h4>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); gap: 0.75rem;">
                         <div class="macro-box">
-                            <small>Torax</small>
+                            <small>${this.t('eval_chest')}</small>
                             <strong>${ev.chest || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>Cintura</small>
+                            <small>${this.t('eval_waist')}</small>
                             <strong>${ev.waist || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>Abdominal</small>
+                            <small>${this.t('eval_abdominal')}</small>
                             <strong>${ev.abdominal || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>Quadril</small>
+                            <small>${this.t('eval_hip')}</small>
                             <strong>${ev.hip || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>Coxa</small>
+                            <small>${this.t('eval_thigh')}</small>
                             <strong>${ev.thigh || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
                         </div>
                     </div>
@@ -5148,8 +5487,8 @@ Bons treinos!`;
         switch (this.activeView) {
             case 'dashboard':
                 container.innerHTML = `
-                    <h2 class="animate-fade-in">Bem-vindo, ${c.name} </h2>
-                    <p style="color:var(--text-muted); margin-bottom:1rem;">Este é o seu painel de acompanhamento KandalGym.</p>
+                    <h2 class="animate-fade-in">${this.t('welcome')}, ${c.name} </h2>
+                    <p style="color:var(--text-muted); margin-bottom:1rem;">${this.t('welcome_subtitle')}</p>
                     
                     ${(() => {
                         const t = this.state.teachers.find(teacher => teacher.id === c.teacherId);
@@ -5160,7 +5499,7 @@ Bons treinos!`;
                                      ${t.photoUrl ? `<img src="${t.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : '<i class="fas fa-user-tie"></i>'}
                                 </div>
                                 <div>
-                                    <small style="color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; font-size:0.7rem;">O seu Professor</small>
+                                    <small style="color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; font-size:0.7rem;">${this.t('trainer_label')}</small>
                                     <h3 style="margin:0; font-size:1.1rem;">${t.name}</h3>
                                     ${t.email ? `<small style="color:var(--text-muted);"><i class="fas fa-envelope" style="font-size:0.8rem; margin-right:5px;"></i> ${t.email}</small>` : ''}
                                 </div>
@@ -5173,18 +5512,18 @@ Bons treinos!`;
                     <div class="stats-grid">
                         <div class="glass-card" onclick="app.setView('training')" style="cursor:pointer;">
                             <i class="fas fa-dumbbell" style="font-size:1.5rem; color:var(--primary); margin-bottom:1rem;"></i>
-                            <h3>O Meu Treino</h3>
-                            <small>Ver exercícios e series</small>
+                            <h3>${this.t('training')}</h3>
+                            <small>${this.t('my_training_sub')}</small>
                         </div>
                         <div class="glass-card" onclick="app.setView('meal')" style="cursor:pointer;">
                             <i class="fas fa-apple-alt" style="font-size:1.5rem; color:var(--success); margin-bottom:1rem;"></i>
-                            <h3>Minha Dieta</h3>
-                            <small>Ver plano alimentar</small>
+                            <h3>${this.t('meal')}</h3>
+                            <small>${this.t('my_diet_sub')}</small>
                         </div>
                         <div class="glass-card" onclick="app.setView('evaluation')" style="cursor:pointer;">
                             <i class="fas fa-chart-line" style="font-size:1.5rem; color:var(--accent); margin-bottom:1rem;"></i>
-                            <h3>Avaliação Física</h3>
-                            <small>Ver peso e medidas</small>
+                            <h3>${this.t('evaluation')}</h3>
+                            <small>${this.t('eval_sub')}</small>
                         </div>
                     </div>
 
@@ -5195,7 +5534,7 @@ Bons treinos!`;
                     ${(this.state.news && this.state.news.length > 0) ? `
                     <div style="margin-top: 2rem;" class="animate-fade-in">
                         <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
-                            <i class="fas fa-bullhorn" style="color: var(--primary);"></i> Notícias & Novidades
+                            <i class="fas fa-bullhorn" style="color: var(--primary);"></i> ${this.t('news_title')}
                         </h3>
                         <div style="display: flex; flex-direction: column; gap: 1rem;">
                             ${[...this.state.news].reverse().slice(0, 5).map(item => `
@@ -8783,12 +9122,12 @@ Bons treinos!`;
         container.innerHTML = `
             <div class="page-header">
                 <div>
-                    <h2>Horário de Aulas</h2>
-                    <p class="client-name">Consulte e inscreva-se nas aulas de grupo</p>
+                    <h2>${this.t('classes_schedule')}</h2>
+                    <p class="client-name">${this.t('classes_subtitle')}</p>
                 </div>
                 ${this.role === 'admin' ? `
                 <button class="btn btn-primary" onclick="app.showClassModal()">
-                    <i class="fas fa-plus"></i> <span class="hide-mobile">Nova Aula</span>
+                    <i class="fas fa-plus"></i> <span class="hide-mobile">${this.t('new_class')}</span>
                 </button>
                 ` : ''}
             </div>
@@ -8810,8 +9149,8 @@ Bons treinos!`;
             container.innerHTML = `
                 <div class="glass-card" style="text-align:center; padding:3rem;">
                     <i class="fas fa-calendar-times" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
-                    <p>Ainda não foram criadas aulas.</p>
-                    <button class="btn btn-primary btn-sm" onclick="app.showClassModal()" style="margin-top:1rem;">Criar Primeira Aula</button>
+                    <p>${this.t('no_classes')}</p>
+                    <button class="btn btn-primary btn-sm" onclick="app.showClassModal()" style="margin-top:1rem;">${this.t('create_first_class')}</button>
                 </div>
             `;
             return;
@@ -8828,12 +9167,12 @@ Bons treinos!`;
                     <table style="width:100%; border-collapse:collapse; text-align:left;">
                         <thead>
                             <tr style="border-bottom:1px solid var(--surface-border); color:var(--text-muted); font-size:0.8rem;">
-                                <th style="padding:1rem;">Data</th>
-                                <th style="padding:1rem;">Hora</th>
-                                <th style="padding:1rem;">Classe</th>
-                                <th style="padding:1rem;">Professor</th>
-                                <th style="padding:1rem;">Inscritos</th>
-                                <th style="padding:1rem; text-align:right;">Ações</th>
+                                <th style="padding:1rem;">${this.t('table_date')}</th>
+                                <th style="padding:1rem;">${this.t('table_time')}</th>
+                                <th style="padding:1rem;">${this.t('table_class')}</th>
+                                <th style="padding:1rem;">${this.t('table_teacher')}</th>
+                                <th style="padding:1rem;">${this.t('table_enrolled')}</th>
+                                <th style="padding:1rem; text-align:right;">${this.t('table_actions')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -8851,16 +9190,16 @@ Bons treinos!`;
                                     <td style="padding:1rem; font-size:0.9rem;">${teacher ? teacher.name : 'N/A'}</td>
                                     <td style="padding:1rem;">
                                         ${this.isClassFinished(c) ?
-                    `<span class="badge badge-error">Finalizada</span>` :
+                    `<span class="badge badge-error">${this.t('finished')}</span>` :
                     `<span class="badge ${participants.length >= (c.capacity || 20) ? 'badge-purple' : 'badge-green'}">
                                                 ${participants.length} / ${c.capacity || 20}
                                             </span>`
                 }
                                     </td>
                                     <td style="padding:1rem; text-align:right;">
-                                        <button class="btn btn-ghost btn-sm" onclick="app.showParticipantsList('${c.id}')" title="Ver Lista / Inscritos"><i class="fas fa-users"></i></button>
-                                        <button class="btn btn-ghost btn-sm" onclick="app.showClassModal(${c.id})" title="Editar"><i class="fas fa-edit"></i></button>
-                                        <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.deleteClass(${c.id})" title="Apagar"><i class="fas fa-trash"></i></button>
+                                        <button class="btn btn-ghost btn-sm" onclick="app.showParticipantsList('${c.id}')" title="${this.t('view_list')}"><i class="fas fa-users"></i></button>
+                                        <button class="btn btn-ghost btn-sm" onclick="app.showClassModal(${c.id})" title="${this.t('edit')}"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.deleteClass(${c.id})" title="${this.t('delete')}"><i class="fas fa-trash"></i></button>
                                     </td>
                                 </tr>
                                 `;
