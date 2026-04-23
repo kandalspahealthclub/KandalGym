@@ -150,6 +150,32 @@ class FitnessApp {
                 table_exercise: 'Exercício',
                 table_sets: 'Séries',
                 table_reps: 'Reps',
+                access_mgmt: 'Gestão de Entradas',
+                hardware_scanner: 'Scanner de Hardware Ativo',
+                hardware_scanner_sub: 'Utilize o leitor físico para ler os códigos QR dos alunos.',
+                ready_to_read: 'Pronto para leitura',
+                connect_arduino: 'Ligar Arduino',
+                arduino_connected: 'Arduino Conetado',
+                waiting_qr: 'Aguardando QR...',
+                new_casual_pass: 'Novo Treino Avulso',
+                casual_pass_sub: 'Crie um acesso rápido para clientes temporários.',
+                client_name_placeholder: 'Nome do Cliente',
+                pass_type_weekly: 'Semanal (7 Dias)',
+                pass_type_monthly: 'Mensal (30 Dias)',
+                create: 'Criar',
+                manual_entry: 'Entrada Manual (Backup)',
+                staff_label: 'Staff (Adm/Prof)',
+                search_qr_placeholder: 'Pesquisar por nome, telemóvel ou código...',
+                select_all_visible: 'Selecionar Todos Visíveis',
+                new_validity: 'Nova Validade:',
+                apply_all: 'Aplicar a Todos',
+                plan_label: 'Plano',
+                status_label: 'Estado',
+                credits_label: 'Créditos',
+                today_label: 'Hoje',
+                validity_label: 'Validade',
+                actions_label: 'Ações',
+                qr_ready_msg: 'Pronto para ler código...',
                 admin_dashboard: 'Painel de Administração',
                 manage_news: 'Gerir Notícias',
                 teachers: 'Professores',
@@ -305,6 +331,32 @@ class FitnessApp {
                 table_exercise: 'Exercise',
                 table_sets: 'Sets',
                 table_reps: 'Reps',
+                access_mgmt: 'Access Management',
+                hardware_scanner: 'Active Hardware Scanner',
+                hardware_scanner_sub: 'Use the physical reader to scan student QR codes.',
+                ready_to_read: 'Ready to read',
+                connect_arduino: 'Connect Arduino',
+                arduino_connected: 'Arduino Connected',
+                waiting_qr: 'Waiting for QR...',
+                new_casual_pass: 'New Casual Pass',
+                casual_pass_sub: 'Create quick access for temporary clients.',
+                client_name_placeholder: 'Client Name',
+                pass_type_weekly: 'Weekly (7 Days)',
+                pass_type_monthly: 'Monthly (30 Days)',
+                create: 'Create',
+                manual_entry: 'Manual Entry (Backup)',
+                staff_label: 'Staff (Admin/Trainer)',
+                search_qr_placeholder: 'Search by name, phone or code...',
+                select_all_visible: 'Select All Visible',
+                new_validity: 'New Validity:',
+                apply_all: 'Apply to All',
+                plan_label: 'Plan',
+                status_label: 'Status',
+                credits_label: 'Credits',
+                today_label: 'Today',
+                validity_label: 'Validity',
+                actions_label: 'Actions',
+                qr_ready_msg: 'Ready to scan code...',
                 admin_dashboard: 'Admin Dashboard',
                 manage_news: 'Manage News',
                 teachers: 'Teachers',
@@ -405,7 +457,7 @@ class FitnessApp {
             console.log("Firebase inicializado.");
         } catch (fbErr) {
             console.error("Erro ao inicializar Firebase:", fbErr);
-            alert("Erro Firebase: Verifique a sua ligação ÃƒÂ  internet.");
+            alert("Erro Firebase: Verifique a sua ligação à internet.");
         }
         this.isSaving = false;
 
@@ -718,6 +770,13 @@ class FitnessApp {
                     } else if (typeof this.state[coll] === 'object' && !Array.isArray(this.state[coll])) {
                         // Garantir que é um Array (Firebase por vezes converte para objeto com chaves numéricas)
                         this.state[coll] = Object.values(this.state[coll]);
+                    }
+                });
+
+                // Normalizar historico de entradas para Array
+                (this.state.qrClients || []).forEach(c => {
+                    if (c && c.historico && typeof c.historico === 'object' && !Array.isArray(c.historico)) {
+                        c.historico = Object.values(c.historico);
                     }
                 });
 
@@ -2360,7 +2419,7 @@ Bons treinos!`;
         if (!input.files || !input.files[0]) return;
         const file = input.files[0];
 
-        if (!confirm("Tem a certeza que deseja restaurar este backup? Isto irá juntar os dados do ficheiro áÃƒâ€šÃ‚Â  base de dados atual.")) return;
+        if (!confirm("Tem a certeza que deseja restaurar este backup? Isto irá juntar os dados do ficheiro á  base de dados atual.")) return;
 
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -4537,7 +4596,7 @@ Bons treinos!`;
                                         </div>
 
                                         <button class="btn btn-primary btn-sm" onclick="app.addSelectedFoodToMeal(${idx})" style="width:100%; height:40px; background:var(--success); border:none;">
-                                            <i class="fas fa-plus"></i> Adicionar áÃƒâ€šÃ‚Â  Refeição
+                                            <i class="fas fa-plus"></i> Adicionar á  Refeição
                                         </button>
                                     </div>
                                 </div>
@@ -7593,32 +7652,32 @@ Bons treinos!`;
         try {
             container.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                    <h2 style="margin: 0;"><i class="fas fa-qrcode"></i> Gestão de Entradas</h2>
+                    <h2 style="margin: 0;"><i class="fas fa-qrcode"></i> ${this.t('access_mgmt')}</h2>
                 </div>
 
                 <div class="dashboard" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; margin-top: 20px;">
                     <div class="glass-panel" style="padding: 1.5rem; border-left: 4px solid var(--accent);">
                         <h3 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
-                            <i class="fas fa-barcode"></i> Scanner de Hardware Ativo
+                            <i class="fas fa-barcode"></i> ${this.t('hardware_scanner')}
                         </h3>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;">Utilize o leitor físico para ler os códigos QR dos alunos.</p>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;">${this.t('hardware_scanner_sub')}</p>
                         
                         <div style="display: flex; gap: 8px; margin-bottom: 20px;">
                             <div style="flex: 1; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 10px; display: flex; align-items: center; gap: 10px;">
                                 <span class="pulse-green" style="width:10px; height:10px; background:#10b981; border-radius:50%;"></span>
-                                <span style="font-size:0.85rem; color:#10b981; font-weight:700;">Pronto para leitura</span>
+                                <span style="font-size:0.85rem; color:#10b981; font-weight:700;">${this.t('ready_to_read')}</span>
                             </div>
                             <button class="btn ${this.serialWriter ? 'btn-success' : 'btn-secondary'}" 
                                 style="flex: 1; border: 1px solid ${this.serialWriter ? 'var(--success)' : 'var(--primary)'}; color: ${this.serialWriter ? '#fff' : 'var(--primary)'}; background: ${this.serialWriter ? 'var(--success)' : 'rgba(145, 27, 43, 0.05)'}; height: 44px;" 
                                 onclick="app.connectArduino()">
-                                <i class="fas fa-plug"></i> ${this.serialWriter ? 'Arduino Conetado' : 'Ligar Arduino'}
+                                <i class="fas fa-plug"></i> ${this.serialWriter ? this.t('arduino_connected') : this.t('connect_arduino')}
                             </button>
                         </div>
 
                         <div style="background: rgba(0,0,0,0.2); border: 1px dashed var(--surface-border); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px;">
                             <i class="fas fa-qrcode" style="font-size: 3rem; color: rgba(255,255,255,0.05); margin-bottom: 10px; display: block;"></i>
                             <input type="text" id="hardware-scanner-input" 
-                                placeholder="Aguardando QR..." 
+                                placeholder="${this.t('waiting_qr')}" 
                                 onkeyup="if(event.key === 'Enter') { app.processarLeituraQR(this.value); this.value=''; }"
                                 autocomplete="off"
                                 style="width: 100%; height: 50px; background: rgba(0,0,0,0.4); border: 2px solid var(--primary); border-radius: 10px; color: #fff; text-align: center; font-size: 1.2rem; font-weight: 700; letter-spacing: 2px; outline: none; box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.1);">
@@ -7631,25 +7690,25 @@ Bons treinos!`;
 
                     <div class="glass-panel" style="padding: 1.5rem;">
                         <h3 style="margin-top: 0; color: var(--success); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
-                            <i class="fas fa-ticket-alt"></i> Novo Treino Avulso
+                            <i class="fas fa-ticket-alt"></i> ${this.t('new_casual_pass')}
                         </h3>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Crie um acesso rápido para clientes temporários.</p>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">${this.t('casual_pass_sub')}</p>
                         
                         <div style="display: grid; gap: 10px;">
-                            <input type="text" id="casual-name" placeholder="Nome do Cliente" class="qr-input-sleek">
+                            <input type="text" id="casual-name" placeholder="${this.t('client_name_placeholder')}" class="qr-input-sleek">
                             <div style="display: flex; gap: 8px;">
                                 <select id="casual-type" class="qr-input-sleek" style="flex: 2; height: 42px;">
-                                    <option value="Semanal">Ã°Å¸â€”â€œÃ¯Â¸Â Semanal (7 Dias)</option>
-                                    <option value="Mensal">Ã°Å¸â€œâ€¦ Mensal (30 Dias)</option>
+                                    <option value="Semanal">🗓️ ${this.t('pass_type_weekly')}</option>
+                                    <option value="Mensal">📅 ${this.t('pass_type_monthly')}</option>
                                 </select>
                                 <button class="btn btn-primary" onclick="app.createCasualPass()" style="flex: 1; height: 42px; border-radius: 6px;">
-                                    Criar <i class="fas fa-plus"></i>
+                                    ${this.t('create')} <i class="fas fa-plus"></i>
                                 </button>
                             </div>
                         </div>
 
                         <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed var(--surface-border);">
-                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Entrada Manual (Backup)</label>
+                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">${this.t('manual_entry')}</label>
                             <div style="display:flex; gap:10px;">
                                 <input type="text" id="manual-qr-id" placeholder="Ex: K1" 
                                     onkeyup="if(event.key === 'Enter') app.processarManualQR()"
@@ -7664,17 +7723,17 @@ Bons treinos!`;
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.8rem;">
                     <button class="btn ${this.qrActiveTab === 'alunos' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('alunos')" style="padding: 6px 12px; font-size:0.8rem;">
-                        <i class="fas fa-user-friends"></i> Alunos
+                        <i class="fas fa-user-friends"></i> ${this.t('students')}
                     </button>
                     <button class="btn ${this.qrActiveTab === 'teachers' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('teachers')" style="padding: 6px 12px; font-size:0.8rem;">
-                        <i class="fas fa-user-tie"></i> Staff (Adm/Prof)
+                        <i class="fas fa-user-tie"></i> ${this.t('staff_label')}
                     </button>
                 </div>
 
                 <div style="margin-bottom: 2rem;">
                     <div style="position: relative;">
                         <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); opacity: 0.6;"></i>
-                        <input type="text" id="qr-search-input" placeholder="Pesquisar por nome, telemóvel ou código..." 
+                        <input type="text" id="qr-search-input" placeholder="${this.t('search_qr_placeholder')}" 
                             oninput="app.filterQRList(this.value)" 
                             style="width: 100%; padding: 1rem 1rem 1rem 3rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; outline: none; transition: all 0.3s ease; font-size: 0.95rem;">
                     </div>
@@ -7685,12 +7744,12 @@ Bons treinos!`;
                     <div style="background: rgba(255,255,255,0.02); padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; border: 1px solid rgba(255,255,255,0.05);">
                         <div style="display:flex; align-items:center; gap:8px;">
                             <input type="checkbox" id="selectAllQR" onchange="app.toggleAllQRSelection(this.checked)" style="width:16px; height:16px; accent-color: var(--primary); cursor:pointer;">
-                            <label for="selectAllQR" style="font-size: 0.85rem; cursor: pointer; color: var(--text-muted); font-weight:600;">Selecionar Todos Visíveis</label>
+                            <label for="selectAllQR" style="font-size: 0.85rem; cursor: pointer; color: var(--text-muted); font-weight:600;">${this.t('select_all_visible')}</label>
                         </div>
                         <div style="margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                            <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Nova Validade:</span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">${this.t('new_validity')}</span>
                             <input type="date" id="bulkCustomDate" title="Selecione o Dia para Aplicar em Massa" style="background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:6px; padding:4px 8px; color:#fff; font-size:0.85rem; cursor:pointer; font-weight:600;">
-                            <button class="btn btn-primary btn-sm" onclick="app.applyBulkValidity()" style="padding: 6px 12px; font-size: 0.8rem; background: var(--success);"><i class="fas fa-check"></i> Aplicar a Todos</button>
+                            <button class="btn btn-primary btn-sm" onclick="app.applyBulkValidity()" style="padding: 6px 12px; font-size: 0.8rem; background: var(--success);"><i class="fas fa-check"></i> ${this.t('apply_all')}</button>
                         </div>
                     </div>
                     ` : ''}
@@ -7700,13 +7759,13 @@ Bons treinos!`;
                             <thead>
                                 <tr>
                                     ${this.qrActiveTab === 'alunos' ? '<th style="width: 40px; text-align:center;"><i class="fas fa-check-square"></i></th>' : ''}
-                                    <th style="min-width: 200px;">${this.qrActiveTab === 'alunos' ? 'Aluno (Nome / Tel)' : 'Staff (Nome / Tel)'}</th>
-                                    <th style="width: 140px;">Plano</th>
-                                    <th style="text-align:center; width: 80px;">Estado</th>
-                                    <th style="text-align:center; width: 110px;">Créditos</th>
-                                    <th style="text-align:center; width: 80px;">Hoje</th>
-                                    <th style="text-align:center; width: 140px;">Validade</th>
-                                    <th style="text-align:right; width: 100px;">Ações</th>
+                                    <th style="min-width: 200px;">${this.qrActiveTab === 'alunos' ? `${this.t('client_label')} (Nome / Tel)` : `${this.t('staff_label')} (Nome / Tel)`}</th>
+                                    <th style="width: 140px;">${this.t('plan_label')}</th>
+                                    <th style="text-align:center; width: 80px;">${this.t('status_label')}</th>
+                                    <th style="text-align:center; width: 110px;">${this.t('credits_label')}</th>
+                                    <th style="text-align:center; width: 80px;">${this.t('today_label')}</th>
+                                    <th style="text-align:center; width: 140px;">${this.t('validity_label')}</th>
+                                    <th style="text-align:right; width: 100px;">${this.t('actions_label')}</th>
                                 </tr>
                             </thead>
                             <tbody id="gridQRClientes">
@@ -7777,7 +7836,7 @@ Bons treinos!`;
         if (!newDateStr) return alert('Por favor, escolha uma data no calendário indicando a nova validade.');
 
         const checkboxes = document.querySelectorAll('.qr-bulk-checkbox:checked');
-        if (checkboxes.length === 0) return alert('Por favor selecione pelo menos um aluno (caixa áÃƒâ€šÃ‚Â  esquerda do ID).');
+        if (checkboxes.length === 0) return alert('Por favor selecione pelo menos um aluno (caixa á  esquerda do ID).');
 
         if (!confirm(`Tem a certeza que deseja definir a validade para o dia ${newDateStr} de forma permanente aos ${checkboxes.length} alunos selecionados?`)) return;
 
@@ -7837,10 +7896,11 @@ Bons treinos!`;
         const hoje = new Date().toISOString().split('T')[0];
 
         return qrList.map((c, idx) => {
-            const entHj = (c.historico || []).filter(l => {
+            const hist = Array.isArray(c.historico) ? c.historico : Object.values(c.historico || {});
+            const entHj = hist.filter(l => {
                 const dateStr = typeof l === 'string' ? l : l.d;
                 const type = typeof l === 'string' ? 'in' : l.t;
-                return dateStr.startsWith(hoje) && type === 'in';
+                return dateStr && dateStr.startsWith(hoje) && type === 'in';
             }).length;
 
             const limitDiario = (this.state.planRestrictions && c.plano && this.state.planRestrictions[c.plano] && this.state.planRestrictions[c.plano].maxDailyEntrances !== undefined) 
@@ -7867,7 +7927,7 @@ Bons treinos!`;
             const showIcon = c.inviteSent || hasLastLogin || hasHistory;
 
             let tooltipText = "";
-            if (hasLastLogin) tooltipText = `Acedeu ÃƒÂ  App em: ${realUser.lastLogin}`;
+            if (hasLastLogin) tooltipText = `Acedeu à App em: ${realUser.lastLogin}`;
             else if (hasHistory) tooltipText = "Atividade detetada (Registou treinos/pesos)";
             else if (c.inviteSent) tooltipText = `App Enviada em: ${c.inviteSent}`;
 
@@ -7925,7 +7985,7 @@ Bons treinos!`;
                         </label>
                     </td>
                     <td>
-                        ${isStaff ? '<div style="text-align:center; font-weight:800; color:var(--accent); font-size:1.5rem;">Ã¢Ë†Å¾</div>' : `
+                        ${isStaff ? '<div style="text-align:center; font-weight:800; color:var(--accent); font-size:1.5rem;">∞</div>' : `
                         <div style="background:rgba(0,0,0,0.2); border-radius:8px; display:flex; align-items:center; justify-content:space-between; padding:4px; border:1px solid rgba(255,255,255,0.05);">
                             <button onclick="app.editQRCredit('${c.id}', -1)" style="width:28px; height:28px; border-radius:6px; border:none; background:rgba(255,255,255,0.05); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;"><i class="fas fa-minus"></i></button>
                             <input type="number" value="${c.ent}" onchange="app.updateQRClientField('${c.id}', 'ent', parseInt(this.value) || 0)" class="no-spin" style="background:transparent; border:none; color:#fff; font-weight:800; width:35px; text-align:center; outline:none; font-size:1rem; padding:0;">
@@ -8399,11 +8459,11 @@ Bons treinos!`;
             const btnCam = document.getElementById("btnCam");
 
             if (typeof jsQR === 'undefined') {
-                throw new Error("A biblioteca de leitura de QR não foi carregada. Verifique a sua ligação áÃƒâ€šÃ‚Â  internet.");
+                throw new Error("A biblioteca de leitura de QR não foi carregada. Verifique a sua ligação á  internet.");
             }
 
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                let errorMsg = "O seu navegador não suporta acesso áÃƒâ€šÃ‚Â  câmara.";
+                let errorMsg = "O seu navegador não suporta acesso á  câmara.";
                 if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
                     errorMsg = "ERRO DE SEGURANÃƒâ€¡A: O scanner live só funciona em ligações seguras (HTTPS disponível em KandalGym.com). Sugerimos usar o botão 'Tirar Foto' ou 'Entrada Manual'.";
                 }
@@ -8446,8 +8506,8 @@ Bons treinos!`;
             scanStatus.className = "";
         } catch (e) {
             console.error(e);
-            let msg = "Erro ao aceder áÃƒâ€šÃ‚Â  câmara: ";
-            if (e.name === 'NotAllowedError') msg = " Permissão Negada: Por favor, autorize o acesso áÃƒâ€šÃ‚Â  câmara nas definições do seu navegador.";
+            let msg = "Erro ao aceder á  câmara: ";
+            if (e.name === 'NotAllowedError') msg = " Permissão Negada: Por favor, autorize o acesso á  câmara nas definições do seu navegador.";
             else if (e.name === 'NotFoundError') msg = " câmara não encontrada no dispositivo.";
             else msg = e.message;
 
@@ -8809,7 +8869,7 @@ Bons treinos!`;
 
     renderQRMsgHTML() {
         if (!this.currentQRMsg) {
-            return '<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding:1rem; opacity:0.5;"><i class="fas fa-qrcode"></i> Pronto para ler código...</div>';
+            return `<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding:1rem; opacity:0.5;"><i class="fas fa-qrcode"></i> ${this.t('qr_ready_msg')}</div>`;
         }
 
         const { text, cls } = this.currentQRMsg;
