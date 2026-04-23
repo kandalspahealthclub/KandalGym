@@ -256,6 +256,22 @@ class FitnessApp {
                 search_exercise: 'Pesquisar exercício...',
                 category: 'Categoria',
                 video_url: 'URL de Vídeo (Youtube)',
+                full_name: 'Nome Completo',
+                access_email: 'Email de Acesso',
+                phone_contact: 'Contacto Telefónico',
+                birth_date: 'Data de Nascimento',
+                profession_label: 'Profissão',
+                new_password: 'Nova Palavra-passe',
+                password_hint: 'Mantenha ou altere para uma nova.',
+                change_photo: 'Alterar Foto',
+                total_visits: 'Total Visitas',
+                sun: 'Domingo',
+                mon: 'Segunda-feira',
+                tue: 'Terça-feira',
+                wed: 'Quarta-feira',
+                thu: 'Quinta-feira',
+                fri: 'Sexta-feira',
+                sat: 'Sábado',
                 wa_recovery_msg: 'Olá KandalGym! Gostaria de solicitar a recuperação da minha palavra-passe.',
                 wa_recovery_user_msg: 'Olá KandalGym! O meu nome é %name, o meu email é %email e gostaria de solicitar a recuperação da minha palavra-passe.',
                 wa_recovery_email_msg: 'Olá KandalGym! O meu email é %email e gostaria de solicitar a recuperação da minha palavra-passe.'
@@ -489,6 +505,22 @@ class FitnessApp {
                 search_exercise: 'Search exercise...',
                 category: 'Category',
                 video_url: 'Video URL (Youtube)',
+                full_name: 'Full Name',
+                access_email: 'Login Email',
+                phone_contact: 'Phone Number',
+                birth_date: 'Date of Birth',
+                profession_label: 'Profession',
+                new_password: 'New Password',
+                password_hint: 'Keep or change for a new one.',
+                change_photo: 'Change Photo',
+                total_visits: 'Total Visits',
+                sun: 'Sunday',
+                mon: 'Monday',
+                tue: 'Tuesday',
+                wed: 'Wednesday',
+                thu: 'Thursday',
+                fri: 'Friday',
+                sat: 'Saturday',
                 wa_recovery_msg: 'Hello KandalGym! I would like to request my password recovery.',
                 wa_recovery_user_msg: 'Hello KandalGym! My name is %name, my email is %email and I would like to request my password recovery.',
                 wa_recovery_email_msg: 'Hello KandalGym! My email is %email and I would like to request my password recovery.'
@@ -2133,7 +2165,7 @@ Bons treinos!`;
                             <span class="pulse-green" style="width:8px; height:8px; background:#10b981; border-radius:50%;"></span>
                             <span style="font-size:0.8rem; color:#10b981; font-weight:700;">${this.t('in_gym')}: ${liveOccupancy}</span>
                         </div>
-                        ${showTotal ? `<span style="font-size:0.8rem; background:rgba(255,255,255,0.05); color:var(--text-muted); padding:6px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">Total Visitas: <strong>${totalHoje}</strong></span>` : ''}
+                        ${showTotal ? `<span style="font-size:0.8rem; background:rgba(255,255,255,0.05); color:var(--text-muted); padding:6px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">${this.t('total_visits')}: <strong>${totalHoje}</strong></span>` : ''}
                     </div>
                 </h3>
                 <div style="display:flex; gap:2px; justify-content:space-between; align-items:flex-end; padding-top:10px; overflow-x:auto; padding-bottom:5px;">
@@ -5798,49 +5830,49 @@ Bons treinos!`;
                     </div>
                     <input type="file" id="photo-upload" style="position: absolute; opacity: 0; pointer-events: none;" accept="image/*" onchange="app.handlePhotoUpload(this)">
                     <button class="btn btn-ghost btn-sm" onclick="document.getElementById('photo-upload').click()">
-                        <i class="fas fa-camera"></i> Alterar Foto
+                        <i class="fas fa-camera"></i> ${this.t('change_photo')}
                     </button>
                 </div>
                 <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Nome Completo</label>
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">${this.t('full_name')}</label>
                     <input type="text" id="edit-name" value="${user.name}" 
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
                 </div>
 
                 <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Email de Acesso</label>
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">${this.t('access_email')}</label>
                     <input type="email" id="edit-email" value="${user.email}" 
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
                 </div>
 
                 <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Contacto Telefónico</label>
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">${this.t('phone_contact')}</label>
                     <input type="tel" id="edit-phone" value="${user.phone || ''}" placeholder="Ex: 912345678"
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
                 </div>
 
                 ${this.role === 'client' ? `
                 <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Data de Nascimento</label>
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">${this.t('birth_date')}</label>
                     <input type="date" id="edit-dob" value="${user.birthDate || ''}" 
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px; color-scheme:dark;">
                 </div>
                 <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Profissão</label>
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">${this.t('profession_label')}</label>
                     <input type="text" id="edit-profession" value="${user.profession || ''}" placeholder="Ex: Engenheiro, Professor, etc."
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
                 </div>
                 ` : ''}
 
                 <div style="margin-top:2rem; padding-top:1rem; border-top:1px dashed var(--surface-border);">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Nova Palavra-passe</label>
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">${this.t('new_password')}</label>
                     <div style="position:relative;">
                         <input type="password" id="edit-pass" value="${user.password}" 
                             style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
                         <i class="fas fa-eye" style="position:absolute; right:15px; top:15px; cursor:pointer; color:var(--text-muted);" 
                             onclick="const i = this.previousElementSibling; i.type = i.type === 'password' ? 'text' : 'password'"></i>
                     </div>
-                    <small style="color:var(--text-muted);">Mantenha ou altere para uma nova.</small>
+                    <small style="color:var(--text-muted);">${this.t('password_hint')}</small>
                 </div>
 
                 ${(() => {
@@ -9816,7 +9848,15 @@ Bons treinos!`;
     }
 
     getDayName(dayIndex) {
-        const days = ['Domingo', 'Segunda-feira', 'terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'sábado'];
+        const days = [
+            this.t('sun'),
+            this.t('mon'),
+            this.t('tue'),
+            this.t('wed'),
+            this.t('thu'),
+            this.t('fri'),
+            this.t('sat')
+        ];
         return days[dayIndex];
     }
 
