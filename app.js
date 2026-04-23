@@ -1,4 +1,4 @@
-// Tratador de Erros Global - Deve ser o primeiro a carregar
+﻿// Tratador de Erros Global - Deve ser o primeiro a carregar
 window.onerror = function (message, source, lineno, colno, error) {
     console.error("Erro detectado:", message, "em", source, ":", lineno);
     const container = document.getElementById('main-content');
@@ -245,6 +245,13 @@ class FitnessApp {
                 eval_abdominal: 'Abdominal',
                 eval_hip: 'Hip',
                 eval_thigh: 'Thigh',
+                eval_modal_new: 'New Evaluation',
+                eval_modal_edit: 'Edit Evaluation',
+                eval_modal_subtitle: 'Record bioimpedance and measurement data.',
+                eval_modal_date: 'Evaluation Date',
+                cancel: 'Cancel',
+                update_data: 'Update Data',
+                save_eval: 'Save Evaluation',
                 wa_recovery_msg: 'Hello KandalGym! I would like to request my password recovery.',
                 wa_recovery_user_msg: 'Hello KandalGym! My name is %name, my email is %email and I would like to request my password recovery.',
                 wa_recovery_email_msg: 'Hello KandalGym! My email is %email and I would like to request my password recovery.'
@@ -304,7 +311,7 @@ class FitnessApp {
             messagingSenderId: "367817039949",
             appId: "1:367817039949:web:5c72215819b9bb1eb07c04",
             measurementId: "G-WY0QSKYVCR",
-            serverKey: "AIzaSyD7cf3sfJBm0YsLOagu6or2hCTd-xcjO1E" // ATENÇÃO: Está chave deve começar por AAAA...
+            serverKey: "AIzaSyD7cf3sfJBm0YsLOagu6or2hCTd-xcjO1E" // ATENÃƒâ€¡ÃƒÆ’O: Está chave deve começar por AAAA...
         };
 
         try {
@@ -317,7 +324,7 @@ class FitnessApp {
             console.log("Firebase inicializado.");
         } catch (fbErr) {
             console.error("Erro ao inicializar Firebase:", fbErr);
-            alert("Erro Firebase: Verifique a sua ligação à internet.");
+            alert("Erro Firebase: Verifique a sua ligação ÃƒÂ  internet.");
         }
         this.isSaving = false;
 
@@ -661,7 +668,7 @@ class FitnessApp {
                 this.syncSessionWithState();
 
                 // Atualizar UI apenas se logado, não houver modais abertas,
-                // E NáÆ’O estivermos no meio de uma gravação nossa (evita reset de scroll)
+                // E NáÃƒâ€ Ã¢â‚¬â„¢O estivermos no meio de uma gravação nossa (evita reset de scroll)
                 if (this.isLoggedIn && !document.querySelector('.modal-overlay') && !this.isSaving) {
                     this.renderContent();
                 }
@@ -757,7 +764,7 @@ class FitnessApp {
         container.innerHTML = `
             <div style="display:flex; align-items:center; gap:0.5rem;">
                 <button class="btn btn-ghost btn-sm" onclick="app.toggleLanguage()" title="${this.t('switch_lang')}" style="padding: 4px 8px; border-radius: 8px; font-size: 1.1rem; display: flex; align-items: center; border: 1px solid var(--surface-border); background:rgba(255,255,255,0.03);">
-                    ${this.lang === 'pt' ? '🇺🇸' : '🇵🇹'}
+                    ${this.lang === 'pt' ? 'Ã°Å¸â€¡ÂºÃ°Å¸â€¡Â¸' : 'Ã°Å¸â€¡ÂµÃ°Å¸â€¡Â¹'}
                 </button>
                 <div class="avatar" style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; border: 2px solid var(--surface-border); overflow: hidden;">
                     ${photo ? `<img src="${photo}" style="width:100%; height:100%; object-fit:cover;">` : initials}
@@ -1821,8 +1828,8 @@ Bons treinos!`;
         let liveOccupancy = 0;
 
         qrClientsArray.forEach(c => {
-            if (c.histórico) {
-                const histArray = Object.values(c.histórico);
+            if (c.historico) {
+                const histArray = Object.values(c.historico);
                 // Ordenar por data descendente para ver o movimento mais recente
                 const sortedHist = histArray.map(h => ({
                     d: new Date(typeof h === 'string' ? h : h.d),
@@ -1845,7 +1852,7 @@ Bons treinos!`;
                     liveOccupancy++;
                 }
 
-                // Total de Visitas áÅ¡nicas Hoje
+                // Total de Visitas áÃƒâ€¦Ã‚Â¡nicas Hoje
                 const hasVisitToday = sortedHist.some(h => h.t === 'in' && h.d >= todayStart && h.d <= todayEnd);
                 if (hasVisitToday) totalHoje++;
             }
@@ -1981,7 +1988,7 @@ Bons treinos!`;
 
                         <div class="glass-panel" style="padding: 1.5rem;">
                             <h3 style="margin-top: 0; color: var(--secondary); display: flex; align-items: center; gap: 0.5rem;">
-                                <i class="fas fa-user-friends"></i> Últimos Alunos Registados
+                                <i class="fas fa-user-friends"></i> ÃƒÅ¡ltimos Alunos Registados
                             </h3>
                             <div class="client-list">
                                 ${this.state.clients.slice(-3).reverse().map(c => `
@@ -2239,7 +2246,7 @@ Bons treinos!`;
             this.showToast(`Importação concluída! ${imported} novos clientes.`);
         }
 
-        alert(`Resumo da Importação:\n\n✅ Sucesso: ${imported}\n⚠️ Ignorados (Já existem): ${skipped}\nÃ¢ÂÅ’ Erros (Campos em falta): ${errors}`);
+        alert(`Resumo da Importação:\n\nÃ¢Å“â€¦ Sucesso: ${imported}\nÃ¢Å¡Â Ã¯Â¸ÂÃ‚Â Ignorados (Já existem): ${skipped}\nÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erros (Campos em falta): ${errors}`);
 
         const modal = document.querySelector('.modal-overlay');
         if (modal) modal.remove();
@@ -2272,7 +2279,7 @@ Bons treinos!`;
         if (!input.files || !input.files[0]) return;
         const file = input.files[0];
 
-        if (!confirm("Tem a certeza que deseja restaurar este backup? Isto irá juntar os dados do ficheiro áÂ  base de dados atual.")) return;
+        if (!confirm("Tem a certeza que deseja restaurar este backup? Isto irá juntar os dados do ficheiro áÃƒâ€šÃ‚Â  base de dados atual.")) return;
 
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -2302,7 +2309,7 @@ Bons treinos!`;
                 });
 
                 this.saveState();
-                alert(`Backup Restaurado!\n\n✅ ${added} novos clientes adicionados.`);
+                alert(`Backup Restaurado!\n\nÃ¢Å“â€¦ ${added} novos clientes adicionados.`);
                 this.renderContent();
             } catch (err) {
                 console.error("Erro no Backup:", err);
@@ -3559,7 +3566,7 @@ Bons treinos!`;
                 </div>
             </div>
 
-            <!-- TABS DE VISUALIZAÇÃO -->
+            <!-- TABS DE VISUALIZAÃƒâ€¡ÃƒÆ’O -->
             ${plans && plans.length > 0 ? `
             <div style="display:flex; gap:0.6rem; margin:1.5rem 0; overflow-x:auto; padding:5px 0 12px; -webkit-overflow-scrolling:touch; scrollbar-width: none;">
                 ${plans.map((day, dIdx) => `
@@ -3781,7 +3788,7 @@ Bons treinos!`;
             modal.innerHTML = `
                 <div class="modal-content" style="max-width:400px; padding:2rem;">
                     <div style="text-align:center; margin-bottom:1.25rem;">
-                        <div style="font-size:2.5rem; margin-bottom:0.5rem;">⚠️</div>
+                        <div style="font-size:2.5rem; margin-bottom:0.5rem;">Ã¢Å¡Â Ã¯Â¸Â</div>
                         <h3 style="margin:0; color:#fff;">Séries sem peso registado</h3>
                         <p style="color:var(--text-muted); font-size:0.85rem; margin-top:0.5rem;">Os seguintes exercícios têm séries por preencher:</p>
                     </div>
@@ -4002,7 +4009,7 @@ Bons treinos!`;
                 </div>
             </div>
 
-            <!-- MENU DE SELECÇÃO DE PLANO (TABS) -->
+            <!-- MENU DE SELECÃƒâ€¡ÃƒÆ’O DE PLANO (TABS) -->
             <div id="editor-tabs-container" style="display:flex; gap:0.75rem; margin-bottom:2rem; flex-wrap:wrap; background:rgba(255,255,255,0.03); padding:12px; border-radius:15px; border:1px solid rgba(255,255,255,0.05);">
                 ${this.editingPlan.map((day, dIdx) => `
                     <div style="display:flex; align-items:center; gap:4px;">
@@ -4449,7 +4456,7 @@ Bons treinos!`;
                                         </div>
 
                                         <button class="btn btn-primary btn-sm" onclick="app.addSelectedFoodToMeal(${idx})" style="width:100%; height:40px; background:var(--success); border:none;">
-                                            <i class="fas fa-plus"></i> Adicionar áÂ  Refeição
+                                            <i class="fas fa-plus"></i> Adicionar áÃƒâ€šÃ‚Â  Refeição
                                         </button>
                                     </div>
                                 </div>
@@ -4548,24 +4555,24 @@ Bons treinos!`;
     getExerciseIcon(cat) {
         const iconMap = {
             // Categorias reais do utilizador
-            'Perna': '🦵',
-            'Costas': '👊',
-            'Peito': '💪',
-            'Ombros': '🤷',
-            'Cárdio': '❤️',
-            'Abdominais': '🔥',
-            'Alongamentos': '🧘',
-            'Geral': '🏋️',
-            'Bicep': '💪',
-            'Tricep': '💪',
+            'Perna': 'Ã°Å¸Â¦Âµ',
+            'Costas': 'Ã°Å¸â€˜Å ',
+            'Peito': 'Ã°Å¸â€™Âª',
+            'Ombros': 'Ã°Å¸Â¤Â·',
+            'Cárdio': 'Ã¢ÂÂ¤Ã¯Â¸Â',
+            'Abdominais': 'Ã°Å¸â€Â¥',
+            'Alongamentos': 'Ã°Å¸Â§Ëœ',
+            'Geral': 'Ã°Å¸Ââ€¹Ã¯Â¸Â',
+            'Bicep': 'Ã°Å¸â€™Âª',
+            'Tricep': 'Ã°Å¸â€™Âª',
             // Músculos específicos (retrocompatibilidade)
-            'Bíceps': '💪',
-            'Deltoides': '🤷',
-            'Dorsal': '👊',
-            'Isquiotibiais': '🦵',
-            'Quadríceps': '🦵'
+            'Bíceps': 'Ã°Å¸â€™Âª',
+            'Deltoides': 'Ã°Å¸Â¤Â·',
+            'Dorsal': 'Ã°Å¸â€˜Å ',
+            'Isquiotibiais': 'Ã°Å¸Â¦Âµ',
+            'Quadríceps': 'Ã°Å¸Â¦Âµ'
         };
-        return iconMap[cat] || '🏋️';
+        return iconMap[cat] || 'Ã°Å¸Ââ€¹Ã¯Â¸Â';
     }
 
     getMuscleColor(cat) {
@@ -5040,120 +5047,19 @@ Bons treinos!`;
                         </div>
                         <div class="macro-box">
                             <small>${this.t('eval_waist')}</small>
-                            <strong>${ev.waist || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
+                            <strong>${ev.waist || "-" } <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>${this.t('eval_abdominal')}</small>
-                            <strong>${ev.abdominal || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
+                            <small>${this.t("eval_abdominal")}</small>
+                            <strong>${ev.abdominal || "-" } <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>${this.t('eval_hip')}</small>
-                            <strong>${ev.hip || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
+                            <small>${this.t("eval_hip")}</small>
+                            <strong>${ev.hip || "-" } <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>${this.t('eval_thigh')}</small>
-                            <strong>${ev.thigh || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-    renderEvaluationCard(ev, idx, clientId, isTeacher) {
-        return `
-            <div class="glass-panel" style="padding: 1.5rem; position: relative; border-left: 4px solid var(--primary);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 1rem;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="background: rgba(145, 27, 43, 0.1); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--primary);">
-                            <i class="fas fa-calendar-alt"></i>
-                        </div>
-                        <div>
-                            <strong style="font-size: 1.1rem; display: block;">${ev.date}</strong>
-                            <small style="color: var(--text-muted);">${this.t('eval_conducted_on')} ${ev.date}</small>
-                            ${ev.author ? `<small style="color: var(--accent); display:block; margin-top:2px;">${this.t('by_author')}: ${ev.author}</small>` : ''}
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <button class="btn btn-ghost btn-sm" style="color: var(--text-muted);" onclick="app.downloadEvaluationPDF(${clientId}, ${idx})" title="Exportar está Avaliação">
-                            <i class="fas fa-file-pdf"></i>
-                        </button>
-                        ${isTeacher ? `
-                            <button class="btn btn-ghost btn-sm" style="color: var(--accent);" onclick="app.showEvaluationModal(${clientId}, ${idx})"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-ghost btn-sm" style="color: var(--danger);" onclick="app.deleteEvaluation(${clientId}, ${idx})"><i class="fas fa-trash-alt"></i></button>
-                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); gap: 0.75rem;">
-                        <div class="macro-box">
-                            <small>${this.t('eval_weight')}</small>
-                            <strong>${ev.weight || '-'} <span style="font-size: 0.65rem; font-weight: normal;">kg</span></strong>
-                        </div>
-                        <div class="macro-box">
-                            <small>${this.t('eval_height')}</small>
-                            <strong>${ev.height || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
-                        </div>
-                        <div class="macro-box">
-                            <small>${this.t('eval_muscle')}</small>
-                            <strong style="color: var(--success);">${ev.muscleMass || '-'} <span style="font-size: 0.65rem; font-weight: normal; color: var(--text-muted);">kg</span></strong>
-                        </div>
-                        <div class="macro-box">
-                            <small>${this.t('eval_fat')}</small>
-                            <strong style="color: var(--danger);">${ev.fatPercentage || '-'} <span style="font-size: 0.65rem; font-weight: normal; color: var(--text-muted);">%</span></strong>
-                        </div>
-                        <div class="macro-box">
-                            <small>${this.t('eval_water')}</small>
-                            <strong style="color: #60a5fa;">${ev.water || '-'} <span style="font-size: 0.65rem; font-weight: normal; color: var(--text-muted);">%</span></strong>
-                        </div>
-                        <div class="macro-box">
-                            <small>${this.t('eval_bone')}</small>
-                            <strong>${ev.boneMass || '-'}</strong>
-                        </div>
-                        <div class="macro-box">
-                            <small>${this.t('eval_visceral')}</small>
-                            <strong>${ev.visceralFat || '-'}</strong>
-                        </div>
-                        <div class="macro-box">
-                            <small>${this.t('eval_met_age')}</small>
-                            <strong>${ev.metabolicAge || '-'}</strong>
-                        </div>
-                        <div class="macro-box">
-                            <small>${this.t('eval_basal')}</small>
-                            <strong>${ev.basalMetabolism || '-'}</strong>
-                        </div>
-                    </div>
-sceralFat || '-'}</strong>
-                        </div>
-                        <div class="macro-box">
-                            <small>Idade Met.</small>
-                            <strong>${ev.metabolicAge || '-'}</strong>
-                        </div>
-                        <div class="macro-box">
-                            <small>Met. Basal</small>
-                            <strong>${ev.basalMetabolism || '-'}</strong>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <h4 style="font-size: 0.8rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--surface-border); padding-top: 1rem;">
-                        <i class="fas fa-ruler-combined"></i> Medidas Corporais
-                    </h4>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); gap: 0.75rem;">
-                        <div class="macro-box">
-                            <small>${this.t('eval_chest')}</small>
-                            <strong>${ev.chest || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
-                        </div>
-                        <div class="macro-box">
-                            <small>${this.t('eval_waist')}</small>
-                            <strong>${ev.waist || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
-                        </div>
-                        <div class="macro-box">
-                            <small>${this.t('eval_abdominal')}</small>
-                            <strong>${ev.abdominal || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
-                        </div>
-                        <div class="macro-box">
-                            <small>${this.t('eval_hip')}</small>
-                            <strong>${ev.hip || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
-                        </div>
-                        <div class="macro-box">
-                            <small>${this.t('eval_thigh')}</small>
-                            <strong>${ev.thigh || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
+                            <small>${this.t("eval_thigh")}</small>
+                            <strong>${ev.thigh || "-" } <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
                         </div>
                     </div>
                 </div>
@@ -5165,7 +5071,6 @@ sceralFat || '-'}</strong>
         let ev = { date: new Date().toISOString().split('T')[0] };
         if (index !== null) {
             const entry = this.state.evaluations[String(clientId)][index];
-            // Converter data DD/MM/YYYY para YYYY-MM-DD para o input type="date"
             let dateVal = entry.date;
             if (dateVal.includes('/')) {
                 const [d, m, y] = dateVal.split('/');
@@ -5180,8 +5085,8 @@ sceralFat || '-'}</strong>
             <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
                     <div>
-                        <h2 style="margin: 0;">${index === null ? 'Nova Avaliação' : 'Editar Avaliação'}</h2>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px;">Registe os dados da bioimpedância e medidas.</p>
+                        <h2 style="margin: 0;">${index === null ? this.t('eval_modal_new') : this.t('eval_modal_edit')}</h2>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px;">${this.t('eval_modal_subtitle')}</p>
                     </div>
                     <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">
                         <i class="fas fa-times"></i>
@@ -5190,49 +5095,49 @@ sceralFat || '-'}</strong>
                 
                 <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                     <div>
-                        <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Data da Avaliação</label>
+                        <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">${this.t('eval_modal_date')}</label>
                         <input type="date" id="ev-date" value="${ev.date}" style="color-scheme: dark;">
                     </div>
 
                     <div>
                         <h4 style="font-size: 0.85rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 5px;">
-                            <i class="fas fa-bolt"></i> Bioimpedância
+                            <i class="fas fa-bolt"></i> BioimpedÃ¢ncia
                         </h4>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Peso (kg)</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_weight')} (kg)</label>
                                 <input type="number" id="ev-weight" step="0.1" value="${ev.weight || ''}" placeholder="ex: 75.5">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Altura (cm)</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_height')} (cm)</label>
                                 <input type="number" id="ev-height" value="${ev.height || ''}" placeholder="ex: 175">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Musculo (kg)</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_muscle')} (kg)</label>
                                 <input type="number" id="ev-muscle" step="0.1" value="${ev.muscleMass || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Gordura (%)</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_fat')} (%)</label>
                                 <input type="number" id="ev-fat" step="0.1" value="${ev.fatPercentage || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">áÂgua (%)</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_water')} (%)</label>
                                 <input type="number" id="ev-water" step="0.1" value="${ev.water || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Massa áâ€œssea</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_bone')}</label>
                                 <input type="number" id="ev-bone" step="0.1" value="${ev.boneMass || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Gordura Visceral</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_visceral')}</label>
                                 <input type="number" id="ev-visceral" value="${ev.visceralFat || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Idade Metabólica</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_met_age')}</label>
                                 <input type="number" id="ev-metabolic-age" value="${ev.metabolicAge || ''}">
                             </div>
                             <div style="grid-column: span 2;">
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Metabolismo Basal</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_basal')}</label>
                                 <input type="number" id="ev-basal" value="${ev.basalMetabolism || ''}">
                             </div>
                         </div>
@@ -5240,46 +5145,43 @@ sceralFat || '-'}</strong>
 
                     <div>
                         <h4 style="font-size: 0.85rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 5px;">
-                            <i class="fas fa-ruler-combined"></i> Medidas Corporais (cm)
+                            <i class="fas fa-ruler-combined"></i> ${this.t('eval_measurements')} (cm)
                         </h4>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Torax</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_chest')}</label>
                                 <input type="number" id="ev-chest" step="0.1" value="${ev.chest || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Cintura</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_waist')}</label>
                                 <input type="number" id="ev-waist" step="0.1" value="${ev.waist || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Abdominal</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_abdominal')}</label>
                                 <input type="number" id="ev-abdominal" step="0.1" value="${ev.abdominal || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Quadril</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_hip')}</label>
                                 <input type="number" id="ev-hip" step="0.1" value="${ev.hip || ''}">
                             </div>
                             <div style="grid-column: span 2;">
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Coxa</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_thigh')}</label>
                                 <input type="number" id="ev-thigh" step="0.1" value="${ev.thigh || ''}">
                             </div>
                         </div>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; align-items: center;">
-                        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
+                        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">${this.t('cancel')}</button>
                         <button class="btn btn-primary" onclick="app.saveEvaluation(${clientId}, ${index})">
-                            ${index === null ? 'Guardar Avaliação' : 'Atualizar Dados'}
+                            ${index === null ? this.t('save_eval') : this.t('update_data')}
                         </button>
                     </div>
-
-
                 </div>
             </div>
             `;
         document.body.appendChild(modal);
     }
-
     saveEvaluation(clientId, index = null) {
         const dateRaw = document.getElementById('ev-date').value;
         const [y, m, d] = dateRaw.split('-');
@@ -6486,7 +6388,7 @@ sceralFat || '-'}</strong>
         if (!confirm('Deseja sinalizar esta mensagem como eliminada?')) return;
         const msg = (this.state.notifications || []).find(n => n.id === msgId);
         if (msg) {
-            msg.body = '🚫 Esta mensagem foi eliminada';
+            msg.body = 'Ã°Å¸Å¡Â« Esta mensagem foi eliminada';
             msg.isDeleted = true;
             this.saveState();
             this.renderContent();
@@ -6779,7 +6681,7 @@ sceralFat || '-'}</strong>
             client.teacherId = Number(newTeacherId);
 
             // Notify Admins
-            const msgText = ` TRANSFERÊNCIAÅ NCIA DE ALUNO: O aluno ${client.name} foi transferido de ${oldTeacherName} para ${newTeacher.name} em ${new Date().toLocaleString()}.`;
+            const msgText = ` TRANSFERÃƒÅ NCIAÃƒâ€¦Ã‚Â NCIA DE ALUNO: O aluno ${client.name} foi transferido de ${oldTeacherName} para ${newTeacher.name} em ${new Date().toLocaleString()}.`;
 
             // Allow storing admin notifications in messages or a separate log. 
             // Using 'messages' with specific 'to' for admin viewing if implemented, 
@@ -7038,7 +6940,7 @@ sceralFat || '-'}</strong>
 
         this.showModal(`
             <div class="modal-sidebar-layout">
-                <!-- Sidebar/Nav áÂrea -->
+                <!-- Sidebar/Nav áÃƒâ€šÃ‚Ârea -->
                 <div class="modal-sidebar-nav">
                     <div>
                         <div style="width: 50px; height: 50px; border-radius: 12px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #fff; margin-bottom: 1rem; box-shadow: 0 8px 16px rgba(145, 27, 43, 0.3);">
@@ -7064,7 +6966,7 @@ sceralFat || '-'}</strong>
 
                 </div>
 
-                <!-- Content áÂrea -->
+                <!-- Content áÃƒâ€šÃ‚Ârea -->
                 <div class="modal-sidebar-content">
                     <div id="anam-section-1" style="margin-bottom: 4rem;">
                         <h3 style="color: var(--primary); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
@@ -7130,7 +7032,7 @@ sceralFat || '-'}</strong>
                             <div class="input-group" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
                                 <div>
                                     <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Alergias</label>
-                                    <input type="text" id="anam-allergies" value="${anam.allergies}" class="search-bar" placeholder="Ex: Penicilina, áÂcaros..." style="background: rgba(255,255,255,0.03);">
+                                    <input type="text" id="anam-allergies" value="${anam.allergies}" class="search-bar" placeholder="Ex: Penicilina, áÃƒâ€šÃ‚Âcaros..." style="background: rgba(255,255,255,0.03);">
                                 </div>
                                 <div>
                                     <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Histórico Familiar</label>
@@ -7485,8 +7387,8 @@ sceralFat || '-'}</strong>
                             </tr>
                             <tr>
                                 <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Gordura:</strong> ${ev.fatPercentage || '-'} %</td>
-                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>áÂgua:</strong> ${ev.water || '-'} %</td>
-                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Massa áâ€œssea:</strong> ${ev.boneMass || '-'}</td>
+                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>áÃƒâ€šÃ‚Âgua:</strong> ${ev.water || '-'} %</td>
+                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Massa áâÃ¢â€šÂ¬Ã…â€œssea:</strong> ${ev.boneMass || '-'}</td>
                             </tr>
                             <tr>
                                 <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Gord. Visceral:</strong> ${ev.visceralFat || '-'}</td>
@@ -7656,8 +7558,8 @@ sceralFat || '-'}</strong>
                             <input type="text" id="casual-name" placeholder="Nome do Cliente" class="qr-input-sleek">
                             <div style="display: flex; gap: 8px;">
                                 <select id="casual-type" class="qr-input-sleek" style="flex: 2; height: 42px;">
-                                    <option value="Semanal">🗓️ Semanal (7 Dias)</option>
-                                    <option value="Mensal">📅 Mensal (30 Dias)</option>
+                                    <option value="Semanal">Ã°Å¸â€”â€œÃ¯Â¸Â Semanal (7 Dias)</option>
+                                    <option value="Mensal">Ã°Å¸â€œâ€¦ Mensal (30 Dias)</option>
                                 </select>
                                 <button class="btn btn-primary" onclick="app.createCasualPass()" style="flex: 1; height: 42px; border-radius: 6px;">
                                     Criar <i class="fas fa-plus"></i>
@@ -7734,7 +7636,7 @@ sceralFat || '-'}</strong>
                 </div>
             `;
 
-            // --- RESTAURAÇÃO DO SCROLL DO CONTENTOR ---
+            // --- RESTAURAÃƒâ€¡ÃƒÆ’O DO SCROLL DO CONTENTOR ---
             container.scrollTop = scrollPosCont;
 
             // Restaurar classe se existia
@@ -7756,11 +7658,11 @@ sceralFat || '-'}</strong>
                 const hwInput = document.getElementById('hardware-scanner-input');
                 if (hwInput) {
                     hwInput.focus({ preventScroll: true });
-                    // Manter foco apenas se NÃO estivermos a interagir com outros campos
+                    // Manter foco apenas se NÃƒÆ’O estivermos a interagir com outros campos
                     document.onmousedown = (e) => {
                         if (this.activeView !== 'qr_manager' || !hwInput) return;
 
-                        // Lista de elementos que NÃO devem ser interrompidos
+                        // Lista de elementos que NÃƒÆ’O devem ser interrompidos
                         const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'];
                         if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button')) {
                             return; // Deixa o utilizador interagir com o campo
@@ -7794,7 +7696,7 @@ sceralFat || '-'}</strong>
         if (!newDateStr) return alert('Por favor, escolha uma data no calendário indicando a nova validade.');
 
         const checkboxes = document.querySelectorAll('.qr-bulk-checkbox:checked');
-        if (checkboxes.length === 0) return alert('Por favor selecione pelo menos um aluno (caixa áÂ  esquerda do ID).');
+        if (checkboxes.length === 0) return alert('Por favor selecione pelo menos um aluno (caixa áÃƒâ€šÃ‚Â  esquerda do ID).');
 
         if (!confirm(`Tem a certeza que deseja definir a validade para o dia ${newDateStr} de forma permanente aos ${checkboxes.length} alunos selecionados?`)) return;
 
@@ -7807,7 +7709,7 @@ sceralFat || '-'}</strong>
                 const planoStr = client.plano || '';
                 let defaultEnt = 30;
                 
-                // 1º Prioridade: Verificar se o admin configurou os créditos fixos nas regras do plano
+                // 1Ã‚Âº Prioridade: Verificar se o admin configurou os créditos fixos nas regras do plano
                 const regras = (this.state.planRestrictions || {})[planoStr];
                 if (regras && typeof regras.maxCredits === 'number') {
                     defaultEnt = regras.maxCredits;
@@ -7854,7 +7756,7 @@ sceralFat || '-'}</strong>
         const hoje = new Date().toISOString().split('T')[0];
 
         return qrList.map((c, idx) => {
-            const entHj = (c.histórico || []).filter(l => {
+            const entHj = (c.historico || []).filter(l => {
                 const dateStr = typeof l === 'string' ? l : l.d;
                 const type = typeof l === 'string' ? 'in' : l.t;
                 return dateStr.startsWith(hoje) && type === 'in';
@@ -7884,7 +7786,7 @@ sceralFat || '-'}</strong>
             const showIcon = c.inviteSent || hasLastLogin || hasHistory;
 
             let tooltipText = "";
-            if (hasLastLogin) tooltipText = `Acedeu à App em: ${realUser.lastLogin}`;
+            if (hasLastLogin) tooltipText = `Acedeu ÃƒÂ  App em: ${realUser.lastLogin}`;
             else if (hasHistory) tooltipText = "Atividade detetada (Registou treinos/pesos)";
             else if (c.inviteSent) tooltipText = `App Enviada em: ${c.inviteSent}`;
 
@@ -7942,7 +7844,7 @@ sceralFat || '-'}</strong>
                         </label>
                     </td>
                     <td>
-                        ${isStaff ? '<div style="text-align:center; font-weight:800; color:var(--accent); font-size:1.5rem;">∞</div>' : `
+                        ${isStaff ? '<div style="text-align:center; font-weight:800; color:var(--accent); font-size:1.5rem;">Ã¢Ë†Å¾</div>' : `
                         <div style="background:rgba(0,0,0,0.2); border-radius:8px; display:flex; align-items:center; justify-content:space-between; padding:4px; border:1px solid rgba(255,255,255,0.05);">
                             <button onclick="app.editQRCredit('${c.id}', -1)" style="width:28px; height:28px; border-radius:6px; border:none; background:rgba(255,255,255,0.05); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;"><i class="fas fa-minus"></i></button>
                             <input type="number" value="${c.ent}" onchange="app.updateQRClientField('${c.id}', 'ent', parseInt(this.value) || 0)" class="no-spin" style="background:transparent; border:none; color:#fff; font-weight:800; width:35px; text-align:center; outline:none; font-size:1rem; padding:0;">
@@ -8169,12 +8071,12 @@ sceralFat || '-'}</strong>
         const hjLocal = agora.getFullYear() + '-' + String(agora.getMonth() + 1).padStart(2, '0') + '-' + String(agora.getDate()).padStart(2, '0');
 
         if (v === 1) {
-            if (!this.state.qrClients[idx].histórico) this.state.qrClients[idx].histórico = [];
+            if (!this.state.qrClients[idx].historico) this.state.qrClients[idx].historico = [];
             // Adicionar no início (mais recente)
-            this.state.qrClients[idx].histórico.unshift({ d: agora.toISOString(), t: 'in' });
+            this.state.qrClients[idx].historico.unshift({ d: agora.toISOString(), t: 'in' });
         } else {
             // Remover a entrada mais RECENTE de hoje (priorizando IN para limpar a ocupação)
-            const hist = this.state.qrClients[idx].histórico || [];
+            const hist = this.state.qrClients[idx].historico || [];
             let targetIdx = -1;
 
             // 1. Procurar primeiro o IN mais recente de hoje (o que está a contar para o gráfico)
@@ -8198,7 +8100,7 @@ sceralFat || '-'}</strong>
             }
 
             if (targetIdx !== -1) {
-                this.state.qrClients[idx].histórico.splice(targetIdx, 1);
+                this.state.qrClients[idx].historico.splice(targetIdx, 1);
             }
         }
         this.saveState();
@@ -8236,7 +8138,7 @@ sceralFat || '-'}</strong>
 
             this.saveState();
             // Nome, telemóvel e PLANO não precisam de refresh:
-            // o input/select já mostra o novo valor Ã¢â‚¬â€ refrescar destruiria o elemento focado e causaria salto de ecrã
+            // o input/select já mostra o novo valor ÃƒÆ’Ã‚Â¢âÃ¢â‚¬Å¡Ã‚Â¬âÃ¢â€šÂ¬Ã‚Â refrescar destruiria o elemento focado e causaria salto de ecrã
             if (field === 'ent' || field === 'validade' || field === 'ativo') {
                 this.refreshQRTableUI();
             }
@@ -8319,7 +8221,7 @@ sceralFat || '-'}</strong>
 
             // Se for um aluno real (clientId != 0)
             if (clientId && clientId != 0) {
-                const deleteMain = confirm("Este utilizador tem uma conta ativa na App. Deseja ELIMINAR TAMBÉMâ€°M a conta do aluno e todo o seu histórico?");
+                const deleteMain = confirm("Este utilizador tem uma conta ativa na App. Deseja ELIMINAR TAMBÃƒâ€°MâÃ¢â€šÂ¬Ã‚Â°M a conta do aluno e todo o seu histórico?");
                 if (deleteMain) {
                     // Eliminar do sistema principal (clientes, professores ou admins)
                     this.state.clients = (this.state.clients || []).filter(c => String(c.id) !== String(clientId));
@@ -8416,13 +8318,13 @@ sceralFat || '-'}</strong>
             const btnCam = document.getElementById("btnCam");
 
             if (typeof jsQR === 'undefined') {
-                throw new Error("A biblioteca de leitura de QR não foi carregada. Verifique a sua ligação áÂ  internet.");
+                throw new Error("A biblioteca de leitura de QR não foi carregada. Verifique a sua ligação áÃƒâ€šÃ‚Â  internet.");
             }
 
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                let errorMsg = "O seu navegador não suporta acesso áÂ  câmara.";
+                let errorMsg = "O seu navegador não suporta acesso áÃƒâ€šÃ‚Â  câmara.";
                 if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                    errorMsg = "ERRO DE SEGURANÇA: O scanner live só funciona em ligações seguras (HTTPS disponível em KandalGym.com). Sugerimos usar o botão 'Tirar Foto' ou 'Entrada Manual'.";
+                    errorMsg = "ERRO DE SEGURANÃƒâ€¡A: O scanner live só funciona em ligações seguras (HTTPS disponível em KandalGym.com). Sugerimos usar o botão 'Tirar Foto' ou 'Entrada Manual'.";
                 }
                 throw new Error(errorMsg);
             }
@@ -8463,8 +8365,8 @@ sceralFat || '-'}</strong>
             scanStatus.className = "";
         } catch (e) {
             console.error(e);
-            let msg = "Erro ao aceder áÂ  câmara: ";
-            if (e.name === 'NotAllowedError') msg = " Permissão Negada: Por favor, autorize o acesso áÂ  câmara nas definições do seu navegador.";
+            let msg = "Erro ao aceder áÃƒâ€šÃ‚Â  câmara: ";
+            if (e.name === 'NotAllowedError') msg = " Permissão Negada: Por favor, autorize o acesso áÃƒâ€šÃ‚Â  câmara nas definições do seu navegador.";
             else if (e.name === 'NotFoundError') msg = " câmara não encontrada no dispositivo.";
             else msg = e.message;
 
@@ -8617,7 +8519,7 @@ sceralFat || '-'}</strong>
             this.showQRMsg(" Codigo não reconhecido", "bg-qr-danger");
             new BroadcastChannel('kandal_access').postMessage({
                 type: 'access_event',
-                data: { name: 'INVÁLIDOÂLIDO', msg: 'Cáâ€œDIGO DESCONHECIDO', valid: false, photo: null }
+                data: { name: 'INVÁLIDOÃƒâ€šÃ‚ÂLIDO', msg: 'CáâÃ¢â€šÂ¬Ã…â€œDIGO DESCONHECIDO', valid: false, photo: null }
             });
             this.sendToArduino('B');
             this.lastProcessedQR = formattedId;
@@ -8641,7 +8543,7 @@ sceralFat || '-'}</strong>
         const hj = agora.toISOString().split('T')[0];
 
         // Determinar se é ENTRADA ou SAÍDA
-        const lastLog = (c.histórico && c.histórico.length > 0) ? c.histórico[0] : null;
+        const lastLog = (c.historico && c.historico.length > 0) ? c.historico[0] : null;
         let isExit = false;
 
         if (lastLog) {
@@ -8677,16 +8579,16 @@ sceralFat || '-'}</strong>
 
 
         if (isExit) {
-            // --- LOGICA DE SAáÂDA ---
-            if (!c.histórico) c.histórico = [];
-            c.histórico.unshift({ d: agora.toISOString(), t: 'out' });
+            // --- LOGICA DE SAáÃƒâ€šÃ‚ÂDA ---
+            if (!c.historico) c.historico = [];
+            c.historico.unshift({ d: agora.toISOString(), t: 'out' });
 
             this.showQRMsg(`Até amanhã, ${c.nome}! Saída registada.`, "bg-qr-warning");
             this.showToast(`Saída registada: ${c.nome}`, "info");
 
             new BroadcastChannel('kandal_access').postMessage({
                 type: 'access_event',
-                data: { name: c.nome, msg: 'ATÉ AMANHÃ! (SAÍDA)', valid: true, photo: c.photoUrl || null }
+                data: { name: c.nome, msg: 'ATÃƒâ€° AMANHÃƒÆ’! (SAÍDA)', valid: true, photo: c.photoUrl || null }
             });
             this.sendToArduino('A');
 
@@ -8709,7 +8611,7 @@ sceralFat || '-'}</strong>
                     this.showQRMsg(`${c.nome}: Sem créditos`, "bg-qr-danger");
                     new BroadcastChannel('kandal_access').postMessage({
                         type: 'access_event',
-                        data: { name: c.nome, msg: 'SEM CRÉDITOS', valid: false, photo: c.photoUrl || null }
+                        data: { name: c.nome, msg: 'SEM CRÃƒâ€°DITOS', valid: false, photo: c.photoUrl || null }
                     });
                     this.sendToArduino('B');
                     return;
@@ -8719,7 +8621,7 @@ sceralFat || '-'}</strong>
 
             // Validar limite diario - Apenas para Alunos
             if (!isStaffMember) {
-                const entriesHj = (c.histórico || []).filter(l => {
+                const entriesHj = (c.historico || []).filter(l => {
                     const d = typeof l === 'string' ? l : l.d;
                     const t = typeof l === 'string' ? 'in' : l.t;
                     return d.startsWith(hj) && t === 'in';
@@ -8742,8 +8644,8 @@ sceralFat || '-'}</strong>
 
             // Processar sucesso Entrada
             c.ent--;
-            if (!c.histórico) c.histórico = [];
-            c.histórico.unshift({ d: agora.toISOString(), t: 'in' });
+            if (!c.historico) c.historico = [];
+            c.historico.unshift({ d: agora.toISOString(), t: 'in' });
 
             this.showQRMsg(`Bem-vindo, ${c.nome}! Entrada validada.`, "bg-qr-success");
             this.showToast(`Entrada validada: ${c.nome}`, "success");
@@ -8759,7 +8661,7 @@ sceralFat || '-'}</strong>
         this.lastProcessedTime = Date.now();
         this.saveState();
 
-        // ATUALIZAÇÃO SEGURA: Apenas a tabela, não a página toda para não desligar a câmara
+        // ATUALIZAÃƒâ€¡ÃƒÆ’O SEGURA: Apenas a tabela, não a página toda para não desligar a câmara
         const grid = document.getElementById("gridQRClientes");
         if (grid) {
             grid.innerHTML = this.renderQRClientCards();
@@ -8771,7 +8673,7 @@ sceralFat || '-'}</strong>
         const client = (this.state.qrClients || []).find(c => c.id === id);
         if (!client) return;
 
-        const logs = client.histórico || [];
+        const logs = client.historico || [];
         const content = `
             <div style="padding: 0.5rem;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
@@ -8986,7 +8888,7 @@ sceralFat || '-'}</strong>
     // --- CLASSES & SCHEDULING ---
 
     async checkFinishedClasses() {
-        // SEGURANÇA: Garantir que o estado existe e temos dados carregados
+        // SEGURANÃƒâ€¡A: Garantir que o estado existe e temos dados carregados
         if (!this.state || !this.state.classes || !this.hasLoadedData || this.isCheckingClasses) return;
 
         // Se for cliente, podemos correr a manutenção mas de forma silenciosa e facultativa
@@ -9342,18 +9244,18 @@ sceralFat || '-'}</strong>
 
         if (restrictions) {
             if (!restrictions.allowClasses) {
-                const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno não permite a marcação de aulas.\n\nDeseja inscrever mesmo assim?`);
+                const force = confirm(`Ã¢Å¡Â Ã¯Â¸ÂÃ‚Â AVISO: O plano "${plano}" deste aluno não permite a marcação de aulas.\n\nDeseja inscrever mesmo assim?`);
                 if (!force) return;
             } else if (restrictions.filter && restrictions.filter.length > 0) {
                 const isAllowed = restrictions.filter.some(f => cls && cls.name.toLowerCase().includes(f.toLowerCase()));
                 if (!isAllowed) {
-                    const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno apenas permite: ${restrictions.filter.join(', ')}.\n\nDeseja inscrever mesmo assim?`);
+                    const force = confirm(`Ã¢Å¡Â Ã¯Â¸ÂÃ‚Â AVISO: O plano "${plano}" deste aluno apenas permite: ${restrictions.filter.join(', ')}.\n\nDeseja inscrever mesmo assim?`);
                     if (!force) return;
                 }
             } else if (restrictions.exclude && restrictions.exclude.length > 0) {
                 const isExcluded = restrictions.exclude.some(ex => cls && cls.name.toLowerCase().includes(ex.toLowerCase()));
                 if (isExcluded) {
-                    const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno não permite reservar aulas desta categoria.\n\nDeseja inscrever mesmo assim?`);
+                    const force = confirm(`Ã¢Å¡Â Ã¯Â¸ÂÃ‚Â AVISO: O plano "${plano}" deste aluno não permite reservar aulas desta categoria.\n\nDeseja inscrever mesmo assim?`);
                     if (!force) return;
                 }
             }
@@ -9616,7 +9518,7 @@ sceralFat || '-'}</strong>
             return alert('Está aula já atingiu a lotação máxima.');
         }
 
-        // VALIDAR RESTRIçáâ€¢ES DE PLANO
+        // VALIDAR RESTRIçáâÃ¢â€šÂ¬Ã‚Â¢ES DE PLANO
         const qrInfo = (this.state.qrClients || []).find(q => Number(q.clientId) === Number(clientId));
         const plano = qrInfo ? qrInfo.plano : 'Livre Trânsito';
         const restrictions = (this.state.planRestrictions || {})[plano];
