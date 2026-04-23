@@ -903,9 +903,10 @@ class FitnessApp {
 
         container.innerHTML = `
             <div style="display:flex; align-items:center; gap:0.5rem;">
-                <button class="btn btn-ghost btn-sm" onclick="app.toggleLanguage()" title="${this.t('switch_lang')}" style="padding: 4px 8px; border-radius: 8px; font-size: 1.1rem; display: flex; align-items: center; border: 1px solid var(--surface-border); background:rgba(255,255,255,0.03);">
-                    ${this.lang === 'pt' ? '🇬🇧' : '🇵🇹'}
-                </button>
+                <div style="display:flex; background:rgba(0,0,0,0.2); border-radius:20px; padding:2px; border:1px solid var(--surface-border); margin-right:4px;">
+                    <button onclick="if(app.lang!=='pt')app.toggleLanguage()" style="border:none; background:${this.lang === 'pt' ? 'var(--primary)' : 'transparent'}; color:${this.lang === 'pt' ? '#fff' : 'var(--text-muted)'}; border-radius:20px; padding:2px 8px; font-size:0.65rem; font-weight:800; cursor:pointer; transition:0.3s;">PT</button>
+                    <button onclick="if(app.lang!=='en')app.toggleLanguage()" style="border:none; background:${this.lang === 'en' ? 'var(--primary)' : 'transparent'}; color:${this.lang === 'en' ? '#fff' : 'var(--text-muted)'}; border-radius:20px; padding:2px 8px; font-size:0.65rem; font-weight:800; cursor:pointer; transition:0.3s;">EN</button>
+                </div>
                 <div class="avatar" style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; border: 2px solid var(--surface-border); overflow: hidden;">
                     ${photo ? `<img src="${photo}" style="width:100%; height:100%; object-fit:cover;">` : initials}
                 </div>
