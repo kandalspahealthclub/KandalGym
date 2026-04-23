@@ -1,4 +1,4 @@
-﻿// Tratador de Erros Global - Deve ser o primeiro a carregar
+// Tratador de Erros Global - Deve ser o primeiro a carregar
 window.onerror = function (message, source, lineno, colno, error) {
     console.error("Erro detectado:", message, "em", source, ":", lineno);
     const container = document.getElementById('main-content');
@@ -134,6 +134,50 @@ class FitnessApp {
                 eval_abdominal: 'Abdominal',
                 eval_hip: 'Quadril',
                 eval_thigh: 'Coxa',
+                eval_modal_new: 'Nova Avaliação',
+                eval_modal_edit: 'Editar Avaliação',
+                eval_modal_subtitle: 'Registe os dados da bioimpedância e medidas.',
+                eval_modal_date: 'Data da Avaliação',
+                cancel: 'Cancelar',
+                update_data: 'Atualizar Dados',
+                save_eval: 'Guardar Avaliação',
+                no_clients_found: 'Nenhum aluno encontrado.',
+                teacher_label: 'Professor',
+                view_card: 'Ver Ficha',
+                training_plan_title: 'Plano de Treino Personalizado',
+                client_label: 'Aluno',
+                goal_label: 'Objetivo',
+                table_exercise: 'Exercício',
+                table_sets: 'Séries',
+                table_reps: 'Reps',
+                admin_dashboard: 'Painel de Administração',
+                manage_news: 'Gerir Notícias',
+                teachers: 'Professores',
+                students: 'Alunos',
+                teacher_team: 'Equipa de Professores',
+                user_mgmt: 'Gestão de Contas',
+                new_user: 'Novo Utilizador',
+                search_users_placeholder: 'Pesquisar utilizador por nome ou email...',
+                manager_label: 'Gestores',
+                plans_label: 'Mensalidades',
+                global_access_title: 'Acesso Global (Admin)',
+                global_access_sub: 'Como Administrador, tem acesso total a todos os alunos registados no sistema.',
+                trainer_dashboard: 'Painel do Treinador',
+                period_label: 'Período',
+                my_clients: 'Os Meus Alunos',
+                total_clients: 'Total de Alunos',
+                this_month: 'Este Mês',
+                no_clients_assigned: 'Ainda não tem alunos atribuídos.',
+                evaluations_plural: 'Avaliações',
+                plans_training_plural: 'Planos Treino',
+                plans_meal_plural: 'Planos Dieta',
+                anamnesis_plural: 'Anamneses',
+                activity_header: 'Atividade de %date',
+                productivity_summary: 'Resumo de produtividade registada por si neste período.',
+                manage_anamnesis: 'Gestão de Anamneses',
+                new_anamnesis: 'Nova Anamnese',
+                search_anamnesis_placeholder: 'Pesquisar aluno ou data...',
+                no_anamnesis_found: 'Nenhuma anamnese registada.',
                 wa_recovery_msg: 'Olá KandalGym! Gostaria de solicitar a recuperação da minha palavra-passe.',
                 wa_recovery_user_msg: 'Olá KandalGym! O meu nome é %name, o meu email é %email e gostaria de solicitar a recuperação da minha palavra-passe.',
                 wa_recovery_email_msg: 'Olá KandalGym! O meu email é %email e gostaria de solicitar a recuperação da minha palavra-passe.'
@@ -252,6 +296,43 @@ class FitnessApp {
                 cancel: 'Cancel',
                 update_data: 'Update Data',
                 save_eval: 'Save Evaluation',
+                no_clients_found: 'No clients found.',
+                teacher_label: 'Teacher',
+                view_card: 'View Card',
+                training_plan_title: 'Personalized Training Plan',
+                client_label: 'Client',
+                goal_label: 'Goal',
+                table_exercise: 'Exercise',
+                table_sets: 'Sets',
+                table_reps: 'Reps',
+                admin_dashboard: 'Admin Dashboard',
+                manage_news: 'Manage News',
+                teachers: 'Teachers',
+                students: 'Students',
+                teacher_team: 'Teachers Team',
+                user_mgmt: 'Account Management',
+                new_user: 'New User',
+                search_users_placeholder: 'Search user by name or email...',
+                manager_label: 'Managers',
+                plans_label: 'Monthly Fees',
+                global_access_title: 'Global Access (Admin)',
+                global_access_sub: 'As an Administrator, you have full access to all registered students.',
+                trainer_dashboard: 'Trainer Dashboard',
+                period_label: 'Period',
+                my_clients: 'My Clients',
+                total_clients: 'Total Students',
+                this_month: 'This Month',
+                no_clients_assigned: 'You have no assigned students yet.',
+                evaluations_plural: 'Evaluations',
+                plans_training_plural: 'Training Plans',
+                plans_meal_plural: 'Meal Plans',
+                anamnesis_plural: 'Anamnesis',
+                activity_header: 'Activity of %date',
+                productivity_summary: 'Summary of productivity recorded by you in this period.',
+                manage_anamnesis: 'Manage Anamnesis',
+                new_anamnesis: 'New Anamnesis',
+                search_anamnesis_placeholder: 'Search student or date...',
+                no_anamnesis_found: 'No anamnesis recorded.',
                 wa_recovery_msg: 'Hello KandalGym! I would like to request my password recovery.',
                 wa_recovery_user_msg: 'Hello KandalGym! My name is %name, my email is %email and I would like to request my password recovery.',
                 wa_recovery_email_msg: 'Hello KandalGym! My email is %email and I would like to request my password recovery.'
@@ -764,7 +845,7 @@ class FitnessApp {
         container.innerHTML = `
             <div style="display:flex; align-items:center; gap:0.5rem;">
                 <button class="btn btn-ghost btn-sm" onclick="app.toggleLanguage()" title="${this.t('switch_lang')}" style="padding: 4px 8px; border-radius: 8px; font-size: 1.1rem; display: flex; align-items: center; border: 1px solid var(--surface-border); background:rgba(255,255,255,0.03);">
-                    ${this.lang === 'pt' ? 'Ã°Å¸â€¡ÂºÃ°Å¸â€¡Â¸' : 'Ã°Å¸â€¡ÂµÃ°Å¸â€¡Â¹'}
+                    ${this.lang === 'pt' ? '🇬🇧' : '🇵🇹'}
                 </button>
                 <div class="avatar" style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; border: 2px solid var(--surface-border); overflow: hidden;">
                     ${photo ? `<img src="${photo}" style="width:100%; height:100%; object-fit:cover;">` : initials}
@@ -1934,9 +2015,9 @@ Bons treinos!`;
             case 'dashboard':
                 container.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:10px;">
-                        <h2 class="animate-fade-in" style="margin:0;"><i class="fas fa-user-shield"></i> Dashboard Admin</h2>
+                        <h2 class="animate-fade-in" style="margin:0;"><i class="fas fa-user-shield"></i> ${this.t('admin_dashboard')}</h2>
                         <button class="btn btn-secondary btn-sm" onclick="app.showManageNewsModal()" style="height:40px; padding:0 1.5rem;">
-                            <i class="fas fa-bullhorn" style="color:var(--primary);"></i> Gerir Notícias
+                            <i class="fas fa-bullhorn" style="color:var(--primary);"></i> ${this.t('manage_news')}
                         </button>
                     </div>
                     
@@ -1946,7 +2027,7 @@ Bons treinos!`;
                                 <i class="fas fa-user-tie" style="font-size: 1.5rem;"></i>
                             </div>
                             <div>
-                                <small style="color: var(--text-muted); display: block;">Professores</small>
+                                <small style="color: var(--text-muted); display: block;">${this.t('teachers')}</small>
                                 <div style="font-size: 1.8rem; font-weight: 800;">${this.state.teachers.length}</div>
                             </div>
                         </div>
@@ -1956,7 +2037,7 @@ Bons treinos!`;
                                 <i class="fas fa-user-friends" style="font-size: 1.5rem;"></i>
                             </div>
                             <div>
-                                <small style="color: var(--text-muted); display: block;">Alunos</small>
+                                <small style="color: var(--text-muted); display: block;">${this.t('students')}</small>
                                 <div style="font-size: 1.8rem; font-weight: 800;">${this.state.clients.length}</div>
                             </div>
                         </div>
@@ -1967,7 +2048,7 @@ Bons treinos!`;
                     <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
                         <div class="glass-panel" style="padding: 1.5rem;">
                             <h3 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">
-                                <i class="fas fa-user-tie"></i> Equipa de Professores
+                                <i class="fas fa-user-tie"></i> ${this.t('teacher_team')}
                             </h3>
                             <div class="client-list">
                                 ${this.state.teachers.map(t => `
@@ -2008,29 +2089,29 @@ Bons treinos!`;
             case 'users':
                 container.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h2 style="margin:0;">Gestão de Contas</h2>
-                        <button class="btn btn-primary" onclick="app.showAddUserModal()"><i class="fas fa-plus"></i> Novo Utilizador</button>
+                        <h2 style="margin:0;">${this.t('user_mgmt')}</h2>
+                        <button class="btn btn-primary" onclick="app.showAddUserModal()"><i class="fas fa-plus"></i> ${this.t('new_user')}</button>
                     </div>
 
                     <div class="search-container" style="margin-bottom:1.5rem;">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Pesquisar utilizador por nome ou email..." 
+                        <input type="text" placeholder="${this.t('search_users_placeholder')}" 
                             oninput="app.switchAdminTab(app.activeAdminTab || 'teachers', this.value)"
                             class="search-bar">
                     </div>
 
                     <div class="tab-container" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 0.5rem; overflow-x: auto;">
                         <button class="btn btn-ghost" id="tab-teachers" onclick="app.switchAdminTab('teachers')" style="color: var(--primary); font-weight: 600;">
-                            <i class="fas fa-user-tie"></i> Professores (${(this.state.teachers || []).length})
+                            <i class="fas fa-user-tie"></i> ${this.t('teachers')} (${(this.state.teachers || []).length})
                         </button>
                         <button class="btn btn-ghost" id="tab-clients" onclick="app.switchAdminTab('clients')" style="color: var(--secondary); font-weight: 600;">
-                            <i class="fas fa-user-friends"></i> Alunos (${(this.state.clients || []).length})
+                            <i class="fas fa-user-friends"></i> ${this.t('students')} (${(this.state.clients || []).length})
                         </button>
                         <button class="btn btn-ghost" id="tab-admins" onclick="app.switchAdminTab('admins')" style="color: var(--accent); font-weight: 600;">
-                            <i class="fas fa-user-shield"></i> Gestores (${(this.state.admins || []).length})
+                            <i class="fas fa-user-shield"></i> ${this.t('manager_label')} (${(this.state.admins || []).length})
                         </button>
                         <button class="btn btn-ghost" id="tab-plans" onclick="app.switchAdminTab('plans')" style="color: #f1c40f; font-weight: 600;">
-                            <i class="fas fa-file-invoice-dollar"></i> Mensalidades (Regras)
+                            <i class="fas fa-file-invoice-dollar"></i> ${this.t('plans_label')}
                         </button>
                     </div>
 
@@ -2059,8 +2140,8 @@ Bons treinos!`;
                 container.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:10px;">
                         <div>
-                            <h2 style="margin-bottom:0.1rem;">Acesso Global (Admin)</h2>
-                            <p style="color:var(--text-muted); font-size:0.85rem; margin:0;">Como Administrador, tem acesso total a todos os alunos registados no sistema.</p>
+                            <h2 style="margin-bottom:0.1rem;">${this.t('global_access_title')}</h2>
+                            <p style="color:var(--text-muted); font-size:0.85rem; margin:0;">${this.t('global_access_sub')}</p>
                         </div>
                         <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                             <button class="btn btn-secondary btn-sm" onclick="app.exportClientDatabase()" title="Exportar Backup de Clientes">
@@ -2459,9 +2540,9 @@ Bons treinos!`;
                 const displayDate = new Date(selYear, selMonth - 1);
                 container.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
-                        <h2 style="margin:0;"><i class="fas fa-chart-line"></i> Dashboard Trainer</h2>
+                        <h2 style="margin:0;"><i class="fas fa-chart-line"></i> ${this.t('trainer_dashboard')}</h2>
                         <div style="display:flex; align-items:center; gap:0.5rem; background:rgba(255,255,255,0.05); padding:5px 15px; border-radius:12px; border:1px solid var(--surface-border);">
-                            <small style="color:var(--text-muted); font-weight:600; text-transform:uppercase; font-size:0.65rem;">Período:</small>
+                            <small style="color:var(--text-muted); font-weight:600; text-transform:uppercase; font-size:0.65rem;">${this.t('period_label')}:</small>
                             <input type="month" id="stats-month-picker" value="${this.dashboardMonth}" 
                                 onchange="app.updateDashboardMonth(this.value)"
                                 style="background:transparent; border:none; color:#fff; font-family:inherit; font-weight:600; font-size:0.9rem; outline:none; cursor:pointer; width:180px;">
@@ -2470,27 +2551,27 @@ Bons treinos!`;
                     
                     <div class="stats-grid">
                         <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--primary); cursor:pointer; transition: transform 0.2s ease, background 0.2s ease;">
-                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Meus Alunos</small>
+                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">${this.t('my_clients')}</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--primary);">${teacherClients.length}</div>
                         </div>
                         
                         <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--accent); cursor:pointer;">
-                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Avaliações</small>
+                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">${this.t('evaluations_plural')}</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--accent);">${monthEvals}</div>
                         </div>
 
                         <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--success); cursor:pointer;">
-                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Planos Treino</small>
+                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">${this.t('plans_training_plural')}</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--success);">${monthTraining}</div>
                         </div>
 
                         <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid #60a5fa; cursor:pointer;">
-                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Planos Dieta</small>
+                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">${this.t('plans_meal_plural')}</small>
                             <div style="font-size:1.8rem; font-weight:800; color:#60a5fa;">${monthMeals}</div>
                         </div>
 
                         <div class="glass-card" onclick="app.setView('anamnesis')" style="border-left: 4px solid var(--primary); cursor:pointer;">
-                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Anamneses</small>
+                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">${this.t('anamnesis_plural')}</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--primary);">${monthAnamnesis}</div>
                         </div>
                     </div>
@@ -2500,20 +2581,20 @@ Bons treinos!`;
                     ${this.getOccupancyHTML()}
 
                     <div style="margin-top:2rem;">
-                        <h3>Atividade de ${new Intl.DateTimeFormat('pt-PT', { month: 'long', year: 'numeric' }).format(displayDate)}</h3>
-                        <p style="color:var(--text-muted); font-size:0.9rem;">Resumo de produtividade registada por si neste período.</p>
+                        <h3>${this.t('activity_header').replace('%date', new Intl.DateTimeFormat(this.lang === 'pt' ? 'pt-PT' : 'en-GB', { month: 'long', year: 'numeric' }).format(displayDate))}</h3>
+                        <p style="color:var(--text-muted); font-size:0.9rem;">${this.t('productivity_summary')}</p>
                     </div>
                 `;
                 break;
             case 'clients':
                 container.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                        <h2 style="margin:0;">Os Meus Alunos</h2>
+                        <h2 style="margin:0;">${this.t('my_clients')}</h2>
                     </div>
                     
                     <div class="search-container">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Pesquisar por nome..." 
+                        <input type="text" placeholder="${this.t('search')}..." 
                             oninput="app.renderTeacherClientsList(this.value)"
                             class="search-bar">
                     </div>
@@ -2525,13 +2606,13 @@ Bons treinos!`;
             case 'anamnesis':
                 container.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:10px;">
-                        <h2 style="margin:0;"><i class="fas fa-notes-medical"></i> Gestão de Anamneses</h2>
-                        <button class="btn btn-primary" onclick="app.showAddAnamnesisModal()"><i class="fas fa-plus"></i> Nova Anamnese</button>
+                        <h2 style="margin:0;"><i class="fas fa-notes-medical"></i> ${this.t('manage_anamnesis')}</h2>
+                        <button class="btn btn-primary" onclick="app.showAddAnamnesisModal()"><i class="fas fa-plus"></i> ${this.t('new_anamnesis')}</button>
                     </div>
                     
                     <div class="search-container">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Pesquisar aluno ou data..." 
+                        <input type="text" placeholder="${this.t('search_anamnesis_placeholder')}" 
                             oninput="app.renderAnamnesisList(this.value)"
                             class="search-bar">
                     </div>
@@ -6780,7 +6861,7 @@ Bons treinos!`;
         );
 
         if (clients.length === 0) {
-            container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:1rem;">Nenhum aluno encontrado.</p>';
+            container.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:1rem;">${this.t('no_clients_found')}</p>`;
             return;
         }
 
@@ -6827,7 +6908,7 @@ Bons treinos!`;
         });
 
         if (anamnesisEntries.length === 0) {
-            container.innerHTML = '<div class="glass-card animate-fade-in" style="text-align:center; padding:2rem;"><p style="color:var(--text-muted); margin:0;">Nenhuma anamnese registada.</p></div>';
+            container.innerHTML = `<div class="glass-card animate-fade-in" style="text-align:center; padding:2rem;"><p style="color:var(--text-muted); margin:0;">${this.t('no_anamnesis_found')}</p></div>`;
             return;
         }
 
@@ -7138,7 +7219,7 @@ Bons treinos!`;
         );
 
         if (clients.length === 0) {
-            container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:1rem;">Nenhum aluno encontrado.</p>';
+            container.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:1rem;">${this.t('no_clients_found')}</p>`;
             return;
         }
 
@@ -7153,10 +7234,10 @@ Bons treinos!`;
                     </div>
                     <div>
                         <strong>${c.name}</strong><br>
-                        <small style="color:var(--text-muted);">Professor: ${teacher ? teacher.name : 'Nenhum'}</small>
+                        <small style="color:var(--text-muted);">${this.t('teacher_label')}: ${teacher ? teacher.name : this.t('no_data')}</small>
                     </div>
                 </div>
-                <button class="btn btn-primary btn-sm" onclick="app.spyClient('${c.id}')">Ver Ficha</button>
+                <button class="btn btn-primary btn-sm" onclick="app.spyClient('${c.id}')">${this.t('view_card')}</button>
             </div> `;
         }).join('');
     }
