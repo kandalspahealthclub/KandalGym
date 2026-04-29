@@ -183,6 +183,8 @@ class FitnessApp {
                 teacher_team: 'Equipa de Professores',
                 user_mgmt: 'Gestão de Contas',
                 new_user: 'Novo Utilizador',
+                new_exercise: 'Novo Exercício',
+                new_food: 'Novo Alimento',
                 search_users_placeholder: 'Pesquisar utilizador por nome ou email...',
                 manager_label: 'Gestores',
                 plans_label: 'Mensalidades',
@@ -432,6 +434,8 @@ class FitnessApp {
                 teacher_team: 'Teachers Team',
                 user_mgmt: 'Account Management',
                 new_user: 'New User',
+                new_exercise: 'New Exercise',
+                new_food: 'New Food',
                 search_users_placeholder: 'Search user by name or email...',
                 manager_label: 'Managers',
                 plans_label: 'Monthly Fees',
@@ -2837,7 +2841,7 @@ Bons treinos!`;
                     <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-exercise-input').click()" title="Importar Backup"><i class="fas fa-file-import"></i> <span class="hide-mobile">Importar</span></button>
                     <input type="file" id="import-exercise-input" style="display:none;" accept=".json" onchange="app.importExerciseDatabase(this)">
                     <button class="btn btn-accent btn-sm" onclick="app.importLocalBaseExercicios()" title="Importar base_exercicios.json"><i class="fas fa-database"></i> <span class="hide-mobile">Base JSON</span></button>
-                    <button class="btn btn-primary btn-sm" onclick="app.showAddExerciseModal()"><i class="fas fa-plus"></i> <span class="hide-mobile">${this.t('new_user')}</span></button>
+                    <button class="btn btn-primary btn-sm" onclick="app.showAddExerciseModal()"><i class="fas fa-plus"></i> <span class="hide-mobile">${this.t('new_exercise')}</span></button>
                 </div>` : '';
 
         container.innerHTML = `
@@ -3465,7 +3469,7 @@ Bons treinos!`;
                     <button class="btn btn-secondary btn-sm" onclick="app.exportFoodDatabase()" title="Exportar Backup"><i class="fas fa-file-export"></i> <span class="hide-mobile">Exportar</span></button>
                     <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-food-input').click()" title="Importar Backup"><i class="fas fa-file-import"></i> <span class="hide-mobile">Importar</span></button>
                     <input type="file" id="import-food-input" style="display:none;" accept=".json" onchange="app.importFoodDatabase(this)">
-                    <button class="btn btn-primary btn-sm" onclick="app.showAddFoodModal()"><i class="fas fa-plus"></i> <span class="hide-mobile">${this.t('new_user')}</span></button>
+                    <button class="btn btn-primary btn-sm" onclick="app.showAddFoodModal()"><i class="fas fa-plus"></i> <span class="hide-mobile">${this.t('new_food')}</span></button>
                 </div>` : '';
 
         container.innerHTML = `
@@ -7835,8 +7839,8 @@ Bons treinos!`;
                             <input type="text" id="casual-name" placeholder="${this.t('client_name_placeholder')}" class="qr-input-sleek">
                             <div style="display: flex; gap: 8px;">
                                 <select id="casual-type" class="qr-input-sleek" style="flex: 2; height: 42px;">
-                                    <option value="Semanal">�???️ ${this.t('pass_type_weekly')}</option>
-                                    <option value="Mensal">�??? ${this.t('pass_type_monthly')}</option>
+                                    <option value="Semanal">🗓️ ${this.t('pass_type_weekly')}</option>
+                                    <option value="Mensal">📅 ${this.t('pass_type_monthly')}</option>
                                 </select>
                                 <button class="btn btn-primary" onclick="app.createCasualPass()" style="flex: 1; height: 42px; border-radius: 6px;">
                                     ${this.t('create')} <i class="fas fa-plus"></i>
