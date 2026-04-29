@@ -6,8 +6,8 @@ window.onerror = function (message, source, lineno, colno, error) {
         container.innerHTML = `
             <div class="glass-card" style="margin:2rem; padding:2rem; border:2px solid var(--danger); text-align:center;">
                 <i class="fas fa-exclamation-circle" style="font-size:3rem; color:var(--danger); margin-bottom:1rem;"></i>
-                <h2 style="color:#fff;">Ocorreu um erro na aplicação</h2>
-                <p style="color:var(--text-muted);">A página não conseguiu carregar corretamente.</p>
+                <h2 style="color:#fff;">Ocorreu um erro na aplica��o</h2>
+                <p style="color:var(--text-muted);">A p�gina n�o conseguiu carregar corretamente.</p>
                 <div style="background:rgba(0,0,0,0.3); padding:1rem; border-radius:8px; margin:1rem 0; text-align:left; font-family:monospace; font-size:0.75rem; color:var(--danger); overflow-x:auto;">
                     Erro: ${message}<br>
                     Arquivo: ${source}<br>
@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v89'; // Versão de controlo para Hard Reset v89
+                last_eval: 'Última Avaliação',
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.lang = localStorage.getItem('kg_lang') || 'pt';
         this.translations = {
@@ -125,7 +125,7 @@ class FitnessApp {
                 eval_muscle: 'Músculo',
                 eval_fat: 'Gordura',
                 eval_water: 'Água',
-                eval_bone: 'Óssea',
+                eval_bone: '�?ssea',
                 eval_visceral: 'Gord. Visceral',
                 eval_met_age: 'Idade Met.',
                 eval_basal: 'Met. Basal',
@@ -206,7 +206,7 @@ class FitnessApp {
                 no_anamnesis_found: 'Nenhuma anamnese registada.',
                 monitor_title: 'Monitor de Acesso',
                 monitor_subtitle: 'Acompanhe as entradas e saídas do ginásio no momento.',
-                last_accesses: 'Últimos Acessos',
+                last_accesses: '�?ltimos Acessos',
                 at_time: 'às',
                 days_ago: 'dias atrás',
                 expired: 'Expirado',
@@ -247,7 +247,7 @@ class FitnessApp {
                 full_gym: 'O ginásio está cheio!',
                 good_time: 'Boa hora para treinar!',
                 busy_time: 'Muita afluência agora.',
-                last_reg_students: 'Últimos Alunos Registados',
+                last_reg_students: '�?ltimos Alunos Registados',
                 see_all: 'Ver Todos',
                 chat_title: 'Centro de Mensagens',
                 type_msg: 'Escreva uma mensagem...',
@@ -580,7 +580,7 @@ class FitnessApp {
             messagingSenderId: "367817039949",
             appId: "1:367817039949:web:5c72215819b9bb1eb07c04",
             measurementId: "G-WY0QSKYVCR",
-            serverKey: "AIzaSyD7cf3sfJBm0YsLOagu6or2hCTd-xcjO1E" // ATENÃƒâ€¡ÃƒÆ’O: Está chave deve começar por AAAA...
+            serverKey: "AIzaSyD7cf3sfJBm0YsLOagu6or2hCTd-xcjO1E" // ATEN�?�?â�?�¡�?�?�?�??O: Está chave deve começar por AAAA...
         };
 
         try {
@@ -944,7 +944,7 @@ class FitnessApp {
                 this.syncSessionWithState();
 
                 // Atualizar UI apenas se logado, não houver modais abertas,
-                // E NáÃƒâ€ Ã¢â‚¬â„¢O estivermos no meio de uma gravação nossa (evita reset de scroll)
+                // E Ná�?�?â�?� �?¢â�??¬â�??¢O estivermos no meio de uma gravação nossa (evita reset de scroll)
                 if (this.isLoggedIn && !document.querySelector('.modal-overlay') && !this.isSaving) {
                     this.renderContent();
                 }
@@ -2129,7 +2129,7 @@ Bons treinos!`;
                     liveOccupancy++;
                 }
 
-                // Total de Visitas áÃƒâ€¦Ã‚Â¡nicas Hoje
+                // Total de Visitas á�?�?â�?�¦�?�??�?¡nicas Hoje
                 const hasVisitToday = sortedHist.some(h => h.t === 'in' && h.d >= todayStart && h.d <= todayEnd);
                 if (hasVisitToday) totalHoje++;
             }
@@ -2523,7 +2523,7 @@ Bons treinos!`;
             this.showToast(`Importação concluída! ${imported} novos clientes.`);
         }
 
-        alert(`Resumo da Importação:\n\nÃ¢Å“â€¦ Sucesso: ${imported}\nÃ¢Å¡Â Ã¯Â¸ÂÃ‚Â Ignorados (Já existem): ${skipped}\nÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Erros (Campos em falta): ${errors}`);
+        alert(`Resumo da Importação:\n\n�?¢�?�??â�?�¦ Sucesso: ${imported}\n�?¢�?¡�? �?¯�?¸�?�?�??�? Ignorados (Já existem): ${skipped}\n�?�?�?�??�?�??�?¢�?�?â�?�š�?�??�?�?�?â�?�¦�?¢â�??¬â�??¢ Erros (Campos em falta): ${errors}`);
 
         const modal = document.querySelector('.modal-overlay');
         if (modal) modal.remove();
@@ -2586,7 +2586,7 @@ Bons treinos!`;
                 });
 
                 this.saveState();
-                alert(`Backup Restaurado!\n\nÃ¢Å“â€¦ ${added} novos clientes adicionados.`);
+                alert(`Backup Restaurado!\n\n�?¢�?�??â�?�¦ ${added} novos clientes adicionados.`);
                 this.renderContent();
             } catch (err) {
                 console.error("Erro no Backup:", err);
@@ -2637,7 +2637,7 @@ Bons treinos!`;
             '@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } } ' +
             '@keyframes slideUp { from { opacity: 0; transform: translateY(100px); } to { opacity: 1; transform: translateY(0); } }';
 
-        let html = '<html><head><title>KandalGym - Monitor de Acesso</title>' +
+        let html = '<html><head><meta charset="UTF-8"><title>KandalGym - Monitor de Acesso</title>' +
             '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">' +
             '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">' +
             '<style>' + css + '</style></head><body>' +
@@ -3843,7 +3843,7 @@ Bons treinos!`;
                 </div>
             </div>
 
-            <!-- TABS DE VISUALIZAÃƒâ€¡ÃƒÆ’O -->
+            <!-- TABS DE VISUALIZA�?�?â�?�¡�?�?�?�??O -->
             ${plans && plans.length > 0 ? `
             <div style="display:flex; gap:0.6rem; margin:1.5rem 0; overflow-x:auto; padding:5px 0 12px; -webkit-overflow-scrolling:touch; scrollbar-width: none;">
                 ${plans.map((day, dIdx) => `
@@ -4065,7 +4065,7 @@ Bons treinos!`;
             modal.innerHTML = `
                 <div class="modal-content" style="max-width:400px; padding:2rem;">
                     <div style="text-align:center; margin-bottom:1.25rem;">
-                        <div style="font-size:2.5rem; margin-bottom:0.5rem;">Ã¢Å¡Â Ã¯Â¸Â</div>
+                        <div style="font-size:2.5rem; margin-bottom:0.5rem;">�?¢�?¡�? �?¯�?¸�?</div>
                         <h3 style="margin:0; color:#fff;">Séries sem peso registado</h3>
                         <p style="color:var(--text-muted); font-size:0.85rem; margin-top:0.5rem;">Os seguintes exercícios têm séries por preencher:</p>
                     </div>
@@ -4286,7 +4286,7 @@ Bons treinos!`;
                 </div>
             </div>
 
-            <!-- MENU DE SELECÃƒâ€¡ÃƒÆ’O DE PLANO (TABS) -->
+            <!-- MENU DE SELEC�?�?â�?�¡�?�?�?�??O DE PLANO (TABS) -->
             <div id="editor-tabs-container" style="display:flex; gap:0.75rem; margin-bottom:2rem; flex-wrap:wrap; background:rgba(255,255,255,0.03); padding:12px; border-radius:15px; border:1px solid rgba(255,255,255,0.05);">
                 ${this.editingPlan.map((day, dIdx) => `
                     <div style="display:flex; align-items:center; gap:4px;">
@@ -4832,24 +4832,24 @@ Bons treinos!`;
     getExerciseIcon(cat) {
         const iconMap = {
             // Categorias reais do utilizador
-            'Perna': 'Ã°Å¸Â¦Âµ',
-            'Costas': 'Ã°Å¸â€˜Å ',
-            'Peito': 'Ã°Å¸â€™Âª',
-            'Ombros': 'Ã°Å¸Â¤Â·',
-            'Cárdio': 'Ã¢ÂÂ¤Ã¯Â¸Â',
-            'Abdominais': 'Ã°Å¸â€Â¥',
-            'Alongamentos': 'Ã°Å¸Â§Ëœ',
-            'Geral': 'Ã°Å¸Ââ€¹Ã¯Â¸Â',
-            'Bicep': 'Ã°Å¸â€™Âª',
-            'Tricep': 'Ã°Å¸â€™Âª',
+            'Perna': '�?°�?¸�?¦�?µ',
+            'Costas': '�?°�?¸â�?��?�? ',
+            'Peito': '�?°�?¸â�?��?��?ª',
+            'Ombros': '�?°�?¸�?¤�?·',
+            'Cárdio': '�?¢�?�?¤�?¯�?¸�?',
+            'Abdominais': '�?°�?¸â�?��?¥',
+            'Alongamentos': '�?°�?¸�?§�?�?',
+            'Geral': '�?°�?¸�?â�?�¹�?¯�?¸�?',
+            'Bicep': '�?°�?¸â�?��?��?ª',
+            'Tricep': '�?°�?¸â�?��?��?ª',
             // Músculos específicos (retrocompatibilidade)
-            'Bíceps': 'Ã°Å¸â€™Âª',
-            'Deltoides': 'Ã°Å¸Â¤Â·',
-            'Dorsal': 'Ã°Å¸â€˜Å ',
-            'Isquiotibiais': 'Ã°Å¸Â¦Âµ',
-            'Quadríceps': 'Ã°Å¸Â¦Âµ'
+            'Bíceps': '�?°�?¸â�?��?��?ª',
+            'Deltoides': '�?°�?¸�?¤�?·',
+            'Dorsal': '�?°�?¸â�?��?�? ',
+            'Isquiotibiais': '�?°�?¸�?¦�?µ',
+            'Quadríceps': '�?°�?¸�?¦�?µ'
         };
-        return iconMap[cat] || 'Ã°Å¸Ââ€¹Ã¯Â¸Â';
+        return iconMap[cat] || '�?°�?¸�?â�?�¹�?¯�?¸�?';
     }
 
     getMuscleColor(cat) {
@@ -5378,7 +5378,7 @@ Bons treinos!`;
 
                     <div>
                         <h4 style="font-size: 0.85rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 5px;">
-                            <i class="fas fa-bolt"></i> BioimpedÃ¢ncia
+                            <i class="fas fa-bolt"></i> Bioimped�?¢ncia
                         </h4>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div>
@@ -6665,7 +6665,7 @@ Bons treinos!`;
         if (!confirm('Deseja sinalizar esta mensagem como eliminada?')) return;
         const msg = (this.state.notifications || []).find(n => n.id === msgId);
         if (msg) {
-            msg.body = 'Ã°Å¸Å¡Â« Esta mensagem foi eliminada';
+            msg.body = '�?°�?¸�?¡�?« Esta mensagem foi eliminada';
             msg.isDeleted = true;
             this.saveState();
             this.renderContent();
@@ -6958,7 +6958,7 @@ Bons treinos!`;
             client.teacherId = Number(newTeacherId);
 
             // Notify Admins
-            const msgText = ` TRANSFERÃƒÅ NCIAÃƒâ€¦Ã‚Â NCIA DE ALUNO: O aluno ${client.name} foi transferido de ${oldTeacherName} para ${newTeacher.name} em ${new Date().toLocaleString()}.`;
+            const msgText = ` TRANSFER�?�?�? NCIA�?�?â�?�¦�?�??�? NCIA DE ALUNO: O aluno ${client.name} foi transferido de ${oldTeacherName} para ${newTeacher.name} em ${new Date().toLocaleString()}.`;
 
             // Allow storing admin notifications in messages or a separate log. 
             // Using 'messages' with specific 'to' for admin viewing if implemented, 
@@ -7217,7 +7217,7 @@ Bons treinos!`;
 
         this.showModal(`
             <div class="modal-sidebar-layout">
-                <!-- Sidebar/Nav áÃƒâ€šÃ‚Ârea -->
+                <!-- Sidebar/Nav á�?�?â�?�š�?�??�?rea -->
                 <div class="modal-sidebar-nav">
                     <div>
                         <div style="width: 50px; height: 50px; border-radius: 12px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #fff; margin-bottom: 1rem; box-shadow: 0 8px 16px rgba(145, 27, 43, 0.3);">
@@ -7243,7 +7243,7 @@ Bons treinos!`;
 
                 </div>
 
-                <!-- Content áÃƒâ€šÃ‚Ârea -->
+                <!-- Content á�?�?â�?�š�?�??�?rea -->
                 <div class="modal-sidebar-content">
                     <div id="anam-section-1" style="margin-bottom: 4rem;">
                         <h3 style="color: var(--primary); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
@@ -7309,7 +7309,7 @@ Bons treinos!`;
                             <div class="input-group" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
                                 <div>
                                     <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Alergias</label>
-                                    <input type="text" id="anam-allergies" value="${anam.allergies}" class="search-bar" placeholder="Ex: Penicilina, áÃƒâ€šÃ‚Âcaros..." style="background: rgba(255,255,255,0.03);">
+                                    <input type="text" id="anam-allergies" value="${anam.allergies}" class="search-bar" placeholder="Ex: Penicilina, á�?�?â�?�š�?�??�?caros..." style="background: rgba(255,255,255,0.03);">
                                 </div>
                                 <div>
                                     <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Histórico Familiar</label>
@@ -7664,8 +7664,8 @@ Bons treinos!`;
                             </tr>
                             <tr>
                                 <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Gordura:</strong> ${ev.fatPercentage || '-'} %</td>
-                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>áÃƒâ€šÃ‚Âgua:</strong> ${ev.water || '-'} %</td>
-                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Massa áâÃ¢â€šÂ¬Ã…â€œssea:</strong> ${ev.boneMass || '-'}</td>
+                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>á�?�?â�?�š�?�??�?gua:</strong> ${ev.water || '-'} %</td>
+                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Massa áâ�?¢â�?�š�?¬�?�?�â�?��?ssea:</strong> ${ev.boneMass || '-'}</td>
                             </tr>
                             <tr>
                                 <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Gord. Visceral:</strong> ${ev.visceralFat || '-'}</td>
@@ -7835,8 +7835,8 @@ Bons treinos!`;
                             <input type="text" id="casual-name" placeholder="${this.t('client_name_placeholder')}" class="qr-input-sleek">
                             <div style="display: flex; gap: 8px;">
                                 <select id="casual-type" class="qr-input-sleek" style="flex: 2; height: 42px;">
-                                    <option value="Semanal">🗓️ ${this.t('pass_type_weekly')}</option>
-                                    <option value="Mensal">📅 ${this.t('pass_type_monthly')}</option>
+                                    <option value="Semanal">�???️ ${this.t('pass_type_weekly')}</option>
+                                    <option value="Mensal">�??? ${this.t('pass_type_monthly')}</option>
                                 </select>
                                 <button class="btn btn-primary" onclick="app.createCasualPass()" style="flex: 1; height: 42px; border-radius: 6px;">
                                     ${this.t('create')} <i class="fas fa-plus"></i>
@@ -7913,7 +7913,7 @@ Bons treinos!`;
                 </div>
             `;
 
-            // --- RESTAURAÃƒâ€¡ÃƒÆ’O DO SCROLL DO CONTENTOR ---
+            // --- RESTAURA�?�?â�?�¡�?�?�?�??O DO SCROLL DO CONTENTOR ---
             container.scrollTop = scrollPosCont;
 
             // Restaurar classe se existia
@@ -7935,11 +7935,11 @@ Bons treinos!`;
                 const hwInput = document.getElementById('hardware-scanner-input');
                 if (hwInput) {
                     hwInput.focus({ preventScroll: true });
-                    // Manter foco apenas se NÃƒÆ’O estivermos a interagir com outros campos
+                    // Manter foco apenas se N�?�?�?�??O estivermos a interagir com outros campos
                     document.onmousedown = (e) => {
                         if (this.activeView !== 'qr_manager' || !hwInput) return;
 
-                        // Lista de elementos que NÃƒÆ’O devem ser interrompidos
+                        // Lista de elementos que N�?�?�?�??O devem ser interrompidos
                         const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'];
                         if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button')) {
                             return; // Deixa o utilizador interagir com o campo
@@ -7986,7 +7986,7 @@ Bons treinos!`;
                 const planoStr = client.plano || '';
                 let defaultEnt = 30;
                 
-                // 1Ã‚Âº Prioridade: Verificar se o admin configurou os créditos fixos nas regras do plano
+                // 1�?�??�?º Prioridade: Verificar se o admin configurou os créditos fixos nas regras do plano
                 const regras = (this.state.planRestrictions || {})[planoStr];
                 if (regras && typeof regras.maxCredits === 'number') {
                     defaultEnt = regras.maxCredits;
@@ -8123,7 +8123,7 @@ Bons treinos!`;
                         </label>
                     </td>
                     <td>
-                        ${isStaff ? '<div style="text-align:center; font-weight:800; color:var(--accent); font-size:1.5rem;">∞</div>' : `
+                        ${isStaff ? '<div style="text-align:center; font-weight:800; color:var(--accent); font-size:1.5rem;">�??</div>' : `
                         <div style="background:rgba(0,0,0,0.2); border-radius:8px; display:flex; align-items:center; justify-content:space-between; padding:4px; border:1px solid rgba(255,255,255,0.05);">
                             <button onclick="app.editQRCredit('${c.id}', -1)" style="width:28px; height:28px; border-radius:6px; border:none; background:rgba(255,255,255,0.05); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;"><i class="fas fa-minus"></i></button>
                             <input type="number" value="${c.ent}" onchange="app.updateQRClientField('${c.id}', 'ent', parseInt(this.value) || 0)" class="no-spin" style="background:transparent; border:none; color:#fff; font-weight:800; width:35px; text-align:center; outline:none; font-size:1rem; padding:0;">
@@ -8417,7 +8417,7 @@ Bons treinos!`;
 
             this.saveState();
             // Nome, telemóvel e PLANO não precisam de refresh:
-            // o input/select já mostra o novo valor ÃƒÆ’Ã‚Â¢âÃ¢â‚¬Å¡Ã‚Â¬âÃ¢â€šÂ¬Ã‚Â refrescar destruiria o elemento focado e causaria salto de ecrã
+            // o input/select já mostra o novo valor �?�?�?�??�?�??�?¢â�?¢â�??¬�?¡�?�??�?¬â�?¢â�?�š�?¬�?�??�? refrescar destruiria o elemento focado e causaria salto de ecrã
             if (field === 'ent' || field === 'validade' || field === 'ativo') {
                 this.refreshQRTableUI();
             }
@@ -8500,7 +8500,7 @@ Bons treinos!`;
 
             // Se for um aluno real (clientId != 0)
             if (clientId && clientId != 0) {
-                const deleteMain = confirm("Este utilizador tem uma conta ativa na App. Deseja ELIMINAR TAMBÃƒâ€°MâÃ¢â€šÂ¬Ã‚Â°M a conta do aluno e todo o seu histórico?");
+                const deleteMain = confirm("Este utilizador tem uma conta ativa na App. Deseja ELIMINAR TAMB�?�?â�?�°Mâ�?¢â�?�š�?¬�?�??�?°M a conta do aluno e todo o seu histórico?");
                 if (deleteMain) {
                     // Eliminar do sistema principal (clientes, professores ou admins)
                     this.state.clients = (this.state.clients || []).filter(c => String(c.id) !== String(clientId));
@@ -8603,7 +8603,7 @@ Bons treinos!`;
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 let errorMsg = "O seu navegador não suporta acesso á  câmara.";
                 if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                    errorMsg = "ERRO DE SEGURANÃƒâ€¡A: O scanner live só funciona em ligações seguras (HTTPS disponível em KandalGym.com). Sugerimos usar o botão 'Tirar Foto' ou 'Entrada Manual'.";
+                    errorMsg = "ERRO DE SEGURAN�?�?â�?�¡A: O scanner live só funciona em ligações seguras (HTTPS disponível em KandalGym.com). Sugerimos usar o botão 'Tirar Foto' ou 'Entrada Manual'.";
                 }
                 throw new Error(errorMsg);
             }
@@ -8795,10 +8795,10 @@ Bons treinos!`;
         const c = this.state.qrClients.find(cli => String(cli.id).toUpperCase() === formattedId);
 
         if (!c) {
-            this.showQRMsg(" Codigo não reconhecido", "bg-qr-danger");
+            this.showQRMsg(" Código não reconhecido", "bg-qr-danger");
             new BroadcastChannel('kandal_access').postMessage({
                 type: 'access_event',
-                data: { name: 'INVÁLIDOÃƒâ€šÃ‚ÂLIDO', msg: 'CáâÃ¢â€šÂ¬Ã…â€œDIGO DESCONHECIDO', valid: false, photo: null }
+                data: { name: 'INVÁLIDO', msg: 'C�?DIGO DESCONHECIDO', valid: false, photo: null }
             });
             this.sendToArduino('B');
             this.lastProcessedQR = formattedId;
@@ -8864,7 +8864,7 @@ Bons treinos!`;
 
 
         if (isExit) {
-            // --- LOGICA DE SAáÃƒâ€šÃ‚ÂDA ---
+            // --- LOGICA DE SA�DA ---
             if (!c.historico) c.historico = [];
             c.historico.unshift({ d: agora.toISOString(), t: 'out' });
 
@@ -8873,7 +8873,7 @@ Bons treinos!`;
 
             new BroadcastChannel('kandal_access').postMessage({
                 type: 'access_event',
-                data: { name: c.nome, msg: 'ATÃƒâ€° AMANHÃƒÆ’! (SAÍDA)', valid: true, photo: userPhoto || null }
+                data: { name: c.nome, msg: 'ATÉ AMANHÃ! (SAÍDA)', valid: true, photo: userPhoto || null }
             });
             this.sendToArduino('A');
 
@@ -8896,7 +8896,7 @@ Bons treinos!`;
                     this.showQRMsg(`${c.nome}: Sem créditos`, "bg-qr-danger");
                     new BroadcastChannel('kandal_access').postMessage({
                         type: 'access_event',
-                        data: { name: c.nome, msg: 'SEM CRÃƒâ€°DITOS', valid: false, photo: userPhoto || null }
+                    data: { name: c.nome, msg: 'SEM CRÉDITOS', valid: false, photo: userPhoto || null }
                     });
                     this.sendToArduino('B');
                     return;
@@ -8946,7 +8946,7 @@ Bons treinos!`;
         this.lastProcessedTime = Date.now();
         this.saveState();
 
-        // ATUALIZAÃƒâ€¡ÃƒÆ’O SEGURA: Apenas a tabela, não a página toda para não desligar a câmara
+        // ATUALIZA�?�?â�?�¡�?�?�?�??O SEGURA: Apenas a tabela, não a página toda para não desligar a câmara
         const grid = document.getElementById("gridQRClientes");
         if (grid) {
             grid.innerHTML = this.renderQRClientCards();
@@ -9173,7 +9173,7 @@ Bons treinos!`;
     // --- CLASSES & SCHEDULING ---
 
     async checkFinishedClasses() {
-        // SEGURANÃƒâ€¡A: Garantir que o estado existe e temos dados carregados
+        // SEGURAN�?�?â�?�¡A: Garantir que o estado existe e temos dados carregados
         if (!this.state || !this.state.classes || !this.hasLoadedData || this.isCheckingClasses) return;
 
         // Se for cliente, podemos correr a manutenção mas de forma silenciosa e facultativa
@@ -9529,18 +9529,18 @@ Bons treinos!`;
 
         if (restrictions) {
             if (!restrictions.allowClasses) {
-                const force = confirm(`Ã¢Å¡Â Ã¯Â¸ÂÃ‚Â AVISO: O plano "${plano}" deste aluno não permite a marcação de aulas.\n\nDeseja inscrever mesmo assim?`);
+                const force = confirm(`�?¢�?¡�? �?¯�?¸�?�?�??�? AVISO: O plano "${plano}" deste aluno não permite a marcação de aulas.\n\nDeseja inscrever mesmo assim?`);
                 if (!force) return;
             } else if (restrictions.filter && restrictions.filter.length > 0) {
                 const isAllowed = restrictions.filter.some(f => cls && cls.name.toLowerCase().includes(f.toLowerCase()));
                 if (!isAllowed) {
-                    const force = confirm(`Ã¢Å¡Â Ã¯Â¸ÂÃ‚Â AVISO: O plano "${plano}" deste aluno apenas permite: ${restrictions.filter.join(', ')}.\n\nDeseja inscrever mesmo assim?`);
+                    const force = confirm(`�?¢�?¡�? �?¯�?¸�?�?�??�? AVISO: O plano "${plano}" deste aluno apenas permite: ${restrictions.filter.join(', ')}.\n\nDeseja inscrever mesmo assim?`);
                     if (!force) return;
                 }
             } else if (restrictions.exclude && restrictions.exclude.length > 0) {
                 const isExcluded = restrictions.exclude.some(ex => cls && cls.name.toLowerCase().includes(ex.toLowerCase()));
                 if (isExcluded) {
-                    const force = confirm(`Ã¢Å¡Â Ã¯Â¸ÂÃ‚Â AVISO: O plano "${plano}" deste aluno não permite reservar aulas desta categoria.\n\nDeseja inscrever mesmo assim?`);
+                    const force = confirm(`�?¢�?¡�? �?¯�?¸�?�?�??�? AVISO: O plano "${plano}" deste aluno não permite reservar aulas desta categoria.\n\nDeseja inscrever mesmo assim?`);
                     if (!force) return;
                 }
             }
@@ -9803,7 +9803,7 @@ Bons treinos!`;
             return alert('Está aula já atingiu a lotação máxima.');
         }
 
-        // VALIDAR RESTRIçáâÃ¢â€šÂ¬Ã‚Â¢ES DE PLANO
+        // VALIDAR RESTRIçáâ�?¢â�?�š�?¬�?�??�?¢ES DE PLANO
         const qrInfo = (this.state.qrClients || []).find(q => Number(q.clientId) === Number(clientId));
         const plano = qrInfo ? qrInfo.plano : 'Livre Trânsito';
         const restrictions = (this.state.planRestrictions || {})[plano];
