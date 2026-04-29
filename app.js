@@ -66,6 +66,7 @@ class FitnessApp {
         vitalDicts.forEach(d => { if (!this.state[d]) this.state[d] = {}; });
 
         this.shownNotifications = JSON.parse(localStorage.getItem('shown_notifications') || '[]');
+        this.lastChatCheck = Number(localStorage.getItem('kg_last_chat_check') || 0);
         this.isLoggedIn = false;
         this.currentUser = null;
 
@@ -479,6 +480,18 @@ class FitnessApp {
 
         this.state.notifications.push(newNotification);
         if (shouldSave) this.saveState();
+    }
+
+    hasUnreadChat() {
+        if (!this.state.notifications || !this.currentUser) return false;
+        const myId = Number(this.currentUser.id);
+        const lastCheck = this.lastChatCheck || 0;
+
+        return this.state.notifications.some(n => {
+            const isTarget = n.targetUserId === myId || (!n.targetUserId && this.role === 'admin' && n.type === 'notification');
+            const isNew = new Date(n.createdAt).getTime() > lastCheck;
+            return isTarget && isNew;
+        });
     }
 
     showModal(content, maxWidth = '600px') {
@@ -1433,9 +1446,10 @@ Bons treinos!`;
         }
 
         mobileNav.innerHTML = navItems.map(item => `
-            <a href="#" class="mobile-nav-item ${this.activeView === item.id ? 'active' : ''}" onclick="app.setView('${item.id}'); return false;">
+            <a href="#" class="mobile-nav-item ${this.activeView === item.id ? 'active' : ''}" onclick="app.setView('${item.id}'); return false;" style="position:relative;">
                 <i class="fas ${item.icon}"></i>
                 <span>${item.label}</span>
+                ${(item.id === 'chat' && this.hasUnreadChat()) ? '<span class="notification-dot"></span>' : ''}
             </a>
         `).join('') + `
             <a href="#" class="mobile-nav-item" onclick="app.handleLogout(); return false;">
@@ -1485,8 +1499,9 @@ Bons treinos!`;
         }
 
         sidebar.innerHTML = navItems.map(item => `
-            <button class="btn btn-ghost ${this.activeView === item.id ? 'glass-card' : ''}" onclick="app.setView('${item.id}')">
+            <button class="btn btn-ghost ${this.activeView === item.id ? 'glass-card' : ''}" onclick="app.setView('${item.id}')" style="position:relative;">
                 <i class="fas ${item.icon}"></i> <span>${item.label}</span>
+                ${(item.id === 'chat' && this.hasUnreadChat()) ? '<span class="notification-dot" style="top:50%; right:15px; transform:translateY(-50%);"></span>' : ''}
             </button>
         `).join('') + `
         <button class="btn btn-ghost" onclick="app.handleLogout()" style="margin-top:auto; color:var(--danger); gap: 10px;">
@@ -1497,6 +1512,10 @@ Bons treinos!`;
 
     setView(view, skipScroll = false) {
         this.activeView = view;
+        if (view === 'chat') {
+            this.lastChatCheck = Date.now();
+            localStorage.setItem('kg_last_chat_check', this.lastChatCheck);
+        }
         this.persistLogin();
         this.renderNavbar();
         this.renderSidebar();
@@ -5958,8 +5977,12 @@ Bons treinos!`;
             }
         });
 
-        // 4. Ordenar threads: Conversas reais primeiro, depois ordem alfabetica
+        // 4. Ordenar threads: Sistema KandalGym primeiro (para admin), depois por data, depois alfabetico
         const sortedThreads = Object.values(threads).sort((a, b) => {
+            if (this.role === 'admin') {
+                if (a.id === 'system') return -1;
+                if (b.id === 'system') return 1;
+            }
             const dateA = new Date(a.lastMsg?.createdAt || 0);
             const dateB = new Date(b.lastMsg?.createdAt || 0);
             if (dateA > 0 || dateB > 0) return dateB - dateA;
