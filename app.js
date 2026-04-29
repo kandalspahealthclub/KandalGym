@@ -1184,7 +1184,6 @@ class FitnessApp {
 
         const subject = `Bem-vindo a KandalGym - ${name}`;
         const body = `Olá ${name},
-
 A sua conta de ${label} na KandalGym foi criada com sucesso!
 
 Esta App ainda encontra-se em fase de teste, mas poderá já usufruir de várias funcionalidades como: a marcação de aulas, consulta dos seus planos de treino, avaliações físicas e planos alimentares.
@@ -1195,26 +1194,25 @@ Poderá aceder a plataforma através do seguinte endereço: https://kandalspahea
 - *Email:* ${email}
 - *Password:* ${pass}
 
-⚠️ *IMPORTANTE:* Por questões de segurança, recomendamos que altere a sua palavra-passe para uma da sua preferência no menu "Perfil" após o primeiro acesso na aplicação.
+⚠️ *IMPORTANTE:* Recomendamos que altere a sua palavra-passe para uma da sua preferência no menu "Perfil" após o primeiro acesso na aplicação.
 
 Recomendamos que guarde este link nos seus favoritos ou instale a App no seu telemóvel.
 
 Bons treinos!
 Equipa KandalGym`;
 
-        const whatsappText = `*Bem-vindo a KandalGym* 
+        const whatsappText = `*Bem-vindo a KandalGym*
 
 Olá ${name}, a sua conta de ${label} foi criada!
-
 _A App está em fase de teste, mas já pode usar a marcação de aulas, os planos de treino, avaliações físicas e planos alimentares._
 
 Aceda aqui: https://kandalspahealthclub.github.io/KandalGym/
 
 *CREDENCIAIS DE ACESSO:*
-📧 *Email:* ${email}
-🔑 *Password:* ${pass}
+\uD83D\uDCE7 *Email:* ${email}
+\uD83D\uDD11 *Password:* ${pass}
 
-⚠️ *AVISO:* Altere a sua password para uma da sua preferência no menu "Perfil" após entrar na aplicação.
+\u26A0\uFE0F *AVISO:* Altere a sua password para uma da sua preferência no menu "Perfil" após entrar na aplicação.
 
 Bons treinos!`;
 
