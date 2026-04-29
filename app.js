@@ -8053,8 +8053,9 @@ Bons treinos!`;
             const realUser = c.clientId ? [...(this.state.clients || []), ...(this.state.teachers || []), ...(this.state.admins || [])]
                 .find(u => Number(u.id) === Number(c.clientId)) : null;
 
-            let userPhoto = c.photoUrl || (realUser ? realUser.photoUrl : null);
-            c.photoUrl = userPhoto;
+            // Priorizar a foto do Utilizador Real (Fonte de Verdade) sobre o cache do QR
+            let userPhoto = (realUser && realUser.photoUrl) ? realUser.photoUrl : (c.photoUrl || null);
+            if (userPhoto !== c.photoUrl) c.photoUrl = userPhoto; // Sincronizar cache se mudou
 
             const avatarLetra = c.nome ? c.nome.substring(0, 1).toUpperCase() : '?';
 
@@ -8805,11 +8806,17 @@ Bons treinos!`;
             return;
         }
 
+        // Obter utilizador real para dados mestres (foto atualizada)
+        const realUser = c.clientId ? [...(this.state.clients || []), ...(this.state.teachers || []), ...(this.state.admins || [])]
+            .find(u => Number(u.id) === Number(c.clientId)) : null;
+        const userPhoto = (realUser && realUser.photoUrl) ? realUser.photoUrl : (c.photoUrl || null);
+        if (userPhoto !== c.photoUrl) c.photoUrl = userPhoto; // Sincronizar cache
+
         if (!c.ativo) {
             this.showQRMsg(` ${c.nome}: Conta Inativa`, "bg-qr-danger");
             new BroadcastChannel('kandal_access').postMessage({
                 type: 'access_event',
-                data: { name: c.nome, msg: 'CONTA INATIVA', valid: false, photo: c.photoUrl || null }
+                data: { name: c.nome, msg: 'CONTA INATIVA', valid: false, photo: userPhoto || null }
             });
             this.sendToArduino('B');
             this.lastProcessedQR = formattedId;
@@ -8866,7 +8873,7 @@ Bons treinos!`;
 
             new BroadcastChannel('kandal_access').postMessage({
                 type: 'access_event',
-                data: { name: c.nome, msg: 'ATÃƒâ€° AMANHÃƒÆ’! (SAÍDA)', valid: true, photo: c.photoUrl || null }
+                data: { name: c.nome, msg: 'ATÃƒâ€° AMANHÃƒÆ’! (SAÍDA)', valid: true, photo: userPhoto || null }
             });
             this.sendToArduino('A');
 
@@ -8878,7 +8885,7 @@ Bons treinos!`;
                     this.showQRMsg(`${c.nome}: Validade Expirada`, "bg-qr-warning");
                     new BroadcastChannel('kandal_access').postMessage({
                         type: 'access_event',
-                        data: { name: c.nome, msg: 'VALIDADE EXPIRADA', valid: false, photo: c.photoUrl || null }
+                        data: { name: c.nome, msg: 'VALIDADE EXPIRADA', valid: false, photo: userPhoto || null }
                     });
                     this.sendToArduino('B');
                     return;
@@ -8889,7 +8896,7 @@ Bons treinos!`;
                     this.showQRMsg(`${c.nome}: Sem créditos`, "bg-qr-danger");
                     new BroadcastChannel('kandal_access').postMessage({
                         type: 'access_event',
-                        data: { name: c.nome, msg: 'SEM CRÃƒâ€°DITOS', valid: false, photo: c.photoUrl || null }
+                        data: { name: c.nome, msg: 'SEM CRÃƒâ€°DITOS', valid: false, photo: userPhoto || null }
                     });
                     this.sendToArduino('B');
                     return;
@@ -8913,7 +8920,7 @@ Bons treinos!`;
                     this.showQRMsg(`${c.nome}: Limite diário atingido`, "bg-qr-warning");
                     new BroadcastChannel('kandal_access').postMessage({
                         type: 'access_event',
-                        data: { name: c.nome, msg: 'LIMITE DIÁRIO', valid: false, photo: c.photoUrl || null }
+                        data: { name: c.nome, msg: 'LIMITE DIÁRIO', valid: false, photo: userPhoto || null }
                     });
                     this.sendToArduino('B');
                     return;
@@ -8930,7 +8937,7 @@ Bons treinos!`;
 
             new BroadcastChannel('kandal_access').postMessage({
                 type: 'access_event',
-                data: { name: c.nome, msg: 'BEM-VINDO!', valid: true, photo: c.photoUrl || null }
+                data: { name: c.nome, msg: 'BEM-VINDO!', valid: true, photo: userPhoto || null }
             });
             this.sendToArduino('A');
         }
