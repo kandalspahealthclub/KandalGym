@@ -1191,9 +1191,11 @@ Esta App ainda encontra-se em fase de teste, mas poderá já usufruir de várias
 
 Poderá aceder a plataforma através do seguinte endereço: https://kandalspahealthclub.github.io/KandalGym/
 
-As suas credenciais de acesso sao:
-- Email: ${email}
-- Password: ${pass}
+*As suas credenciais de acesso são:*
+- *Email:* ${email}
+- *Password:* ${pass}
+
+⚠️ *IMPORTANTE:* Por questões de segurança, recomendamos que altere a sua palavra-passe para uma da sua preferência no menu "Perfil" após o primeiro acesso na aplicação.
 
 Recomendamos que guarde este link nos seus favoritos ou instale a App no seu telemóvel.
 
@@ -1206,11 +1208,13 @@ Olá ${name}, a sua conta de ${label} foi criada!
 
 _A App está em fase de teste, mas já pode usar a marcação de aulas, os planos de treino, avaliações físicas e planos alimentares._
 
- Aceda aqui: https://kandalspahealthclub.github.io/KandalGym/
+Aceda aqui: https://kandalspahealthclub.github.io/KandalGym/
 
- *Credenciais:*
- Email: ${email}
- Password: ${pass}
+*CREDENCIAIS DE ACESSO:*
+📧 *Email:* ${email}
+🔑 *Password:* ${pass}
+
+⚠️ *AVISO:* Altere a sua password para uma da sua preferência no menu "Perfil" após entrar na aplicação.
 
 Bons treinos!`;
 
