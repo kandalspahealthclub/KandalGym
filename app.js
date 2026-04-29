@@ -103,6 +103,12 @@ class FitnessApp {
             this.deferredPrompt = e;
             this.renderSidebar();
             this.renderNavbar();
+            this.renderUserProfile();
+        });
+
+        window.addEventListener('appinstalled', () => {
+            this.deferredPrompt = null;
+            this.renderUserProfile();
         });
 
         // 1. Restaurar login e renderizar interface IMEDIATAMENTE
@@ -542,14 +548,19 @@ class FitnessApp {
         const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
         const photo = this.currentUser.photoUrl;
 
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const installButton = (!isStandalone && (this.deferredPrompt || isIOS)) ? `
+                <button class="btn btn-ghost btn-sm" onclick="app.installPWA()" title="Instalar App" style="color: var(--primary); padding: 6px 10px; border: 1px solid var(--primary); border-radius: 8px;">
+                    <i class="fas fa-download"></i>
+                </button>` : '';
+
         container.innerHTML = `
             <div style="display:flex; align-items:center; gap:0.5rem;">
                 <div class="avatar" style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; border: 2px solid var(--surface-border); overflow: hidden;">
                     ${photo ? `<img src="${photo}" style="width:100%; height:100%; object-fit:cover;">` : initials}
                 </div>
-                <button class="btn btn-ghost btn-sm" onclick="app.installPWA()" title="Instalar App" style="color: var(--primary); padding: 6px 10px; border: 1px solid var(--primary); border-radius: 8px;">
-                    <i class="fas fa-download"></i>
-                </button>
+                ${installButton}
                 <button class="btn btn-ghost btn-sm" onclick="app.handleLogout()" title="Sair" style="color:var(--text-muted);">
                     <i class="fas fa-sign-out-alt"></i>
                 </button>
