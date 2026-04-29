@@ -6,8 +6,8 @@ window.onerror = function (message, source, lineno, colno, error) {
         container.innerHTML = `
             <div class="glass-card" style="margin:2rem; padding:2rem; border:2px solid var(--danger); text-align:center;">
                 <i class="fas fa-exclamation-circle" style="font-size:3rem; color:var(--danger); margin-bottom:1rem;"></i>
-                <h2 style="color:#fff;">Ocorreu um erro na aplica��o</h2>
-                <p style="color:var(--text-muted);">A p�gina n�o conseguiu carregar corretamente.</p>
+                <h2 style="color:#fff;">Ocorreu um erro na aplicação</h2>
+                <p style="color:var(--text-muted);">A página não conseguiu carregar corretamente.</p>
                 <div style="background:rgba(0,0,0,0.3); padding:1rem; border-radius:8px; margin:1rem 0; text-align:left; font-family:monospace; font-size:0.75rem; color:var(--danger); overflow-x:auto;">
                     Erro: ${message}<br>
                     Arquivo: ${source}<br>
@@ -23,513 +23,8 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-                last_eval: 'Última Avaliação',
+        this.appVersion = '2026.04.15.v89'; // Versão de controlo para Hard Reset v89
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
-        this.lang = localStorage.getItem('kg_lang') || 'pt';
-        this.translations = {
-            pt: {
-                dashboard: 'Início',
-                classes: 'Horário / Aulas',
-                chat: 'Mensagens / Chat',
-                training: 'Treino Online',
-                meal: 'Plano Alimentar',
-                evaluation: 'Avaliações F.',
-                profile: 'O Meu Perfil',
-                logout: 'Sair',
-                welcome: 'Bem-vindo(a)',
-                loading: 'Carregando...',
-                users_admin: 'Gestão Contas',
-                qr_admin: 'Gestão de Entradas',
-                monitor_admin: 'Monitor de Acesso',
-                exercises_admin: 'Exercícios',
-                foods_admin: 'Alimentos',
-                global_access: 'Acesso Global',
-                notifications_admin: 'Comunicados',
-                news: 'Feed KandalGym',
-                hello: 'Olá',
-                my_trainer: 'O meu preparador',
-                last_eval: 'Última Avaliação',
-                performance: 'O Teu Rendimento',
-                active_plan: 'Plano Ativo',
-                current_goal: 'Objetivo Atual',
-                switch_lang: 'Mudar para Inglês',
-                save: 'Gravar',
-                cancel: 'Cancelar',
-                edit: 'Editar',
-                delete: 'Apagar',
-                search: 'Pesquisar...',
-                no_data: 'Sem dados para mostrar.',
-                dashboard_admin: 'Painel Admin',
-                classes_schedule: 'Horário de Aulas',
-                classes_mgmt: 'Gestão de Aulas',
-                anamnesis: 'Anamnese',
-                chat_simple: 'Mensagens',
-                logout_session: 'Terminar Sessão',
-                welcome_subtitle: 'Este é o seu painel de acompanhamento KandalGym.',
-                my_training_sub: 'Ver exercícios e séries',
-                my_diet_sub: 'Ver plano alimentar',
-                eval_sub: 'Ver peso e medidas',
-                news_title: 'Notícias & Novidades',
-                trainer_label: 'O seu Professor',
-                login_subtitle: 'Entre na sua conta para continuar',
-                remember_me: 'Lembrar-me',
-                enter: 'Entrar',
-                forgot_pass: 'Esqueci-me da palavra-passe',
-                recovery_title: 'Recuperar Conta',
-                recovery_subtitle: 'Introduza o seu email de registo. Um administrador será notificado para repor a sua conta. Se preferir, pode agilizar o processo via WhatsApp.',
-                request_recovery: 'Solicitar Recuperação',
-                wa_message: 'Mensagem Whatsapp',
-                wa_identification: '* Ao enviar Whatsapp, indique o seu email para identificarmos a sua conta.',
-                back_login: 'Voltar ao Login',
-                email_placeholder: 'Email',
-                pass_placeholder: 'Password',
-                recovery_email_placeholder: 'O seu email de registo',
-                classes_subtitle: 'Consulte e inscreva-se nas aulas de grupo',
-                new_class: 'Nova Aula',
-                no_classes: 'Ainda não foram criadas aulas.',
-                create_first_class: 'Criar Primeira Aula',
-                table_date: 'Data',
-                table_time: 'Hora',
-                table_class: 'Classe',
-                table_teacher: 'Professor',
-                table_enrolled: 'Inscritos',
-                table_actions: 'Ações',
-                finished: 'Finalizada',
-                view_list: 'Ver Lista / Inscritos',
-                plan_training: 'Plano de Treino',
-                history: 'Histórico',
-                manage: 'Gerir',
-                back: 'Voltar',
-                plan_rest: 'Descanso',
-                plan_exercises: 'Exercícios',
-                plan_details: 'Detalhes do Plano',
-                plan_meal_title: 'Plano Alimentar',
-                created_by: 'Criado por',
-                on_date: 'em',
-                nutrition_prot: 'Prot',
-                nutrition_carb: 'Carb',
-                nutrition_fat: 'Gord',
-                no_meal_plan: 'Ainda não tem plano alimentar atribuído.',
-                create_meal_plan: 'Criar Plano Alimentar',
-                macro_kcal: 'Kcal Total',
-                macro_prot: 'Proteina',
-                macro_carb: 'Hidratos',
-                macro_fat: 'Gordura',
-                eval_conducted_on: 'Realizada em',
-                export_pdf: 'Exportar PDF',
-                new_eval: 'Nova Avaliação',
-                no_evals: 'Ainda não existem avaliações registadas.',
-                by_author: 'Por',
-                eval_weight: 'Peso',
-                eval_height: 'Altura',
-                eval_muscle: 'Músculo',
-                eval_fat: 'Gordura',
-                eval_water: 'Água',
-                eval_bone: '�?ssea',
-                eval_visceral: 'Gord. Visceral',
-                eval_met_age: 'Idade Met.',
-                eval_basal: 'Met. Basal',
-                eval_chest: 'Tórax',
-                eval_waist: 'Cintura',
-                eval_abdominal: 'Abdominal',
-                eval_hip: 'Quadril',
-                eval_thigh: 'Coxa',
-                eval_modal_new: 'Nova Avaliação',
-                eval_modal_edit: 'Editar Avaliação',
-                eval_modal_subtitle: 'Registe os dados da bioimpedância e medidas.',
-                eval_modal_date: 'Data da Avaliação',
-                cancel: 'Cancelar',
-                update_data: 'Atualizar Dados',
-                save_eval: 'Guardar Avaliação',
-                no_clients_found: 'Nenhum aluno encontrado.',
-                teacher_label: 'Professor',
-                view_card: 'Ver Ficha',
-                training_plan_title: 'Plano de Treino Personalizado',
-                client_label: 'Aluno',
-                goal_label: 'Objetivo',
-                table_exercise: 'Exercício',
-                table_sets: 'Séries',
-                table_reps: 'Reps',
-                access_mgmt: 'Gestão de Entradas',
-                hardware_scanner: 'Scanner de Hardware Ativo',
-                hardware_scanner_sub: 'Utilize o leitor físico para ler os códigos QR dos alunos.',
-                ready_to_read: 'Pronto para leitura',
-                connect_arduino: 'Ligar Arduino',
-                arduino_connected: 'Arduino Conetado',
-                waiting_qr: 'Aguardando QR...',
-                new_casual_pass: 'Novo Treino Avulso',
-                casual_pass_sub: 'Crie um acesso rápido para clientes temporários.',
-                client_name_placeholder: 'Nome do Cliente',
-                pass_type_weekly: 'Semanal (7 Dias)',
-                pass_type_monthly: 'Mensal (30 Dias)',
-                create: 'Criar',
-                manual_entry: 'Entrada Manual (Backup)',
-                staff_label: 'Staff (Adm/Prof)',
-                search_qr_placeholder: 'Pesquisar por nome, telemóvel ou código...',
-                select_all_visible: 'Selecionar Todos Visíveis',
-                new_validity: 'Nova Validade:',
-                apply_all: 'Aplicar a Todos',
-                plan_label: 'Plano',
-                status_label: 'Estado',
-                credits_label: 'Créditos',
-                today_label: 'Hoje',
-                validity_label: 'Validade',
-                actions_label: 'Ações',
-                qr_ready_msg: 'Pronto para ler código...',
-                admin_dashboard: 'Painel de Administração',
-                manage_news: 'Gerir Notícias',
-                teachers: 'Professores',
-                students: 'Alunos',
-                teacher_team: 'Equipa de Professores',
-                user_mgmt: 'Gestão de Contas',
-                new_user: 'Novo Utilizador',
-                new_exercise: 'Novo Exercício',
-                new_food: 'Novo Alimento',
-                search_users_placeholder: 'Pesquisar utilizador por nome ou email...',
-                manager_label: 'Gestores',
-                plans_label: 'Mensalidades',
-                global_access_title: 'Acesso Global (Admin)',
-                global_access_sub: 'Como Administrador, tem acesso total a todos os alunos registados no sistema.',
-                trainer_dashboard: 'Painel do Treinador',
-                period_label: 'Período',
-                my_clients: 'Os Meus Alunos',
-                total_clients: 'Total de Alunos',
-                this_month: 'Este Mês',
-                no_clients_assigned: 'Ainda não tem alunos atribuídos.',
-                evaluations_plural: 'Avaliações',
-                plans_training_plural: 'Planos Treino',
-                plans_meal_plural: 'Planos Dieta',
-                anamnesis_plural: 'Anamneses',
-                activity_header: 'Atividade de %date',
-                productivity_summary: 'Resumo de produtividade registada por si neste período.',
-                manage_anamnesis: 'Gestão de Anamneses',
-                new_anamnesis: 'Nova Anamnese',
-                search_anamnesis_placeholder: 'Pesquisar aluno ou data...',
-                no_anamnesis_found: 'Nenhuma anamnese registada.',
-                monitor_title: 'Monitor de Acesso',
-                monitor_subtitle: 'Acompanhe as entradas e saídas do ginásio no momento.',
-                last_accesses: '�?ltimos Acessos',
-                at_time: 'às',
-                days_ago: 'dias atrás',
-                expired: 'Expirado',
-                active_status: 'Ativo',
-                spots_left: 'vagas restantes',
-                spots_total: 'vagas',
-                join: 'Inscrever',
-                leave: 'Sair da Aula',
-                class_full: 'Aula Cheia',
-                unenroll_msg: 'Tem a certeza que deseja cancelar a inscrição?',
-                enroll_success: 'Inscrição realizada!',
-                food_db: 'Base de Dados de Alimentos',
-                add_food: 'Novo Alimento',
-                search_food: 'Pesquisar alimento ou categoria...',
-                portion: 'Porção',
-                kcal: 'Kcal',
-                prot: 'Prot',
-                carb: 'Carb',
-                fat: 'Gord',
-                announcements_mgmt: 'Gestão de Comunicados (Push)',
-                new_announcement: 'Novo Comunicado',
-                title_label: 'Título',
-                msg_label: 'Mensagem (Corpo do Texto)',
-                msg_placeholder: 'Escreva aqui o que os alunos vão receber...',
-                send: 'Enviar Agora',
-                all_clients: 'Todos os Alunos',
-                my_profile_title: 'O Meu Perfil',
-                account_settings: 'Definições de Conta',
-                change_pass: 'Alterar Palavra-passe',
-                current_pass: 'Password Atual',
-                new_pass: 'Nova Password',
-                save_changes: 'Guardar Alterações',
-                incorrect_pass: 'Password atual incorreta.',
-                pass_changed: 'Password alterada com sucesso!',
-                occupancy_title: 'Afluência Estimada',
-                occupancy_sub: 'Dicas baseadas no histórico de visitas.',
-                in_gym: 'No Ginásio',
-                full_gym: 'O ginásio está cheio!',
-                good_time: 'Boa hora para treinar!',
-                busy_time: 'Muita afluência agora.',
-                last_reg_students: '�?ltimos Alunos Registados',
-                see_all: 'Ver Todos',
-                chat_title: 'Centro de Mensagens',
-                type_msg: 'Escreva uma mensagem...',
-                exercise_library: 'Biblioteca de Exercícios',
-                add_exercise: 'Novo Exercício',
-                search_exercise: 'Pesquisar exercício...',
-                category: 'Categoria',
-                video_url: 'URL de Vídeo (Youtube)',
-                full_name: 'Nome Completo',
-                access_email: 'Email de Acesso',
-                phone_contact: 'Contacto Telefónico',
-                birth_date: 'Data de Nascimento',
-                profession_label: 'Profissão',
-                new_password: 'Nova Palavra-passe',
-                password_hint: 'Mantenha ou altere para uma nova.',
-                change_photo: 'Alterar Foto',
-                total_visits: 'Total Visitas',
-                sun: 'Domingo',
-                mon: 'Segunda-feira',
-                tue: 'Terça-feira',
-                wed: 'Quarta-feira',
-                thu: 'Quinta-feira',
-                fri: 'Sexta-feira',
-                sat: 'Sábado',
-                wa_recovery_msg: 'Olá KandalGym! Gostaria de solicitar a recuperação da minha palavra-passe.',
-                wa_recovery_user_msg: 'Olá KandalGym! O meu nome é %name, o meu email é %email e gostaria de solicitar a recuperação da minha palavra-passe.',
-                wa_recovery_email_msg: 'Olá KandalGym! O meu email é %email e gostaria de solicitar a recuperação da minha palavra-passe.'
-            },
-            en: {
-                dashboard: 'Home',
-                classes: 'Schedule / Classes',
-                chat: 'Messages / Chat',
-                training: 'Training Plan',
-                meal: 'Nutrition Plan',
-                evaluation: 'Physical Eval.',
-                profile: 'My Profile',
-                logout: 'Logout',
-                welcome: 'Welcome',
-                loading: 'Loading...',
-                users_admin: 'Account Mgmt',
-                qr_admin: 'Access Mgmt',
-                monitor_admin: 'Access Monitor',
-                exercises_admin: 'Exercises',
-                foods_admin: 'Foods',
-                global_access: 'Global Access',
-                notifications_admin: 'Announcements',
-                news: 'KandalGym Feed',
-                hello: 'Hello',
-                my_trainer: 'My Trainer',
-                last_eval: 'Last Evaluation',
-                performance: 'Your Performance',
-                active_plan: 'Active Plan',
-                current_goal: 'Current Goal',
-                switch_lang: 'Switch to Portuguese',
-                save: 'Save',
-                cancel: 'Cancel',
-                edit: 'Edit',
-                delete: 'Delete',
-                search: 'Search...',
-                no_data: 'No data to show.',
-                dashboard_admin: 'Admin Panel',
-                classes_schedule: 'Class Schedule',
-                classes_mgmt: 'Class Mgmt',
-                anamnesis: 'Anamnesis',
-                chat_simple: 'Messages',
-                logout_session: 'Logout',
-                welcome_subtitle: 'This is your KandalGym monitoring dashboard.',
-                my_training_sub: 'View exercises and sets',
-                my_diet_sub: 'View meal plan',
-                eval_sub: 'View weight and measures',
-                news_title: 'News & Updates',
-                trainer_label: 'Your Trainer',
-                login_subtitle: 'Sign in to your account to continue',
-                remember_me: 'Remember me',
-                enter: 'Login',
-                forgot_pass: 'Forgot my password',
-                recovery_title: 'Account Recovery',
-                recovery_subtitle: 'Enter your registered email. An admin will be notified to reset your account. If you prefer, expedite the process via WhatsApp.',
-                request_recovery: 'Request Recovery',
-                wa_message: 'WhatsApp Message',
-                wa_identification: '* When sending via WhatsApp, include your email for account identification.',
-                back_login: 'Back to Login',
-                email_placeholder: 'Email',
-                pass_placeholder: 'Password',
-                recovery_email_placeholder: 'Your registered email',
-                classes_subtitle: 'Check and sign up for group classes',
-                new_class: 'New Class',
-                no_classes: 'No classes have been created yet.',
-                create_first_class: 'Create First Class',
-                table_date: 'Date',
-                table_time: 'Time',
-                table_class: 'Class',
-                table_teacher: 'Teacher',
-                table_enrolled: 'Enrolled',
-                table_actions: 'Actions',
-                finished: 'Finished',
-                view_list: 'View List / Enrolled',
-                plan_training: 'Training Plan',
-                history: 'History',
-                manage: 'Manage',
-                back: 'Back',
-                plan_rest: 'Rest',
-                plan_exercises: 'Exercises',
-                plan_details: 'Plan Details',
-                plan_meal_title: 'Nutrition Plan',
-                created_by: 'Created by',
-                on_date: 'on',
-                nutrition_prot: 'Prot',
-                nutrition_carb: 'Carb',
-                nutrition_fat: 'Fat',
-                no_meal_plan: 'No nutrition plan assigned yet.',
-                create_meal_plan: 'Create Nutrition Plan',
-                macro_kcal: 'Total Kcal',
-                macro_prot: 'Protein',
-                macro_carb: 'Carbs',
-                macro_fat: 'Fat',
-                eval_conducted_on: 'Conducted on',
-                export_pdf: 'Export PDF',
-                new_eval: 'New Evaluation',
-                no_evals: 'No evaluations recorded yet.',
-                by_author: 'By',
-                eval_weight: 'Weight',
-                eval_height: 'Height',
-                eval_muscle: 'Muscle',
-                eval_fat: 'Fat',
-                eval_water: 'Water',
-                eval_bone: 'Bone',
-                eval_visceral: 'Visc. Fat',
-                eval_met_age: 'Met. Age',
-                eval_basal: 'Basal Met.',
-                eval_chest: 'Chest',
-                eval_waist: 'Waist',
-                eval_abdominal: 'Abdominal',
-                eval_hip: 'Hip',
-                eval_thigh: 'Thigh',
-                eval_modal_new: 'New Evaluation',
-                eval_modal_edit: 'Edit Evaluation',
-                eval_modal_subtitle: 'Record bioimpedance and measurement data.',
-                eval_modal_date: 'Evaluation Date',
-                cancel: 'Cancel',
-                update_data: 'Update Data',
-                save_eval: 'Save Evaluation',
-                no_clients_found: 'No clients found.',
-                teacher_label: 'Teacher',
-                view_card: 'View Card',
-                training_plan_title: 'Personalized Training Plan',
-                client_label: 'Client',
-                goal_label: 'Goal',
-                table_exercise: 'Exercise',
-                table_sets: 'Sets',
-                table_reps: 'Reps',
-                access_mgmt: 'Access Management',
-                hardware_scanner: 'Active Hardware Scanner',
-                hardware_scanner_sub: 'Use the physical reader to scan student QR codes.',
-                ready_to_read: 'Ready to read',
-                connect_arduino: 'Connect Arduino',
-                arduino_connected: 'Arduino Connected',
-                waiting_qr: 'Waiting for QR...',
-                new_casual_pass: 'New Casual Pass',
-                casual_pass_sub: 'Create quick access for temporary clients.',
-                client_name_placeholder: 'Client Name',
-                pass_type_weekly: 'Weekly (7 Days)',
-                pass_type_monthly: 'Monthly (30 Days)',
-                create: 'Create',
-                manual_entry: 'Manual Entry (Backup)',
-                staff_label: 'Staff (Admin/Trainer)',
-                search_qr_placeholder: 'Search by name, phone or code...',
-                select_all_visible: 'Select All Visible',
-                new_validity: 'New Validity:',
-                apply_all: 'Apply to All',
-                plan_label: 'Plan',
-                status_label: 'Status',
-                credits_label: 'Credits',
-                today_label: 'Today',
-                validity_label: 'Validity',
-                actions_label: 'Actions',
-                qr_ready_msg: 'Ready to scan code...',
-                admin_dashboard: 'Admin Dashboard',
-                manage_news: 'Manage News',
-                teachers: 'Teachers',
-                students: 'Students',
-                teacher_team: 'Teachers Team',
-                user_mgmt: 'Account Management',
-                new_user: 'New User',
-                new_exercise: 'New Exercise',
-                new_food: 'New Food',
-                search_users_placeholder: 'Search user by name or email...',
-                manager_label: 'Managers',
-                plans_label: 'Monthly Fees',
-                global_access_title: 'Global Access (Admin)',
-                global_access_sub: 'As an Administrator, you have full access to all registered students.',
-                trainer_dashboard: 'Trainer Dashboard',
-                period_label: 'Period',
-                my_clients: 'My Clients',
-                total_clients: 'Total Students',
-                this_month: 'This Month',
-                no_clients_assigned: 'You have no assigned students yet.',
-                evaluations_plural: 'Evaluations',
-                plans_training_plural: 'Training Plans',
-                plans_meal_plural: 'Meal Plans',
-                anamnesis_plural: 'Anamnesis',
-                activity_header: 'Activity of %date',
-                productivity_summary: 'Summary of productivity recorded by you in this period.',
-                manage_anamnesis: 'Manage Anamnesis',
-                new_anamnesis: 'New Anamnesis',
-                search_anamnesis_placeholder: 'Search student or date...',
-                no_anamnesis_found: 'No anamnesis recorded.',
-                monitor_title: 'Access Monitor',
-                monitor_subtitle: 'Track gym check-ins and check-outs in real time.',
-                last_accesses: 'Last Accesses',
-                at_time: 'at',
-                days_ago: 'days ago',
-                expired: 'Expired',
-                active_status: 'Active',
-                spots_left: 'spots left',
-                spots_total: 'spots',
-                join: 'Join',
-                leave: 'Leave Class',
-                class_full: 'Full',
-                unenroll_msg: 'Are you sure you want to cancel your enrollment?',
-                enroll_success: 'Enrollment successful!',
-                food_db: 'Food Database',
-                add_food: 'New Food',
-                search_food: 'Search food or category...',
-                portion: 'Portion',
-                kcal: 'Kcal',
-                prot: 'Prot',
-                carb: 'Carb',
-                fat: 'Fat',
-                announcements_mgmt: 'Push Announcements Mgmt',
-                new_announcement: 'New Announcement',
-                title_label: 'Title',
-                msg_label: 'Message (Body Text)',
-                msg_placeholder: 'Write here what students will receive...',
-                send: 'Send Now',
-                all_clients: 'All Students',
-                my_profile_title: 'My Profile',
-                account_settings: 'Account Settings',
-                change_pass: 'Change Password',
-                current_pass: 'Current Password',
-                new_pass: 'New Password',
-                save_changes: 'Save Changes',
-                incorrect_pass: 'Incorrect current password.',
-                pass_changed: 'Password changed successfully!',
-                occupancy_title: 'Estimated Occupancy',
-                occupancy_sub: 'Tips based on visit history.',
-                in_gym: 'In the Gym',
-                full_gym: 'The gym is full!',
-                good_time: 'Good time to train!',
-                busy_time: 'Very busy right now.',
-                last_reg_students: 'Last Registered Students',
-                see_all: 'See All',
-                chat_title: 'Message Center',
-                type_msg: 'Type a message...',
-                exercise_library: 'Exercise Library',
-                add_exercise: 'New Exercise',
-                search_exercise: 'Search exercise...',
-                category: 'Category',
-                video_url: 'Video URL (Youtube)',
-                full_name: 'Full Name',
-                access_email: 'Login Email',
-                phone_contact: 'Phone Number',
-                birth_date: 'Date of Birth',
-                profession_label: 'Profession',
-                new_password: 'New Password',
-                password_hint: 'Keep or change for a new one.',
-                change_photo: 'Change Photo',
-                total_visits: 'Total Visits',
-                sun: 'Sunday',
-                mon: 'Monday',
-                tue: 'Tuesday',
-                wed: 'Wednesday',
-                thu: 'Thursday',
-                fri: 'Friday',
-                sat: 'Saturday',
-                wa_recovery_msg: 'Hello KandalGym! I would like to request my password recovery.',
-                wa_recovery_user_msg: 'Hello KandalGym! My name is %name, my email is %email and I would like to request my password recovery.',
-                wa_recovery_email_msg: 'Hello KandalGym! My email is %email and I would like to request my password recovery.'
-            }
-        };
         this.checkForForceUpdate();
 
         this.role = 'client';
@@ -584,7 +79,7 @@ class FitnessApp {
             messagingSenderId: "367817039949",
             appId: "1:367817039949:web:5c72215819b9bb1eb07c04",
             measurementId: "G-WY0QSKYVCR",
-            serverKey: "AIzaSyD7cf3sfJBm0YsLOagu6or2hCTd-xcjO1E" // ATEN�?�?â�?�¡�?�?�?�??O: Está chave deve começar por AAAA...
+            serverKey: "AIzaSyD7cf3sfJBm0YsLOagu6or2hCTd-xcjO1E" // ATENÇÃO: Está chave deve começar por AAAA...
         };
 
         try {
@@ -913,13 +408,6 @@ class FitnessApp {
                     }
                 });
 
-                // Normalizar historico de entradas para Array
-                (this.state.qrClients || []).forEach(c => {
-                    if (c && c.historico && typeof c.historico === 'object' && !Array.isArray(c.historico)) {
-                        c.historico = Object.values(c.historico);
-                    }
-                });
-
                 const dictCollections = ['trainingPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments', 'planRestrictions'];
                 dictCollections.forEach(coll => { if (!this.state[coll]) this.state[coll] = {}; });
 
@@ -948,7 +436,7 @@ class FitnessApp {
                 this.syncSessionWithState();
 
                 // Atualizar UI apenas se logado, não houver modais abertas,
-                // E Ná�?�?â�?� �?¢â�??¬â�??¢O estivermos no meio de uma gravação nossa (evita reset de scroll)
+                // E NáÆ’O estivermos no meio de uma gravação nossa (evita reset de scroll)
                 if (this.isLoggedIn && !document.querySelector('.modal-overlay') && !this.isSaving) {
                     this.renderContent();
                 }
@@ -1043,31 +531,17 @@ class FitnessApp {
 
         container.innerHTML = `
             <div style="display:flex; align-items:center; gap:0.5rem;">
-                <div style="display:flex; background:rgba(0,0,0,0.2); border-radius:20px; padding:2px; border:1px solid var(--surface-border); margin-right:4px;">
-                    <button onclick="if(app.lang!=='pt')app.toggleLanguage()" style="border:none; background:${this.lang === 'pt' ? 'var(--primary)' : 'transparent'}; color:${this.lang === 'pt' ? '#fff' : 'var(--text-muted)'}; border-radius:20px; padding:2px 8px; font-size:0.65rem; font-weight:800; cursor:pointer; transition:0.3s;">PT</button>
-                    <button onclick="if(app.lang!=='en')app.toggleLanguage()" style="border:none; background:${this.lang === 'en' ? 'var(--primary)' : 'transparent'}; color:${this.lang === 'en' ? '#fff' : 'var(--text-muted)'}; border-radius:20px; padding:2px 8px; font-size:0.65rem; font-weight:800; cursor:pointer; transition:0.3s;">EN</button>
-                </div>
                 <div class="avatar" style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; border: 2px solid var(--surface-border); overflow: hidden;">
                     ${photo ? `<img src="${photo}" style="width:100%; height:100%; object-fit:cover;">` : initials}
                 </div>
                 <button class="btn btn-ghost btn-sm" onclick="app.installPWA()" title="Instalar App" style="color: var(--primary); padding: 6px 10px; border: 1px solid var(--primary); border-radius: 8px;">
                     <i class="fas fa-download"></i>
                 </button>
-                <button class="btn btn-ghost btn-sm" onclick="app.handleLogout()" title="${this.t('logout')}" style="color:var(--text-muted);">
+                <button class="btn btn-ghost btn-sm" onclick="app.handleLogout()" title="Sair" style="color:var(--text-muted);">
                     <i class="fas fa-sign-out-alt"></i>
                 </button>
             </div>
         `;
-    }
-
-    t(key) {
-        return (this.translations[this.lang] && this.translations[this.lang][key]) ? this.translations[this.lang][key] : key;
-    }
-
-    toggleLanguage() {
-        this.lang = this.lang === 'pt' ? 'en' : 'pt';
-        localStorage.setItem('kg_lang', this.lang);
-        location.reload();
     }
 
     renderLogin() {
@@ -1085,30 +559,30 @@ class FitnessApp {
                     <div class="logo">
                         <img src="logo.png" alt="KandalGym Logo">
                     </div>
-                    <p>${this.t('login_subtitle')}</p>
+                    <p>Entre na sua conta para continuar</p>
                 </div>
                 <form class="login-form" onsubmit="app.handleLogin(); return false;">
                     <div id="login-error-msg" style="display:none; color:var(--danger); background:rgba(239, 68, 68, 0.1); padding:0.8rem; border-radius:8px; margin-bottom:1rem; font-size:0.9rem; text-align:center; border: 1px solid rgba(239, 68, 68, 0.3);"></div>
                     <div class="input-icon-group">
                         <i class="fas fa-envelope"></i>
-                        <input type="email" id="login-email" placeholder="${this.t('email_placeholder')}" value="${savedCreds.email || ''}" required>
+                        <input type="email" id="login-email" placeholder="Email" value="${savedCreds.email || ''}" required>
                     </div>
                     <div class="input-icon-group">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="login-pass" placeholder="${this.t('pass_placeholder')}" value="${savedCreds.pass || ''}" required>
+                        <input type="password" id="login-pass" placeholder="Password" value="${savedCreds.pass || ''}" required>
                     </div>
 
                     <div style="display:flex; align-items:center; gap:8px; margin:0.2rem 0 1.2rem 4px; cursor:pointer;">
                         <input type="checkbox" id="remember-me" style="width:16px; height:16px; cursor:pointer;" ${rememberChecked ? 'checked' : ''}>
-                        <label for="remember-me" style="font-size:0.85rem; color:var(--text-muted); cursor:pointer;">${this.t('remember_me')}</label>
+                        <label for="remember-me" style="font-size:0.85rem; color:var(--text-muted); cursor:pointer;">Lembrar-me</label>
                     </div>
 
                     <button type="submit" class="btn btn-primary" style="width:100%;">
-                        ${this.t('enter')} <i class="fas fa-arrow-right"></i>
+                        Entrar <i class="fas fa-arrow-right"></i>
                     </button>
 
                     <a href="#" onclick="app.renderForgotPassword(); return false;" style="display:block; text-align:center; margin-top:1.5rem; font-size:0.85rem; color:var(--text-muted); text-decoration:none;">
-                        ${this.t('forgot_pass')}
+                        Esqueci-me da palavra-passe
                     </a>
                 </form>
             </div>
@@ -1125,9 +599,9 @@ class FitnessApp {
                     <div class="logo">
                         <img src="logo.png" alt="KandalGym Logo">
                     </div>
-                    <h3>${this.t('recovery_title')}</h3>
+                    <h3>Recuperar Conta</h3>
                     <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5; margin-top:0.5rem; padding: 0 1rem;">
-                        ${this.t('recovery_subtitle')}
+                        Introduza o seu email de registo. Um administrador será notificado para repor a sua conta. Se preferir, pode agilizar o processo via WhatsApp.
                     </p>
                 </div>
                 
@@ -1136,24 +610,24 @@ class FitnessApp {
                     
                     <div class="input-icon-group">
                         <i class="fas fa-envelope"></i>
-                        <input type="email" id="recovery-email" placeholder="${this.t('recovery_email_placeholder')}" required>
+                        <input type="email" id="recovery-email" placeholder="O seu email de registo" required>
                     </div>
 
                     <button class="btn btn-primary" style="width:100%;" onclick="app.handlePasswordRecovery()">
-                        ${this.t('request_recovery')}
+                        Solicitar Recuperação
                     </button>
 
                     <div style="margin-top:1.5rem; text-align:center;">
                         <button onclick="app.contactSupportViaWA()" class="btn btn-ghost" style="color:#25d366; font-size:0.85rem; border: 1px solid rgba(37, 211, 102, 0.2); width: 100%;">
-                            <i class="fa-brands fa-whatsapp"></i> ${this.t('wa_message')}
+                            <i class="fa-brands fa-whatsapp"></i> Mensagem Whatsapp
                         </button>
                         <p style="font-size:0.7rem; color:var(--text-muted); margin-top:0.5rem;">
-                            ${this.t('wa_identification')}
+                            * Ao enviar Whatsapp, indique o seu email para identificarmos a sua conta.
                         </p>
                     </div>
 
                     <a href="#" onclick="app.renderLogin(); return false;" style="display:block; text-align:center; margin-top:2rem; font-size:0.85rem; color:var(--text-muted); text-decoration: none;">
-                        <i class="fas fa-arrow-left"></i> ${this.t('back_login')}
+                        <i class="fas fa-arrow-left"></i> Voltar ao Login
                     </a>
                 </div>
             </div>
@@ -1207,7 +681,7 @@ class FitnessApp {
         // Obter o email digitado, se houver
         const emailInput = document.getElementById('recovery-email');
         const email = emailInput ? emailInput.value.trim() : '';
-
+        
         let user = null;
         if (email) {
             // Procurar no estado se o email pertence a alguém conhecido
@@ -1215,14 +689,14 @@ class FitnessApp {
             user = allUsers.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
         }
 
-        let message = this.t('wa_recovery_msg');
-
+        let message = "Olá KandalGym! Gostaria de solicitar a recuperação da minha palavra-passe.";
+        
         if (user) {
             // Se encontrarmos o utilizador, enviamos Nome e Email
-            message = this.t('wa_recovery_user_msg').replace('%name', user.name).replace('%email', user.email);
+            message = `Olá KandalGym! O meu nome é ${user.name}, o meu email é ${user.email} e gostaria de solicitar a recuperação da minha palavra-passe.`;
         } else if (email) {
             // Se só tivermos o email, enviamos só o email
-            message = this.t('wa_recovery_email_msg').replace('%email', email);
+            message = `Olá KandalGym! O meu email é ${email} e gostaria de solicitar a recuperação da minha palavra-passe.`;
         }
 
         const waUrl = `https://wa.me/351963939017?text=${encodeURIComponent(message)}`;
@@ -1978,35 +1452,35 @@ Bons treinos!`;
         let navItems = [];
         if (this.role === 'admin') {
             navItems = [
-                { id: 'dashboard', icon: 'fa-shield-alt', label: this.t('dashboard_admin') || 'Painel Admin' },
-                { id: 'classes', icon: 'fa-calendar-alt', label: this.t('classes') },
-                { id: 'users', icon: 'fa-users-cog', label: this.t('users_admin') },
-                { id: 'chat', icon: 'fa-comment-alt', label: this.t('chat') },
-                { id: 'qr_manager', icon: 'fa-qrcode', label: this.t('qr_admin') },
-                { id: 'monitor', icon: 'fa-desktop', label: this.t('monitor_admin') },
-                { id: 'exercises', icon: 'fa-play-circle', label: this.t('exercises_admin') },
-                { id: 'foods', icon: 'fa-apple-alt', label: this.t('foods_admin') },
-                { id: 'all-clients', icon: 'fa-search', label: this.t('global_access') },
-                { id: 'notifications_manager', icon: 'fa-paper-plane', label: this.t('notifications_admin') },
-                { id: 'profile', icon: 'fa-user-circle', label: this.t('profile') }
+                { id: 'dashboard', icon: 'fa-shield-alt', label: 'Painel Admin' },
+                { id: 'classes', icon: 'fa-calendar-alt', label: 'Horário & Aulas' },
+                { id: 'users', icon: 'fa-users-cog', label: 'Gestão Contas' },
+                { id: 'chat', icon: 'fa-comment-alt', label: 'Mensagens / Chat' },
+                { id: 'qr_manager', icon: 'fa-qrcode', label: 'Gestão de Entradas' },
+                { id: 'monitor', icon: 'fa-desktop', label: 'Monitor de Acesso' },
+                { id: 'exercises', icon: 'fa-play-circle', label: 'Biblioteca Exercícios' },
+                { id: 'foods', icon: 'fa-apple-alt', label: 'Base de Alimentos' },
+                { id: 'all-clients', icon: 'fa-search', label: 'Acesso Global' },
+                { id: 'notifications_manager', icon: 'fa-paper-plane', label: 'Comunicados' },
+                { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
             ];
         } else if (this.role === 'teacher') {
             navItems = [
                 { id: 'dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
-                { id: 'classes', icon: 'fa-calendar-alt', label: this.t('classes_mgmt') || 'Gestão de Aulas' },
-                { id: 'anamnesis', icon: 'fa-notes-medical', label: this.t('anamnesis') || 'Anamnese' },
-                { id: 'chat', icon: 'fa-comment-alt', label: this.t('chat_simple') || 'Mensagens' },
-                { id: 'profile', icon: 'fa-user-circle', label: this.t('profile') }
+                { id: 'classes', icon: 'fa-calendar-alt', label: 'Gestão de Aulas' },
+                { id: 'anamnesis', icon: 'fa-notes-medical', label: 'Anamnese' },
+                { id: 'chat', icon: 'fa-comment-alt', label: 'Mensagens' },
+                { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
             ];
         } else {
             navItems = [
-                { id: 'dashboard', icon: 'fa-home', label: this.t('dashboard') },
-                { id: 'classes', icon: 'fa-calendar-alt', label: this.t('classes_schedule') || 'Horário de Aulas' },
-                { id: 'training', icon: 'fa-dumbbell', label: this.t('training') },
-                { id: 'meal', icon: 'fa-apple-alt', label: this.t('meal') },
-                { id: 'evaluation', icon: 'fa-chart-line', label: this.t('evaluation') },
-                { id: 'chat', icon: 'fa-comment-alt', label: this.t('chat_simple') || 'Mensagens' },
-                { id: 'profile', icon: 'fa-user-circle', label: this.t('profile') }
+                { id: 'dashboard', icon: 'fa-home', label: 'Inicio' },
+                { id: 'classes', icon: 'fa-calendar-alt', label: 'Horário de Aulas' },
+                { id: 'training', icon: 'fa-dumbbell', label: 'Meu Treino' },
+                { id: 'meal', icon: 'fa-apple-alt', label: 'Minha Dieta' },
+                { id: 'evaluation', icon: 'fa-chart-line', label: 'Avaliação Física' },
+                { id: 'chat', icon: 'fa-comment-alt', label: 'Mensagens' },
+                { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
             ];
         }
 
@@ -2016,7 +1490,7 @@ Bons treinos!`;
             </button>
         `).join('') + `
         <button class="btn btn-ghost" onclick="app.handleLogout()" style="margin-top:auto; color:var(--danger); gap: 10px;">
-                <i class="fas fa-sign-out-alt"></i> <span>${this.t('logout_session') || 'Terminar Sessão'}</span>
+                <i class="fas fa-sign-out-alt"></i> <span>Terminar Sessão</span>
             </button>
         `;
     }
@@ -2109,8 +1583,8 @@ Bons treinos!`;
         let liveOccupancy = 0;
 
         qrClientsArray.forEach(c => {
-            if (c.historico) {
-                const histArray = Object.values(c.historico);
+            if (c.histórico) {
+                const histArray = Object.values(c.histórico);
                 // Ordenar por data descendente para ver o movimento mais recente
                 const sortedHist = histArray.map(h => ({
                     d: new Date(typeof h === 'string' ? h : h.d),
@@ -2133,7 +1607,7 @@ Bons treinos!`;
                     liveOccupancy++;
                 }
 
-                // Total de Visitas á�?�?â�?�¦�?�??�?¡nicas Hoje
+                // Total de Visitas áÅ¡nicas Hoje
                 const hasVisitToday = sortedHist.some(h => h.t === 'in' && h.d >= todayStart && h.d <= todayEnd);
                 if (hasVisitToday) totalHoje++;
             }
@@ -2162,14 +1636,14 @@ Bons treinos!`;
                 <h3 style="margin-top:0; color:var(--text-base); display:flex; align-items:center; gap:0.5rem; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap;">
                     <div style="display:flex; align-items:center; gap:0.5rem;">
                         <i class="fas fa-chart-line" style="color:var(--accent);"></i> 
-                        <span>${this.t('occupancy_title')}</span>
+                        <span>Afluência Estimada</span>
                     </div>
                     <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                         <div style="background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.2); padding:6px 12px; border-radius:12px; display:flex; align-items:center; gap:6px;">
                             <span class="pulse-green" style="width:8px; height:8px; background:#10b981; border-radius:50%;"></span>
-                            <span style="font-size:0.8rem; color:#10b981; font-weight:700;">${this.t('in_gym')}: ${liveOccupancy}</span>
+                            <span style="font-size:0.8rem; color:#10b981; font-weight:700;">No Ginásio: ${liveOccupancy}</span>
                         </div>
-                        ${showTotal ? `<span style="font-size:0.8rem; background:rgba(255,255,255,0.05); color:var(--text-muted); padding:6px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">${this.t('total_visits')}: <strong>${totalHoje}</strong></span>` : ''}
+                        ${showTotal ? `<span style="font-size:0.8rem; background:rgba(255,255,255,0.05); color:var(--text-muted); padding:6px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);">Total Visitas: <strong>${totalHoje}</strong></span>` : ''}
                     </div>
                 </h3>
                 <div style="display:flex; gap:2px; justify-content:space-between; align-items:flex-end; padding-top:10px; overflow-x:auto; padding-bottom:5px;">
@@ -2215,9 +1689,9 @@ Bons treinos!`;
             case 'dashboard':
                 container.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:10px;">
-                        <h2 class="animate-fade-in" style="margin:0;"><i class="fas fa-user-shield"></i> ${this.t('admin_dashboard')}</h2>
+                        <h2 class="animate-fade-in" style="margin:0;"><i class="fas fa-user-shield"></i> Dashboard Admin</h2>
                         <button class="btn btn-secondary btn-sm" onclick="app.showManageNewsModal()" style="height:40px; padding:0 1.5rem;">
-                            <i class="fas fa-bullhorn" style="color:var(--primary);"></i> ${this.t('manage_news')}
+                            <i class="fas fa-bullhorn" style="color:var(--primary);"></i> Gerir Notícias
                         </button>
                     </div>
                     
@@ -2227,7 +1701,7 @@ Bons treinos!`;
                                 <i class="fas fa-user-tie" style="font-size: 1.5rem;"></i>
                             </div>
                             <div>
-                                <small style="color: var(--text-muted); display: block;">${this.t('teachers')}</small>
+                                <small style="color: var(--text-muted); display: block;">Professores</small>
                                 <div style="font-size: 1.8rem; font-weight: 800;">${this.state.teachers.length}</div>
                             </div>
                         </div>
@@ -2237,7 +1711,7 @@ Bons treinos!`;
                                 <i class="fas fa-user-friends" style="font-size: 1.5rem;"></i>
                             </div>
                             <div>
-                                <small style="color: var(--text-muted); display: block;">${this.t('students')}</small>
+                                <small style="color: var(--text-muted); display: block;">Alunos</small>
                                 <div style="font-size: 1.8rem; font-weight: 800;">${this.state.clients.length}</div>
                             </div>
                         </div>
@@ -2248,7 +1722,7 @@ Bons treinos!`;
                     <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
                         <div class="glass-panel" style="padding: 1.5rem;">
                             <h3 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">
-                                <i class="fas fa-user-tie"></i> ${this.t('teacher_team')}
+                                <i class="fas fa-user-tie"></i> Equipa de Professores
                             </h3>
                             <div class="client-list">
                                 ${this.state.teachers.map(t => `
@@ -2269,7 +1743,7 @@ Bons treinos!`;
 
                         <div class="glass-panel" style="padding: 1.5rem;">
                             <h3 style="margin-top: 0; color: var(--secondary); display: flex; align-items: center; gap: 0.5rem;">
-                                <i class="fas fa-user-friends"></i> ${this.t('last_reg_students')}
+                                <i class="fas fa-user-friends"></i> Últimos Alunos Registados
                             </h3>
                             <div class="client-list">
                                 ${this.state.clients.slice(-3).reverse().map(c => `
@@ -2278,7 +1752,7 @@ Bons treinos!`;
                                             <strong>${c.name}</strong>
                                             <div style="font-size: 0.8rem; color: var(--text-muted);">${c.email}</div>
                                         </div>
-                                        <button class="btn btn-ghost btn-sm" onclick="app.spyClient(${c.id})">${this.t('view_card')} <i class="fas fa-chevron-right"></i></button>
+                                        <button class="btn btn-ghost btn-sm" onclick="app.spyClient(${c.id})">Ver Ficha <i class="fas fa-chevron-right"></i></button>
                                     </div>
                                 `).join('')}
                             </div>
@@ -2289,29 +1763,29 @@ Bons treinos!`;
             case 'users':
                 container.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h2 style="margin:0;">${this.t('user_mgmt')}</h2>
-                        <button class="btn btn-primary" onclick="app.showAddUserModal()"><i class="fas fa-plus"></i> ${this.t('new_user')}</button>
+                        <h2 style="margin:0;">Gestão de Contas</h2>
+                        <button class="btn btn-primary" onclick="app.showAddUserModal()"><i class="fas fa-plus"></i> Novo Utilizador</button>
                     </div>
 
                     <div class="search-container" style="margin-bottom:1.5rem;">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="${this.t('search_users_placeholder')}" 
+                        <input type="text" placeholder="Pesquisar utilizador por nome ou email..." 
                             oninput="app.switchAdminTab(app.activeAdminTab || 'teachers', this.value)"
                             class="search-bar">
                     </div>
 
                     <div class="tab-container" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 0.5rem; overflow-x: auto;">
                         <button class="btn btn-ghost" id="tab-teachers" onclick="app.switchAdminTab('teachers')" style="color: var(--primary); font-weight: 600;">
-                            <i class="fas fa-user-tie"></i> ${this.t('teachers')} (${(this.state.teachers || []).length})
+                            <i class="fas fa-user-tie"></i> Professores (${(this.state.teachers || []).length})
                         </button>
                         <button class="btn btn-ghost" id="tab-clients" onclick="app.switchAdminTab('clients')" style="color: var(--secondary); font-weight: 600;">
-                            <i class="fas fa-user-friends"></i> ${this.t('students')} (${(this.state.clients || []).length})
+                            <i class="fas fa-user-friends"></i> Alunos (${(this.state.clients || []).length})
                         </button>
                         <button class="btn btn-ghost" id="tab-admins" onclick="app.switchAdminTab('admins')" style="color: var(--accent); font-weight: 600;">
-                            <i class="fas fa-user-shield"></i> ${this.t('manager_label')} (${(this.state.admins || []).length})
+                            <i class="fas fa-user-shield"></i> Gestores (${(this.state.admins || []).length})
                         </button>
                         <button class="btn btn-ghost" id="tab-plans" onclick="app.switchAdminTab('plans')" style="color: #f1c40f; font-weight: 600;">
-                            <i class="fas fa-file-invoice-dollar"></i> ${this.t('plans_label')}
+                            <i class="fas fa-file-invoice-dollar"></i> Mensalidades (Regras)
                         </button>
                     </div>
 
@@ -2340,8 +1814,8 @@ Bons treinos!`;
                 container.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:10px;">
                         <div>
-                            <h2 style="margin-bottom:0.1rem;">${this.t('global_access_title')}</h2>
-                            <p style="color:var(--text-muted); font-size:0.85rem; margin:0;">${this.t('global_access_sub')}</p>
+                            <h2 style="margin-bottom:0.1rem;">Acesso Global (Admin)</h2>
+                            <p style="color:var(--text-muted); font-size:0.85rem; margin:0;">Como Administrador, tem acesso total a todos os alunos registados no sistema.</p>
                         </div>
                         <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                             <button class="btn btn-secondary btn-sm" onclick="app.exportClientDatabase()" title="Exportar Backup de Clientes">
@@ -2527,7 +2001,7 @@ Bons treinos!`;
             this.showToast(`Importação concluída! ${imported} novos clientes.`);
         }
 
-        alert(`Resumo da Importação:\n\n�?¢�?�??â�?�¦ Sucesso: ${imported}\n�?¢�?¡�? �?¯�?¸�?�?�??�? Ignorados (Já existem): ${skipped}\n�?�?�?�??�?�??�?¢�?�?â�?�š�?�??�?�?�?â�?�¦�?¢â�??¬â�??¢ Erros (Campos em falta): ${errors}`);
+        alert(`Resumo da Importação:\n\n✅ Sucesso: ${imported}\n⚠️ Ignorados (Já existem): ${skipped}\nÃ¢ÂÅ’ Erros (Campos em falta): ${errors}`);
 
         const modal = document.querySelector('.modal-overlay');
         if (modal) modal.remove();
@@ -2560,7 +2034,7 @@ Bons treinos!`;
         if (!input.files || !input.files[0]) return;
         const file = input.files[0];
 
-        if (!confirm("Tem a certeza que deseja restaurar este backup? Isto irá juntar os dados do ficheiro á  base de dados atual.")) return;
+        if (!confirm("Tem a certeza que deseja restaurar este backup? Isto irá juntar os dados do ficheiro áÂ  base de dados atual.")) return;
 
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -2590,7 +2064,7 @@ Bons treinos!`;
                 });
 
                 this.saveState();
-                alert(`Backup Restaurado!\n\n�?¢�?�??â�?�¦ ${added} novos clientes adicionados.`);
+                alert(`Backup Restaurado!\n\n✅ ${added} novos clientes adicionados.`);
                 this.renderContent();
             } catch (err) {
                 console.error("Erro no Backup:", err);
@@ -2605,15 +2079,15 @@ Bons treinos!`;
             <div style="height: calc(100vh - 150px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2rem;">
                 <div class="glass-panel" style="max-width: 600px; padding: 3rem; border-radius: 30px; border: 2px solid var(--primary);">
                     <i class="fas fa-desktop" style="font-size: 4rem; color: var(--primary); margin-bottom: 2rem;"></i>
-                    <h2 style="font-size: 2rem; margin-bottom: 1rem;">${this.t('monitor_title')}</h2>
+                    <h2 style="font-size: 2rem; margin-bottom: 1rem;">Monitor de Acesso</h2>
                     <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2rem;">
-                        ${this.t('monitor_intro')}
+                        Esta funcionalidade foi desenhada para um segundo ecrã (TV ou Monitor) virado para o cliente na receção.
                     </p>
                     <button class="btn btn-primary btn-lg" onclick="app.openAccessMonitor()" style="padding: 1.5rem 3rem; font-size: 1.2rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);">
-                        <i class="fas fa-external-link-alt"></i> ${this.t('open_client_screen')}
+                        <i class="fas fa-external-link-alt"></i> Abrir Ecra de Cliente
                     </button>
                     <p style="margin-top: 2rem; font-size: 0.9rem; color: var(--text-muted);">
-                        <i class="fas fa-info-circle"></i> ${this.t('monitor_instructions')}
+                        <i class="fas fa-info-circle"></i> Após abrir, arraste a nova janela para o segundo monitor e coloque em ecrã inteiro (tecla F11).
                     </p>
                 </div>
             </div>
@@ -2740,9 +2214,9 @@ Bons treinos!`;
                 const displayDate = new Date(selYear, selMonth - 1);
                 container.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
-                        <h2 style="margin:0;"><i class="fas fa-chart-line"></i> ${this.t('trainer_dashboard')}</h2>
+                        <h2 style="margin:0;"><i class="fas fa-chart-line"></i> Dashboard Trainer</h2>
                         <div style="display:flex; align-items:center; gap:0.5rem; background:rgba(255,255,255,0.05); padding:5px 15px; border-radius:12px; border:1px solid var(--surface-border);">
-                            <small style="color:var(--text-muted); font-weight:600; text-transform:uppercase; font-size:0.65rem;">${this.t('period_label')}:</small>
+                            <small style="color:var(--text-muted); font-weight:600; text-transform:uppercase; font-size:0.65rem;">Período:</small>
                             <input type="month" id="stats-month-picker" value="${this.dashboardMonth}" 
                                 onchange="app.updateDashboardMonth(this.value)"
                                 style="background:transparent; border:none; color:#fff; font-family:inherit; font-weight:600; font-size:0.9rem; outline:none; cursor:pointer; width:180px;">
@@ -2751,27 +2225,27 @@ Bons treinos!`;
                     
                     <div class="stats-grid">
                         <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--primary); cursor:pointer; transition: transform 0.2s ease, background 0.2s ease;">
-                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">${this.t('my_clients')}</small>
+                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Meus Alunos</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--primary);">${teacherClients.length}</div>
                         </div>
                         
                         <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--accent); cursor:pointer;">
-                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">${this.t('evaluations_plural')}</small>
+                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Avaliações</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--accent);">${monthEvals}</div>
                         </div>
 
                         <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--success); cursor:pointer;">
-                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">${this.t('plans_training_plural')}</small>
+                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Planos Treino</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--success);">${monthTraining}</div>
                         </div>
 
                         <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid #60a5fa; cursor:pointer;">
-                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">${this.t('plans_meal_plural')}</small>
+                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Planos Dieta</small>
                             <div style="font-size:1.8rem; font-weight:800; color:#60a5fa;">${monthMeals}</div>
                         </div>
 
                         <div class="glass-card" onclick="app.setView('anamnesis')" style="border-left: 4px solid var(--primary); cursor:pointer;">
-                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">${this.t('anamnesis_plural')}</small>
+                            <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Anamneses</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--primary);">${monthAnamnesis}</div>
                         </div>
                     </div>
@@ -2781,20 +2255,20 @@ Bons treinos!`;
                     ${this.getOccupancyHTML()}
 
                     <div style="margin-top:2rem;">
-                        <h3>${this.t('activity_header').replace('%date', new Intl.DateTimeFormat(this.lang === 'pt' ? 'pt-PT' : 'en-GB', { month: 'long', year: 'numeric' }).format(displayDate))}</h3>
-                        <p style="color:var(--text-muted); font-size:0.9rem;">${this.t('productivity_summary')}</p>
+                        <h3>Atividade de ${new Intl.DateTimeFormat('pt-PT', { month: 'long', year: 'numeric' }).format(displayDate)}</h3>
+                        <p style="color:var(--text-muted); font-size:0.9rem;">Resumo de produtividade registada por si neste período.</p>
                     </div>
                 `;
                 break;
             case 'clients':
                 container.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                        <h2 style="margin:0;">${this.t('my_clients')}</h2>
+                        <h2 style="margin:0;">Os Meus Alunos</h2>
                     </div>
                     
                     <div class="search-container">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="${this.t('search')}..." 
+                        <input type="text" placeholder="Pesquisar por nome..." 
                             oninput="app.renderTeacherClientsList(this.value)"
                             class="search-bar">
                     </div>
@@ -2806,13 +2280,13 @@ Bons treinos!`;
             case 'anamnesis':
                 container.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:10px;">
-                        <h2 style="margin:0;"><i class="fas fa-notes-medical"></i> ${this.t('manage_anamnesis')}</h2>
-                        <button class="btn btn-primary" onclick="app.showAddAnamnesisModal()"><i class="fas fa-plus"></i> ${this.t('new_anamnesis')}</button>
+                        <h2 style="margin:0;"><i class="fas fa-notes-medical"></i> Gestão de Anamneses</h2>
+                        <button class="btn btn-primary" onclick="app.showAddAnamnesisModal()"><i class="fas fa-plus"></i> Nova Anamnese</button>
                     </div>
                     
                     <div class="search-container">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="${this.t('search_anamnesis_placeholder')}" 
+                        <input type="text" placeholder="Pesquisar aluno ou data..." 
                             oninput="app.renderAnamnesisList(this.value)"
                             class="search-bar">
                     </div>
@@ -2836,23 +2310,23 @@ Bons treinos!`;
         const isAdmin = this.role === 'admin';
         const controls = isAdmin ? `
                 <div style="display:flex; gap:0.5rem; flex-wrap: wrap;">
-                    <button class="btn btn-secondary btn-sm" onclick="app.showManageExerciseCategoriesModal()" title="Gerir Categorias"><i class="fas fa-tags"></i> <span class="hide-mobile">${this.t('category')}</span></button>
+                    <button class="btn btn-secondary btn-sm" onclick="app.showManageExerciseCategoriesModal()" title="Gerir Categorias"><i class="fas fa-tags"></i> <span class="hide-mobile">Categorias</span></button>
                     <button class="btn btn-secondary btn-sm" onclick="app.exportExerciseDatabase()" title="Exportar Backup"><i class="fas fa-file-export"></i> <span class="hide-mobile">Exportar</span></button>
                     <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-exercise-input').click()" title="Importar Backup"><i class="fas fa-file-import"></i> <span class="hide-mobile">Importar</span></button>
                     <input type="file" id="import-exercise-input" style="display:none;" accept=".json" onchange="app.importExerciseDatabase(this)">
                     <button class="btn btn-accent btn-sm" onclick="app.importLocalBaseExercicios()" title="Importar base_exercicios.json"><i class="fas fa-database"></i> <span class="hide-mobile">Base JSON</span></button>
-                    <button class="btn btn-primary btn-sm" onclick="app.showAddExerciseModal()"><i class="fas fa-plus"></i> <span class="hide-mobile">${this.t('new_exercise')}</span></button>
+                    <button class="btn btn-primary btn-sm" onclick="app.showAddExerciseModal()"><i class="fas fa-plus"></i> <span class="hide-mobile">Novo Exercício</span></button>
                 </div>` : '';
 
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap: wrap; gap: 1rem;">
-                <h2>${this.t('exercise_library')}</h2>
+                <h2>Biblioteca de Exercícios</h2>
                 ${controls}
             </div>
 
             <div class="search-container">
                 <i class="fas fa-search"></i>
-                <input type="text" id="exercise-search-input" placeholder="${this.t('search_exercise')}" 
+                <input type="text" id="exercise-search-input" placeholder="Pesquisar exercícios..." 
                     oninput="app.renderExerciseList(this.value)"
                     class="search-bar">
             </div>
@@ -2906,7 +2380,7 @@ Bons treinos!`;
 
             return `
                 <div style="margin-bottom: 2rem;">
-                    <h3 style="color:var(--primary); font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px; margin-bottom:15px;">${catName}</h3>
+                    <h3 style="color:var(--primary); font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px; margin-bottom:15px;">${this.getExerciseIcon(catName)} ${catName}</h3>
                     <div class="video-grid">
                         ${exercises.map(ex => {
                 const yt = this.normalizeYoutubeUrl(ex.videoUrl);
@@ -3214,7 +2688,7 @@ Bons treinos!`;
 
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap: wrap; gap: 1rem;">
-                <h2><i class="fas fa-paper-plane" style="color:var(--primary);"></i> ${this.t('announcements_mgmt')}</h2>
+                <h2><i class="fas fa-paper-plane" style="color:var(--primary);"></i> Envio de Comunicados</h2>
             </div>
             <div class="glass-panel" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
                 
@@ -3465,22 +2939,22 @@ Bons treinos!`;
         const isAdmin = this.role === 'admin';
         const controls = isAdmin ? `
                 <div style="display:flex; gap:0.5rem;">
-                    <button class="btn btn-secondary btn-sm" onclick="app.showManageCategoriesModal()" title="Gerir Categorias"><i class="fas fa-tags"></i> <span class="hide-mobile">${this.t('category')}</span></button>
+                    <button class="btn btn-secondary btn-sm" onclick="app.showManageCategoriesModal()" title="Gerir Categorias"><i class="fas fa-tags"></i> <span class="hide-mobile">Categorias</span></button>
                     <button class="btn btn-secondary btn-sm" onclick="app.exportFoodDatabase()" title="Exportar Backup"><i class="fas fa-file-export"></i> <span class="hide-mobile">Exportar</span></button>
                     <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-food-input').click()" title="Importar Backup"><i class="fas fa-file-import"></i> <span class="hide-mobile">Importar</span></button>
                     <input type="file" id="import-food-input" style="display:none;" accept=".json" onchange="app.importFoodDatabase(this)">
-                    <button class="btn btn-primary btn-sm" onclick="app.showAddFoodModal()"><i class="fas fa-plus"></i> <span class="hide-mobile">${this.t('new_food')}</span></button>
+                    <button class="btn btn-primary btn-sm" onclick="app.showAddFoodModal()"><i class="fas fa-plus"></i> <span class="hide-mobile">Novo Alimento</span></button>
                 </div>` : '';
 
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap: wrap; gap: 1rem;">
-                <h2>${this.t('food_db')}</h2>
+                <h2>Base de Alimentos</h2>
                 ${controls}
             </div>
             
             <div class="search-container">
                 <i class="fas fa-search"></i>
-                <input type="text" id="food-search-input" placeholder="${this.t('search_food')}" 
+                <input type="text" id="food-search-input" placeholder="Pesquisar alimentos..." 
                     oninput="app.renderFoodList(this.value)"
                     class="search-bar">
             </div>
@@ -3818,7 +3292,7 @@ Bons treinos!`;
 
         const c = this.state.clients.find(x => x.id == clientId);
         if (!c) {
-            container.innerHTML = `<p class="text-muted">${this.t('no_data')}</p>`;
+            container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
             return;
         }
 
@@ -3831,23 +3305,23 @@ Bons treinos!`;
         container.innerHTML = `
             <div class="page-header">
                 <div>
-                    <h2>${this.t('plan_training')}</h2>
+                    <h2>Plano de Treino</h2>
                     <h3 class="client-name">${c.name}</h3>
                 </div>
                 <div class="header-actions">
                     <button class="btn btn-secondary btn-sm" onclick="app.downloadTrainingPDF('${clientId}')" title="Download PDF"><i class="fas fa-file-pdf"></i> <span class="hide-mobile">PDF</span></button>
-                    ${isClient ? `<button class="btn btn-secondary btn-sm" onclick="app.setView('training_history')"><i class="fas fa-history"></i> <span class="hide-mobile">${this.t('history')}</span></button>` : ''}
+                    ${isClient ? `<button class="btn btn-secondary btn-sm" onclick="app.setView('training_history')"><i class="fas fa-history"></i> <span class="hide-mobile">Histórico</span></button>` : ''}
                     ${isTeacher ? `
-                        <button class="btn btn-primary btn-sm" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-edit"></i> <span class="hide-mobile">${this.t('manage')}</span></button>
+                        <button class="btn btn-primary btn-sm" onclick="app.openTrainingEditor('${clientId}')"><i class="fas fa-edit"></i> <span class="hide-mobile">Gerir</span></button>
                         <button class="btn btn-ghost btn-sm" style="color:var(--danger); border:1px solid rgba(220, 38, 38, 0.2);" onclick="app.deleteTrainingPlan('${clientId}')">
-                            <i class="fas fa-trash"></i> <span class="hide-mobile">${this.t('delete')}</span>
+                            <i class="fas fa-trash"></i> <span class="hide-mobile">Eliminar</span>
                         </button>
                     ` : ''}
-                    ${this.role !== 'client' && container.id === 'main-content' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">${this.t('back')}</span></button>` : ''}
+                    ${this.role !== 'client' && container.id === 'main-content' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">Voltar</span></button>` : ''}
                 </div>
             </div>
 
-            <!-- TABS DE VISUALIZA�?�?â�?�¡�?�?�?�??O -->
+            <!-- TABS DE VISUALIZAÇÃO -->
             ${plans && plans.length > 0 ? `
             <div style="display:flex; gap:0.6rem; margin:1.5rem 0; overflow-x:auto; padding:5px 0 12px; -webkit-overflow-scrolling:touch; scrollbar-width: none;">
                 ${plans.map((day, dIdx) => `
@@ -3871,22 +3345,22 @@ Bons treinos!`;
                     <!-- RESUMO COMPACTO DO PLANO (PREMIUM) -->
                     <div style="background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); padding: 12px 16px; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between;">
                         <div>
-                            <span style="font-size:0.6rem; color:var(--primary); font-weight:800; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:2px;">${this.t('plan_details')}</span>
+                            <span style="font-size:0.6rem; color:var(--primary); font-weight:800; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:2px;">Plan Details</span>
                             <h3 style="color:#fff; margin:0; font-weight:800; font-size:1.1rem; line-height:1;">
-                                ${day.title || `${this.lang === 'pt' ? 'Treino' : 'Training'} ${String.fromCharCode(65 + this.viewingDayIdx)}`}
+                                ${day.title || `Treino ${String.fromCharCode(65 + this.viewingDayIdx)}`}
                             </h3>
                         </div>
                         <div style="text-align:right;">
                             <div style="display:flex; gap:12px; align-items:center; justify-content:flex-end;">
                                 <div style="display:flex; flex-direction:column; align-items:flex-end;">
                                     <span style="font-size:0.8rem; font-weight:800; color:#fff;">${day.exercises.length}</span>
-                                    <span style="font-size:0.55rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">${this.t('plan_exercises')}</span>
+                                    <span style="font-size:0.55rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Excl.</span>
                                 </div>
                                 ${day.rest ? `
                                 <div style="width:1px; height:20px; background:rgba(255,255,255,0.1);"></div>
                                 <div style="display:flex; flex-direction:column; align-items:flex-end;">
                                     <span style="font-size:0.8rem; font-weight:800; color:var(--accent);">${day.rest}</span>
-                                    <span style="font-size:0.55rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">${this.t('plan_rest')}</span>
+                                    <span style="font-size:0.55rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Rest</span>
                                 </div>
                                 ` : ''}
                             </div>
@@ -4069,7 +3543,7 @@ Bons treinos!`;
             modal.innerHTML = `
                 <div class="modal-content" style="max-width:400px; padding:2rem;">
                     <div style="text-align:center; margin-bottom:1.25rem;">
-                        <div style="font-size:2.5rem; margin-bottom:0.5rem;">�?¢�?¡�? �?¯�?¸�?</div>
+                        <div style="font-size:2.5rem; margin-bottom:0.5rem;">⚠️</div>
                         <h3 style="margin:0; color:#fff;">Séries sem peso registado</h3>
                         <p style="color:var(--text-muted); font-size:0.85rem; margin-top:0.5rem;">Os seguintes exercícios têm séries por preencher:</p>
                     </div>
@@ -4290,7 +3764,7 @@ Bons treinos!`;
                 </div>
             </div>
 
-            <!-- MENU DE SELEC�?�?â�?�¡�?�?�?�??O DE PLANO (TABS) -->
+            <!-- MENU DE SELECÇÃO DE PLANO (TABS) -->
             <div id="editor-tabs-container" style="display:flex; gap:0.75rem; margin-bottom:2rem; flex-wrap:wrap; background:rgba(255,255,255,0.03); padding:12px; border-radius:15px; border:1px solid rgba(255,255,255,0.05);">
                 ${this.editingPlan.map((day, dIdx) => `
                     <div style="display:flex; align-items:center; gap:4px;">
@@ -4522,7 +3996,7 @@ Bons treinos!`;
         // Usar comparacao loosa (==) para garantir que encontra mesmo se for string vs number
         const c = this.state.clients.find(x => x.id == clientId);
         if (!c) {
-            container.innerHTML = `<p class="text-muted">${this.t('no_data')}</p>`;
+            container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
             return;
         }
         const cid = String(clientId); // Firebase normaliza chaves para string
@@ -4532,18 +4006,18 @@ Bons treinos!`;
         container.innerHTML = `
             <div class="page-header">
                 <div>
-                    <h2>${this.t('plan_meal_title')}</h2>
+                    <h2>Plano Alimentar</h2>
                     <h3 class="client-name">${c.name}</h3>
-                    ${meal && meal.author ? `<small style="color:var(--text-muted); display:block; margin-top:5px;">${this.t('created_by')}: ${meal.author} ${this.t('on_date')} ${meal.updatedAt || ''}</small>` : ''}
+                    ${meal && meal.author ? `<small style="color:var(--text-muted); display:block; margin-top:5px;">Criado por: ${meal.author} em ${meal.updatedAt || ''}</small>` : ''}
                 </div>
                 <div class="header-actions">
                     <button class="btn btn-secondary btn-sm" onclick="app.downloadMealPDF('${c.id}')" title="Download PDF"><i class="fas fa-file-pdf"></i> <span class="hide-mobile">PDF</span></button>
                     ${canEdit ? `
-                        <button class="btn btn-primary btn-sm" onclick="app.openMealEditor('${c.id}')"><i class="fas fa-edit"></i> <span class="hide-mobile">${this.t('manage')}</span></button>
+                        <button class="btn btn-primary btn-sm" onclick="app.openMealEditor('${c.id}')"><i class="fas fa-edit"></i> <span class="hide-mobile">Gerir</span></button>
                         <button class="btn btn-ghost btn-sm" style="color:var(--danger); border:1px solid rgba(220, 38, 38, 0.2);" onclick="app.deleteMealPlan('${c.id}')">
-                            <i class="fas fa-trash"></i> <span class="hide-mobile">${this.t('delete')}</span>
+                            <i class="fas fa-trash"></i> <span class="hide-mobile">Eliminar</span>
                         </button>
-                        ${container.id === 'main-content' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">${this.t('back')}</span></button>` : ''}
+                        ${container.id === 'main-content' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">Voltar</span></button>` : ''}
                     ` : ''}
                 </div>
             </div>
@@ -4577,17 +4051,17 @@ Bons treinos!`;
                 }).join('') : `
                         <div style="text-align:center; padding:3rem 1rem;">
                             <i class="fas fa-utensils" style="font-size:3rem; color:var(--text-muted); opacity:0.3; margin-bottom:1rem;"></i>
-                            <p style="color:var(--text-muted); margin-bottom:1.5rem;">${this.t('no_meal_plan')}</p>
-                            ${canEdit ? `<button class="btn btn-primary" onclick="app.openMealEditor('${c.id}')"><i class="fas fa-plus"></i> ${this.t('create_meal_plan')}</button>` : ''}
+                            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Ainda não tem plano alimentar atribuído.</p>
+                            ${canEdit ? `<button class="btn btn-primary" onclick="app.openMealEditor('${c.id}')"><i class="fas fa-plus"></i> Criar Plano Alimentar</button>` : ''}
                         </div>
                     `;
 
                 return (dailyTotal.kcal > 0 ? `
                         <div class="daily-macros-bar">
-                            <div class="macro-box"><small>${this.t('macro_kcal')}</small><strong>${Math.round(dailyTotal.kcal)}</strong></div>
-                            <div class="macro-box"><small>${this.t('macro_prot')}</small><strong>${Math.round(dailyTotal.prot)}g</strong></div>
-                            <div class="macro-box"><small>${this.t('macro_carb')}</small><strong>${Math.round(dailyTotal.carb)}g</strong></div>
-                            <div class="macro-box"><small>${this.t('macro_fat')}</small><strong>${Math.round(dailyTotal.fat)}g</strong></div>
+                            <div class="macro-box"><small>Kcal Total</small><strong>${Math.round(dailyTotal.kcal)}</strong></div>
+                            <div class="macro-box"><small>Proteina</small><strong>${Math.round(dailyTotal.prot)}g</strong></div>
+                            <div class="macro-box"><small>Hidratos</small><strong>${Math.round(dailyTotal.carb)}g</strong></div>
+                            <div class="macro-box"><small>Gordura</small><strong>${Math.round(dailyTotal.fat)}g</strong></div>
                         </div>
                     ` : '') + mealsHtml;
             })()}
@@ -4670,10 +4144,10 @@ Bons treinos!`;
 
                     return dailyTotal.kcal > 0 ? `
                         <div class="daily-macros-bar" style="margin-bottom:2rem;">
-                            <div class="macro-box"><small>${this.t('macro_kcal')}</small><strong>${Math.round(dailyTotal.kcal)}</strong></div>
-                            <div class="macro-box"><small>${this.t('macro_prot')}</small><strong>${Math.round(dailyTotal.prot)}g</strong></div>
-                            <div class="macro-box"><small>${this.t('macro_carb')}</small><strong>${Math.round(dailyTotal.carb)}g</strong></div>
-                            <div class="macro-box"><small>${this.t('macro_fat')}</small><strong>${Math.round(dailyTotal.fat)}g</strong></div>
+                            <div class="macro-box"><small>Kcal Total</small><strong>${Math.round(dailyTotal.kcal)}</strong></div>
+                            <div class="macro-box"><small>Proteina</small><strong>${Math.round(dailyTotal.prot)}g</strong></div>
+                            <div class="macro-box"><small>Hidratos</small><strong>${Math.round(dailyTotal.carb)}g</strong></div>
+                            <div class="macro-box"><small>Gordura</small><strong>${Math.round(dailyTotal.fat)}g</strong></div>
                         </div>
                     ` : '';
                 })()}
@@ -4737,7 +4211,7 @@ Bons treinos!`;
                                         </div>
 
                                         <button class="btn btn-primary btn-sm" onclick="app.addSelectedFoodToMeal(${idx})" style="width:100%; height:40px; background:var(--success); border:none;">
-                                            <i class="fas fa-plus"></i> Adicionar á  Refeição
+                                            <i class="fas fa-plus"></i> Adicionar áÂ  Refeição
                                         </button>
                                     </div>
                                 </div>
@@ -4819,41 +4293,39 @@ Bons treinos!`;
 
     getFoodEmoji(category) {
         const emojiMap = {
-            'Carne': '',
-            'Peixe': '',
-            'Leguminosas': '',
-            'Laticinios': '',
-            'Cereais': '',
-            'Horticolas': '',
-            'Fruta': '',
-            'Gorduras/Oleos': '',
-            'Bebidas Energeticas': '',
-            'Outros': ''
+            'Carne': '🥩',
+            'Peixe': '🐟',
+            'Leguminosas': '🫘',
+            'Laticinios': '🥛',
+            'Cereais': '🥣',
+            'Horticolas': '🥦',
+            'Fruta': '🍎',
+            'Gorduras/Oleos': '🥑',
+            'Bebidas Energeticas': '⚡',
+            'Outros': '🥗'
         };
-        return emojiMap[category] || '';
+        return emojiMap[category] || '🥗';
     }
 
     getExerciseIcon(cat) {
         const iconMap = {
-            // Categorias reais do utilizador
-            'Perna': '�?°�?¸�?¦�?µ',
-            'Costas': '�?°�?¸â�?��?�? ',
-            'Peito': '�?°�?¸â�?��?��?ª',
-            'Ombros': '�?°�?¸�?¤�?·',
-            'Cárdio': '�?¢�?�?¤�?¯�?¸�?',
-            'Abdominais': '�?°�?¸â�?��?¥',
-            'Alongamentos': '�?°�?¸�?§�?�?',
-            'Geral': '�?°�?¸�?â�?�¹�?¯�?¸�?',
-            'Bicep': '�?°�?¸â�?��?��?ª',
-            'Tricep': '�?°�?¸â�?��?��?ª',
-            // Músculos específicos (retrocompatibilidade)
-            'Bíceps': '�?°�?¸â�?��?��?ª',
-            'Deltoides': '�?°�?¸�?¤�?·',
-            'Dorsal': '�?°�?¸â�?��?�? ',
-            'Isquiotibiais': '�?°�?¸�?¦�?µ',
-            'Quadríceps': '�?°�?¸�?¦�?µ'
+            'Perna': '🦵',
+            'Costas': '🧱',
+            'Peito': '👕',
+            'Ombros': '🏋️',
+            'Cárdio': '🏃',
+            'Abdominais': '🧘',
+            'Alongamentos': '🤸',
+            'Geral': '⚙️',
+            'Bicep': '💪',
+            'Tricep': '💪',
+            'Bíceps': '💪',
+            'Deltoides': '🏋️',
+            'Dorsal': '🧱',
+            'Isquiotibiais': '🦵',
+            'Quadríceps': '🦵'
         };
-        return iconMap[cat] || '�?°�?¸�?â�?�¹�?¯�?¸�?';
+        return iconMap[cat] || '⚙️';
     }
 
     getMuscleColor(cat) {
@@ -5216,7 +4688,7 @@ Bons treinos!`;
     renderEvaluationView(container, clientId) {
         const c = this.state.clients.find(x => x.id == clientId);
         if (!c) {
-            container.innerHTML = `<p class="text-muted">${this.t('no_data')}</p>`;
+            container.innerHTML = '<p class="text-muted">Erro: Cliente não encontrado.</p>';
             return;
         }
         const cid = String(clientId); // Firebase usa chaves de string
@@ -5226,13 +4698,13 @@ Bons treinos!`;
         container.innerHTML = `
             <div class="page-header" style="margin-bottom: 2rem;">
                 <div>
-                    <h2 style="margin:0;">${this.t('eval_title')}</h2>
+                    <h2 style="margin:0;">Avaliação Física</h2>
                     <h3 class="client-name">${c.name}</h3>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    ${evals.length ? `<button class="btn btn-secondary btn-sm" onclick="app.downloadEvaluationPDF(${clientId})"><i class="fas fa-file-pdf"></i> <span class="hide-mobile">${this.t('export_pdf')}</span></button>` : ''}
-                    ${isTeacher ? `<button class="btn btn-primary btn-sm" onclick="app.showEvaluationModal(${clientId})"><i class="fas fa-plus"></i> <span class="hide-mobile">${this.t('new_eval')}</span></button>` : ''}
-                    ${this.role !== 'client' && container.id === 'main-content' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">${this.t('back')}</span></button>` : ''}
+                    ${evals.length ? `<button class="btn btn-secondary btn-sm" onclick="app.downloadEvaluationPDF(${clientId})"><i class="fas fa-file-pdf"></i> <span class="hide-mobile">Exportar PDF</span></button>` : ''}
+                    ${isTeacher ? `<button class="btn btn-primary btn-sm" onclick="app.showEvaluationModal(${clientId})"><i class="fas fa-plus"></i> <span class="hide-mobile">Nova Avaliação</span></button>` : ''}
+                    ${this.role !== 'client' && container.id === 'main-content' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">Voltar</span></button>` : ''}
                 </div>
             </div>
 
@@ -5240,7 +4712,7 @@ Bons treinos!`;
                 ${evals.length ? evals.map((ev, idx) => this.renderEvaluationCard(ev, idx, clientId, isTeacher)).join('') : `
                     <div class="glass-panel" style="padding: 4rem 1rem; text-align: center; color: var(--text-muted);">
                         <i class="fas fa-chart-line" style="font-size: 3rem; opacity: 0.2; margin-bottom: 1.5rem; display: block;"></i>
-                        ${this.t('no_evals')}
+                        Ainda não existem avaliações registadas.
                     </div>
                 `}
             </div>
@@ -5257,8 +4729,8 @@ Bons treinos!`;
                         </div>
                         <div>
                             <strong style="font-size: 1.1rem; display: block;">${ev.date}</strong>
-                            <small style="color: var(--text-muted);">${this.t('eval_conducted_on')} ${ev.date}</small>
-                            ${ev.author ? `<small style="color: var(--accent); display:block; margin-top:2px;">${this.t('by_author')}: ${ev.author}</small>` : ''}
+                            <small style="color: var(--text-muted);">Realizada em ${ev.date}</small>
+                            ${ev.author ? `<small style="color: var(--accent); display:block; margin-top:2px;">Por: ${ev.author}</small>` : ''}
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -5279,39 +4751,39 @@ Bons treinos!`;
                     </h4>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); gap: 0.75rem;">
                         <div class="macro-box">
-                            <small>${this.t('eval_weight')}</small>
+                            <small>Peso</small>
                             <strong>${ev.weight || '-'} <span style="font-size: 0.65rem; font-weight: normal;">kg</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>${this.t('eval_height')}</small>
+                            <small>Altura</small>
                             <strong>${ev.height || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>${this.t('eval_muscle')}</small>
+                            <small>Musculo</small>
                             <strong style="color: var(--success);">${ev.muscleMass || '-'} <span style="font-size: 0.65rem; font-weight: normal; color: var(--text-muted);">kg</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>${this.t('eval_fat')}</small>
+                            <small>Gordura</small>
                             <strong style="color: var(--danger);">${ev.fatPercentage || '-'} <span style="font-size: 0.65rem; font-weight: normal; color: var(--text-muted);">%</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>${this.t('eval_water')}</small>
+                            <small>áÂgua</small>
                             <strong style="color: #60a5fa;">${ev.water || '-'} <span style="font-size: 0.65rem; font-weight: normal; color: var(--text-muted);">%</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>${this.t('eval_bone')}</small>
+                            <small>áâ€œssea</small>
                             <strong>${ev.boneMass || '-'}</strong>
                         </div>
                         <div class="macro-box">
-                            <small>${this.t('eval_visceral')}</small>
+                            <small>Gord. Visceral</small>
                             <strong>${ev.visceralFat || '-'}</strong>
                         </div>
                         <div class="macro-box">
-                            <small>${this.t('eval_met_age')}</small>
+                            <small>Idade Met.</small>
                             <strong>${ev.metabolicAge || '-'}</strong>
                         </div>
                         <div class="macro-box">
-                            <small>${this.t('eval_basal')}</small>
+                            <small>Met. Basal</small>
                             <strong>${ev.basalMetabolism || '-'}</strong>
                         </div>
                     </div>
@@ -5323,24 +4795,24 @@ Bons treinos!`;
                     </h4>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); gap: 0.75rem;">
                         <div class="macro-box">
-                            <small>${this.t('eval_chest')}</small>
+                            <small>Torax</small>
                             <strong>${ev.chest || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>${this.t('eval_waist')}</small>
-                            <strong>${ev.waist || "-" } <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
+                            <small>Cintura</small>
+                            <strong>${ev.waist || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>${this.t("eval_abdominal")}</small>
-                            <strong>${ev.abdominal || "-" } <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
+                            <small>Abdominal</small>
+                            <strong>${ev.abdominal || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>${this.t("eval_hip")}</small>
-                            <strong>${ev.hip || "-" } <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
+                            <small>Quadril</small>
+                            <strong>${ev.hip || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
                         </div>
                         <div class="macro-box">
-                            <small>${this.t("eval_thigh")}</small>
-                            <strong>${ev.thigh || "-" } <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
+                            <small>Coxa</small>
+                            <strong>${ev.thigh || '-'} <span style="font-size: 0.65rem; font-weight: normal;">cm</span></strong>
                         </div>
                     </div>
                 </div>
@@ -5352,6 +4824,7 @@ Bons treinos!`;
         let ev = { date: new Date().toISOString().split('T')[0] };
         if (index !== null) {
             const entry = this.state.evaluations[String(clientId)][index];
+            // Converter data DD/MM/YYYY para YYYY-MM-DD para o input type="date"
             let dateVal = entry.date;
             if (dateVal.includes('/')) {
                 const [d, m, y] = dateVal.split('/');
@@ -5366,8 +4839,8 @@ Bons treinos!`;
             <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
                     <div>
-                        <h2 style="margin: 0;">${index === null ? this.t('eval_modal_new') : this.t('eval_modal_edit')}</h2>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px;">${this.t('eval_modal_subtitle')}</p>
+                        <h2 style="margin: 0;">${index === null ? 'Nova Avaliação' : 'Editar Avaliação'}</h2>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px;">Registe os dados da bioimpedância e medidas.</p>
                     </div>
                     <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">
                         <i class="fas fa-times"></i>
@@ -5376,49 +4849,49 @@ Bons treinos!`;
                 
                 <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                     <div>
-                        <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">${this.t('eval_modal_date')}</label>
+                        <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Data da Avaliação</label>
                         <input type="date" id="ev-date" value="${ev.date}" style="color-scheme: dark;">
                     </div>
 
                     <div>
                         <h4 style="font-size: 0.85rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 5px;">
-                            <i class="fas fa-bolt"></i> Bioimped�?¢ncia
+                            <i class="fas fa-bolt"></i> Bioimpedância
                         </h4>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_weight')} (kg)</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Peso (kg)</label>
                                 <input type="number" id="ev-weight" step="0.1" value="${ev.weight || ''}" placeholder="ex: 75.5">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_height')} (cm)</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Altura (cm)</label>
                                 <input type="number" id="ev-height" value="${ev.height || ''}" placeholder="ex: 175">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_muscle')} (kg)</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Musculo (kg)</label>
                                 <input type="number" id="ev-muscle" step="0.1" value="${ev.muscleMass || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_fat')} (%)</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Gordura (%)</label>
                                 <input type="number" id="ev-fat" step="0.1" value="${ev.fatPercentage || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_water')} (%)</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">áÂgua (%)</label>
                                 <input type="number" id="ev-water" step="0.1" value="${ev.water || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_bone')}</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Massa áâ€œssea</label>
                                 <input type="number" id="ev-bone" step="0.1" value="${ev.boneMass || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_visceral')}</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Gordura Visceral</label>
                                 <input type="number" id="ev-visceral" value="${ev.visceralFat || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_met_age')}</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Idade Metabólica</label>
                                 <input type="number" id="ev-metabolic-age" value="${ev.metabolicAge || ''}">
                             </div>
                             <div style="grid-column: span 2;">
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_basal')}</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Metabolismo Basal</label>
                                 <input type="number" id="ev-basal" value="${ev.basalMetabolism || ''}">
                             </div>
                         </div>
@@ -5426,43 +4899,46 @@ Bons treinos!`;
 
                     <div>
                         <h4 style="font-size: 0.85rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 5px;">
-                            <i class="fas fa-ruler-combined"></i> ${this.t('eval_measurements')} (cm)
+                            <i class="fas fa-ruler-combined"></i> Medidas Corporais (cm)
                         </h4>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_chest')}</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Torax</label>
                                 <input type="number" id="ev-chest" step="0.1" value="${ev.chest || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_waist')}</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Cintura</label>
                                 <input type="number" id="ev-waist" step="0.1" value="${ev.waist || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_abdominal')}</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Abdominal</label>
                                 <input type="number" id="ev-abdominal" step="0.1" value="${ev.abdominal || ''}">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_hip')}</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Quadril</label>
                                 <input type="number" id="ev-hip" step="0.1" value="${ev.hip || ''}">
                             </div>
                             <div style="grid-column: span 2;">
-                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">${this.t('eval_thigh')}</label>
+                                <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px;">Coxa</label>
                                 <input type="number" id="ev-thigh" step="0.1" value="${ev.thigh || ''}">
                             </div>
                         </div>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; align-items: center;">
-                        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">${this.t('cancel')}</button>
+                        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
                         <button class="btn btn-primary" onclick="app.saveEvaluation(${clientId}, ${index})">
-                            ${index === null ? this.t('save_eval') : this.t('update_data')}
+                            ${index === null ? 'Guardar Avaliação' : 'Atualizar Dados'}
                         </button>
                     </div>
+
+
                 </div>
             </div>
             `;
         document.body.appendChild(modal);
     }
+
     saveEvaluation(clientId, index = null) {
         const dateRaw = document.getElementById('ev-date').value;
         const [y, m, d] = dateRaw.split('-');
@@ -5670,8 +5146,8 @@ Bons treinos!`;
         switch (this.activeView) {
             case 'dashboard':
                 container.innerHTML = `
-                    <h2 class="animate-fade-in">${this.t('welcome')}, ${c.name} </h2>
-                    <p style="color:var(--text-muted); margin-bottom:1rem;">${this.t('welcome_subtitle')}</p>
+                    <h2 class="animate-fade-in">Bem-vindo, ${c.name} </h2>
+                    <p style="color:var(--text-muted); margin-bottom:1rem;">Este é o seu painel de acompanhamento KandalGym.</p>
                     
                     ${(() => {
                         const t = this.state.teachers.find(teacher => teacher.id === c.teacherId);
@@ -5682,7 +5158,7 @@ Bons treinos!`;
                                      ${t.photoUrl ? `<img src="${t.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : '<i class="fas fa-user-tie"></i>'}
                                 </div>
                                 <div>
-                                    <small style="color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; font-size:0.7rem;">${this.t('trainer_label')}</small>
+                                    <small style="color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; font-size:0.7rem;">O seu Professor</small>
                                     <h3 style="margin:0; font-size:1.1rem;">${t.name}</h3>
                                     ${t.email ? `<small style="color:var(--text-muted);"><i class="fas fa-envelope" style="font-size:0.8rem; margin-right:5px;"></i> ${t.email}</small>` : ''}
                                 </div>
@@ -5695,18 +5171,18 @@ Bons treinos!`;
                     <div class="stats-grid">
                         <div class="glass-card" onclick="app.setView('training')" style="cursor:pointer;">
                             <i class="fas fa-dumbbell" style="font-size:1.5rem; color:var(--primary); margin-bottom:1rem;"></i>
-                            <h3>${this.t('training')}</h3>
-                            <small>${this.t('my_training_sub')}</small>
+                            <h3>O Meu Treino</h3>
+                            <small>Ver exercícios e series</small>
                         </div>
                         <div class="glass-card" onclick="app.setView('meal')" style="cursor:pointer;">
                             <i class="fas fa-apple-alt" style="font-size:1.5rem; color:var(--success); margin-bottom:1rem;"></i>
-                            <h3>${this.t('meal')}</h3>
-                            <small>${this.t('my_diet_sub')}</small>
+                            <h3>Minha Dieta</h3>
+                            <small>Ver plano alimentar</small>
                         </div>
                         <div class="glass-card" onclick="app.setView('evaluation')" style="cursor:pointer;">
                             <i class="fas fa-chart-line" style="font-size:1.5rem; color:var(--accent); margin-bottom:1rem;"></i>
-                            <h3>${this.t('evaluation')}</h3>
-                            <small>${this.t('eval_sub')}</small>
+                            <h3>Avaliação Física</h3>
+                            <small>Ver peso e medidas</small>
                         </div>
                     </div>
 
@@ -5717,7 +5193,7 @@ Bons treinos!`;
                     ${(this.state.news && this.state.news.length > 0) ? `
                     <div style="margin-top: 2rem;" class="animate-fade-in">
                         <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
-                            <i class="fas fa-bullhorn" style="color: var(--primary);"></i> ${this.t('news_title')}
+                            <i class="fas fa-bullhorn" style="color: var(--primary);"></i> Notícias & Novidades
                         </h3>
                         <div style="display: flex; flex-direction: column; gap: 1rem;">
                             ${[...this.state.news].reverse().slice(0, 5).map(item => `
@@ -5824,8 +5300,8 @@ Bons treinos!`;
         if (!user) return;
 
         container.innerHTML = `
-            <h2 class="animate-fade-in"><i class="fas fa-user-circle"></i> ${this.t('my_profile_title')}</h2>
-            <p style="color:var(--text-muted); margin-bottom:2rem;">${this.t('account_settings')}</p>
+            <h2 class="animate-fade-in"><i class="fas fa-user-circle"></i> O Meu Perfil</h2>
+            <p style="color:var(--text-muted); margin-bottom:2rem;">Atualize os seus dados de contacto e palavra-passe.</p>
 
             <div class="glass-panel" style="padding:2rem; max-width:600px;">
                 <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:2rem;">
@@ -5834,49 +5310,49 @@ Bons treinos!`;
                     </div>
                     <input type="file" id="photo-upload" style="position: absolute; opacity: 0; pointer-events: none;" accept="image/*" onchange="app.handlePhotoUpload(this)">
                     <button class="btn btn-ghost btn-sm" onclick="document.getElementById('photo-upload').click()">
-                        <i class="fas fa-camera"></i> ${this.t('change_photo')}
+                        <i class="fas fa-camera"></i> Alterar Foto
                     </button>
                 </div>
                 <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">${this.t('full_name')}</label>
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Nome Completo</label>
                     <input type="text" id="edit-name" value="${user.name}" 
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
                 </div>
 
                 <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">${this.t('access_email')}</label>
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Email de Acesso</label>
                     <input type="email" id="edit-email" value="${user.email}" 
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
                 </div>
 
                 <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">${this.t('phone_contact')}</label>
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Contacto Telefónico</label>
                     <input type="tel" id="edit-phone" value="${user.phone || ''}" placeholder="Ex: 912345678"
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
                 </div>
 
                 ${this.role === 'client' ? `
                 <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">${this.t('birth_date')}</label>
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Data de Nascimento</label>
                     <input type="date" id="edit-dob" value="${user.birthDate || ''}" 
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px; color-scheme:dark;">
                 </div>
                 <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">${this.t('profession_label')}</label>
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Profissão</label>
                     <input type="text" id="edit-profession" value="${user.profession || ''}" placeholder="Ex: Engenheiro, Professor, etc."
                         style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
                 </div>
                 ` : ''}
 
                 <div style="margin-top:2rem; padding-top:1rem; border-top:1px dashed var(--surface-border);">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">${this.t('new_password')}</label>
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Nova Palavra-passe</label>
                     <div style="position:relative;">
                         <input type="password" id="edit-pass" value="${user.password}" 
                             style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
                         <i class="fas fa-eye" style="position:absolute; right:15px; top:15px; cursor:pointer; color:var(--text-muted);" 
                             onclick="const i = this.previousElementSibling; i.type = i.type === 'password' ? 'text' : 'password'"></i>
                     </div>
-                    <small style="color:var(--text-muted);">${this.t('password_hint')}</small>
+                    <small style="color:var(--text-muted);">Mantenha ou altere para uma nova.</small>
                 </div>
 
                 ${(() => {
@@ -6500,10 +5976,10 @@ Bons treinos!`;
                 <!-- Sidebar -->
                 <div class="chat-sidebar">
                     <div style="padding:1rem; border-bottom:1px solid rgba(255,255,255,0.05);">
-                        <h2 style="margin:0; font-size:1.2rem;">${this.t('chat_simple')}</h2>
+                        <h2 style="margin:0; font-size:1.2rem;">Mensagens</h2>
                     </div>
                     ${sortedThreads.length === 0 ?
-                `<div style="padding:1rem; text-align:center; color:var(--text-muted);">${this.t('no_data')}</div>` :
+                `<div style="padding:1rem; text-align:center; color:var(--text-muted);">Sem conversas.</div>` :
                 sortedThreads.map(th => {
                     const isActive = activeChatId == th.id ? 'active' : '';
                     const lastDate = new Date(th.lastMsg.createdAt);
@@ -6552,7 +6028,7 @@ Bons treinos!`;
             return `
                 <div class="chat-empty-state">
                     <i class="far fa-comments" style="font-size:4rem; margin-bottom:1rem; opacity:0.3;"></i>
-                    <p>${this.t('select_all_visible').includes('Selecciona') ? 'Selecione uma conversa para começar.' : 'Select a conversation to start.'}</p>
+                    <p>Selecione uma conversa para começar.</p>
                 </div>
             `;
         }
@@ -6636,14 +6112,14 @@ Bons treinos!`;
                     </div>
                 ` : ''}
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <input type="text" id="chat-input-text" placeholder="${this.t('type_msg')}" onkeypress="app.handleChatInput(event, '${activeChatId}')">
+                    <input type="text" id="chat-input-text" placeholder="Escreva uma mensagem..." onkeypress="app.handleChatInput(event, '${activeChatId}')">
                     <button class="btn btn-primary btn-sm" style="border-radius:50%; width:40px; height:40px; padding:0; display:flex; align-items:center; justify-content:center;" 
                         onclick="app.sendMessageInChat('${activeChatId}')">
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </div>
             </div>
-            ` : `<div style="padding:1rem; text-align:center; color:var(--text-muted); background:rgba(0,0,0,0.2);">${this.t('select_all_visible').includes('Selecciona') ? 'Este é um canal de notificações do sistema.' : 'This is a system notification channel.'}</div>`}
+            ` : '<div style="padding:1rem; text-align:center; color:var(--text-muted); background:rgba(0,0,0,0.2);">Este é um canal de notificações do sistema.</div>'}
         `;
     }
 
@@ -6669,7 +6145,7 @@ Bons treinos!`;
         if (!confirm('Deseja sinalizar esta mensagem como eliminada?')) return;
         const msg = (this.state.notifications || []).find(n => n.id === msgId);
         if (msg) {
-            msg.body = '�?°�?¸�?¡�?« Esta mensagem foi eliminada';
+            msg.body = '🚫 Esta mensagem foi eliminada';
             msg.isDeleted = true;
             this.saveState();
             this.renderContent();
@@ -6962,7 +6438,7 @@ Bons treinos!`;
             client.teacherId = Number(newTeacherId);
 
             // Notify Admins
-            const msgText = ` TRANSFER�?�?�? NCIA�?�?â�?�¦�?�??�? NCIA DE ALUNO: O aluno ${client.name} foi transferido de ${oldTeacherName} para ${newTeacher.name} em ${new Date().toLocaleString()}.`;
+            const msgText = ` TRANSFERÊNCIAÅ NCIA DE ALUNO: O aluno ${client.name} foi transferido de ${oldTeacherName} para ${newTeacher.name} em ${new Date().toLocaleString()}.`;
 
             // Allow storing admin notifications in messages or a separate log. 
             // Using 'messages' with specific 'to' for admin viewing if implemented, 
@@ -7061,7 +6537,7 @@ Bons treinos!`;
         );
 
         if (clients.length === 0) {
-            container.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:1rem;">${this.t('no_clients_found')}</p>`;
+            container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:1rem;">Nenhum aluno encontrado.</p>';
             return;
         }
 
@@ -7108,7 +6584,7 @@ Bons treinos!`;
         });
 
         if (anamnesisEntries.length === 0) {
-            container.innerHTML = `<div class="glass-card animate-fade-in" style="text-align:center; padding:2rem;"><p style="color:var(--text-muted); margin:0;">${this.t('no_anamnesis_found')}</p></div>`;
+            container.innerHTML = '<div class="glass-card animate-fade-in" style="text-align:center; padding:2rem;"><p style="color:var(--text-muted); margin:0;">Nenhuma anamnese registada.</p></div>';
             return;
         }
 
@@ -7221,7 +6697,7 @@ Bons treinos!`;
 
         this.showModal(`
             <div class="modal-sidebar-layout">
-                <!-- Sidebar/Nav á�?�?â�?�š�?�??�?rea -->
+                <!-- Sidebar/Nav áÂrea -->
                 <div class="modal-sidebar-nav">
                     <div>
                         <div style="width: 50px; height: 50px; border-radius: 12px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #fff; margin-bottom: 1rem; box-shadow: 0 8px 16px rgba(145, 27, 43, 0.3);">
@@ -7247,7 +6723,7 @@ Bons treinos!`;
 
                 </div>
 
-                <!-- Content á�?�?â�?�š�?�??�?rea -->
+                <!-- Content áÂrea -->
                 <div class="modal-sidebar-content">
                     <div id="anam-section-1" style="margin-bottom: 4rem;">
                         <h3 style="color: var(--primary); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
@@ -7313,7 +6789,7 @@ Bons treinos!`;
                             <div class="input-group" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
                                 <div>
                                     <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Alergias</label>
-                                    <input type="text" id="anam-allergies" value="${anam.allergies}" class="search-bar" placeholder="Ex: Penicilina, á�?�?â�?�š�?�??�?caros..." style="background: rgba(255,255,255,0.03);">
+                                    <input type="text" id="anam-allergies" value="${anam.allergies}" class="search-bar" placeholder="Ex: Penicilina, áÂcaros..." style="background: rgba(255,255,255,0.03);">
                                 </div>
                                 <div>
                                     <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-weight:700; text-transform:uppercase;">Histórico Familiar</label>
@@ -7419,7 +6895,7 @@ Bons treinos!`;
         );
 
         if (clients.length === 0) {
-            container.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:1rem;">${this.t('no_clients_found')}</p>`;
+            container.innerHTML = '<p style="color:var(--text-muted); text-align:center; padding:1rem;">Nenhum aluno encontrado.</p>';
             return;
         }
 
@@ -7434,10 +6910,10 @@ Bons treinos!`;
                     </div>
                     <div>
                         <strong>${c.name}</strong><br>
-                        <small style="color:var(--text-muted);">${this.t('teacher_label')}: ${teacher ? teacher.name : this.t('no_data')}</small>
+                        <small style="color:var(--text-muted);">Professor: ${teacher ? teacher.name : 'Nenhum'}</small>
                     </div>
                 </div>
-                <button class="btn btn-primary btn-sm" onclick="app.spyClient('${c.id}')">${this.t('view_card')}</button>
+                <button class="btn btn-primary btn-sm" onclick="app.spyClient('${c.id}')">Ver Ficha</button>
             </div> `;
         }).join('');
     }
@@ -7668,8 +7144,8 @@ Bons treinos!`;
                             </tr>
                             <tr>
                                 <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Gordura:</strong> ${ev.fatPercentage || '-'} %</td>
-                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>á�?�?â�?�š�?�??�?gua:</strong> ${ev.water || '-'} %</td>
-                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Massa áâ�?¢â�?�š�?¬�?�?�â�?��?ssea:</strong> ${ev.boneMass || '-'}</td>
+                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>áÂgua:</strong> ${ev.water || '-'} %</td>
+                                <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Massa áâ€œssea:</strong> ${ev.boneMass || '-'}</td>
                             </tr>
                             <tr>
                                 <td style="padding: 6px; border-bottom: 1px solid #f0f0f0;"><strong>Gord. Visceral:</strong> ${ev.visceralFat || '-'}</td>
@@ -7793,32 +7269,32 @@ Bons treinos!`;
         try {
             container.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                    <h2 style="margin: 0;"><i class="fas fa-qrcode"></i> ${this.t('access_mgmt')}</h2>
+                    <h2 style="margin: 0;"><i class="fas fa-qrcode"></i> Gestão de Entradas</h2>
                 </div>
 
                 <div class="dashboard" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; margin-top: 20px;">
                     <div class="glass-panel" style="padding: 1.5rem; border-left: 4px solid var(--accent);">
                         <h3 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
-                            <i class="fas fa-barcode"></i> ${this.t('hardware_scanner')}
+                            <i class="fas fa-barcode"></i> Scanner de Hardware Ativo
                         </h3>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;">${this.t('hardware_scanner_sub')}</p>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;">Utilize o leitor físico para ler os códigos QR dos alunos.</p>
                         
                         <div style="display: flex; gap: 8px; margin-bottom: 20px;">
                             <div style="flex: 1; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 10px; display: flex; align-items: center; gap: 10px;">
                                 <span class="pulse-green" style="width:10px; height:10px; background:#10b981; border-radius:50%;"></span>
-                                <span style="font-size:0.85rem; color:#10b981; font-weight:700;">${this.t('ready_to_read')}</span>
+                                <span style="font-size:0.85rem; color:#10b981; font-weight:700;">Pronto para leitura</span>
                             </div>
                             <button class="btn ${this.serialWriter ? 'btn-success' : 'btn-secondary'}" 
                                 style="flex: 1; border: 1px solid ${this.serialWriter ? 'var(--success)' : 'var(--primary)'}; color: ${this.serialWriter ? '#fff' : 'var(--primary)'}; background: ${this.serialWriter ? 'var(--success)' : 'rgba(145, 27, 43, 0.05)'}; height: 44px;" 
                                 onclick="app.connectArduino()">
-                                <i class="fas fa-plug"></i> ${this.serialWriter ? this.t('arduino_connected') : this.t('connect_arduino')}
+                                <i class="fas fa-plug"></i> ${this.serialWriter ? 'Arduino Conetado' : 'Ligar Arduino'}
                             </button>
                         </div>
 
                         <div style="background: rgba(0,0,0,0.2); border: 1px dashed var(--surface-border); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px;">
                             <i class="fas fa-qrcode" style="font-size: 3rem; color: rgba(255,255,255,0.05); margin-bottom: 10px; display: block;"></i>
                             <input type="text" id="hardware-scanner-input" 
-                                placeholder="${this.t('waiting_qr')}" 
+                                placeholder="Aguardando QR..." 
                                 onkeyup="if(event.key === 'Enter') { app.processarLeituraQR(this.value); this.value=''; }"
                                 autocomplete="off"
                                 style="width: 100%; height: 50px; background: rgba(0,0,0,0.4); border: 2px solid var(--primary); border-radius: 10px; color: #fff; text-align: center; font-size: 1.2rem; font-weight: 700; letter-spacing: 2px; outline: none; box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.1);">
@@ -7831,25 +7307,25 @@ Bons treinos!`;
 
                     <div class="glass-panel" style="padding: 1.5rem;">
                         <h3 style="margin-top: 0; color: var(--success); display: flex; align-items: center; gap: 10px; font-size: 1.1rem;">
-                            <i class="fas fa-ticket-alt"></i> ${this.t('new_casual_pass')}
+                            <i class="fas fa-ticket-alt"></i> Novo Treino Avulso
                         </h3>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">${this.t('casual_pass_sub')}</p>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Crie um acesso rápido para clientes temporários.</p>
                         
                         <div style="display: grid; gap: 10px;">
-                            <input type="text" id="casual-name" placeholder="${this.t('client_name_placeholder')}" class="qr-input-sleek">
+                            <input type="text" id="casual-name" placeholder="Nome do Cliente" class="qr-input-sleek">
                             <div style="display: flex; gap: 8px;">
                                 <select id="casual-type" class="qr-input-sleek" style="flex: 2; height: 42px;">
-                                    <option value="Semanal">🗓️ ${this.t('pass_type_weekly')}</option>
-                                    <option value="Mensal">📅 ${this.t('pass_type_monthly')}</option>
+                                    <option value="Semanal">🗓️ Semanal (7 Dias)</option>
+                                    <option value="Mensal">📅 Mensal (30 Dias)</option>
                                 </select>
                                 <button class="btn btn-primary" onclick="app.createCasualPass()" style="flex: 1; height: 42px; border-radius: 6px;">
-                                    ${this.t('create')} <i class="fas fa-plus"></i>
+                                    Criar <i class="fas fa-plus"></i>
                                 </button>
                             </div>
                         </div>
 
                         <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed var(--surface-border);">
-                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">${this.t('manual_entry')}</label>
+                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Entrada Manual (Backup)</label>
                             <div style="display:flex; gap:10px;">
                                 <input type="text" id="manual-qr-id" placeholder="Ex: K1" 
                                     onkeyup="if(event.key === 'Enter') app.processarManualQR()"
@@ -7864,17 +7340,17 @@ Bons treinos!`;
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.8rem;">
                     <button class="btn ${this.qrActiveTab === 'alunos' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('alunos')" style="padding: 6px 12px; font-size:0.8rem;">
-                        <i class="fas fa-user-friends"></i> ${this.t('students')}
+                        <i class="fas fa-user-friends"></i> Alunos
                     </button>
                     <button class="btn ${this.qrActiveTab === 'teachers' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('teachers')" style="padding: 6px 12px; font-size:0.8rem;">
-                        <i class="fas fa-user-tie"></i> ${this.t('staff_label')}
+                        <i class="fas fa-user-tie"></i> Staff (Adm/Prof)
                     </button>
                 </div>
 
                 <div style="margin-bottom: 2rem;">
                     <div style="position: relative;">
                         <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); opacity: 0.6;"></i>
-                        <input type="text" id="qr-search-input" placeholder="${this.t('search_qr_placeholder')}" 
+                        <input type="text" id="qr-search-input" placeholder="Pesquisar por nome, telemóvel ou código..." 
                             oninput="app.filterQRList(this.value)" 
                             style="width: 100%; padding: 1rem 1rem 1rem 3rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; outline: none; transition: all 0.3s ease; font-size: 0.95rem;">
                     </div>
@@ -7885,12 +7361,12 @@ Bons treinos!`;
                     <div style="background: rgba(255,255,255,0.02); padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; border: 1px solid rgba(255,255,255,0.05);">
                         <div style="display:flex; align-items:center; gap:8px;">
                             <input type="checkbox" id="selectAllQR" onchange="app.toggleAllQRSelection(this.checked)" style="width:16px; height:16px; accent-color: var(--primary); cursor:pointer;">
-                            <label for="selectAllQR" style="font-size: 0.85rem; cursor: pointer; color: var(--text-muted); font-weight:600;">${this.t('select_all_visible')}</label>
+                            <label for="selectAllQR" style="font-size: 0.85rem; cursor: pointer; color: var(--text-muted); font-weight:600;">Selecionar Todos Visíveis</label>
                         </div>
                         <div style="margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                            <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">${this.t('new_validity')}</span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Nova Validade:</span>
                             <input type="date" id="bulkCustomDate" title="Selecione o Dia para Aplicar em Massa" style="background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:6px; padding:4px 8px; color:#fff; font-size:0.85rem; cursor:pointer; font-weight:600;">
-                            <button class="btn btn-primary btn-sm" onclick="app.applyBulkValidity()" style="padding: 6px 12px; font-size: 0.8rem; background: var(--success);"><i class="fas fa-check"></i> ${this.t('apply_all')}</button>
+                            <button class="btn btn-primary btn-sm" onclick="app.applyBulkValidity()" style="padding: 6px 12px; font-size: 0.8rem; background: var(--success);"><i class="fas fa-check"></i> Aplicar a Todos</button>
                         </div>
                     </div>
                     ` : ''}
@@ -7900,13 +7376,13 @@ Bons treinos!`;
                             <thead>
                                 <tr>
                                     ${this.qrActiveTab === 'alunos' ? '<th style="width: 40px; text-align:center;"><i class="fas fa-check-square"></i></th>' : ''}
-                                    <th style="min-width: 200px;">${this.qrActiveTab === 'alunos' ? `${this.t('client_label')} (Nome / Tel)` : `${this.t('staff_label')} (Nome / Tel)`}</th>
-                                    <th style="width: 140px;">${this.t('plan_label')}</th>
-                                    <th style="text-align:center; width: 80px;">${this.t('status_label')}</th>
-                                    <th style="text-align:center; width: 110px;">${this.t('credits_label')}</th>
-                                    <th style="text-align:center; width: 80px;">${this.t('today_label')}</th>
-                                    <th style="text-align:center; width: 140px;">${this.t('validity_label')}</th>
-                                    <th style="text-align:right; width: 100px;">${this.t('actions_label')}</th>
+                                    <th style="min-width: 200px;">${this.qrActiveTab === 'alunos' ? 'Aluno (Nome / Tel)' : 'Staff (Nome / Tel)'}</th>
+                                    <th style="width: 140px;">Plano</th>
+                                    <th style="text-align:center; width: 80px;">Estado</th>
+                                    <th style="text-align:center; width: 110px;">Créditos</th>
+                                    <th style="text-align:center; width: 80px;">Hoje</th>
+                                    <th style="text-align:center; width: 140px;">Validade</th>
+                                    <th style="text-align:right; width: 100px;">Ações</th>
                                 </tr>
                             </thead>
                             <tbody id="gridQRClientes">
@@ -7917,7 +7393,7 @@ Bons treinos!`;
                 </div>
             `;
 
-            // --- RESTAURA�?�?â�?�¡�?�?�?�??O DO SCROLL DO CONTENTOR ---
+            // --- RESTAURAÇÃO DO SCROLL DO CONTENTOR ---
             container.scrollTop = scrollPosCont;
 
             // Restaurar classe se existia
@@ -7939,11 +7415,11 @@ Bons treinos!`;
                 const hwInput = document.getElementById('hardware-scanner-input');
                 if (hwInput) {
                     hwInput.focus({ preventScroll: true });
-                    // Manter foco apenas se N�?�?�?�??O estivermos a interagir com outros campos
+                    // Manter foco apenas se NÃO estivermos a interagir com outros campos
                     document.onmousedown = (e) => {
                         if (this.activeView !== 'qr_manager' || !hwInput) return;
 
-                        // Lista de elementos que N�?�?�?�??O devem ser interrompidos
+                        // Lista de elementos que NÃO devem ser interrompidos
                         const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'];
                         if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button')) {
                             return; // Deixa o utilizador interagir com o campo
@@ -7977,7 +7453,7 @@ Bons treinos!`;
         if (!newDateStr) return alert('Por favor, escolha uma data no calendário indicando a nova validade.');
 
         const checkboxes = document.querySelectorAll('.qr-bulk-checkbox:checked');
-        if (checkboxes.length === 0) return alert('Por favor selecione pelo menos um aluno (caixa á  esquerda do ID).');
+        if (checkboxes.length === 0) return alert('Por favor selecione pelo menos um aluno (caixa áÂ  esquerda do ID).');
 
         if (!confirm(`Tem a certeza que deseja definir a validade para o dia ${newDateStr} de forma permanente aos ${checkboxes.length} alunos selecionados?`)) return;
 
@@ -7990,7 +7466,7 @@ Bons treinos!`;
                 const planoStr = client.plano || '';
                 let defaultEnt = 30;
                 
-                // 1�?�??�?º Prioridade: Verificar se o admin configurou os créditos fixos nas regras do plano
+                // 1º Prioridade: Verificar se o admin configurou os créditos fixos nas regras do plano
                 const regras = (this.state.planRestrictions || {})[planoStr];
                 if (regras && typeof regras.maxCredits === 'number') {
                     defaultEnt = regras.maxCredits;
@@ -8037,11 +7513,10 @@ Bons treinos!`;
         const hoje = new Date().toISOString().split('T')[0];
 
         return qrList.map((c, idx) => {
-            const hist = Array.isArray(c.historico) ? c.historico : Object.values(c.historico || {});
-            const entHj = hist.filter(l => {
+            const entHj = (c.histórico || []).filter(l => {
                 const dateStr = typeof l === 'string' ? l : l.d;
                 const type = typeof l === 'string' ? 'in' : l.t;
-                return dateStr && dateStr.startsWith(hoje) && type === 'in';
+                return dateStr.startsWith(hoje) && type === 'in';
             }).length;
 
             const limitDiario = (this.state.planRestrictions && c.plano && this.state.planRestrictions[c.plano] && this.state.planRestrictions[c.plano].maxDailyEntrances !== undefined) 
@@ -8057,9 +7532,8 @@ Bons treinos!`;
             const realUser = c.clientId ? [...(this.state.clients || []), ...(this.state.teachers || []), ...(this.state.admins || [])]
                 .find(u => Number(u.id) === Number(c.clientId)) : null;
 
-            // Priorizar a foto do Utilizador Real (Fonte de Verdade) sobre o cache do QR
-            let userPhoto = (realUser && realUser.photoUrl) ? realUser.photoUrl : (c.photoUrl || null);
-            if (userPhoto !== c.photoUrl) c.photoUrl = userPhoto; // Sincronizar cache se mudou
+            let userPhoto = c.photoUrl || (realUser ? realUser.photoUrl : null);
+            c.photoUrl = userPhoto;
 
             const avatarLetra = c.nome ? c.nome.substring(0, 1).toUpperCase() : '?';
 
@@ -8127,7 +7601,7 @@ Bons treinos!`;
                         </label>
                     </td>
                     <td>
-                        ${isStaff ? '<div style="text-align:center; font-weight:800; color:var(--accent); font-size:1.5rem;">�??</div>' : `
+                        ${isStaff ? '<div style="text-align:center; font-weight:800; color:var(--accent); font-size:1.5rem;">∞</div>' : `
                         <div style="background:rgba(0,0,0,0.2); border-radius:8px; display:flex; align-items:center; justify-content:space-between; padding:4px; border:1px solid rgba(255,255,255,0.05);">
                             <button onclick="app.editQRCredit('${c.id}', -1)" style="width:28px; height:28px; border-radius:6px; border:none; background:rgba(255,255,255,0.05); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;"><i class="fas fa-minus"></i></button>
                             <input type="number" value="${c.ent}" onchange="app.updateQRClientField('${c.id}', 'ent', parseInt(this.value) || 0)" class="no-spin" style="background:transparent; border:none; color:#fff; font-weight:800; width:35px; text-align:center; outline:none; font-size:1rem; padding:0;">
@@ -8354,12 +7828,12 @@ Bons treinos!`;
         const hjLocal = agora.getFullYear() + '-' + String(agora.getMonth() + 1).padStart(2, '0') + '-' + String(agora.getDate()).padStart(2, '0');
 
         if (v === 1) {
-            if (!this.state.qrClients[idx].historico) this.state.qrClients[idx].historico = [];
+            if (!this.state.qrClients[idx].histórico) this.state.qrClients[idx].histórico = [];
             // Adicionar no início (mais recente)
-            this.state.qrClients[idx].historico.unshift({ d: agora.toISOString(), t: 'in' });
+            this.state.qrClients[idx].histórico.unshift({ d: agora.toISOString(), t: 'in' });
         } else {
             // Remover a entrada mais RECENTE de hoje (priorizando IN para limpar a ocupação)
-            const hist = this.state.qrClients[idx].historico || [];
+            const hist = this.state.qrClients[idx].histórico || [];
             let targetIdx = -1;
 
             // 1. Procurar primeiro o IN mais recente de hoje (o que está a contar para o gráfico)
@@ -8383,7 +7857,7 @@ Bons treinos!`;
             }
 
             if (targetIdx !== -1) {
-                this.state.qrClients[idx].historico.splice(targetIdx, 1);
+                this.state.qrClients[idx].histórico.splice(targetIdx, 1);
             }
         }
         this.saveState();
@@ -8421,7 +7895,7 @@ Bons treinos!`;
 
             this.saveState();
             // Nome, telemóvel e PLANO não precisam de refresh:
-            // o input/select já mostra o novo valor �?�?�?�??�?�??�?¢â�?¢â�??¬�?¡�?�??�?¬â�?¢â�?�š�?¬�?�??�? refrescar destruiria o elemento focado e causaria salto de ecrã
+            // o input/select já mostra o novo valor Ã¢â‚¬â€ refrescar destruiria o elemento focado e causaria salto de ecrã
             if (field === 'ent' || field === 'validade' || field === 'ativo') {
                 this.refreshQRTableUI();
             }
@@ -8504,7 +7978,7 @@ Bons treinos!`;
 
             // Se for um aluno real (clientId != 0)
             if (clientId && clientId != 0) {
-                const deleteMain = confirm("Este utilizador tem uma conta ativa na App. Deseja ELIMINAR TAMB�?�?â�?�°Mâ�?¢â�?�š�?¬�?�??�?°M a conta do aluno e todo o seu histórico?");
+                const deleteMain = confirm("Este utilizador tem uma conta ativa na App. Deseja ELIMINAR TAMBÉMâ€°M a conta do aluno e todo o seu histórico?");
                 if (deleteMain) {
                     // Eliminar do sistema principal (clientes, professores ou admins)
                     this.state.clients = (this.state.clients || []).filter(c => String(c.id) !== String(clientId));
@@ -8601,13 +8075,13 @@ Bons treinos!`;
             const btnCam = document.getElementById("btnCam");
 
             if (typeof jsQR === 'undefined') {
-                throw new Error("A biblioteca de leitura de QR não foi carregada. Verifique a sua ligação á  internet.");
+                throw new Error("A biblioteca de leitura de QR não foi carregada. Verifique a sua ligação áÂ  internet.");
             }
 
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                let errorMsg = "O seu navegador não suporta acesso á  câmara.";
+                let errorMsg = "O seu navegador não suporta acesso áÂ  câmara.";
                 if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                    errorMsg = "ERRO DE SEGURAN�?�?â�?�¡A: O scanner live só funciona em ligações seguras (HTTPS disponível em KandalGym.com). Sugerimos usar o botão 'Tirar Foto' ou 'Entrada Manual'.";
+                    errorMsg = "ERRO DE SEGURANÇA: O scanner live só funciona em ligações seguras (HTTPS disponível em KandalGym.com). Sugerimos usar o botão 'Tirar Foto' ou 'Entrada Manual'.";
                 }
                 throw new Error(errorMsg);
             }
@@ -8648,8 +8122,8 @@ Bons treinos!`;
             scanStatus.className = "";
         } catch (e) {
             console.error(e);
-            let msg = "Erro ao aceder á  câmara: ";
-            if (e.name === 'NotAllowedError') msg = " Permissão Negada: Por favor, autorize o acesso á  câmara nas definições do seu navegador.";
+            let msg = "Erro ao aceder áÂ  câmara: ";
+            if (e.name === 'NotAllowedError') msg = " Permissão Negada: Por favor, autorize o acesso áÂ  câmara nas definições do seu navegador.";
             else if (e.name === 'NotFoundError') msg = " câmara não encontrada no dispositivo.";
             else msg = e.message;
 
@@ -8799,10 +8273,10 @@ Bons treinos!`;
         const c = this.state.qrClients.find(cli => String(cli.id).toUpperCase() === formattedId);
 
         if (!c) {
-            this.showQRMsg(" Código não reconhecido", "bg-qr-danger");
+            this.showQRMsg(" Codigo não reconhecido", "bg-qr-danger");
             new BroadcastChannel('kandal_access').postMessage({
                 type: 'access_event',
-                data: { name: 'INVÁLIDO', msg: 'C�?DIGO DESCONHECIDO', valid: false, photo: null }
+                data: { name: 'INVÁLIDOÂLIDO', msg: 'Cáâ€œDIGO DESCONHECIDO', valid: false, photo: null }
             });
             this.sendToArduino('B');
             this.lastProcessedQR = formattedId;
@@ -8832,7 +8306,7 @@ Bons treinos!`;
         const hj = agora.toISOString().split('T')[0];
 
         // Determinar se é ENTRADA ou SAÍDA
-        const lastLog = (c.historico && c.historico.length > 0) ? c.historico[0] : null;
+        const lastLog = (c.histórico && c.histórico.length > 0) ? c.histórico[0] : null;
         let isExit = false;
 
         if (lastLog) {
@@ -8868,9 +8342,9 @@ Bons treinos!`;
 
 
         if (isExit) {
-            // --- LOGICA DE SA�DA ---
-            if (!c.historico) c.historico = [];
-            c.historico.unshift({ d: agora.toISOString(), t: 'out' });
+            // --- LOGICA DE SAáÂDA ---
+            if (!c.histórico) c.histórico = [];
+            c.histórico.unshift({ d: agora.toISOString(), t: 'out' });
 
             this.showQRMsg(`Até amanhã, ${c.nome}! Saída registada.`, "bg-qr-warning");
             this.showToast(`Saída registada: ${c.nome}`, "info");
@@ -8900,7 +8374,7 @@ Bons treinos!`;
                     this.showQRMsg(`${c.nome}: Sem créditos`, "bg-qr-danger");
                     new BroadcastChannel('kandal_access').postMessage({
                         type: 'access_event',
-                    data: { name: c.nome, msg: 'SEM CRÉDITOS', valid: false, photo: userPhoto || null }
+                        data: { name: c.nome, msg: 'SEM CRÉDITOS', valid: false, photo: userPhoto || null }
                     });
                     this.sendToArduino('B');
                     return;
@@ -8910,7 +8384,7 @@ Bons treinos!`;
 
             // Validar limite diario - Apenas para Alunos
             if (!isStaffMember) {
-                const entriesHj = (c.historico || []).filter(l => {
+                const entriesHj = (c.histórico || []).filter(l => {
                     const d = typeof l === 'string' ? l : l.d;
                     const t = typeof l === 'string' ? 'in' : l.t;
                     return d.startsWith(hj) && t === 'in';
@@ -8933,15 +8407,15 @@ Bons treinos!`;
 
             // Processar sucesso Entrada
             c.ent--;
-            if (!c.historico) c.historico = [];
-            c.historico.unshift({ d: agora.toISOString(), t: 'in' });
+            if (!c.histórico) c.histórico = [];
+            c.histórico.unshift({ d: agora.toISOString(), t: 'in' });
 
             this.showQRMsg(`Bem-vindo, ${c.nome}! Entrada validada.`, "bg-qr-success");
             this.showToast(`Entrada validada: ${c.nome}`, "success");
 
             new BroadcastChannel('kandal_access').postMessage({
                 type: 'access_event',
-                data: { name: c.nome, msg: 'BEM-VINDO!', valid: true, photo: userPhoto || null }
+                data: { name: c.nome, msg: 'BEM-VINDO!', valid: true, photo: c.photoUrl || null }
             });
             this.sendToArduino('A');
         }
@@ -8950,7 +8424,7 @@ Bons treinos!`;
         this.lastProcessedTime = Date.now();
         this.saveState();
 
-        // ATUALIZA�?�?â�?�¡�?�?�?�??O SEGURA: Apenas a tabela, não a página toda para não desligar a câmara
+        // ATUALIZAÇÃO SEGURA: Apenas a tabela, não a página toda para não desligar a câmara
         const grid = document.getElementById("gridQRClientes");
         if (grid) {
             grid.innerHTML = this.renderQRClientCards();
@@ -8962,7 +8436,7 @@ Bons treinos!`;
         const client = (this.state.qrClients || []).find(c => c.id === id);
         if (!client) return;
 
-        const logs = client.historico || [];
+        const logs = client.histórico || [];
         const content = `
             <div style="padding: 0.5rem;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
@@ -9017,7 +8491,7 @@ Bons treinos!`;
 
     renderQRMsgHTML() {
         if (!this.currentQRMsg) {
-            return `<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding:1rem; opacity:0.5;"><i class="fas fa-qrcode"></i> ${this.t('qr_ready_msg')}</div>`;
+            return '<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; padding:1rem; opacity:0.5;"><i class="fas fa-qrcode"></i> Pronto para ler código...</div>';
         }
 
         const { text, cls } = this.currentQRMsg;
@@ -9177,7 +8651,7 @@ Bons treinos!`;
     // --- CLASSES & SCHEDULING ---
 
     async checkFinishedClasses() {
-        // SEGURAN�?�?â�?�¡A: Garantir que o estado existe e temos dados carregados
+        // SEGURANÇA: Garantir que o estado existe e temos dados carregados
         if (!this.state || !this.state.classes || !this.hasLoadedData || this.isCheckingClasses) return;
 
         // Se for cliente, podemos correr a manutenção mas de forma silenciosa e facultativa
@@ -9313,12 +8787,12 @@ Bons treinos!`;
         container.innerHTML = `
             <div class="page-header">
                 <div>
-                    <h2>${this.t('classes_schedule')}</h2>
-                    <p class="client-name">${this.t('classes_subtitle')}</p>
+                    <h2>Horário de Aulas</h2>
+                    <p class="client-name">Consulte e inscreva-se nas aulas de grupo</p>
                 </div>
                 ${this.role === 'admin' ? `
                 <button class="btn btn-primary" onclick="app.showClassModal()">
-                    <i class="fas fa-plus"></i> <span class="hide-mobile">${this.t('new_class')}</span>
+                    <i class="fas fa-plus"></i> <span class="hide-mobile">Nova Aula</span>
                 </button>
                 ` : ''}
             </div>
@@ -9340,8 +8814,8 @@ Bons treinos!`;
             container.innerHTML = `
                 <div class="glass-card" style="text-align:center; padding:3rem;">
                     <i class="fas fa-calendar-times" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
-                    <p>${this.t('no_classes')}</p>
-                    <button class="btn btn-primary btn-sm" onclick="app.showClassModal()" style="margin-top:1rem;">${this.t('create_first_class')}</button>
+                    <p>Ainda não foram criadas aulas.</p>
+                    <button class="btn btn-primary btn-sm" onclick="app.showClassModal()" style="margin-top:1rem;">Criar Primeira Aula</button>
                 </div>
             `;
             return;
@@ -9358,12 +8832,12 @@ Bons treinos!`;
                     <table style="width:100%; border-collapse:collapse; text-align:left;">
                         <thead>
                             <tr style="border-bottom:1px solid var(--surface-border); color:var(--text-muted); font-size:0.8rem;">
-                                <th style="padding:1rem;">${this.t('table_date')}</th>
-                                <th style="padding:1rem;">${this.t('table_time')}</th>
-                                <th style="padding:1rem;">${this.t('table_class')}</th>
-                                <th style="padding:1rem;">${this.t('table_teacher')}</th>
-                                <th style="padding:1rem;">${this.t('table_enrolled')}</th>
-                                <th style="padding:1rem; text-align:right;">${this.t('table_actions')}</th>
+                                <th style="padding:1rem;">Data</th>
+                                <th style="padding:1rem;">Hora</th>
+                                <th style="padding:1rem;">Classe</th>
+                                <th style="padding:1rem;">Professor</th>
+                                <th style="padding:1rem;">Inscritos</th>
+                                <th style="padding:1rem; text-align:right;">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -9381,16 +8855,16 @@ Bons treinos!`;
                                     <td style="padding:1rem; font-size:0.9rem;">${teacher ? teacher.name : 'N/A'}</td>
                                     <td style="padding:1rem;">
                                         ${this.isClassFinished(c) ?
-                    `<span class="badge badge-error">${this.t('finished')}</span>` :
+                    `<span class="badge badge-error">Finalizada</span>` :
                     `<span class="badge ${participants.length >= (c.capacity || 20) ? 'badge-purple' : 'badge-green'}">
                                                 ${participants.length} / ${c.capacity || 20}
                                             </span>`
                 }
                                     </td>
                                     <td style="padding:1rem; text-align:right;">
-                                        <button class="btn btn-ghost btn-sm" onclick="app.showParticipantsList('${c.id}')" title="${this.t('view_list')}"><i class="fas fa-users"></i></button>
-                                        <button class="btn btn-ghost btn-sm" onclick="app.showClassModal(${c.id})" title="${this.t('edit')}"><i class="fas fa-edit"></i></button>
-                                        <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.deleteClass(${c.id})" title="${this.t('delete')}"><i class="fas fa-trash"></i></button>
+                                        <button class="btn btn-ghost btn-sm" onclick="app.showParticipantsList('${c.id}')" title="Ver Lista / Inscritos"><i class="fas fa-users"></i></button>
+                                        <button class="btn btn-ghost btn-sm" onclick="app.showClassModal(${c.id})" title="Editar"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.deleteClass(${c.id})" title="Apagar"><i class="fas fa-trash"></i></button>
                                     </td>
                                 </tr>
                                 `;
@@ -9533,18 +9007,18 @@ Bons treinos!`;
 
         if (restrictions) {
             if (!restrictions.allowClasses) {
-                const force = confirm(`�?¢�?¡�? �?¯�?¸�?�?�??�? AVISO: O plano "${plano}" deste aluno não permite a marcação de aulas.\n\nDeseja inscrever mesmo assim?`);
+                const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno não permite a marcação de aulas.\n\nDeseja inscrever mesmo assim?`);
                 if (!force) return;
             } else if (restrictions.filter && restrictions.filter.length > 0) {
                 const isAllowed = restrictions.filter.some(f => cls && cls.name.toLowerCase().includes(f.toLowerCase()));
                 if (!isAllowed) {
-                    const force = confirm(`�?¢�?¡�? �?¯�?¸�?�?�??�? AVISO: O plano "${plano}" deste aluno apenas permite: ${restrictions.filter.join(', ')}.\n\nDeseja inscrever mesmo assim?`);
+                    const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno apenas permite: ${restrictions.filter.join(', ')}.\n\nDeseja inscrever mesmo assim?`);
                     if (!force) return;
                 }
             } else if (restrictions.exclude && restrictions.exclude.length > 0) {
                 const isExcluded = restrictions.exclude.some(ex => cls && cls.name.toLowerCase().includes(ex.toLowerCase()));
                 if (isExcluded) {
-                    const force = confirm(`�?¢�?¡�? �?¯�?¸�?�?�??�? AVISO: O plano "${plano}" deste aluno não permite reservar aulas desta categoria.\n\nDeseja inscrever mesmo assim?`);
+                    const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno não permite reservar aulas desta categoria.\n\nDeseja inscrever mesmo assim?`);
                     if (!force) return;
                 }
             }
@@ -9643,16 +9117,16 @@ Bons treinos!`;
                                             
                                             <div style="margin-top:auto;">
                                                 ${this.isClassFinished(c) ? `
-                                                    <div style="text-align:center; padding:0.5rem; background:rgba(255,255,255,0.05); border-radius:4px; font-size:0.7rem; color:var(--text-muted); border:1px solid var(--surface-border);">${this.t('finished')}</div>
+                                                    <div style="text-align:center; padding:0.5rem; background:rgba(255,255,255,0.05); border-radius:4px; font-size:0.7rem; color:var(--text-muted); border:1px solid var(--surface-border);">Finalizada</div>
                                                 ` : (isEnrolled ? `
                                                     <button class="btn btn-secondary btn-sm" style="width:100%; color:var(--danger); font-size:0.7rem; padding:0.5rem;" onclick="app.leaveClass(${c.id})">
-                                                        ${this.t('leave')}
+                                                        Sair
                                                      </button>
                                                 ` : (isFull ? `
-                                                    <button class="btn btn-ghost btn-sm" style="width:100%; font-size:0.75rem; padding:0.5rem;" disabled>${this.t('class_full')}</button>
+                                                    <button class="btn btn-ghost btn-sm" style="width:100%; font-size:0.75rem; padding:0.5rem;" disabled>Cheio</button>
                                                 ` : `
                                                     <button class="btn btn-primary btn-sm" style="width:100%; font-size:0.75rem; padding:0.5rem;" onclick="app.enrollInClass(${c.id})">
-                                                        ${this.t('join')}
+                                                        Reservar
                                                     </button>
                                                 `))}
                                             </div>
@@ -9807,7 +9281,7 @@ Bons treinos!`;
             return alert('Está aula já atingiu a lotação máxima.');
         }
 
-        // VALIDAR RESTRIçáâ�?¢â�?�š�?¬�?�??�?¢ES DE PLANO
+        // VALIDAR RESTRIçáâ€¢ES DE PLANO
         const qrInfo = (this.state.qrClients || []).find(q => Number(q.clientId) === Number(clientId));
         const plano = qrInfo ? qrInfo.plano : 'Livre Trânsito';
         const restrictions = (this.state.planRestrictions || {})[plano];
@@ -9859,15 +9333,7 @@ Bons treinos!`;
     }
 
     getDayName(dayIndex) {
-        const days = [
-            this.t('sun'),
-            this.t('mon'),
-            this.t('tue'),
-            this.t('wed'),
-            this.t('thu'),
-            this.t('fri'),
-            this.t('sat')
-        ];
+        const days = ['Domingo', 'Segunda-feira', 'terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'sábado'];
         return days[dayIndex];
     }
 
