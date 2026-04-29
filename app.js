@@ -9196,7 +9196,7 @@ Equipa KandalGym`;
                                             </div>
                                             <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:0.2rem;">
                                                 <i class="fas fa-calendar-alt"></i> ${this.formatFullDate(c.day, c.date)}
-                                                ${this.isHoliday(c.date) ? `<span style="color:var(--danger); font-weight:bold; margin-left:5px;">(${this.isHoliday(c.date)})</span>` : ''}
+                                                ${this.isHoliday(c.date) ? `<span style="color:var(--warning); font-weight:bold; margin-left:5px;">(${this.isHoliday(c.date)}: Horário 08h30-13h00, sem aulas)</span>` : ''}
                                             </div>
                                             <h4 style="margin-bottom:0.3rem; font-size:0.9rem; line-height:1.2; min-height:2.4em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${c.name}</h4>
                                             <p style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.8rem;">
@@ -9352,7 +9352,7 @@ Equipa KandalGym`;
         if (cls && cls.date) {
             const holidayName = this.isHoliday(cls.date);
             if (holidayName) {
-                return alert(`Não é possível reservar esta aula. O dia ${cls.date.split('-').reverse().join('/')} é feriado (${holidayName}) e o ginásio encontra-se encerrado.`);
+                return alert(`Informação de Feriado (${holidayName}):\n\nNeste dia o ginásio terá horário reduzido (08h30 às 13h00) apenas para musculação.\n\nAs aulas de grupo estão suspensas. Obrigado pela compreensão!`);
             }
         }
 
