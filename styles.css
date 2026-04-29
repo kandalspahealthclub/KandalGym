@@ -1693,5 +1693,22 @@ option {
     outline: none;
     box-shadow: 0 0 0 2px rgba(145, 27, 43, 0.2);
 }
-/* Notificacoes */
-.notification-dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; position: absolute; top: 5px; right: 5px; box-shadow: 0 0 8px #ef4444; border: 1px solid #000; z-index: 10; }
+
+/* Notificações */
+.notification-dot {
+    width: 10px !important;
+    height: 10px !important;
+    min-width: 10px !important;
+    min-height: 10px !important;
+    aspect-ratio: 1 / 1 !important;
+    background: #ef4444 !important;
+    border-radius: 50% !important;
+    position: absolute !important;
+    top: 5px !important;
+    right: 20% !important;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.8) !important;
+    border: 1.5px solid #000 !important;
+    z-index: 100 !important;
+    pointer-events: none !important;
+    display: block !important;
+}
