@@ -8810,6 +8810,59 @@ Equipa KandalGym`;
         }
     }
 
+    getPortugalHolidays(year) {
+        const holidays = {
+            [`${year}-01-01`]: "Ano Novo",
+            [`${year}-04-25`]: "Dia da Liberdade",
+            [`${year}-05-01`]: "Dia do Trabalhador",
+            [`${year}-06-10`]: "Dia de Portugal",
+            [`${year}-08-15`]: "Assunção de Nossa Senhora",
+            [`${year}-10-05`]: "Implantação da República",
+            [`${year}-11-01`]: "Todos os Santos",
+            [`${year}-12-01`]: "Restauração da Independência",
+            [`${year}-12-08`]: "Imaculada Conceição",
+            [`${year}-12-25`]: "Natal"
+        };
+
+        const a = year % 19;
+        const b = Math.floor(year / 100);
+        const c = year % 100;
+        const d = Math.floor(b / 4);
+        const e = b % 4;
+        const f = Math.floor((b + 8) / 25);
+        const g = Math.floor((b - f + 1) / 3);
+        const h = (19 * a + b - d - g + 15) % 30;
+        const i = Math.floor(c / 4);
+        const k = c % 4;
+        const l = (32 + 2 * e + 2 * i - h - k) % 7;
+        const m = Math.floor((a + 11 * h + 22 * l) / 451);
+        const month = Math.floor((h + l - 7 * m + 114) / 31);
+        const day = ((h + l - 7 * m + 114) % 31) + 1;
+
+        const easter = new Date(year, month - 1, day);
+        const goodFriday = new Date(easter); goodFriday.setDate(easter.getDate() - 2);
+        const corpusChristi = new Date(easter); corpusChristi.setDate(easter.getDate() + 60);
+
+        const formatDate = (date) => {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        };
+
+        holidays[formatDate(goodFriday)] = "Sexta-feira Santa";
+        holidays[formatDate(easter)] = "Páscoa";
+        holidays[formatDate(corpusChristi)] = "Corpo de Deus";
+        return holidays;
+    }
+
+    isHoliday(dateStr) {
+        if (!dateStr) return false;
+        const year = Number(dateStr.split('-')[0]);
+        const holidays = this.getPortugalHolidays(year);
+        return holidays[dateStr] || false;
+    }
+
     formatFullDate(day, dateStr) {
         if (!dateStr) return this.getDayName(day);
         const dayName = this.getDayName(day);
@@ -9143,6 +9196,7 @@ Equipa KandalGym`;
                                             </div>
                                             <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:0.2rem;">
                                                 <i class="fas fa-calendar-alt"></i> ${this.formatFullDate(c.day, c.date)}
+                                                ${this.isHoliday(c.date) ? `<span style="color:var(--danger); font-weight:bold; margin-left:5px;">(${this.isHoliday(c.date)})</span>` : ''}
                                             </div>
                                             <h4 style="margin-bottom:0.3rem; font-size:0.9rem; line-height:1.2; min-height:2.4em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${c.name}</h4>
                                             <p style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.8rem;">
@@ -9294,6 +9348,14 @@ Equipa KandalGym`;
         const classIdStr = String(actualClassId);
 
         const cls = this.state.classes.find(x => Number(x.id) === actualClassId);
+        
+        if (cls && cls.date) {
+            const holidayName = this.isHoliday(cls.date);
+            if (holidayName) {
+                return alert(`Não é possível reservar esta aula. O dia ${cls.date.split('-').reverse().join('/')} é feriado (${holidayName}) e o ginásio encontra-se encerrado.`);
+            }
+        }
+
         if (cls && this.isClassFinished(cls)) {
             console.warn("Inscrição recusada: Aula já terminou.");
             return alert('Está aula já terminou e não aceita mais inscrições.');
