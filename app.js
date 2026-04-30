@@ -2226,6 +2226,9 @@ Equipa KandalGym`;
             '  if (e.key === "Enter") { ' +
             '    const val = hwInput.value.trim().toUpperCase(); ' +
             '    if (val.length >= 2) { ' +
+                 '/* Feedback visual de leitura no monitor */ ' +
+                 'document.body.style.border = "10px solid var(--primary)"; ' +
+                 'setTimeout(() => document.body.style.border = "none", 500); ' +
             '      if (window.opener && window.opener.app) { window.opener.app.processarLeituraQR(val); } ' +
             '      else { bc.postMessage({ type: "access_request", code: val }); } ' +
             '    } ' +
@@ -9659,7 +9662,8 @@ Equipa KandalGym`;
 
 
 
-const app = new FitnessApp();
+window.app = new FitnessApp();
+const app = window.app; // Mantem compatibilidade com referencias locais
 
 // Override global window.alert para usar o modal premium em todo o lado
 window.originalAlert = window.alert;
