@@ -155,30 +155,8 @@ class FitnessApp {
             }
         }, 8000);
         
-        // --- ESCUTADOR GLOBAL DE SCANNER (HARDWARE) ---
-        // Permite que o leitor funcione em qualquer menu (Dashboard, Alunos, etc.)
-        this._scannerBuffer = "";
-        document.addEventListener('keydown', (e) => {
-            // Ignorar se o utilizador estiver a escrever num campo de texto (evita conflitos)
-            const tagsToIgnore = ['INPUT', 'TEXTAREA', 'SELECT'];
-            if (tagsToIgnore.includes(document.activeElement.tagName)) {
-                return; // Deixa o campo de texto processar se estiver focado
-            }
-
-            if (e.key === 'Enter') {
-                if (this._scannerBuffer.length >= 2) {
-                    console.log("Scanner Global detetou código:", this._scannerBuffer);
-                    this.processarLeituraQR(this._scannerBuffer);
-                }
-                this._scannerBuffer = "";
-            } else if (e.key.length === 1) {
-                this._scannerBuffer += e.key;
-                
-                // Limpar buffer se demorar muito (proteção contra digitação manual lenta)
-                clearTimeout(this._scannerTimeout);
-                this._scannerTimeout = setTimeout(() => { this._scannerBuffer = ""; }, 500);
-            }
-        });
+        // --- SISTEMA DE SCANNER GLOBAL ROBUSTO ---
+        this.initGlobalScanner();
 
         // --- CANAL DE COMUNICAÇÃO PARA MONITOR ---
         this.accessChannel = new BroadcastChannel("kandal_access");
@@ -187,6 +165,49 @@ class FitnessApp {
                 this.processarLeituraQR(ev.data.code);
             }
         };
+    }
+
+    initGlobalScanner() {
+        // Criar um input invisível para capturar o scanner em qualquer menu
+        let input = document.getElementById('global-scanner-input');
+        if (!input) {
+            input = document.createElement('input');
+            input.id = 'global-scanner-input';
+            input.type = 'text';
+            input.style.cssText = 'position:fixed; top:-1000px; left:-1000px; opacity:0; z-index:-1;';
+            document.body.appendChild(input);
+        }
+
+        input.onkeyup = (e) => {
+            if (e.key === 'Enter') {
+                const val = input.value.trim().toUpperCase();
+                if (val.length >= 2) {
+                    console.log("Scanner detetado (Global):", val);
+                    this.processarLeituraQR(val);
+                }
+                input.value = '';
+            }
+        };
+
+        // Gestor de Foco Global
+        document.addEventListener('mousedown', (e) => {
+            // Se clicar em algo que precise de foco (inputs, botoes), não interferimos
+            const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'];
+            if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button') || e.target.closest('a')) {
+                return;
+            }
+
+            // Caso contrário, devolvemos o foco ao scanner após um pequeno delay
+            setTimeout(() => {
+                const active = document.activeElement;
+                if (!active || !['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) {
+                    input.focus({ preventScroll: true });
+                }
+            }, 200);
+        });
+
+        // Foco inicial
+        setTimeout(() => input.focus({ preventScroll: true }), 1000);
     }
 
     checkForForceUpdate() {
