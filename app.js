@@ -154,6 +154,39 @@ class FitnessApp {
                 }
             }
         }, 8000);
+        
+        // --- ESCUTADOR GLOBAL DE SCANNER (HARDWARE) ---
+        // Permite que o leitor funcione em qualquer menu (Dashboard, Alunos, etc.)
+        this._scannerBuffer = "";
+        document.addEventListener('keydown', (e) => {
+            // Ignorar se o utilizador estiver a escrever num campo de texto (evita conflitos)
+            const tagsToIgnore = ['INPUT', 'TEXTAREA', 'SELECT'];
+            if (tagsToIgnore.includes(document.activeElement.tagName)) {
+                return; // Deixa o campo de texto processar se estiver focado
+            }
+
+            if (e.key === 'Enter') {
+                if (this._scannerBuffer.length >= 2) {
+                    console.log("Scanner Global detetou código:", this._scannerBuffer);
+                    this.processarLeituraQR(this._scannerBuffer);
+                }
+                this._scannerBuffer = "";
+            } else if (e.key.length === 1) {
+                this._scannerBuffer += e.key;
+                
+                // Limpar buffer se demorar muito (proteção contra digitação manual lenta)
+                clearTimeout(this._scannerTimeout);
+                this._scannerTimeout = setTimeout(() => { this._scannerBuffer = ""; }, 500);
+            }
+        });
+
+        // --- CANAL DE COMUNICAÇÃO PARA MONITOR ---
+        this.accessChannel = new BroadcastChannel("kandal_access");
+        this.accessChannel.onmessage = (ev) => {
+            if (ev.data && ev.data.type === 'access_request') {
+                this.processarLeituraQR(ev.data.code);
+            }
+        };
     }
 
     checkForForceUpdate() {
@@ -2168,11 +2201,13 @@ Equipa KandalGym`;
             'window.addEventListener("keydown", (e) => { ' +
             '  if (e.key === "Enter") { ' +
             '    if (scanBuffer.length >= 2) { ' +
-            '      if (window.opener && window.opener.app) window.opener.app.processarLeituraQR(scanBuffer); ' +
+            '      if (window.opener && window.opener.app) { window.opener.app.processarLeituraQR(scanBuffer); } ' +
+            '      else { bc.postMessage({ type: "access_request", code: scanBuffer }); } ' +
             '    } ' +
             '    scanBuffer = ""; ' +
             '  } else if (e.key.length === 1) { ' +
             '    scanBuffer += e.key; ' +
+            '    clearTimeout(window._scanTO); window._scanTO = setTimeout(() => scanBuffer = "", 500); ' +
             '  } ' +
             '}); ' +
 
