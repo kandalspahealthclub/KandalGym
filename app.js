@@ -2214,21 +2214,22 @@ Equipa KandalGym`;
             '<div id="user-photo-frame" class="photo-frame"><img id="user-photo" src="" style="display:none;"><i id="user-icon" class="fas fa-user"></i></div>' +
             '<h1 id="user-name" class="name">NOME DO CLIENTE</h1>' +
             '<div id="user-status" class="status">ENTRADA VÁLIDA</div></div></div>' +
+            
+            '<!-- Scanner Invisivel (Replica da logica da Gestao de Entradas) -->' +
+            '<input type="text" id="monitor-scanner-input" autocomplete="off" style="position:fixed; top:-100px; left:-100px; opacity:0;">' +
+
             '<script>' +
             'const bc = new BroadcastChannel("kandal_access"); let timeout; ' +
-            'let scanBuffer = ""; ' +
+            'const hwInput = document.getElementById("monitor-scanner-input"); ' +
             
-            '/* Suporte para Leitor de Hardware (Scanner USB) */ ' +
-            'window.addEventListener("keydown", (e) => { ' +
+            'hwInput.onkeyup = (e) => { ' +
             '  if (e.key === "Enter") { ' +
-            '    if (scanBuffer.length >= 2) { ' +
-            '      if (window.opener && window.opener.app) { window.opener.app.processarLeituraQR(scanBuffer); } ' +
-            '      else { bc.postMessage({ type: "access_request", code: scanBuffer }); } ' +
+            '    const val = hwInput.value.trim().toUpperCase(); ' +
+            '    if (val.length >= 2) { ' +
+            '      if (window.opener && window.opener.app) { window.opener.app.processarLeituraQR(val); } ' +
+            '      else { bc.postMessage({ type: "access_request", code: val }); } ' +
             '    } ' +
-            '    scanBuffer = ""; ' +
-            '  } else if (e.key.length === 1) { ' +
-            '    scanBuffer += e.key; ' +
-            '    clearTimeout(window._scanTO); window._scanTO = setTimeout(() => scanBuffer = "", 500); ' +
+            '    hwInput.value = ""; ' +
             '  } ' +
             '}); ' +
 
