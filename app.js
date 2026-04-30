@@ -1252,12 +1252,12 @@ Recomendamos que guarde este link nos seus favoritos ou instale a App no seu tel
 Bons treinos!
 Equipa KandalGym`;
 
-        const e_env = '📧';
-        const e_key = '🔑';
-        const e_warn = '⚠️';
-        const e_rocket = '🚀';
-        const e_gym = '🏛️'; // Ou 🏋️, mas 1F3DB é 🏛️ (Edifício Clássico/Ginásio)
-        const e_link = '🔗';
+        const e_env = '\uD83D\uDCE7';
+        const e_key = '\uD83D\uDD11';
+        const e_warn = '\u26A0\uFE0F';
+        const e_rocket = '\uD83D\uDE80';
+        const e_gym = '\uD83C\uDFDB\uFE0F'; 
+        const e_link = '\uD83D\uDD17';
 
         const whatsappText = `${e_gym} *Bem-vindo a KandalGym*\n` +
             `---------------------------------------------\n` +
