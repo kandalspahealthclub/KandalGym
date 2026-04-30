@@ -1137,7 +1137,10 @@ class FitnessApp {
             const pass = document.getElementById('new-user-pass').value.trim();
             const phone = document.getElementById('new-user-phone').value.trim();
 
-            if (!name || !email || !pass || !phone) return alert('Por favor, preencha todos os campos obrigatorios.');
+            if (!name || !email || !pass || !phone) {
+                this.showToast('Por favor, preencha todos os campos obrigatorios.', 'error');
+                return;
+            }
 
             // Garantir que as listas existem antes de verificar duplicados
             if (!this.state.clients) this.state.clients = [];
@@ -1150,7 +1153,7 @@ class FitnessApp {
                 this.state.admins.some(a => a.email.toLowerCase() === email);
 
             if (existsEmail) {
-                alert('Este email já está registado no sistema.');
+                this.showToast('Este email já está registado no sistema.', 'error');
                 return;
             }
 
@@ -1161,7 +1164,7 @@ class FitnessApp {
                 this.state.admins.some(a => (a.phone || '').replace(/\s+/g, '') === cleanPhone);
 
             if (existsPhone) {
-                alert('Este contacto telefonico já está registado na base de dados (Professor, Aluno ou Admin).');
+                this.showToast('Este contacto telefonico já está registado na base de dados.', 'error');
                 return;
             }
 
