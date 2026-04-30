@@ -1252,23 +1252,16 @@ Recomendamos que guarde este link nos seus favoritos ou instale a App no seu tel
 Bons treinos!
 Equipa KandalGym`;
 
-        const e_env = '\uD83D\uDCE7';
-        const e_key = '\uD83D\uDD11';
-        const e_warn = '\u26A0\uFE0F';
-        const e_rocket = '\uD83D\uDE80';
-        const e_gym = '\uD83C\uDFDB\uFE0F'; 
-        const e_link = '\uD83D\uDD17';
-
-        const whatsappText = `${e_gym} *Bem-vindo a KandalGym*\n` +
+        const whatsappText = `*Bem-vindo a KandalGym*\n` +
             `---------------------------------------------\n` +
             `Olá *${name}*, a sua conta de *${label}* foi criada!\n` +
             `*CREDENCIAIS DE ACESSO:*\n` +
-            `${e_env} *Email:* \`${email}\`\n` +
-            `${e_key} *Password:* \`${pass}\`\n` +
-            `${e_warn} *AVISO:* Altere a sua password no menu "Perfil" após o primeiro acesso.\n\n` +
+            `*Email:* \`${email}\`\n` +
+            `*Password:* \`${pass}\`\n` +
+            `*AVISO:* Altere a sua password no menu "Perfil" após o primeiro acesso.\n\n` +
             `_A App está em fase de teste, mas já pode usar a marcação de aulas, os planos de treino e muito mais._\n` +
-            `${e_link} *Acesso:* https://kandalspahealthclub.github.io/KandalGym/\n` +
-            `Bons treinos! ${e_rocket}`;
+            `*Acesso:* https://kandalspahealthclub.github.io/KandalGym/\n` +
+            `Bons treinos!`;
 
         const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
