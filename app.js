@@ -2162,6 +2162,20 @@ Equipa KandalGym`;
             '<div id="user-status" class="status">ENTRADA VÁLIDA</div></div></div>' +
             '<script>' +
             'const bc = new BroadcastChannel("kandal_access"); let timeout; ' +
+            'let scanBuffer = ""; ' +
+            
+            '/* Suporte para Leitor de Hardware (Scanner USB) */ ' +
+            'window.addEventListener("keydown", (e) => { ' +
+            '  if (e.key === "Enter") { ' +
+            '    if (scanBuffer.length >= 2) { ' +
+            '      if (window.opener && window.opener.app) window.opener.app.processarLeituraQR(scanBuffer); ' +
+            '    } ' +
+            '    scanBuffer = ""; ' +
+            '  } else if (e.key.length === 1) { ' +
+            '    scanBuffer += e.key; ' +
+            '  } ' +
+            '}); ' +
+
             'bc.onmessage = (ev) => { const { type, data } = ev.data; if (type === "access_event") { ' +
             'clearTimeout(timeout); document.getElementById("standby").style.display = "none"; ' +
             'document.getElementById("user-display").style.display = "flex"; ' +
