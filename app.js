@@ -174,6 +174,7 @@ class FitnessApp {
             input = document.createElement('input');
             input.id = 'global-scanner-input';
             input.type = 'text';
+            input.setAttribute('inputmode', 'none'); // Previne abertura do teclado virtual em mobile
             input.style.cssText = 'position:fixed; top:-1000px; left:-1000px; opacity:0; z-index:-1;';
             document.body.appendChild(input);
         }
@@ -189,25 +190,29 @@ class FitnessApp {
             }
         };
 
-        // Gestor de Foco Global
-        document.addEventListener('mousedown', (e) => {
-            // Se clicar em algo que precise de foco (inputs, botoes), não interferimos
-            const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'];
-            if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button') || e.target.closest('a')) {
-                return;
-            }
-
-            // Caso contrário, devolvemos o foco ao scanner após um pequeno delay
-            setTimeout(() => {
-                const active = document.activeElement;
-                if (!active || !['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) {
-                    input.focus({ preventScroll: true });
+        // Gestor de Foco Global (apenas para Desktop/Receção)
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (!isMobile) {
+            document.addEventListener('mousedown', (e) => {
+                // Se clicar em algo que precise de foco (inputs, botoes), não interferimos
+                const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'];
+                if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button') || e.target.closest('a')) {
+                    return;
                 }
-            }, 200);
-        });
 
-        // Foco inicial
-        setTimeout(() => input.focus({ preventScroll: true }), 1000);
+                // Caso contrário, devolvemos o foco ao scanner após um pequeno delay
+                setTimeout(() => {
+                    const active = document.activeElement;
+                    if (!active || !['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) {
+                        input.focus({ preventScroll: true });
+                    }
+                }, 200);
+            });
+
+            // Foco inicial
+            setTimeout(() => input.focus({ preventScroll: true }), 1000);
+        }
     }
 
     checkForForceUpdate() {
