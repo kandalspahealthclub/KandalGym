@@ -611,7 +611,7 @@ class FitnessApp {
 
         container.innerHTML = `
             <div style="display:flex; align-items:center; gap:0.5rem;">
-                <div class="avatar" style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; border: 2px solid var(--surface-border); overflow: hidden;">
+                <div class="avatar" onclick="app.setView('profile')" style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; border: 2px solid var(--surface-border); overflow: hidden; cursor: pointer;">
                     ${photo ? `<img src="${photo}" style="width:100%; height:100%; object-fit:cover;">` : initials}
                 </div>
                 ${installButton}
