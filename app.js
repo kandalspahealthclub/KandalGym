@@ -2222,7 +2222,7 @@ Equipa KandalGym`;
             'const bc = new BroadcastChannel("kandal_access"); let timeout; ' +
             'const hwInput = document.getElementById("monitor-scanner-input"); ' +
             
-            'hwInput.onkeyup = (e) => { ' +
+    'hwInput.onkeyup = (e) => { ' +
             '  if (e.key === "Enter") { ' +
             '    const val = hwInput.value.trim().toUpperCase(); ' +
             '    if (val.length >= 2) { ' +
@@ -2231,7 +2231,14 @@ Equipa KandalGym`;
             '    } ' +
             '    hwInput.value = ""; ' +
             '  } ' +
+            '}; ' +
+
+            '/* Auto-foco persistente */ ' +
+            'document.addEventListener("mousedown", () => { ' +
+            '  setTimeout(() => hwInput.focus({ preventScroll: true }), 100); ' +
             '}); ' +
+            'setTimeout(() => hwInput.focus({ preventScroll: true }), 500); ' +
+            'setInterval(() => { if(document.activeElement !== hwInput) hwInput.focus({ preventScroll: true }); }, 2000); ' +
 
             'bc.onmessage = (ev) => { const { type, data } = ev.data; if (type === "access_event") { ' +
             'clearTimeout(timeout); document.getElementById("standby").style.display = "none"; ' +
