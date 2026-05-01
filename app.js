@@ -7655,9 +7655,10 @@ Equipa KandalGym`;
             const realUser = c.clientId ? [...(this.state.clients || []), ...(this.state.teachers || []), ...(this.state.admins || [])]
                 .find(u => Number(u.id) === Number(c.clientId)) : null;
 
-            let userPhoto = c.photoUrl || (realUser ? realUser.photoUrl : null);
-            c.photoUrl = userPhoto;
-
+            if (realUser) {
+                c.photoUrl = realUser.photoUrl || null;
+            }
+            let userPhoto = c.photoUrl;
             const avatarLetra = c.nome ? c.nome.substring(0, 1).toUpperCase() : '?';
 
             // Deteção inteligente de envio/atividade (manual, login ou treinos registados)
@@ -8394,6 +8395,15 @@ Equipa KandalGym`;
         if (this.lastProcessedQR === formattedId && (Date.now() - this.lastProcessedTime < 3000)) return;
 
         const c = this.state.qrClients.find(cli => String(cli.id).toUpperCase() === formattedId);
+
+        if (c) {
+            // Sincronizar foto mais recente antes de enviar para o ecrã
+            const realUser = c.clientId ? [...(this.state.clients || []), ...(this.state.teachers || []), ...(this.state.admins || [])]
+                .find(u => Number(u.id) === Number(c.clientId)) : null;
+            if (realUser) {
+                c.photoUrl = realUser.photoUrl || null;
+            }
+        }
 
         if (!c) {
             this.showQRMsg(" Codigo não reconhecido", "bg-qr-danger");
