@@ -8903,7 +8903,11 @@ Equipa KandalGym`;
             [`${year}-11-01`]: "Todos os Santos",
             [`${year}-12-01`]: "Restauração da Independência",
             [`${year}-12-08`]: "Imaculada Conceição",
-            [`${year}-12-25`]: "Natal"
+            [`${year}-12-24`]: "Véspera de Natal",
+            [`${year}-12-25`]: "Natal",
+            [`${year}-12-31`]: "Passagem de Ano",
+            [`${year}-06-23`]: "Véspera de São João",
+            [`${year}-06-24`]: "São João"
         };
 
         const a = year % 19;
@@ -9278,7 +9282,14 @@ Equipa KandalGym`;
                                             </div>
                                             <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:0.2rem;">
                                                 <i class="fas fa-calendar-alt"></i> ${this.formatFullDate(c.day, c.date)}
-                                                ${this.isHoliday(c.date) ? `<span style="color:var(--warning); font-weight:bold; margin-left:5px;">(${this.isHoliday(c.date)}: Horário 08h30-13h00, sem aulas)</span>` : ''}
+                                                ${(() => {
+                                                    const hn = this.isHoliday(c.date);
+                                                    if (!hn) return '';
+                                                    let msg = "Horário 08h30-13h00, sem aulas";
+                                                    if (hn === "Ano Novo" || hn === "Natal" || hn === "São João") msg = "Encerrado";
+                                                    else if (hn === "Véspera de São João" || hn === "Véspera de Natal" || hn === "Passagem de Ano") msg = "Abertos até às 16h30";
+                                                    return `<span style="color:var(--warning); font-weight:bold; margin-left:5px; display:block; margin-top:2px;">(${hn}: ${msg})</span>`;
+                                                })()}
                                             </div>
                                             <h4 style="margin-bottom:0.3rem; font-size:0.9rem; line-height:1.2; min-height:2.4em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${c.name}</h4>
                                             <p style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.8rem;">
@@ -9434,7 +9445,32 @@ Equipa KandalGym`;
         if (cls && cls.date) {
             const holidayName = this.isHoliday(cls.date);
             if (holidayName) {
-                return alert(`Informação de Feriado (${holidayName}):\n\nNeste dia o ginásio terá horário reduzido (08h30 às 13h00) apenas para musculação.\n\nAs aulas de grupo estão suspensas. Obrigado pela compreensão!`);
+                let shouldBlock = false;
+                let blockMessage = '';
+                
+                if (holidayName === "Ano Novo" || holidayName === "Natal" || holidayName === "São João") {
+                    shouldBlock = true;
+                    blockMessage = `Informação de Feriado (${holidayName}):\n\nNeste dia o ginásio encontra-se totalmente encerrado.`;
+                } else if (holidayName === "Véspera de São João" || holidayName === "Véspera de Natal" || holidayName === "Passagem de Ano") {
+                    if (cls.time) {
+                        const timeParts = cls.time.split(':');
+                        if (timeParts.length === 2) {
+                            const timeInMinutes = parseInt(timeParts[0]) * 60 + parseInt(timeParts[1]);
+                            const closeTimeInMinutes = 16 * 60 + 30; // 16:30
+                            if (timeInMinutes >= closeTimeInMinutes) {
+                                shouldBlock = true;
+                                blockMessage = `Informação Especial (${holidayName}):\n\nNeste dia o ginásio encerra às 16h30.\nNão há aulas de grupo a partir desta hora.`;
+                            }
+                        }
+                    }
+                } else {
+                    shouldBlock = true;
+                    blockMessage = `Informação de Feriado (${holidayName}):\n\nNeste dia o ginásio terá horário reduzido (08h30 às 13h00) apenas para musculação.\n\nAs aulas de grupo estão suspensas. Obrigado pela compreensão!`;
+                }
+
+                if (shouldBlock) {
+                    return alert(blockMessage);
+                }
             }
         }
 
