@@ -5421,9 +5421,7 @@ Equipa KandalGym`;
         container.innerHTML = `
             <h2 class="animate-fade-in"><i class="fas fa-user-circle"></i> O Meu Perfil</h2>
             <p style="color:var(--text-muted); margin-bottom:0.5rem;">Atualize os seus dados de contacto e palavra-passe.</p>
-            <p style="color:var(--warning); font-size:0.82rem; margin-bottom:2rem;">
-                <i class="fas fa-info-circle" style="margin-right:0.3rem;"></i>Sempre que efetuar alguma alteração, clique em <strong style="color:#fff;">Guardar Alterações</strong> no final da página.
-            </p>
+            <p style="color:var(--warning); font-size:0.82rem; margin-bottom:2rem;">Sempre que efetuar alterações, clique em "Guardar Alteracoes" no final da pagina.</p>
 
             <div class="glass-panel" style="padding:2rem; max-width:600px;">
                 <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:2rem;">
