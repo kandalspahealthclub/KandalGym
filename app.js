@@ -1141,7 +1141,7 @@ class FitnessApp {
         input.type = 'text'; // Mostrar ao gerar para o admin ver
     }
 
-    addUser() {
+    async addUser() {
         try {
             const type = document.getElementById('new-user-type').value;
             const name = document.getElementById('new-user-name').value.trim();
@@ -5669,7 +5669,21 @@ Equipa KandalGym`;
         const btn = document.querySelector('button[onclick="app.updateProfile()"]');
 
         if (!name || !email || !pass) {
-            return alert('Nome, Ema            if (user) {
+            return alert('Nome, Email e Palavra-passe são obrigatórios.');
+        }
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A gravar...';
+        }
+
+        try {
+            // Atualizar no estado global (procurar em clientes, professores ou admins)
+            let user = this.state.clients.find(c => c.id === this.currentUser.id);
+            if (!user) user = this.state.teachers.find(t => t.id === this.currentUser.id);
+            if (!user) user = this.state.admins.find(a => a.id === this.currentUser.id);
+
+            if (user) {
                 user.name = name;
                 user.email = email;
                 user.phone = phone;
@@ -5681,6 +5695,7 @@ Equipa KandalGym`;
                 if (profInput) user.profession = profInput.value;
                 if (this.currentUser.photoUrl) user.photoUrl = this.currentUser.photoUrl;
 
+                // Atualizar utilizador atual na sessão
                 this.currentUser = { ...user };
                 await this.saveState();
 
@@ -5696,19 +5711,6 @@ Equipa KandalGym`;
                     }
                 }
 
-                this.persistLogin();
-                this.renderUserProfile();
-                alert('Perfil atualizado com sucesso!');
-                this.setView('dashboard');
-            }               user.profession = profInput.value;
-                }
-                if (this.currentUser.photoUrl) {
-                    user.photoUrl = this.currentUser.photoUrl;
-                }
-
-                // Atualizar utilizador atual na sessão
-                this.currentUser = { ...user };
-                await this.saveState();
                 this.persistLogin();
                 this.renderUserProfile(); // Atualizar avatar no topo
 
