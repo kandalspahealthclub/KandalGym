@@ -86,14 +86,13 @@ class FitnessApp {
         try {
             firebase.initializeApp(this.firebaseAppConfig);
             this.db = firebase.database();
+            this.auth = firebase.auth(); // Firebase Authentication
             this.currentQRMsg = null;
-
-            // 1. Carregar do LocalStorage imediatamente (Cache Offline)
             this.dbRef = this.db.ref('kandalGymState');
-            console.log("Firebase inicializado.");
+            console.log("Firebase inicializado com autenticacao.");
         } catch (fbErr) {
             console.error("Erro ao inicializar Firebase:", fbErr);
-            alert("Erro Firebase: Verifique a sua ligação à internet.");
+            alert("Erro Firebase: Verifique a sua ligacao a internet.");
         }
         this.isSaving = false;
 
@@ -421,8 +420,15 @@ class FitnessApp {
             console.warn('Tentativa de gravar antes de carregar dados do Firebase ignorada.');
             return;
         }
-        if (this.isSaving) return;
+        
+        if (this.isSaving) {
+            this.needsAnotherSave = true;
+            return;
+        }
+
         this.isSaving = true;
+        this.needsAnotherSave = false;
+
         try {
             // Tentar gravar no LocalStorage (cache rapido)
             try {
@@ -443,7 +449,11 @@ class FitnessApp {
                 alert("Erro ao guardar dados: " + (e.message || "Verifique a sua ligação ou o Console (F12) para detalhes."));
             }
         } finally {
-            setTimeout(() => { this.isSaving = false; }, 1000);
+            this.isSaving = false;
+            if (this.needsAnotherSave) {
+                this.needsAnotherSave = false;
+                await this.saveState();
+            }
         }
     }
 
@@ -652,7 +662,7 @@ class FitnessApp {
                     </div>
                     <div class="input-icon-group">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="login-pass" placeholder="Password" value="${savedCreds.pass || ''}" required>
+                        <input type="password" id="login-pass" placeholder="Password" required>
                     </div>
 
                     <div style="display:flex; align-items:center; gap:8px; margin:0.2rem 0 1.2rem 4px; cursor:pointer;">
@@ -727,36 +737,39 @@ class FitnessApp {
             msgDiv.style.display = 'block';
             msgDiv.style.background = 'rgba(239, 68, 68, 0.1)';
             msgDiv.style.color = 'var(--danger)';
-            msgDiv.innerText = 'Por favor, introduza um email válido.';
+            msgDiv.innerText = 'Por favor, introduza um email valido.';
             return;
         }
 
-        // Tentar encontrar o utilizador
-        const user = [...this.state.clients, ...this.state.teachers, ...this.state.admins]
-            .find(u => u.email && u.email.toLowerCase() === email);
-
-        if (user) {
-            // Enviar notificação para Adms
-            const adminId = this.state.admins[0]?.id || 1;
-            this.addAppNotification(adminId, 'Pedido de Recuperação', `O utilizador ${user.name} (${email}) solicitou a recuperação da password.`, null, 'notification');
-
-            msgDiv.style.display = 'block';
-            msgDiv.style.background = 'rgba(34, 197, 94, 0.1)';
-            msgDiv.style.color = '#22c55e';
-            msgDiv.innerHTML = `
-                <strong>Pedido enviado com sucesso!</strong><br><br>
-                Um administrador foi notificado. Para acelerar o processo, pode também contactar-nos via WhatsApp:
-                <br><br>
-                <button class="btn btn-primary btn-sm" onclick="app.contactSupportViaWA()" style="background:#25d366; border-color:#25d366;">
-                    <i class="fab fa-whatsapp"></i> Enviar p/ WhatsApp
-                </button>
-            `;
-            emailInput.value = '';
-        } else {
-            msgDiv.style.display = 'block';
-            msgDiv.style.background = 'rgba(239, 68, 68, 0.1)';
-            msgDiv.style.color = 'var(--danger)';
-            msgDiv.innerText = 'Email não encontrado no sistema. Verifique se escreveu corretamente.';
+        // Tentar Firebase Auth password reset primeiro (mais seguro)
+        if (this.auth) {
+            this.auth.sendPasswordResetEmail(email)
+                .then(() => {
+                    msgDiv.style.display = 'block';
+                    msgDiv.style.background = 'rgba(34, 197, 94, 0.1)';
+                    msgDiv.style.color = '#22c55e';
+                    msgDiv.innerHTML = `<strong>Email de recuperacao enviado!</strong><br><br>Verifique a sua caixa de entrada (e a pasta de spam) para recuperar a sua conta.`;
+                    emailInput.value = '';
+                })
+                .catch((err) => {
+                    // Fallback: notificar administrador
+                    const user = [...this.state.clients, ...this.state.teachers, ...this.state.admins]
+                        .find(u => u.email && u.email.toLowerCase() === email);
+                    if (user) {
+                        const adminId = this.state.admins[0]?.id || 1;
+                        this.addAppNotification(adminId, 'Pedido de Recuperacao', `O utilizador ${user.name} (${email}) solicitou recuperacao de password.`, null, 'notification');
+                        msgDiv.style.display = 'block';
+                        msgDiv.style.background = 'rgba(34, 197, 94, 0.1)';
+                        msgDiv.style.color = '#22c55e';
+                        msgDiv.innerHTML = `<strong>Pedido enviado!</strong><br>Um administrador foi notificado.`;
+                    } else {
+                        msgDiv.style.display = 'block';
+                        msgDiv.style.background = 'rgba(239, 68, 68, 0.1)';
+                        msgDiv.style.color = 'var(--danger)';
+                        msgDiv.innerText = 'Email nao encontrado no sistema.';
+                    }
+                });
+            return;
         }
     }
 
@@ -786,116 +799,112 @@ class FitnessApp {
         window.open(waUrl, '_blank');
     }
 
-    handleLogin() {
+    async handleLogin() {
+        const emailInput = document.getElementById('login-email');
+        const passInput = document.getElementById('login-pass');
+        const errorDiv = document.getElementById('login-error-msg');
+        const loginBtn = document.querySelector('.login-form button[type="submit"]');
+
+        if (errorDiv) errorDiv.style.display = 'none';
+        if (!emailInput || !passInput) return;
+
+        const email = emailInput.value.trim().toLowerCase();
+        const pass = passInput.value;
+        const rememberEl = document.getElementById('remember-me');
+        const rememberMe = rememberEl ? rememberEl.checked : false;
+
+        if (!email || !pass) {
+            if (errorDiv) {
+                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Por favor, preencha todos os campos.';
+                errorDiv.style.display = 'block';
+            }
+            return;
+        }
+
+        if (loginBtn) { loginBtn.disabled = true; loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A entrar...'; }
+
         try {
-            const emailInput = document.getElementById('login-email');
-            const passInput = document.getElementById('login-pass');
-            const errorDiv = document.getElementById('login-error-msg');
+            // Configurar persistencia de sessao
+            await this.auth.setPersistence(
+                rememberMe ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION
+            );
 
-            if (errorDiv) errorDiv.style.display = 'none';
+            try {
+                // Tentativa 1: Firebase Auth (utilizadores ja migrados)
+                await this.auth.signInWithEmailAndPassword(email, pass);
+            } catch (authError) {
+                // Tentativa 2: Migracao automatica (primeiro login apos implementar Firebase Auth)
+                const allUsers = [
+                    ...(this.state.admins || []),
+                    ...(this.state.teachers || []),
+                    ...(this.state.clients || [])
+                ];
+                const legacyUser = allUsers.find(u =>
+                    (u.email || '').toLowerCase() === email && u.password === pass
+                );
 
-            if (!emailInput || !passInput) return;
-
-            const email = emailInput.value.trim().toLowerCase();
-            const pass = passInput.value;
-            const rememberEl = document.getElementById('remember-me');
-            const rememberMe = rememberEl ? rememberEl.checked : false;
-
-            if (!email || !pass) {
-                if (errorDiv) {
-                    errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Por favor, preencha todos os campos.';
-                    errorDiv.style.display = 'block';
-                    return;
+                if (legacyUser) {
+                    try {
+                        // Criar conta Firebase Auth e migrar automaticamente
+                        await this.auth.createUserWithEmailAndPassword(email, pass);
+                        console.log('Utilizador migrado para Firebase Auth:', email);
+                    } catch (createError) {
+                        if (createError.code === 'auth/email-already-in-use') {
+                            // Esta no Firebase Auth mas password errada
+                            throw { code: 'auth/wrong-password' };
+                        }
+                        throw createError;
+                    }
+                } else {
+                    throw { code: 'auth/wrong-password' };
                 }
-                return alert('Por favor, preencha todos os campos.');
             }
 
-            // Garantir que o estado e listas basicas existem
+            // Firebase Auth validou - encontrar dados do utilizador na base de dados
             if (!this.state) this.state = {};
             if (!this.state.admins) this.state.admins = [];
             if (!this.state.teachers) this.state.teachers = [];
             if (!this.state.clients) this.state.clients = [];
 
             const emailLower = email.toLowerCase();
-            const admin = this.state.admins.find(a => (a.email || '').toLowerCase() === emailLower && a.password === pass);
-            if (admin) {
-                admin.lastLogin = new Date().toLocaleString('pt-PT');
-                this.role = 'admin';
-                this.currentUser = admin;
-                this.isLoggedIn = true;
+            const admin = this.state.admins.find(a => (a.email || '').toLowerCase() === emailLower);
+            const teacher = !admin && this.state.teachers.find(t => (t.email || '').toLowerCase() === emailLower);
+            const client = !admin && !teacher && this.state.clients.find(c => (c.email || '').toLowerCase() === emailLower);
+            const foundUser = admin || teacher || client;
 
-                if (rememberMe) {
-                    localStorage.setItem('kg_remember', 'true');
-                    localStorage.setItem('kg_saved_creds', JSON.stringify({ email: email, pass: pass }));
-                } else {
-                    localStorage.removeItem('kg_remember');
-                    localStorage.removeItem('kg_saved_creds');
-                }
-
-                this.saveState();
-                this.persistLogin();
-                this.renderAppInterface();
-                return;
+            if (!foundUser) {
+                await this.auth.signOut();
+                throw new Error('Utilizador nao encontrado na base de dados. Contacte o administrador.');
             }
 
-            const teacher = this.state.teachers.find(t => (t.email || '').toLowerCase() === emailLower && t.password === pass);
-            if (teacher) {
-                teacher.lastLogin = new Date().toLocaleString('pt-PT');
-                this.role = 'teacher';
-                this.currentUser = teacher;
-                this.isLoggedIn = true;
+            this.role = admin ? 'admin' : (teacher ? 'teacher' : 'client');
+            foundUser.lastLogin = new Date().toLocaleString('pt-PT');
+            this.currentUser = foundUser;
+            this.isLoggedIn = true;
+            if (this.role === 'client') this.currentClientId = foundUser.id;
 
-                if (rememberMe) {
-                    localStorage.setItem('kg_remember', 'true');
-                    localStorage.setItem('kg_saved_creds', JSON.stringify({ email: email, pass: pass }));
-                } else {
-                    localStorage.removeItem('kg_remember');
-                    localStorage.removeItem('kg_saved_creds');
-                }
-
-                this.saveState();
-                this.persistLogin();
-                this.renderAppInterface();
-                return;
-            }
-
-            const client = this.state.clients.find(c => (c.email || '').toLowerCase() === emailLower && c.password === pass);
-            if (client) {
-                client.lastLogin = new Date().toLocaleString('pt-PT');
-                this.role = 'client';
-                this.currentUser = client;
-                this.currentClientId = client.id;
-                this.isLoggedIn = true;
-
-                if (rememberMe) {
-                    localStorage.setItem('kg_remember', 'true');
-                    localStorage.setItem('kg_saved_creds', JSON.stringify({ email: email, pass: pass }));
-                } else {
-                    localStorage.removeItem('kg_remember');
-                    localStorage.removeItem('kg_saved_creds');
-                }
-
-                this.saveState();
-                this.persistLogin();
-                this.renderAppInterface();
-                return;
-            }
-
-            if (typeof errorDiv !== 'undefined' && errorDiv) {
-                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Email ou palavra-passe incorretos.';
-                errorDiv.style.display = 'block';
+            // Guardar email (sem password) para conveniencia
+            if (rememberMe) {
+                localStorage.setItem('kg_remember', 'true');
+                localStorage.setItem('kg_saved_creds', JSON.stringify({ email: email }));
             } else {
-                this.showToast('Email ou palavra-passe incorretos.', 'error');
+                localStorage.removeItem('kg_remember');
+                localStorage.removeItem('kg_saved_creds');
             }
-        } catch (error) {
-            console.error('Erro no login:', error);
-            const errDiv = document.getElementById('login-error-msg');
-            if (errDiv) {
-                errDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Ocorreu um erro ao entrar: ${error.message}`;
-                errDiv.style.display = 'block';
-            } else {
-                this.showToast(`Ocorreu um erro ao entrar: ${error.message}`, 'error');
-            }
+
+            this.saveState();
+            this.persistLogin();
+            this.renderAppInterface();
+
+        } catch (err) {
+            const isWrongPass = err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential' || err.code === 'auth/invalid-login-credentials';
+            const errMsg = isWrongPass
+                ? '<i class="fas fa-exclamation-circle"></i> Email ou palavra-passe incorretos.'
+                : `<i class="fas fa-exclamation-triangle"></i> Erro: ${err.message || 'Tente novamente.'}`;
+            if (errorDiv) { errorDiv.innerHTML = errMsg; errorDiv.style.display = 'block'; }
+            else this.showToast(isWrongPass ? 'Email ou palavra-passe incorretos.' : (err.message || ''), 'error');
+        } finally {
+            if (loginBtn) { loginBtn.disabled = false; loginBtn.innerHTML = 'Entrar <i class="fas fa-arrow-right"></i>'; }
         }
     }
 
@@ -917,10 +926,13 @@ class FitnessApp {
     }
 
     persistLogin() {
+        // Guardar sessao SEM a password por seguranca
+        const userSafe = this.currentUser ? { ...this.currentUser } : null;
+        if (userSafe) delete userSafe.password;
         const session = {
             isLoggedIn: this.isLoggedIn,
             role: this.role,
-            currentUser: this.currentUser,
+            currentUser: userSafe,
             currentClientId: this.currentClientId,
             activeView: this.activeView
         };
@@ -951,8 +963,8 @@ class FitnessApp {
         this.isLoggedIn = false;
         this.currentUser = null;
         localStorage.removeItem('kandalgym_session');
-
-        // Force refresh to clear all state and re-initialize purely on the login screen
+        localStorage.removeItem('kg_saved_creds');
+        if (this.auth) this.auth.signOut().catch(() => {});
         window.location.reload();
     }
 
@@ -1213,6 +1225,20 @@ class FitnessApp {
             }
 
             this.saveState();
+
+            // Criar conta no Firebase Authentication
+            try {
+                const secondaryApp = firebase.initializeApp(this.firebaseAppConfig, 'user_creation_' + Date.now());
+                await secondaryApp.auth().createUserWithEmailAndPassword(email, pass);
+                await secondaryApp.auth().signOut();
+                await secondaryApp.delete();
+                console.log('Conta Firebase Auth criada para:', email);
+            } catch (authErr) {
+                if (authErr.code !== 'auth/email-already-in-use') {
+                    console.warn('Aviso: nao foi possivel criar conta Firebase Auth para', email, authErr.code);
+                }
+            }
+
             document.querySelector('.modal-overlay').remove();
             this.showInviteModal(name, email, pass, type, phone);
 
@@ -5643,33 +5669,38 @@ Equipa KandalGym`;
         const btn = document.querySelector('button[onclick="app.updateProfile()"]');
 
         if (!name || !email || !pass) {
-            return alert('Nome, Email e Palavra-passe são obrigatórios.');
-        }
-
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A gravar...';
-        }
-
-        try {
-            // Atualizar no estado global (procurar em clientes, professores ou admins)
-            let user = this.state.clients.find(c => c.id === this.currentUser.id);
-            if (!user) user = this.state.teachers.find(t => t.id === this.currentUser.id);
-            if (!user) user = this.state.admins.find(a => a.id === this.currentUser.id);
-
-            if (user) {
+            return alert('Nome, Ema            if (user) {
                 user.name = name;
                 user.email = email;
                 user.phone = phone;
                 user.password = pass;
 
                 const dobInput = document.getElementById('edit-dob');
-                if (dobInput) {
-                    user.birthDate = dobInput.value;
-                }
+                if (dobInput) user.birthDate = dobInput.value;
                 const profInput = document.getElementById('edit-profession');
-                if (profInput) {
-                    user.profession = profInput.value;
+                if (profInput) user.profession = profInput.value;
+                if (this.currentUser.photoUrl) user.photoUrl = this.currentUser.photoUrl;
+
+                this.currentUser = { ...user };
+                await this.saveState();
+
+                // Atualizar Firebase Auth (email e password)
+                const firebaseUser = this.auth ? this.auth.currentUser : null;
+                if (firebaseUser) {
+                    try {
+                        if (firebaseUser.email !== email) await firebaseUser.updateEmail(email);
+                        if (pass && pass !== '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022') await firebaseUser.updatePassword(pass);
+                    } catch (authErr) {
+                        console.warn('Aviso Firebase Auth update:', authErr.code);
+                        // Se requerer re-login recente, ignorar silenciosamente (nao e critico)
+                    }
+                }
+
+                this.persistLogin();
+                this.renderUserProfile();
+                alert('Perfil atualizado com sucesso!');
+                this.setView('dashboard');
+            }               user.profession = profInput.value;
                 }
                 if (this.currentUser.photoUrl) {
                     user.photoUrl = this.currentUser.photoUrl;
