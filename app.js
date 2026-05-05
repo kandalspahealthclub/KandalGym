@@ -87,6 +87,9 @@ class FitnessApp {
             if (!window.firebase) {
                 throw new Error("O script do Firebase não foi carregado. Verifique extensões como AdBlockers.");
             }
+            if (typeof firebase.auth !== 'function') {
+                throw new Error("O módulo de Autenticação não carregou corretamente. Por favor limpe a cache do navegador (Ctrl+F5) ou teste noutro navegador/modo anónimo.");
+            }
             if (!firebase.apps.length) {
                 firebase.initializeApp(this.firebaseAppConfig);
             }
