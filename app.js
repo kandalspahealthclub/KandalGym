@@ -84,7 +84,12 @@ class FitnessApp {
         };
 
         try {
-            firebase.initializeApp(this.firebaseAppConfig);
+            if (!window.firebase) {
+                throw new Error("O script do Firebase não foi carregado. Verifique extensões como AdBlockers.");
+            }
+            if (!firebase.apps.length) {
+                firebase.initializeApp(this.firebaseAppConfig);
+            }
             this.db = firebase.database();
             this.auth = firebase.auth(); // Firebase Authentication
             this.currentQRMsg = null;
@@ -92,7 +97,7 @@ class FitnessApp {
             console.log("Firebase inicializado com autenticacao.");
         } catch (fbErr) {
             console.error("Erro ao inicializar Firebase:", fbErr);
-            alert("Erro Firebase: Verifique a sua ligacao a internet.");
+            alert("Erro Firebase: Verifique a sua ligacao a internet. Detalhes: " + fbErr.message);
         }
         this.isSaving = false;
 
