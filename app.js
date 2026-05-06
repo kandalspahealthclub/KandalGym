@@ -4357,8 +4357,11 @@ Equipa KandalGym`;
                                     <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">Adicionar Alimento da Base de Dados</label>
                                     <div style="display:flex; flex-direction:column; gap:12px;">
                                         <div class="food-row" style="flex-wrap: wrap;">
-                                            <button class="btn btn-secondary food-search-btn" onclick="app.showFoodSelectionModal(${idx})" style="flex: 1 1 auto; min-width: 140px;">
-                                                <i class="fas fa-search"></i> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Pesquisar</span>
+                                            <button class="btn btn-secondary food-search-btn" onclick="app.showFoodSelectionModal(${idx})" style="flex: 1 1 auto; min-width: 120px; font-size:0.85rem;">
+                                                <i class="fas fa-apple-alt"></i> Alimento
+                                            </button>
+                                            <button class="btn btn-secondary" onclick="app.showRecipeSelectionForMeal(${idx})" style="flex: 1 1 auto; min-width: 120px; background:rgba(var(--accent-rgb), 0.1); border:1px solid var(--accent); color:var(--accent); font-size:0.85rem;">
+                                                <i class="fas fa-utensils"></i> Receita
                                             </button>
                                             <input type="hidden" id="selected-food-${idx}" value="">
                                             
@@ -10391,6 +10394,66 @@ Equipa KandalGym`;
     updateRecipePreview() {
         // Apenas para refrescar a UI se necessário, o render já lida com isso se for re-chamado
         // Mas como estamos a usar oninput directo nos dados, o renderEditor vai mostrar o link.
+    }
+
+    // --- INTEGRAÇÃO RECEITAS NO PLANO ALIMENTAR ---
+
+    showRecipeSelectionForMeal(mealIdx) {
+        this.currentMealIdxForRecipe = mealIdx;
+        const recipes = this.state.recipes || [];
+        const isMobile = window.innerWidth <= 768;
+
+        const content = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h2 style="margin:0;"><i class="fas fa-utensils"></i> Escolher Receita</h2>
+                <button class="btn btn-ghost" onclick="app.closeModal()" style="padding:8px;"><i class="fas fa-times"></i></button>
+            </div>
+            <div style="max-height:60vh; overflow-y:auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(${isMobile ? '140px' : '200px'}, 1fr)); gap:10px;">
+                ${recipes.length === 0 ? `
+                    <p style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--text-muted);">Não existem receitas criadas.</p>
+                ` : recipes.map(r => `
+                    <div class="glass-card" onclick="app.addRecipeToMeal('${r.id}')" 
+                        style="padding:12px; cursor:pointer; text-align:center; border:1px solid transparent; transition:all 0.2s;"
+                        onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'">
+                        <div style="font-size:1.5rem; margin-bottom:5px;">${this.extractYoutubeId(r.videoUrl) ? '<i class="fab fa-youtube" style="color:red;"></i>' : '<i class="fas fa-utensils" style="color:var(--primary);"></i>'}</div>
+                        <div style="font-size:0.85rem; font-weight:bold; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${r.name}</div>
+                        <div style="font-size:0.7rem; color:var(--text-muted);">${r.ingredients ? r.ingredients.length : 0} Ingredientes</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        this.showModal(content, '600px');
+    }
+
+    addRecipeToMeal(recipeId) {
+        const recipe = this.state.recipes.find(r => r.id === recipeId);
+        if (!recipe) return;
+
+        const mealIdx = this.currentMealIdxForRecipe;
+        let textToAdd = `\n* RECEITA: ${recipe.name.toUpperCase()} *\n`;
+        
+        if (recipe.ingredients && recipe.ingredients.length > 0) {
+            recipe.ingredients.forEach(ing => {
+                if (ing.name && ing.amount) {
+                    textToAdd += `${ing.name}: ${ing.amount}\n`;
+                } else if (ing.name) {
+                    textToAdd += `${ing.name}\n`;
+                }
+            });
+        }
+
+        if (recipe.videoUrl) {
+            textToAdd += `Vídeo: ${recipe.videoUrl}\n`;
+        }
+        
+        textToAdd += `* FIM RECEITA *\n`;
+
+        const currentItems = this.editingMeal.meals[mealIdx].items || '';
+        this.editingMeal.meals[mealIdx].items = (currentItems.trim() + textToAdd).trim();
+        
+        this.closeModal();
+        this.renderMealEditor();
+        this.showToast(`Receita "${recipe.name}" adicionada!`);
     }
 }
 
