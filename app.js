@@ -4206,10 +4206,20 @@ Equipa KandalGym`;
                                     <strong style="color:var(--primary); font-size: 1rem;">${m.time} - ${m.name}</strong>
                                     <i class="fas fa-utensils" style="color:var(--text-muted); font-size:0.75rem;"></i>
                                 </div>
-                                <div style="font-size:0.9rem; white-space: pre-wrap; line-height: 1.5; color: #e2e8f0;">${this.linkify(m.items)}</div>
+                                <div style="font-size:0.9rem; white-space: pre-wrap; line-height: 1.5; color: #e2e8f0;">${(() => {
+                                    let cleanText = m.items;
+                                    const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+                                    const match = m.items.match(youtubeRegex);
+                                    
+                                    if (match) {
+                                        // Remover a linha que contém o link do YouTube para não repetir com o card
+                                        const lines = cleanText.split('\n');
+                                        cleanText = lines.filter(line => !line.includes(match[0]) && !line.toLowerCase().includes('vídeo tutorial')).join('\n').trim();
+                                    }
+                                    return this.linkify(cleanText);
+                                })()}</div>
                                 
                                 ${(() => {
-                                    // Regex mais abrangente para YouTube (suporta Shorts, Embed, Watch, YouTu.be e parâmetros como ?si=)
                                     const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
                                     const match = m.items.match(youtubeRegex);
                                     if (match && match[1]) {
