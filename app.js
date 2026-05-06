@@ -4383,7 +4383,7 @@ Equipa KandalGym`;
                                         </div>
 
                                         <button class="btn btn-primary btn-sm" onclick="app.addSelectedFoodToMeal(${idx})" style="width:100%; height:40px; background:var(--success); border:none;">
-                                            <i class="fas fa-plus"></i> Adicionar áÂ  Refeição
+                                            <i class="fas fa-plus"></i> Adicionar à Refeição
                                         </button>
                                     </div>
                                 </div>
@@ -10446,8 +10446,6 @@ Equipa KandalGym`;
             textToAdd += `Vídeo: ${recipe.videoUrl}\n`;
         }
         
-        textToAdd += `* FIM RECEITA *\n`;
-
         const currentItems = this.editingMeal.meals[mealIdx].items || '';
         this.editingMeal.meals[mealIdx].items = (currentItems.trim() + textToAdd).trim();
         
