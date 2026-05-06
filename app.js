@@ -9758,31 +9758,6 @@ Equipa KandalGym`;
         }
     }
 
-}
-
-
-
-window.app = new FitnessApp();
-const app = window.app; // Mantem compatibilidade com referencias locais
-
-// Override global window.alert para usar o modal premium em todo o lado
-window.originalAlert = window.alert;
-window.alert = function (msg) {
-    if (typeof app !== 'undefined' && app.showModal) {
-        app.showModal(`
-            <div style="text-align: center; padding: 1.5rem 0.5rem 0.5rem;">
-                <div style="width: 64px; height: 64px; background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.2), rgba(var(--primary-rgb), 0.2)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; border: 1px solid rgba(var(--accent-rgb), 0.4); box-shadow: 0 8px 20px rgba(var(--accent-rgb), 0.15);">
-                    <i class="fas fa-info-circle" style="font-size: 2rem; color: var(--accent);"></i>
-                </div>
-                <h3 style="margin-bottom: 1rem; color: #fff; font-size: 1.2rem; font-weight: 800;">Aviso do Sistema</h3>
-                <p style="color: #e0e0e0; font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem; font-weight: 400;">${msg}</p>
-                <button class="btn btn-primary" onclick="app.closeModal()" style="width: 100%; border-radius: 12px; padding: 0.9rem; font-size: 1rem; font-weight: 700; background: linear-gradient(135deg, var(--primary), var(--accent)); border: none; box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.4);">Entendido</button>
-            </div>
-        `);
-    } else {
-        window.originalAlert(msg);
-    }
-};
 
     // --- SISTEMA DE PLANOS PRÉ-DEFINIDOS ---
     
@@ -10057,7 +10032,7 @@ window.alert = function (msg) {
         const plan = this.state.predefinedPlans[planId];
         const client = this.state.clients.find(c => c.id == clientId);
         
-        if (!confirm(\`Confirmar atribuição do plano "\${plan.name}" ao aluno \${client.name}?\`)) return;
+        if (!confirm(`Confirmar atribuição do plano "${plan.name}" ao aluno ${client.name}?`)) return;
         
         const newPlan = {
             days: JSON.parse(JSON.stringify(plan.days)),
@@ -10067,11 +10042,11 @@ window.alert = function (msg) {
         
         this.state.trainingPlans[clientId] = newPlan;
         
-        this.addAppNotification(clientId, 'Novo Plano de Treino!', \`O seu professor atribuiu-lhe o plano: \${plan.name}\`);
+        this.addAppNotification(clientId, 'Novo Plano de Treino!', `O seu professor atribuiu-lhe o plano: ${plan.name}`);
         
         this.saveState();
         this.closeModal();
-        this.showToast(\`Plano atribuído a \${client.name}!\`, 'success');
+        this.showToast(`Plano atribuído a ${client.name}!`, 'success');
         
         this.askNotificationMethod(clientId, 'Novo Plano de Treino (' + plan.name + ')');
     }
@@ -10121,3 +10096,29 @@ window.alert = function (msg) {
         this.renderTrainingEditor();
         this.showToast('Modelo carregado com sucesso!');
     }
+}
+
+
+
+window.app = new FitnessApp();
+const app = window.app; // Mantem compatibilidade com referencias locais
+
+// Override global window.alert para usar o modal premium em todo o lado
+window.originalAlert = window.alert;
+window.alert = function (msg) {
+    if (typeof app !== 'undefined' && app.showModal) {
+        app.showModal(`
+            <div style="text-align: center; padding: 1.5rem 0.5rem 0.5rem;">
+                <div style="width: 64px; height: 64px; background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.2), rgba(var(--primary-rgb), 0.2)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; border: 1px solid rgba(var(--accent-rgb), 0.4); box-shadow: 0 8px 20px rgba(var(--accent-rgb), 0.15);">
+                    <i class="fas fa-info-circle" style="font-size: 2rem; color: var(--accent);"></i>
+                </div>
+                <h3 style="margin-bottom: 1rem; color: #fff; font-size: 1.2rem; font-weight: 800;">Aviso do Sistema</h3>
+                <p style="color: #e0e0e0; font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem; font-weight: 400;">${msg}</p>
+                <button class="btn btn-primary" onclick="app.closeModal()" style="width: 100%; border-radius: 12px; padding: 0.9rem; font-size: 1rem; font-weight: 700; background: linear-gradient(135deg, var(--primary), var(--accent)); border: none; box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.4);">Entendido</button>
+            </div>
+        `);
+    } else {
+        window.originalAlert(msg);
+    }
+};
+
