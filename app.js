@@ -4206,21 +4206,24 @@ Equipa KandalGym`;
                                     <strong style="color:var(--primary); font-size: 1rem;">${m.time} - ${m.name}</strong>
                                     <i class="fas fa-utensils" style="color:var(--text-muted); font-size:0.75rem;"></i>
                                 </div>
-                                <div style="font-size:0.9rem; white-space: pre-wrap; line-height: 1.5; color: #e2e8f0;">${m.items}</div>
+                                <div style="font-size:0.9rem; white-space: pre-wrap; line-height: 1.5; color: #e2e8f0;">${this.linkify(m.items)}</div>
                                 
                                 ${(() => {
-                                    const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+                                    // Regex mais abrangente para YouTube (suporta Shorts, Embed, Watch, YouTu.be e parâmetros como ?si=)
+                                    const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
                                     const match = m.items.match(youtubeRegex);
                                     if (match && match[1]) {
                                         const videoId = match[1];
                                         return `
-                                            <div style="margin-top:1rem; border-radius:12px; overflow:hidden; border:1px solid rgba(255,0,0,0.2); background:rgba(0,0,0,0.3); display:flex; align-items:center; cursor:pointer;" onclick="window.open('https://www.youtube.com/watch?v=${videoId}', '_blank')">
-                                                <div style="width:80px; height:50px; background:url('https://img.youtube.com/vi/${videoId}/mqdefault.jpg') center/cover;"></div>
-                                                <div style="padding:0 1rem; flex:1; display:flex; align-items:center; gap:8px;">
-                                                    <i class="fab fa-youtube" style="color:#ff0000; font-size:1.2rem;"></i>
-                                                    <span style="font-size:0.8rem; font-weight:600; color:#fff;">Ver Vídeo da Receita</span>
+                                            <div class="glass-card" style="margin-top:1rem; padding: 0.5rem; border:1px solid rgba(255,0,0,0.3); background:rgba(255,0,0,0.05); display:flex; align-items:center; cursor:pointer; gap:12px;" onclick="window.open('https://www.youtube.com/watch?v=${videoId}', '_blank')">
+                                                <div style="width:70px; height:45px; border-radius:8px; background:url('https://img.youtube.com/vi/${videoId}/mqdefault.jpg') center/cover; position:relative; flex-shrink:0;">
+                                                    <i class="fab fa-youtube" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#fff; font-size:1rem; text-shadow: 0 0 5px rgba(0,0,0,0.5);"></i>
                                                 </div>
-                                                <i class="fas fa-external-link-alt" style="margin-right:1rem; font-size:0.7rem; color:var(--text-muted);"></i>
+                                                <div style="flex:1;">
+                                                    <div style="font-size:0.85rem; font-weight:700; color:#fff;">Vídeo da Receita</div>
+                                                    <div style="font-size:0.7rem; color:var(--text-muted);">Clique para ver o tutorial passo-a-passo</div>
+                                                </div>
+                                                <i class="fas fa-chevron-right" style="margin-right:0.5rem; color:rgba(255,255,255,0.2);"></i>
                                             </div>
                                         `;
                                     }
@@ -10519,6 +10522,14 @@ Equipa KandalGym`;
             }
         });
         return total;
+    }
+
+    linkify(text) {
+        if (!text) return '';
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        return text.replace(urlRegex, (url) => {
+            return `<a href="${url}" target="_blank" style="color:var(--primary); text-decoration:underline; font-weight:bold;">${url}</a>`;
+        });
     }
 }
 
