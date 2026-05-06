@@ -46,6 +46,8 @@ class FitnessApp {
         this.isCheckingClasses = false;
         this.checkInterval = null;
         this.replyingTo = null;
+        this.editingPredefinedId = null;
+        this.editingPredefinedName = '';
 
         // Tentar carregar estado do LocalStorage como cache inicial
         const cachedState = localStorage.getItem('kandalgym_state');
@@ -62,7 +64,7 @@ class FitnessApp {
         const vitalCollections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes', 'news'];
         vitalCollections.forEach(c => { if (!this.state[c]) this.state[c] = []; });
 
-        const vitalDicts = ['trainingPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments'];
+        const vitalDicts = ['trainingPlans', 'predefinedPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments'];
         vitalDicts.forEach(d => { if (!this.state[d]) this.state[d] = {}; });
 
         this.shownNotifications = JSON.parse(localStorage.getItem('shown_notifications') || '[]');
@@ -492,7 +494,7 @@ class FitnessApp {
                     }
                 });
 
-                const dictCollections = ['trainingPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments', 'planRestrictions'];
+                const dictCollections = ['trainingPlans', 'predefinedPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments', 'planRestrictions'];
                 dictCollections.forEach(coll => { if (!this.state[coll]) this.state[coll] = {}; });
 
                 // Integridade das restrições
@@ -1579,6 +1581,7 @@ Equipa KandalGym`;
                 { id: 'foods', icon: 'fa-apple-alt', label: 'Base de Alimentos' },
                 { id: 'all-clients', icon: 'fa-search', label: 'Acesso Global' },
                 { id: 'notifications_manager', icon: 'fa-paper-plane', label: 'Comunicados' },
+                { id: 'predefined_plans', icon: 'fa-copy', label: 'Planos Pré-Definidos' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
             ];
         } else if (this.role === 'teacher') {
@@ -1587,6 +1590,7 @@ Equipa KandalGym`;
                 { id: 'classes', icon: 'fa-calendar-alt', label: 'Gestão de Aulas' },
                 { id: 'anamnesis', icon: 'fa-notes-medical', label: 'Anamnese' },
                 { id: 'chat', icon: 'fa-comment-alt', label: 'Mensagens' },
+                { id: 'predefined_plans', icon: 'fa-copy', label: 'Planos Pré-Definidos' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
             ];
         } else {
@@ -1664,8 +1668,10 @@ Equipa KandalGym`;
 
         if (this.activeView === 'edit_training') this.renderTrainingEditor();
         else if (this.activeView === 'edit_meal') this.renderMealEditor();
+        else if (this.activeView === 'edit_predefined_plan') this.renderPredefinedPlanEditor();
         else if (this.activeView === 'spy_view') this.renderSpyView(container);
         else if (this.activeView === 'classes') this.renderClassesView(container);
+        else if (this.activeView === 'predefined_plans') this.renderPredefinedPlans(container);
         else if (this.role === 'admin') this.renderAdminContent(container);
         else if (this.role === 'teacher') this.renderTeacherContent(container);
         else this.renderClientContent(container);
@@ -3900,6 +3906,7 @@ Equipa KandalGym`;
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
                 <h2 style="margin:0;">Editar Treino: ${c.name}</h2>
                 <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <button class="btn btn-ghost" style="color:var(--accent);" onclick="app.showLoadPredefinedPlanModal()"><i class="fas fa-copy"></i> Carregar Modelo</button>
                     <button class="btn btn-ghost" style="color:var(--danger);" onclick="app.deleteTrainingPlan(app.editingClientId)"><i class="fas fa-trash"></i> Eliminar</button>
                     <button class="btn btn-secondary" onclick="app.clearTrainingDraft(); app.setView('spy_view')">Cancelar</button>
                     <button class="btn btn-primary" onclick="app.saveTrainingPlan()"><i class="fas fa-save"></i> Guardar Plano</button>
@@ -4613,7 +4620,11 @@ Equipa KandalGym`;
         if (modal) modal.remove();
 
         // Renderizar novamente para atualizar o nome no botão
-        this.renderTrainingEditor();
+        if (this.activeView === 'edit_predefined_plan') {
+            this.renderPredefinedPlanEditor();
+        } else {
+            this.renderTrainingEditor();
+        }
     }
 
     showFoodSelectionModal(mealIdx) {
@@ -9772,3 +9783,341 @@ window.alert = function (msg) {
         window.originalAlert(msg);
     }
 };
+
+    // --- SISTEMA DE PLANOS PRÉ-DEFINIDOS ---
+    
+    renderPredefinedPlans(container) {
+        const plans = Object.entries(this.state.predefinedPlans || {}).map(([id, plan]) => ({ id, ...plan }));
+        
+        container.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:1rem;">
+                <h2 style="margin:0;"><i class="fas fa-copy" style="color:var(--primary); margin-right:10px;"></i> Planos de Treino Pré-Definidos</h2>
+                <button class="btn btn-primary" onclick="app.startNewPredefinedPlan()">
+                    <i class="fas fa-plus"></i> Novo Plano Modelo
+                </button>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:1.5rem;">
+                ${plans.length === 0 ? `
+                    <div class="glass-panel" style="grid-column: 1/-1; padding:3rem; text-align:center;">
+                        <i class="fas fa-info-circle" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
+                        <p style="color:var(--text-muted);">Ainda não existem planos pré-definidos. Crie um modelo para facilitar a atribuição a novos alunos.</p>
+                    </div>
+                ` : plans.map(plan => `
+                    <div class="glass-card animate-scale-in" style="padding:1.5rem; display:flex; flex-direction:column; gap:1rem; border-top: 3px solid var(--primary); height: 100%;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                            <h3 style="margin:0; font-size:1.2rem; color:#fff;">${plan.name}</h3>
+                            <div style="display:flex; gap:0.5rem;">
+                                <button class="btn btn-ghost" style="color:var(--primary); padding:5px;" onclick="app.editPredefinedPlan('${plan.id}')" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-ghost" style="color:var(--danger); padding:5px;" onclick="app.deletePredefinedPlan('${plan.id}')" title="Eliminar">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div style="color:var(--text-muted); font-size:0.9rem; flex:1;">
+                            <p style="margin:0;"><i class="fas fa-calendar-day" style="width:20px; color:var(--primary);"></i> <strong>${plan.days ? plan.days.length : 0}</strong> Dias / Planos</p>
+                            <p style="margin:0;"><i class="fas fa-dumbbell" style="width:20px; color:var(--primary);"></i> <strong>${(plan.days || []).reduce((acc, d) => acc + (d.exercises ? d.exercises.length : 0), 0)}</strong> Exercícios totais</p>
+                        </div>
+                        <div style="margin-top:1rem; padding-top:1rem; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <button class="btn btn-secondary btn-sm" style="width:100%; justify-content:center;" onclick="app.applyPredefinedPlanToClientModal('${plan.id}')">
+                                <i class="fas fa-user-plus"></i> Atribuir a Aluno
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    startNewPredefinedPlan() {
+        this.editingPredefinedId = null;
+        this.editingPlan = [{ title: 'Treino A', exercises: [] }];
+        this.editingDayIdx = 0;
+        this.editingPredefinedName = '';
+        this.setView('edit_predefined_plan');
+    }
+
+    editPredefinedPlan(id) {
+        const plan = this.state.predefinedPlans[id];
+        if (!plan) return alert('Plano não encontrado.');
+        
+        this.editingPredefinedId = id;
+        this.editingPlan = JSON.parse(JSON.stringify(plan.days || []));
+        this.editingPredefinedName = plan.name || '';
+        this.editingDayIdx = 0;
+        this.setView('edit_predefined_plan');
+    }
+
+    deletePredefinedPlan(id) {
+        if (confirm('Tem a certeza que deseja eliminar este plano modelo?')) {
+            delete this.state.predefinedPlans[id];
+            this.saveState();
+            this.renderContent();
+            this.showToast('Plano modelo eliminado.', 'success');
+        }
+    }
+
+    renderPredefinedPlanEditor() {
+        const container = document.getElementById('main-content');
+        if (!container) return;
+
+        if (this.editingDayIdx >= this.editingPlan.length) this.editingDayIdx = 0;
+        const currentDay = this.editingPlan[this.editingDayIdx];
+
+        container.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+                <h2 style="margin:0;">${this.editingPredefinedId ? 'Editar Modelo' : 'Novo Plano Modelo'}</h2>
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <button class="btn btn-secondary" onclick="app.setView('predefined_plans')">Cancelar</button>
+                    <button class="btn btn-primary" onclick="app.savePredefinedPlan()"><i class="fas fa-save"></i> Guardar Modelo</button>
+                </div>
+            </div>
+
+            <div class="glass-panel" style="margin-bottom:1.5rem; padding:1.5rem;">
+                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Nome do Plano Modelo</label>
+                <input type="text" id="edit-predefined-name" value="${this.editingPredefinedName || ''}" 
+                    placeholder="Ex: Hipertrofia Intermédio, Perda de Peso..."
+                    oninput="app.editingPredefinedName = this.value"
+                    style="width:100%; max-width:500px; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1.1rem; font-weight:600;">
+            </div>
+
+            <div id="editor-tabs-container" style="display:flex; gap:0.75rem; margin-bottom:2rem; flex-wrap:wrap; background:rgba(255,255,255,0.03); padding:12px; border-radius:15px; border:1px solid rgba(255,255,255,0.05);">
+                ${this.editingPlan.map((day, dIdx) => `
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <button class="btn ${this.editingDayIdx === dIdx ? 'btn-primary' : 'btn-ghost'}" 
+                            onclick="app.editingDayIdx = ${dIdx}; app.renderPredefinedPlanEditor();"
+                            style="padding:10px 18px; font-size:0.95rem; border-radius:10px; display:flex; align-items:center; gap:10px; min-width:140px; justify-content:center;">
+                            <span style="font-weight:700;">${day.title || 'Plano ' + String.fromCharCode(65 + dIdx)}</span>
+                            <span style="opacity:0.6; font-size:0.85rem;">(${day.exercises.length})</span>
+                        </button>
+                    </div>
+                `).join('')}
+                <button class="btn btn-ghost" onclick="app.addPredefinedTrainingDay()" 
+                    style="color:var(--accent); border:2px dashed rgba(var(--accent-rgb), 0.3); padding:8px 18px; border-radius:10px; font-size:0.9rem; font-weight:700;">
+                    <i class="fas fa-plus-circle"></i> Novo Dia
+                </button>
+            </div>
+
+            <div id="editor-days-container">
+                <div class="glass-panel" style="padding:1.5rem; margin-bottom:3rem; border-top: 4px solid var(--primary);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+                        <input type="text" value="${currentDay.title || 'Plano ' + String.fromCharCode(65 + this.editingDayIdx)}" 
+                            placeholder="Nome do Plano (ex: Treino A)..."
+                            oninput="app.editingPlan[${this.editingDayIdx}].title = this.value"
+                            onchange="app.renderPredefinedPlanEditor()"
+                            style="font-weight:800; font-size:1.3rem; background:transparent; border:none; border-bottom:2px solid var(--primary); width:100%; max-width:400px; padding:8px 0; color:#fff; outline:none;">
+                        
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <div style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.05); padding:5px 12px; border-radius:10px;">
+                                <label style="font-size:0.75rem; color:var(--text-muted);">Descanso:</label>
+                                <input type="text" value="${currentDay.rest || ''}" placeholder="60s" 
+                                    onchange="app.editingPlan[${this.editingDayIdx}].rest = this.value"
+                                    style="width:70px; height:30px; background:rgba(0,0,0,0.3); color:var(--accent); border:1px solid rgba(var(--accent-rgb), 0.3); border-radius:6px; text-align:center;">
+                            </div>
+                            <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.removePredefinedTrainingDay(${this.editingDayIdx})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="day-${this.editingDayIdx}-exercises">
+                        ${currentDay.exercises.map((ex, eIdx) => `
+                            <div class="glass-card" style="padding:1.2rem; margin-bottom:1rem; background:rgba(255,255,255,0.02); border-left:3px solid var(--secondary);">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                                    <button class="btn btn-secondary btn-sm" onclick="app.showExerciseSelectionModal(${this.editingDayIdx}, ${eIdx})" 
+                                        style="flex:1; text-align:left; justify-content:flex-start;">
+                                        <i class="fas fa-search"></i> <span>${ex.name || '-- Selecionar Exercício --'}</span>
+                                    </button>
+                                    <div style="display:flex; gap:0.2rem; margin-left:1rem;">
+                                        <button class="btn btn-ghost btn-sm" onclick="app.movePredefinedExercise(${this.editingDayIdx}, ${eIdx}, -1)" ${eIdx === 0 ? 'disabled' : ''}><i class="fas fa-arrow-up"></i></button>
+                                        <button class="btn btn-ghost btn-sm" onclick="app.movePredefinedExercise(${this.editingDayIdx}, ${eIdx}, 1)" ${eIdx === currentDay.exercises.length - 1 ? 'disabled' : ''}><i class="fas fa-arrow-down"></i></button>
+                                        <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.removePredefinedExercise(${this.editingDayIdx}, ${eIdx})"><i class="fas fa-trash-alt"></i></button>
+                                    </div>
+                                </div>
+                                <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                                    <div style="width:80px;">
+                                        <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">Sets</label>
+                                        <input type="text" value="${ex.sets || ''}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].sets = this.value"
+                                            style="width:100%; height:35px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:6px; text-align:center;">
+                                    </div>
+                                    <div style="flex:1; min-width:100px;">
+                                        <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">Reps</label>
+                                        <input type="text" value="${ex.reps || ''}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].reps = this.value"
+                                            style="width:100%; height:35px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid var(--primary); border-radius:6px; text-align:center;">
+                                    </div>
+                                    <div style="flex:2; min-width:150px;">
+                                        <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">Obs</label>
+                                        <input type="text" value="${ex.observations || ''}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].observations = this.value"
+                                            style="width:100%; height:35px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:0 10px;">
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <button class="btn btn-ghost btn-sm" style="color:var(--primary); margin-top:1rem;" onclick="app.addExerciseToPredefinedEditor(${this.editingDayIdx})">
+                        <i class="fas fa-plus"></i> Adicionar Exercício
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    addPredefinedTrainingDay() {
+        this.editingPlan.push({ title: '', exercises: [] });
+        this.editingDayIdx = this.editingPlan.length - 1;
+        this.renderPredefinedPlanEditor();
+    }
+
+    removePredefinedTrainingDay(idx) {
+        if (this.editingPlan.length <= 1) return alert('O modelo deve ter pelo menos um dia.');
+        if (confirm('Remover este dia do modelo?')) {
+            this.editingPlan.splice(idx, 1);
+            this.editingDayIdx = Math.max(0, idx - 1);
+            this.renderPredefinedPlanEditor();
+        }
+    }
+
+    addExerciseToPredefinedEditor(dayIdx) {
+        this.editingPlan[dayIdx].exercises.push({ id: '', name: '', sets: '', reps: '', observations: '' });
+        this.renderPredefinedPlanEditor();
+    }
+
+    removePredefinedExercise(dayIdx, exIdx) {
+        this.editingPlan[dayIdx].exercises.splice(exIdx, 1);
+        this.renderPredefinedPlanEditor();
+    }
+
+    movePredefinedExercise(dayIdx, exIdx, dir) {
+        const exs = this.editingPlan[dayIdx].exercises;
+        const target = exIdx + dir;
+        if (target >= 0 && target < exs.length) {
+            [exs[exIdx], exs[target]] = [exs[target], exs[exIdx]];
+            this.renderPredefinedPlanEditor();
+        }
+    }
+
+    savePredefinedPlan() {
+        const name = this.editingPredefinedName ? this.editingPredefinedName.trim() : '';
+        if (!name) return alert('Por favor, dê um nome ao plano modelo.');
+
+        const cleanDays = this.editingPlan.map(day => ({
+            ...day,
+            exercises: day.exercises.filter(ex => ex.id)
+        })).filter(day => day.exercises.length > 0 || this.editingPlan.length === 1);
+
+        const id = this.editingPredefinedId || Date.now().toString();
+        
+        this.state.predefinedPlans[id] = {
+            name: name,
+            days: cleanDays,
+            updatedAt: new Date().toLocaleDateString('pt-PT')
+        };
+
+        this.saveState();
+        this.setView('predefined_plans');
+        this.showToast('Plano modelo guardado com sucesso!', 'success');
+    }
+
+    applyPredefinedPlanToClientModal(planId) {
+        const plan = this.state.predefinedPlans[planId];
+        const clients = (this.state.clients || []).sort((a, b) => a.name.localeCompare(b.name));
+        
+        let clientOptions = clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        
+        const content = `
+            <h3>Atribuir Plano Modelo</h3>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">
+                Está prestes a aplicar o plano <strong>"${plan.name}"</strong> a um aluno. 
+                Isto irá sobrescrever o plano de treino atual do aluno selecionado.
+            </p>
+            
+            <div class="glass-panel" style="padding:1rem; margin-bottom:1.5rem;">
+                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Selecionar Aluno</label>
+                <select id="apply-plan-client-select" class="search-bar" style="width:100% !important; padding-left:15px !important;">
+                    <option value="">-- Selecione um Aluno --</option>
+                    ${clientOptions}
+                </select>
+            </div>
+            
+            <div style="display:flex; gap:1rem; justify-content:flex-end;">
+                <button class="btn btn-secondary" onclick="app.closeModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="app.applyPredefinedPlanToClient('${planId}')">Confirmar Atribuição</button>
+            </div>
+        `;
+        this.showModal(content, '500px');
+    }
+
+    applyPredefinedPlanToClient(planId) {
+        const clientId = document.getElementById('apply-plan-client-select').value;
+        if (!clientId) return alert('Por favor, selecione um aluno.');
+        
+        const plan = this.state.predefinedPlans[planId];
+        const client = this.state.clients.find(c => c.id == clientId);
+        
+        if (!confirm(\`Confirmar atribuição do plano "\${plan.name}" ao aluno \${client.name}?\`)) return;
+        
+        const newPlan = {
+            days: JSON.parse(JSON.stringify(plan.days)),
+            author: this.currentUser.name,
+            updatedAt: new Date().toLocaleDateString('pt-PT')
+        };
+        
+        this.state.trainingPlans[clientId] = newPlan;
+        
+        this.addAppNotification(clientId, 'Novo Plano de Treino!', \`O seu professor atribuiu-lhe o plano: \${plan.name}\`);
+        
+        this.saveState();
+        this.closeModal();
+        this.showToast(\`Plano atribuído a \${client.name}!\`, 'success');
+        
+        this.askNotificationMethod(clientId, 'Novo Plano de Treino (' + plan.name + ')');
+    }
+
+    showLoadPredefinedPlanModal() {
+        const plans = Object.entries(this.state.predefinedPlans || {}).map(([id, plan]) => ({ id, ...plan }));
+        
+        if (plans.length === 0) {
+            return alert('Ainda não criou nenhum plano modelo. Vá à aba "Planos Pré-Definidos" para criar um.');
+        }
+
+        const content = `
+            <h3>Carregar Plano Modelo</h3>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">
+                Escolha um modelo para aplicar a este aluno. 
+                <strong>Atenção:</strong> Isto irá substituir o rascunho atual que está a editar.
+            </p>
+            
+            <div style="display:grid; grid-template-columns:1fr; gap:0.75rem; max-height:400px; overflow-y:auto; padding:5px;">
+                ${plans.map(plan => `
+                    <button class="glass-card" onclick="app.loadPredefinedPlanIntoEditor('${plan.id}')" 
+                        style="text-align:left; padding:1rem; cursor:pointer; border:1px solid rgba(255,255,255,0.05); transition:all 0.2s ease; width: 100%;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong style="color:var(--primary);">${plan.name}</strong>
+                            <span style="font-size:0.8rem; color:var(--text-muted);">${plan.days.length} Dias</span>
+                        </div>
+                    </button>
+                `).join('')}
+            </div>
+            
+            <div style="display:flex; justify-content:flex-end; margin-top:1.5rem;">
+                <button class="btn btn-secondary" onclick="app.closeModal()">Cancelar</button>
+            </div>
+        `;
+        this.showModal(content, '500px');
+    }
+
+    loadPredefinedPlanIntoEditor(planId) {
+        const plan = this.state.predefinedPlans[planId];
+        if (!plan) return;
+        
+        if (!confirm(`Deseja carregar o modelo "${plan.name}"? Isto substituirá o treino que está a editar.`)) return;
+        
+        this.editingPlan = JSON.parse(JSON.stringify(plan.days));
+        this.editingDayIdx = 0;
+        this.closeModal();
+        this.renderTrainingEditor();
+        this.showToast('Modelo carregado com sucesso!');
+    }
