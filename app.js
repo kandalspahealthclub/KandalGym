@@ -2936,11 +2936,10 @@ Equipa KandalGym`;
     }
 
     renderNotifyClientsRows(query = '') {
-        const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-        const qClean = normalize(query);
+        const qClean = this.normalizeText(query);
 
         const clients = (this.state.clients || [])
-            .filter(c => !qClean || normalize(c.name).includes(qClean))
+            .filter(c => !qClean || this.normalizeText(c.name).includes(qClean))
             .sort((a, b) => a.name.localeCompare(b.name));
 
         if (clients.length === 0) return '<div style="padding:20px; text-align:center; color:var(--text-muted); font-size:0.9rem;">Nenhum aluno encontrado.</div>';
@@ -3140,10 +3139,10 @@ Equipa KandalGym`;
         // Filter foods by search query
         let filteredFoods = this.state.foods;
         if (searchQuery) {
-            const query = searchQuery.toLowerCase().trim();
+            const query = this.normalizeText(searchQuery);
             filteredFoods = this.state.foods.filter(f =>
-                f.name.toLowerCase().includes(query) ||
-                (f.category && f.category.toLowerCase().includes(query))
+                this.normalizeText(f.name).includes(query) ||
+                (f.category && this.normalizeText(f.category).includes(query))
             );
         }
 
@@ -4709,10 +4708,10 @@ Equipa KandalGym`;
         let foods = [...this.state.foods].sort((a, b) => a.name.localeCompare(b.name));
 
         if (searchQuery) {
-            const query = searchQuery.toLowerCase().trim();
+            const query = this.normalizeText(searchQuery);
             foods = foods.filter(f =>
-                f.name.toLowerCase().includes(query) ||
-                (f.category && f.category.toLowerCase().includes(query))
+                this.normalizeText(f.name).includes(query) ||
+                (f.category && this.normalizeText(f.category).includes(query))
             );
         }
 
@@ -6697,9 +6696,6 @@ Equipa KandalGym`;
         this.setView('spy_view');
     }
 
-    normalizeText(text) {
-        return text ? text.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : "";
-    }
 
     getNutritionFromText(text) {
         if (!text) return { kcal: 0, prot: 0, carb: 0, fat: 0 };
@@ -7719,10 +7715,10 @@ Equipa KandalGym`;
             const matchesRole = this.qrActiveTab === 'teachers' ? isStaff : !isStaff;
             if (!matchesRole) return false;
 
-            const f = filter.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-            const nomeNormal = c.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-            const telNormal = (c.tel || "").toLowerCase();
-            const idNormal = c.id.toLowerCase();
+            const f = this.normalizeText(filter);
+            const nomeNormal = this.normalizeText(c.nome);
+            const telNormal = this.normalizeText(c.tel || "");
+            const idNormal = this.normalizeText(c.id);
 
             return nomeNormal.includes(f) ||
                 telNormal.includes(f) ||
@@ -9294,13 +9290,13 @@ Equipa KandalGym`;
                 const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno não permite a marcação de aulas.\n\nDeseja inscrever mesmo assim?`);
                 if (!force) return;
             } else if (restrictions.filter && restrictions.filter.length > 0) {
-                const isAllowed = restrictions.filter.some(f => cls && cls.name.toLowerCase().includes(f.toLowerCase()));
+                const isAllowed = restrictions.filter.some(f => cls && this.normalizeText(cls.name).includes(this.normalizeText(f)));
                 if (!isAllowed) {
                     const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno apenas permite: ${restrictions.filter.join(', ')}.\n\nDeseja inscrever mesmo assim?`);
                     if (!force) return;
                 }
             } else if (restrictions.exclude && restrictions.exclude.length > 0) {
-                const isExcluded = restrictions.exclude.some(ex => cls && cls.name.toLowerCase().includes(ex.toLowerCase()));
+                const isExcluded = restrictions.exclude.some(ex => cls && this.normalizeText(cls.name).includes(this.normalizeText(ex)));
                 if (isExcluded) {
                     const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno não permite reservar aulas desta categoria.\n\nDeseja inscrever mesmo assim?`);
                     if (!force) return;
@@ -9326,10 +9322,10 @@ Equipa KandalGym`;
         const select = document.getElementById('manualEnrollSelect');
         if (!input || !select) return;
 
-        const filterStr = input.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const filterStr = this.normalizeText(input.value);
         Array.from(select.options).forEach(opt => {
             if (opt.value === "") return;
-            const text = opt.text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const text = this.normalizeText(opt.text);
             opt.style.display = text.includes(filterStr) ? "" : "none";
         });
         select.value = "";
@@ -9618,7 +9614,7 @@ Equipa KandalGym`;
 
             // Validar Filtro (Apenas pode estas)
             if (restrictions.filter && restrictions.filter.length > 0) {
-                const isAllowed = restrictions.filter.some(f => cls.name.toLowerCase().includes(f.toLowerCase()));
+                const isAllowed = restrictions.filter.some(f => this.normalizeText(cls.name).includes(this.normalizeText(f)));
                 if (!isAllowed) {
                     return alert(`O seu plano (${plano}) apenas permite reserva das aulas: ${restrictions.filter.join(', ')}.`);
                 }
@@ -9626,7 +9622,7 @@ Equipa KandalGym`;
 
             // Validar Exclusão (Não pode estas)
             if (restrictions.exclude && restrictions.exclude.length > 0) {
-                const isExcluded = restrictions.exclude.some(ex => cls.name.toLowerCase().includes(ex.toLowerCase()));
+                const isExcluded = restrictions.exclude.some(ex => this.normalizeText(cls.name).includes(this.normalizeText(ex)));
                 if (isExcluded) {
                     return alert(`O seu plano (${plano}) não permite a reserva de aulas desta categoria.`);
                 }
@@ -10368,8 +10364,8 @@ Equipa KandalGym`;
     renderFoodGridForRecipe(query = '') {
         let foods = [...this.state.foods].sort((a, b) => a.name.localeCompare(b.name));
         if (query) {
-            const q = query.toLowerCase();
-            foods = foods.filter(f => f.name.toLowerCase().includes(q) || (f.category && f.category.toLowerCase().includes(q)));
+            const q = this.normalizeText(query);
+            foods = foods.filter(f => this.normalizeText(f.name).includes(q) || (f.category && this.normalizeText(f.category).includes(q)));
         }
         if (foods.length === 0) return `<p style="text-align:center; padding:2rem; color:var(--text-muted);">Nenhum alimento encontrado.</p>`;
 
