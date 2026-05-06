@@ -48,6 +48,8 @@ class FitnessApp {
         this.replyingTo = null;
         this.editingPredefinedId = null;
         this.editingPredefinedName = '';
+        this.editingRecipeId = null;
+        this.editingRecipeData = { name: '', description: '', videoUrl: '', ingredients: [] };
 
         // Tentar carregar estado do LocalStorage como cache inicial
         const cachedState = localStorage.getItem('kandalgym_state');
@@ -61,7 +63,7 @@ class FitnessApp {
             this.state = (typeof mockState !== 'undefined') ? mockState : {};
         }
 
-        const vitalCollections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes', 'news'];
+        const vitalCollections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes', 'news', 'recipes'];
         vitalCollections.forEach(c => { if (!this.state[c]) this.state[c] = []; });
 
         const vitalDicts = ['trainingPlans', 'predefinedPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments'];
@@ -484,7 +486,7 @@ class FitnessApp {
                 }
 
                 // 1. Integridade local
-                const collections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes', 'news'];
+                const collections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes', 'news', 'recipes'];
                 collections.forEach(coll => {
                     if (!this.state[coll]) {
                         this.state[coll] = [];
@@ -1583,6 +1585,7 @@ Equipa KandalGym`;
                 { id: 'all-clients', icon: 'fa-search', label: 'Acesso Global' },
                 { id: 'notifications_manager', icon: 'fa-paper-plane', label: 'Comunicados' },
                 { id: 'predefined_plans', icon: 'fa-copy', label: 'Planos Pré-Definidos' },
+                { id: 'recipes', icon: 'fa-utensils', label: 'Receitas Saudáveis' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
             ];
             if (window.innerWidth <= 768) {
@@ -1595,6 +1598,7 @@ Equipa KandalGym`;
                 { id: 'anamnesis', icon: 'fa-notes-medical', label: 'Anamnese' },
                 { id: 'chat', icon: 'fa-comment-alt', label: 'Mensagens' },
                 { id: 'predefined_plans', icon: 'fa-copy', label: 'Planos Pré-Definidos' },
+                { id: 'recipes', icon: 'fa-utensils', label: 'Gestão de Receitas' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
             ];
         } else {
@@ -1676,9 +1680,11 @@ Equipa KandalGym`;
         if (this.activeView === 'edit_training') this.renderTrainingEditor();
         else if (this.activeView === 'edit_meal') this.renderMealEditor();
         else if (this.activeView === 'edit_predefined_plan') this.renderPredefinedPlanEditor();
+        else if (this.activeView === 'edit_recipe') this.renderRecipeEditor();
         else if (this.activeView === 'spy_view') this.renderSpyView(container);
         else if (this.activeView === 'classes') this.renderClassesView(container);
         else if (this.activeView === 'predefined_plans') this.renderPredefinedPlans(container);
+        else if (this.activeView === 'recipes') this.renderRecipes(container);
         else if (this.role === 'admin') this.renderAdminContent(container);
         else if (this.role === 'teacher') this.renderTeacherContent(container);
         else this.renderClientContent(container);
@@ -10102,6 +10108,292 @@ Equipa KandalGym`;
         this.closeModal();
         this.renderTrainingEditor();
         this.showToast('Modelo carregado com sucesso!');
+    }
+
+    // --- GESTÃO DE RECEITAS ---
+
+    renderRecipes(container) {
+        const recipes = this.state.recipes || [];
+        const isMobile = window.innerWidth <= 768;
+
+        container.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:1rem;">
+                <h2 style="margin:0;"><i class="fas fa-utensils" style="color:var(--primary); margin-right:10px;"></i> Biblioteca de Receitas</h2>
+                <button class="btn btn-primary" onclick="app.startNewRecipe()">
+                    <i class="fas fa-plus"></i> Nova Receita
+                </button>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(${isMobile ? '280px' : '350px'}, 1fr)); gap:1.5rem;">
+                ${recipes.length === 0 ? `
+                    <div class="glass-panel" style="grid-column: 1/-1; padding:4rem; text-align:center;">
+                        <i class="fas fa-utensils" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
+                        <p style="color:var(--text-muted);">Ainda não existem receitas registadas. Crie receitas saudáveis para partilhar com os alunos.</p>
+                    </div>
+                ` : recipes.map(recipe => {
+                    const videoId = this.extractYoutubeId(recipe.videoUrl);
+                    const thumb = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : null;
+                    
+                    return `
+                    <div class="glass-card animate-scale-in" style="overflow:hidden; display:flex; flex-direction:column; height:100%; border-top: 4px solid var(--primary);">
+                        ${thumb ? `
+                            <div style="width:100%; height:180px; background:url('${thumb}') center/cover; position:relative;">
+                                <div style="position:absolute; inset:0; background:rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center;">
+                                    <i class="fab fa-youtube" style="font-size:3rem; color:red; opacity:0.8;"></i>
+                                </div>
+                            </div>
+                        ` : `
+                            <div style="width:100%; height:100px; background:rgba(255,255,255,0.03); display:flex; align-items:center; justify-content:center;">
+                                <i class="fas fa-utensils" style="font-size:2rem; color:var(--text-muted);"></i>
+                            </div>
+                        `}
+                        <div style="padding:1.5rem; flex:1; display:flex; flex-direction:column; gap:0.75rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <h3 style="margin:0; font-size:1.25rem; color:#fff;">${recipe.name}</h3>
+                                <div style="display:flex; gap:5px;">
+                                    <button class="btn btn-ghost btn-sm" onclick="app.editRecipe('${recipe.id}')" style="color:var(--primary); padding:5px;"><i class="fas fa-edit"></i></button>
+                                    <button class="btn btn-ghost btn-sm" onclick="app.deleteRecipe('${recipe.id}')" style="color:var(--danger); padding:5px;"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </div>
+                            <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin:0;">
+                                ${recipe.description || 'Sem descrição.'}
+                            </p>
+                            <div style="margin-top:auto; padding-top:1rem; display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.05);">
+                                <span style="font-size:0.75rem; color:var(--accent); font-weight:700;">
+                                    <i class="fas fa-mortar-pestle"></i> ${recipe.ingredients ? recipe.ingredients.length : 0} Ingredientes
+                                </span>
+                                ${recipe.videoUrl ? `
+                                    <a href="${recipe.videoUrl}" target="_blank" style="color:red; font-size:0.9rem; text-decoration:none; font-weight:bold;">
+                                        <i class="fab fa-youtube"></i> Ver Vídeo
+                                    </a>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `}).join('')}
+            </div>
+        `;
+    }
+
+    startNewRecipe() {
+        this.editingRecipeId = null;
+        this.editingRecipeData = {
+            name: '',
+            description: '',
+            videoUrl: '',
+            ingredients: []
+        };
+        this.setView('edit_recipe');
+    }
+
+    editRecipe(id) {
+        const recipe = this.state.recipes.find(r => r.id === id);
+        if (!recipe) return;
+        this.editingRecipeId = id;
+        this.editingRecipeData = JSON.parse(JSON.stringify(recipe));
+        this.setView('edit_recipe');
+    }
+
+    deleteRecipe(id) {
+        if (!confirm('Deseja eliminar esta receita permanentemente?')) return;
+        this.state.recipes = this.state.recipes.filter(r => r.id !== id);
+        this.saveState();
+        this.renderRecipes(document.getElementById('main-content'));
+        this.showToast('Receita eliminada.', 'success');
+    }
+
+    renderRecipeEditor() {
+        const container = document.getElementById('main-content');
+        if (!container) return;
+        const isMobile = window.innerWidth <= 768;
+        const recipe = this.editingRecipeData;
+
+        container.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+                <h2 style="margin:0;">${this.editingRecipeId ? 'Editar Receita' : 'Nova Receita'}</h2>
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <button class="btn btn-secondary" onclick="app.setView('recipes')">Cancelar</button>
+                    <button class="btn btn-primary" onclick="app.saveRecipe()"><i class="fas fa-save"></i> Guardar Receita</button>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:${isMobile ? '1fr' : '1.5fr 1fr'}; gap:1.5rem; align-items:start;">
+                
+                <div class="glass-panel" style="padding:1.5rem; display:flex; flex-direction:column; gap:1.5rem;">
+                    <div>
+                        <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Nome da Receita</label>
+                        <input type="text" id="recipe-name" value="${recipe.name || ''}" 
+                            placeholder="Ex: Panquecas de Aveia e Banana..."
+                            oninput="app.editingRecipeData.name = this.value"
+                            style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1.1rem; font-weight:600;">
+                    </div>
+
+                    <div>
+                        <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Instruções / Descrição</label>
+                        <textarea id="recipe-description" rows="10" 
+                            placeholder="Descreva o passo-a-passo da receita..."
+                            oninput="app.editingRecipeData.description = this.value"
+                            style="width:100%; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:15px; font-size:1rem; line-height:1.6; resize:vertical;">${recipe.description || ''}</textarea>
+                    </div>
+
+                    <div>
+                        <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Link Vídeo YouTube (Opcional)</label>
+                        <div style="display:flex; gap:10px;">
+                            <div style="flex:1; position:relative;">
+                                <i class="fab fa-youtube" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:red;"></i>
+                                <input type="text" id="recipe-video" value="${recipe.videoUrl || ''}" 
+                                    placeholder="https://www.youtube.com/watch?v=..."
+                                    oninput="app.editingRecipeData.videoUrl = this.value; app.updateRecipePreview();"
+                                    style="width:100%; height:40px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px 0 35px; font-size:0.9rem;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel" style="padding:1.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                        <h3 style="margin:0; font-size:1.1rem;"><i class="fas fa-shopping-basket" style="color:var(--accent);"></i> Ingredientes</h3>
+                        <button class="btn btn-ghost btn-sm" onclick="app.addIngredientToRecipe()" style="color:var(--primary); font-weight:bold;">
+                            <i class="fas fa-plus"></i> Adicionar
+                        </button>
+                    </div>
+
+                    <div id="recipe-ingredients-list" style="display:flex; flex-direction:column; gap:10px;">
+                        ${(recipe.ingredients || []).length === 0 ? `
+                            <p style="text-align:center; color:var(--text-muted); font-size:0.85rem; padding:1rem; border:1px dashed rgba(255,255,255,0.1); border-radius:10px;">Ainda não adicionou ingredientes.</p>
+                        ` : recipe.ingredients.map((ing, idx) => `
+                            <div class="glass-card" style="padding:10px; display:flex; flex-direction:column; gap:8px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05);">
+                                <div style="display:flex; gap:8px; align-items:center;">
+                                    <button class="btn btn-secondary btn-sm" onclick="app.showFoodSelectionForRecipe(${idx})" style="flex:1; text-align:left; justify-content:flex-start; height:32px; font-size:0.8rem;">
+                                        <i class="fas fa-search"></i> ${ing.name || '-- Selecionar Alimento --'}
+                                    </button>
+                                    <button class="btn btn-ghost btn-sm" style="color:var(--danger); padding:5px;" onclick="app.removeIngredientFromRecipe(${idx})"><i class="fas fa-trash"></i></button>
+                                </div>
+                                <div style="display:flex; gap:8px; align-items:center;">
+                                    <div style="flex:1;">
+                                        <input type="text" placeholder="Qtd (ex: 100g, 2 colheres...)" value="${ing.amount || ''}" 
+                                            oninput="app.editingRecipeData.ingredients[${idx}].amount = this.value"
+                                            style="width:100%; height:28px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:0 8px; font-size:0.75rem;">
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+            </div>
+        `;
+    }
+
+    addIngredientToRecipe() {
+        if (!this.editingRecipeData.ingredients) this.editingRecipeData.ingredients = [];
+        this.editingRecipeData.ingredients.push({ id: '', name: '', amount: '' });
+        this.renderRecipeEditor();
+    }
+
+    removeIngredientFromRecipe(idx) {
+        this.editingRecipeData.ingredients.splice(idx, 1);
+        this.renderRecipeEditor();
+    }
+
+    showFoodSelectionForRecipe(ingIdx) {
+        this.currentRecipeIngredientIdx = ingIdx;
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width:700px; max-height:80vh; display:flex; flex-direction:column;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                    <h2 style="margin:0;"><i class="fas fa-search"></i> Selecionar para Receita</h2>
+                    <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()" style="padding:8px;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="search-container" style="margin-bottom:1.5rem;">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="recipe-food-search" placeholder="Pesquisar alimento..." 
+                        oninput="app.filterFoodsForRecipe(this.value)"
+                        class="search-bar" autofocus>
+                </div>
+                <div id="recipe-food-grid" style="overflow-y:auto; flex:1;">
+                    ${this.renderFoodGridForRecipe()}
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    filterFoodsForRecipe(query) {
+        const grid = document.getElementById('recipe-food-grid');
+        if (grid) grid.innerHTML = this.renderFoodGridForRecipe(query);
+    }
+
+    renderFoodGridForRecipe(query = '') {
+        let foods = [...this.state.foods].sort((a, b) => a.name.localeCompare(b.name));
+        if (query) {
+            const q = query.toLowerCase();
+            foods = foods.filter(f => f.name.toLowerCase().includes(q) || (f.category && f.category.toLowerCase().includes(q)));
+        }
+        if (foods.length === 0) return `<p style="text-align:center; padding:2rem; color:var(--text-muted);">Nenhum alimento encontrado.</p>`;
+
+        return `
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:10px;">
+                ${foods.map(f => `
+                    <div class="glass-card" onclick="app.selectFoodForRecipe('${f.id}', '${f.name.replace(/'/g, "\\'")}')" 
+                        style="padding:12px; cursor:pointer; text-align:center; border:1px solid transparent; transition:all 0.2s;"
+                        onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'">
+                        <div style="font-size:2rem; margin-bottom:5px;">${this.getFoodEmoji(f.category)}</div>
+                        <div style="font-size:0.85rem; font-weight:bold; color:#fff;">${f.name}</div>
+                        <div style="font-size:0.7rem; color:var(--text-muted);">${f.kcal || 0} kcal/100g</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    selectFoodForRecipe(foodId, foodName) {
+        const ingIdx = this.currentRecipeIngredientIdx;
+        this.editingRecipeData.ingredients[ingIdx].id = foodId;
+        this.editingRecipeData.ingredients[ingIdx].name = foodName;
+        this.closeModal();
+        this.renderRecipeEditor();
+    }
+
+    saveRecipe() {
+        const data = this.editingRecipeData;
+        if (!data.name.trim()) return alert('Por favor, dê um nome à receita.');
+        
+        const id = this.editingRecipeId || Date.now().toString();
+        const newRecipe = {
+            id,
+            name: data.name.trim(),
+            description: data.description.trim(),
+            videoUrl: data.videoUrl.trim(),
+            ingredients: (data.ingredients || []).filter(ing => ing.name),
+            updatedAt: new Date().toLocaleDateString('pt-PT')
+        };
+
+        const idx = this.state.recipes.findIndex(r => r.id === id);
+        if (idx !== -1) {
+            this.state.recipes[idx] = newRecipe;
+        } else {
+            this.state.recipes.push(newRecipe);
+        }
+
+        this.saveState();
+        this.setView('recipes');
+        this.showToast('Receita guardada com sucesso!', 'success');
+    }
+
+    extractYoutubeId(url) {
+        if (!url) return null;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    updateRecipePreview() {
+        // Apenas para refrescar a UI se necessário, o render já lida com isso se for re-chamado
+        // Mas como estamos a usar oninput directo nos dados, o renderEditor vai mostrar o link.
     }
 }
 
