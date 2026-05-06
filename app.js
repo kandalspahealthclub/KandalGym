@@ -2988,7 +2988,7 @@ Equipa KandalGym`;
             if (clients.length === 1) {
                 const phone = clients[0].phone;
                 if (!phone) return alert('O cliente selecionado não tem telemóvel registado.');
-                let cleanPhone = phone.replace(/\\D/g, '');
+                let cleanPhone = phone.replace(/\D/g, '');
                 if (!cleanPhone.startsWith('351') && cleanPhone.length === 9) cleanPhone = '351' + cleanPhone;
                 window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
             } else {
@@ -3010,7 +3010,7 @@ Equipa KandalGym`;
                     ${clients.map(c => {
             let cleanPhone = '';
             if (c.phone) {
-                cleanPhone = c.phone.replace(/\\D/g, '');
+                cleanPhone = c.phone.replace(/\D/g, '');
                 if (!cleanPhone.startsWith('351') && cleanPhone.length === 9) cleanPhone = '351' + cleanPhone;
             }
             const hasPhone = c.phone && c.phone !== 'undefined' && c.phone !== '';
@@ -3027,6 +3027,7 @@ Equipa KandalGym`;
                 <button class="btn btn-secondary" style="width:100%; margin-top:1.5rem;" onclick="this.closest('.modal-overlay').remove()">Concluir / Fechar</button>
             </div>
         `;
+        document.body.appendChild(modal);
     }
 
     showSMSBulkModal(clients, msg) {
