@@ -23,7 +23,7 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        this.appVersion = '2026.04.15.v89'; // Versão de controlo para Hard Reset v89
+        this.appVersion = '2026.05.06.v90'; // Versão de controlo para Hard Reset v90
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -226,7 +226,7 @@ class FitnessApp {
 
     checkForForceUpdate() {
         try {
-            const targetV = 'v89'; // Forçar v89 (FAB Hide & Notification Fix)
+            const targetV = 'v90'; // Forçar v90 (Template Plans & Mobile Nav Fix)
             const currentV = localStorage.getItem('kg_v');
             if (currentV !== targetV) {
                 console.warn("Forçando atualização total da App (KandalGym v70)...");
@@ -1526,14 +1526,14 @@ Equipa KandalGym`;
                 { id: 'users', icon: 'fa-users-cog', label: 'Contas' },
                 { id: 'qr_manager', icon: 'fa-qrcode', label: 'Entradas' },
                 { id: 'notifications_manager', icon: 'fa-paper-plane', label: 'Comunic.' },
-                { id: 'exercises', icon: 'fa-play-circle', label: 'Exercícios' },
-                { id: 'foods', icon: 'fa-apple-alt', label: 'Alimentos' },
+                { id: 'predefined_plans', icon: 'fa-copy', label: 'Planos' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'Perfil' }
             ];
         } else if (this.role === 'teacher') {
             navItems = [
                 { id: 'dashboard', icon: 'fa-chart-pie', label: 'Inicio' },
                 { id: 'classes', icon: 'fa-calendar-alt', label: 'Aulas' },
+                { id: 'predefined_plans', icon: 'fa-copy', label: 'Planos' },
                 { id: 'chat', icon: 'fa-comment-alt', label: 'Msgs' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'Perfil' }
             ];
@@ -1584,6 +1584,9 @@ Equipa KandalGym`;
                 { id: 'predefined_plans', icon: 'fa-copy', label: 'Planos Pré-Definidos' },
                 { id: 'profile', icon: 'fa-user-circle', label: 'O Meu Perfil' }
             ];
+            if (window.innerWidth <= 768) {
+                navItems = navItems.filter(item => item.id !== 'foods');
+            }
         } else if (this.role === 'teacher') {
             navItems = [
                 { id: 'dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
