@@ -10168,6 +10168,11 @@ Equipa KandalGym`;
                                     </a>
                                 ` : ''}
                             </div>
+                            ${recipe.ingredients && recipe.ingredients.length > 0 ? `
+                                <div style="font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-top: 0.5rem; background: rgba(0,0,0,0.2); padding: 5px 8px; border-radius: 6px;">
+                                    ${recipe.ingredients.slice(0, 3).map(i => `${i.name} (${i.amount || 'qtd.'})`).join(', ')}${recipe.ingredients.length > 3 ? '...' : ''}
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 `}).join('')}
@@ -10442,8 +10447,12 @@ Equipa KandalGym`;
             });
         }
 
+        if (recipe.description) {
+            textToAdd += `\nPREPARAÇÃO:\n${recipe.description}\n`;
+        }
+
         if (recipe.videoUrl) {
-            textToAdd += `Vídeo: ${recipe.videoUrl}\n`;
+            textToAdd += `\nVídeo Tutorial: ${recipe.videoUrl}\n`;
         }
         
         const currentItems = this.editingMeal.meals[mealIdx].items || '';
