@@ -9766,41 +9766,42 @@ Equipa KandalGym`;
     
     renderPredefinedPlans(container) {
         const plans = Object.entries(this.state.predefinedPlans || {}).map(([id, plan]) => ({ id, ...plan }));
+        const isMobile = window.innerWidth <= 768;
         
         container.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:1rem;">
-                <h2 style="margin:0;"><i class="fas fa-copy" style="color:var(--primary); margin-right:10px;"></i> Planos de Treino Pré-Definidos</h2>
-                <button class="btn btn-primary" onclick="app.startNewPredefinedPlan()">
-                    <i class="fas fa-plus"></i> Novo Plano Modelo
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${isMobile ? '1rem' : '2rem'}; flex-wrap:wrap; gap:1rem;">
+                <h2 style="margin:0; font-size:${isMobile ? '1.2rem' : '1.5rem'};"><i class="fas fa-copy" style="color:var(--primary); margin-right:10px;"></i> Modelos</h2>
+                <button class="btn btn-primary" onclick="app.startNewPredefinedPlan()" style="${isMobile ? 'padding: 8px 12px; font-size: 0.85rem;' : ''}">
+                    <i class="fas fa-plus"></i> Novo Modelo
                 </button>
             </div>
 
-            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:1.5rem;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(${isMobile ? '150px' : '300px'}, 1fr)); gap:${isMobile ? '0.75rem' : '1.5rem'};">
                 ${plans.length === 0 ? `
                     <div class="glass-panel" style="grid-column: 1/-1; padding:3rem; text-align:center;">
                         <i class="fas fa-info-circle" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
-                        <p style="color:var(--text-muted);">Ainda não existem planos pré-definidos. Crie um modelo para facilitar a atribuição a novos alunos.</p>
+                        <p style="color:var(--text-muted);">Ainda não existem planos pré-definidos.</p>
                     </div>
                 ` : plans.map(plan => `
-                    <div class="glass-card animate-scale-in" style="padding:1.5rem; display:flex; flex-direction:column; gap:1rem; border-top: 3px solid var(--primary); height: 100%;">
+                    <div class="glass-card animate-scale-in" style="padding:${isMobile ? '1rem' : '1.5rem'}; display:flex; flex-direction:column; gap:${isMobile ? '0.5rem' : '1rem'}; border-top: 3px solid var(--primary); height: 100%;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                            <h3 style="margin:0; font-size:1.2rem; color:#fff;">${plan.name}</h3>
-                            <div style="display:flex; gap:0.5rem;">
-                                <button class="btn btn-ghost" style="color:var(--primary); padding:5px;" onclick="app.editPredefinedPlan('${plan.id}')" title="Editar">
-                                    <i class="fas fa-edit"></i>
+                            <h3 style="margin:0; font-size:${isMobile ? '1rem' : '1.2rem'}; color:#fff; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${plan.name}</h3>
+                            <div style="display:flex; gap:0.25rem;">
+                                <button class="btn btn-ghost" style="color:var(--primary); padding:4px;" onclick="app.editPredefinedPlan('${plan.id}')" title="Editar">
+                                    <i class="fas fa-edit" style="font-size:${isMobile ? '0.85rem' : '1rem'};"></i>
                                 </button>
-                                <button class="btn btn-ghost" style="color:var(--danger); padding:5px;" onclick="app.deletePredefinedPlan('${plan.id}')" title="Eliminar">
-                                    <i class="fas fa-trash-alt"></i>
+                                <button class="btn btn-ghost" style="color:var(--danger); padding:4px;" onclick="app.deletePredefinedPlan('${plan.id}')" title="Eliminar">
+                                    <i class="fas fa-trash-alt" style="font-size:${isMobile ? '0.85rem' : '1rem'};"></i>
                                 </button>
                             </div>
                         </div>
-                        <div style="color:var(--text-muted); font-size:0.9rem; flex:1;">
-                            <p style="margin:0;"><i class="fas fa-calendar-day" style="width:20px; color:var(--primary);"></i> <strong>${plan.days ? plan.days.length : 0}</strong> Dias / Planos</p>
-                            <p style="margin:0;"><i class="fas fa-dumbbell" style="width:20px; color:var(--primary);"></i> <strong>${(plan.days || []).reduce((acc, d) => acc + (d.exercises ? d.exercises.length : 0), 0)}</strong> Exercícios totais</p>
+                        <div style="color:var(--text-muted); font-size:${isMobile ? '0.75rem' : '0.9rem'}; flex:1;">
+                            <p style="margin:0;"><i class="fas fa-calendar-day" style="width:16px; color:var(--primary);"></i> <strong>${plan.days ? plan.days.length : 0}</strong> Dias</p>
+                            <p style="margin:0;"><i class="fas fa-dumbbell" style="width:16px; color:var(--primary);"></i> <strong>${(plan.days || []).reduce((acc, d) => acc + (d.exercises ? d.exercises.length : 0), 0)}</strong> Ex.</p>
                         </div>
-                        <div style="margin-top:1rem; padding-top:1rem; border-top: 1px solid rgba(255,255,255,0.05);">
-                            <button class="btn btn-secondary btn-sm" style="width:100%; justify-content:center;" onclick="app.applyPredefinedPlanToClientModal('${plan.id}')">
-                                <i class="fas fa-user-plus"></i> Atribuir a Aluno
+                        <div style="margin-top:${isMobile ? '0.5rem' : '1rem'}; padding-top:${isMobile ? '0.5rem' : '1rem'}; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <button class="btn btn-secondary btn-sm" style="width:100%; justify-content:center; font-size:${isMobile ? '0.75rem' : '0.85rem'}; padding: 6px;" onclick="app.applyPredefinedPlanToClientModal('${plan.id}')">
+                                <i class="fas fa-user-plus"></i> Atribuir
                             </button>
                         </div>
                     </div>
@@ -9843,58 +9844,59 @@ Equipa KandalGym`;
 
         if (this.editingDayIdx >= this.editingPlan.length) this.editingDayIdx = 0;
         const currentDay = this.editingPlan[this.editingDayIdx];
+        const isMobile = window.innerWidth <= 768;
 
         container.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
-                <h2 style="margin:0;">${this.editingPredefinedId ? 'Editar Modelo' : 'Novo Plano Modelo'}</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${isMobile ? '0.75rem' : '1.5rem'}; flex-wrap:wrap; gap:1rem;">
+                <h2 style="margin:0; font-size:${isMobile ? '1.2rem' : '1.5rem'};">${this.editingPredefinedId ? 'Editar Modelo' : 'Novo Modelo'}</h2>
                 <div style="display:flex; gap:0.5rem; align-items:center;">
-                    <button class="btn btn-secondary" onclick="app.setView('predefined_plans')">Cancelar</button>
-                    <button class="btn btn-primary" onclick="app.savePredefinedPlan()"><i class="fas fa-save"></i> Guardar Modelo</button>
+                    <button class="btn btn-secondary" onclick="app.setView('predefined_plans')" style="${isMobile ? 'padding: 6px 12px; font-size: 0.8rem;' : ''}">Cancelar</button>
+                    <button class="btn btn-primary" onclick="app.savePredefinedPlan()" style="${isMobile ? 'padding: 6px 12px; font-size: 0.8rem;' : ''}"><i class="fas fa-save"></i> Guardar</button>
                 </div>
             </div>
 
-            <div class="glass-panel" style="margin-bottom:1.5rem; padding:1.5rem;">
-                <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Nome do Plano Modelo</label>
+            <div class="glass-panel" style="margin-bottom:${isMobile ? '0.75rem' : '1.5rem'}; padding:${isMobile ? '0.75rem' : '1.5rem'};">
+                <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase; font-weight:700;">Nome do Plano</label>
                 <input type="text" id="edit-predefined-name" value="${this.editingPredefinedName || ''}" 
-                    placeholder="Ex: Hipertrofia Intermédio, Perda de Peso..."
+                    placeholder="Ex: Hipertrofia..."
                     oninput="app.editingPredefinedName = this.value"
-                    style="width:100%; max-width:500px; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1.1rem; font-weight:600;">
+                    style="width:100%; max-width:500px; height:${isMobile ? '38px' : '45px'}; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 12px; font-size:${isMobile ? '0.95rem' : '1.1rem'}; font-weight:600;">
             </div>
 
-            <div id="editor-tabs-container" style="display:flex; gap:0.75rem; margin-bottom:2rem; flex-wrap:wrap; background:rgba(255,255,255,0.03); padding:12px; border-radius:15px; border:1px solid rgba(255,255,255,0.05);">
+            <div id="editor-tabs-container" style="display:flex; gap:0.5rem; margin-bottom:${isMobile ? '1rem' : '2rem'}; flex-wrap:wrap; background:rgba(255,255,255,0.03); padding:${isMobile ? '8px' : '12px'}; border-radius:15px; border:1px solid rgba(255,255,255,0.05);">
                 ${this.editingPlan.map((day, dIdx) => `
                     <div style="display:flex; align-items:center; gap:4px;">
                         <button class="btn ${this.editingDayIdx === dIdx ? 'btn-primary' : 'btn-ghost'}" 
                             onclick="app.editingDayIdx = ${dIdx}; app.renderPredefinedPlanEditor();"
-                            style="padding:10px 18px; font-size:0.95rem; border-radius:10px; display:flex; align-items:center; gap:10px; min-width:140px; justify-content:center;">
+                            style="padding:${isMobile ? '6px 10px' : '10px 18px'}; font-size:${isMobile ? '0.8rem' : '0.95rem'}; border-radius:10px; display:flex; align-items:center; gap:${isMobile ? '4px' : '10px'}; min-width:${isMobile ? '80px' : '140px'}; justify-content:center;">
                             <span style="font-weight:700;">${day.title || 'Plano ' + String.fromCharCode(65 + dIdx)}</span>
-                            <span style="opacity:0.6; font-size:0.85rem;">(${day.exercises.length})</span>
+                            <span style="opacity:0.6; font-size:0.75rem;">(${day.exercises.length})</span>
                         </button>
                     </div>
                 `).join('')}
                 <button class="btn btn-ghost" onclick="app.addPredefinedTrainingDay()" 
-                    style="color:var(--accent); border:2px dashed rgba(var(--accent-rgb), 0.3); padding:8px 18px; border-radius:10px; font-size:0.9rem; font-weight:700;">
-                    <i class="fas fa-plus-circle"></i> Novo Dia
+                    style="color:var(--accent); border:2px dashed rgba(var(--accent-rgb), 0.3); padding:${isMobile ? '6px 10px' : '8px 18px'}; border-radius:10px; font-size:${isMobile ? '0.8rem' : '0.9rem'}; font-weight:700;">
+                    <i class="fas fa-plus-circle"></i> Novo
                 </button>
             </div>
 
             <div id="editor-days-container">
-                <div class="glass-panel" style="padding:1.5rem; margin-bottom:3rem; border-top: 4px solid var(--primary);">
+                <div class="glass-panel" style="padding:${isMobile ? '1rem' : '1.5rem'}; margin-bottom:3rem; border-top: 4px solid var(--primary);">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
                         <input type="text" value="${currentDay.title || 'Plano ' + String.fromCharCode(65 + this.editingDayIdx)}" 
-                            placeholder="Nome do Plano (ex: Treino A)..."
+                            placeholder="Nome do Plano..."
                             oninput="app.editingPlan[${this.editingDayIdx}].title = this.value"
                             onchange="app.renderPredefinedPlanEditor()"
-                            style="font-weight:800; font-size:1.3rem; background:transparent; border:none; border-bottom:2px solid var(--primary); width:100%; max-width:400px; padding:8px 0; color:#fff; outline:none;">
+                            style="font-weight:800; font-size:${isMobile ? '1.1rem' : '1.3rem'}; background:transparent; border:none; border-bottom:2px solid var(--primary); width:100%; max-width:250px; padding:4px 0; color:#fff; outline:none;">
                         
                         <div style="display:flex; gap:0.5rem; align-items:center;">
                             <div style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.05); padding:5px 12px; border-radius:10px;">
-                                <label style="font-size:0.75rem; color:var(--text-muted);">Descanso:</label>
+                                <label style="font-size:0.7rem; color:var(--text-muted);">Descanso:</label>
                                 <input type="text" value="${currentDay.rest || ''}" placeholder="60s" 
                                     onchange="app.editingPlan[${this.editingDayIdx}].rest = this.value"
-                                    style="width:70px; height:30px; background:rgba(0,0,0,0.3); color:var(--accent); border:1px solid rgba(var(--accent-rgb), 0.3); border-radius:6px; text-align:center;">
+                                    style="width:50px; height:28px; background:rgba(0,0,0,0.3); color:var(--accent); border:1px solid rgba(var(--accent-rgb), 0.3); border-radius:6px; text-align:center; font-size:0.8rem;">
                             </div>
-                            <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.removePredefinedTrainingDay(${this.editingDayIdx})">
+                            <button class="btn btn-ghost btn-sm" style="color:var(--danger); padding:4px;" onclick="app.removePredefinedTrainingDay(${this.editingDayIdx})">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -9902,40 +9904,40 @@ Equipa KandalGym`;
 
                     <div id="day-${this.editingDayIdx}-exercises">
                         ${currentDay.exercises.map((ex, eIdx) => `
-                            <div class="glass-card" style="padding:1.2rem; margin-bottom:1rem; background:rgba(255,255,255,0.02); border-left:3px solid var(--secondary);">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                            <div class="glass-card" style="padding:${isMobile ? '0.75rem' : '1.2rem'}; margin-bottom:0.75rem; background:rgba(255,255,255,0.02); border-left:3px solid var(--secondary);">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${isMobile ? '0.75rem' : '1rem'};">
                                     <button class="btn btn-secondary btn-sm" onclick="app.showExerciseSelectionModal(${this.editingDayIdx}, ${eIdx})" 
-                                        style="flex:1; text-align:left; justify-content:flex-start;">
-                                        <i class="fas fa-search"></i> <span>${ex.name || '-- Selecionar Exercício --'}</span>
+                                        style="flex:1; text-align:left; justify-content:flex-start; font-size:${isMobile ? '0.8rem' : '0.9rem'}; padding: 6px 10px;">
+                                        <i class="fas fa-search"></i> <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">${ex.name || "-- Selecionar --"}</span>
                                     </button>
-                                    <div style="display:flex; gap:0.2rem; margin-left:1rem;">
-                                        <button class="btn btn-ghost btn-sm" onclick="app.movePredefinedExercise(${this.editingDayIdx}, ${eIdx}, -1)" ${eIdx === 0 ? 'disabled' : ''}><i class="fas fa-arrow-up"></i></button>
-                                        <button class="btn btn-ghost btn-sm" onclick="app.movePredefinedExercise(${this.editingDayIdx}, ${eIdx}, 1)" ${eIdx === currentDay.exercises.length - 1 ? 'disabled' : ''}><i class="fas fa-arrow-down"></i></button>
-                                        <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.removePredefinedExercise(${this.editingDayIdx}, ${eIdx})"><i class="fas fa-trash-alt"></i></button>
+                                    <div style="display:flex; gap:0.1rem; margin-left:0.5rem;">
+                                        <button class="btn btn-ghost btn-sm" onclick="app.movePredefinedExercise(${this.editingDayIdx}, ${eIdx}, -1)" ${eIdx === 0 ? "disabled" : ""} style="padding:4px;"><i class="fas fa-arrow-up" style="font-size:0.8rem;"></i></button>
+                                        <button class="btn btn-ghost btn-sm" onclick="app.movePredefinedExercise(${this.editingDayIdx}, ${eIdx}, 1)" ${eIdx === currentDay.exercises.length - 1 ? "disabled" : ""} style="padding:4px;"><i class="fas fa-arrow-down" style="font-size:0.8rem;"></i></button>
+                                        <button class="btn btn-ghost btn-sm" style="color:var(--danger); padding:4px;" onclick="app.removePredefinedExercise(${this.editingDayIdx}, ${eIdx})"><i class="fas fa-trash-alt" style="font-size:0.8rem;"></i></button>
                                     </div>
                                 </div>
-                                <div style="display:flex; flex-wrap:wrap; gap:10px;">
-                                    <div style="width:80px;">
-                                        <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">Sets</label>
-                                        <input type="text" value="${ex.sets || ''}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].sets = this.value"
-                                            style="width:100%; height:35px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:6px; text-align:center;">
+                                <div style="display:flex; flex-wrap:wrap; gap:${isMobile ? '5px' : '10px'};">
+                                    <div style="width:${isMobile ? '50px' : '80px'};">
+                                        <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Sets</label>
+                                        <input type="text" value="${ex.sets || ""}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].sets = this.value"
+                                            style="width:100%; height:32px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:6px; text-align:center; font-size:0.85rem;">
                                     </div>
-                                    <div style="flex:1; min-width:100px;">
-                                        <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">Reps</label>
-                                        <input type="text" value="${ex.reps || ''}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].reps = this.value"
-                                            style="width:100%; height:35px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid var(--primary); border-radius:6px; text-align:center;">
+                                    <div style="width:${isMobile ? '60px' : '100px'};">
+                                        <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Reps</label>
+                                        <input type="text" value="${ex.reps || ""}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].reps = this.value"
+                                            style="width:100%; height:32px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid var(--primary); border-radius:6px; text-align:center; font-size:0.85rem;">
                                     </div>
-                                    <div style="flex:2; min-width:150px;">
-                                        <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:4px;">Obs</label>
-                                        <input type="text" value="${ex.observations || ''}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].observations = this.value"
-                                            style="width:100%; height:35px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:0 10px;">
+                                    <div style="flex:1; min-width:${isMobile ? '100px' : '150px'};">
+                                        <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Obs</label>
+                                        <input type="text" value="${ex.observations || ""}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].observations = this.value"
+                                            style="width:100%; height:32px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:0 8px; font-size:0.85rem;">
                                     </div>
                                 </div>
                             </div>
-                        `).join('')}
+                        `).join("")}
                     </div>
                     
-                    <button class="btn btn-ghost btn-sm" style="color:var(--primary); margin-top:1rem;" onclick="app.addExerciseToPredefinedEditor(${this.editingDayIdx})">
+                    <button class="btn btn-ghost btn-sm" style="color:var(--primary); margin-top:0.5rem; font-size:0.8rem;" onclick="app.addExerciseToPredefinedEditor(${this.editingDayIdx})">
                         <i class="fas fa-plus"></i> Adicionar Exercício
                     </button>
                 </div>
