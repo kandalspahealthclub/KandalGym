@@ -591,6 +591,7 @@ class FitnessApp {
     closeModal() {
         const modal = document.querySelector('.modal-overlay');
         if (modal) modal.remove();
+        this.renderContent();
     }
 
     showToast(message, type = 'success') {
@@ -1334,7 +1335,7 @@ Equipa KandalGym`;
                     <a href="${mailtoLink}" class="btn btn-secondary" onclick="app.markInviteSent('${qrId}')" style="text-decoration: none;">
                         <i class="fas fa-envelope"></i> Enviar por Email
                     </a>
-                    <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove();">
+                    <button class="btn btn-ghost" onclick="app.closeModal();">
                         Concluir <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -1624,6 +1625,9 @@ Equipa KandalGym`;
 
     setView(view, skipScroll = false) {
         this.activeView = view;
+        if (view === 'notifications_manager') {
+            this.selectedNotifyIds = new Set();
+        }
         if (view === 'chat') {
             this.lastChatCheck = Date.now();
             localStorage.setItem('kg_last_chat_check', this.lastChatCheck);
@@ -2843,8 +2847,8 @@ Equipa KandalGym`;
     }
 
     renderNotificationsManager(container) {
+        if (!this.selectedNotifyIds) this.selectedNotifyIds = new Set();
         let clientsList = this.state.clients || [];
-        this.selectedNotifyIds = new Set(); // Reset de seleção ao entrar no menu
 
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap: wrap; gap: 1rem;">
