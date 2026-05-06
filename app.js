@@ -10435,14 +10435,21 @@ Equipa KandalGym`;
         if (!recipe) return;
 
         const mealIdx = this.currentMealIdxForRecipe;
-        let textToAdd = `\n* RECEITA: ${recipe.name.toUpperCase()} *\n`;
+        const macros = this.calculateRecipeMacros(recipe);
         
+        let textToAdd = `\n--- RECEITA: ${recipe.name.toUpperCase()} ---\n`;
+        
+        if (macros.kcal > 0) {
+            textToAdd += `(Valores: ${Math.round(macros.kcal)}kcal | ${Math.round(macros.prot)}g P | ${Math.round(macros.carb)}g C | ${Math.round(macros.fat)}g G)\n\n`;
+        }
+
+        textToAdd += `INGREDIENTES:\n`;
         if (recipe.ingredients && recipe.ingredients.length > 0) {
             recipe.ingredients.forEach(ing => {
                 if (ing.name && ing.amount) {
-                    textToAdd += `${ing.name}: ${ing.amount}\n`;
+                    textToAdd += `• ${ing.name}: ${ing.amount}\n`;
                 } else if (ing.name) {
-                    textToAdd += `${ing.name}\n`;
+                    textToAdd += `• ${ing.name}\n`;
                 }
             });
         }
@@ -10455,12 +10462,43 @@ Equipa KandalGym`;
             textToAdd += `\nVídeo Tutorial: ${recipe.videoUrl}\n`;
         }
         
+        textToAdd += `----------------------------\n`;
+
         const currentItems = this.editingMeal.meals[mealIdx].items || '';
-        this.editingMeal.meals[mealIdx].items = (currentItems.trim() + textToAdd).trim();
+        this.editingMeal.meals[mealIdx].items = (currentItems.trim() ? currentItems.trim() + '\n' + textToAdd : textToAdd).trim();
         
         this.closeModal();
         this.renderMealEditor();
         this.showToast(`Receita "${recipe.name}" adicionada!`);
+    }
+
+    calculateRecipeMacros(recipe) {
+        let total = { kcal: 0, prot: 0, carb: 0, fat: 0 };
+        if (!recipe.ingredients) return total;
+
+        recipe.ingredients.forEach(ing => {
+            if (!ing.amount) return;
+            
+            // Tenta extrair numero e unidade do texto de dosagem (ex: "100g" ou "2 un")
+            const match = ing.amount.match(/(\d+(?:\.\d+)?)\s*(g|ml|l|un|c\. sopa|c\. sobremesa|c\. cafe|fatia(?:\(s\))?|chavena|copo)/i);
+            if (match) {
+                const qty = parseFloat(match[1]);
+                const unit = match[2].toLowerCase();
+                
+                const food = this.state.foods.find(f => f.id == ing.id || f.name.toLowerCase() === ing.name.toLowerCase());
+                if (food) {
+                    const unitWeights = { 'g': 1, 'ml': 1, 'l': 1000, 'un': food.portionWeight || 50, 'fatia(s)': 30, 'c. sopa': 15, 'c. sobremesa': 10, 'c. cafe': 5, 'chavena': 200, 'copo': 200 };
+                    let weight = unitWeights[unit] || (unit.includes('fatia') ? 30 : 1);
+                    const multiplier = (weight * qty) / 100;
+                    
+                    total.kcal += (food.kcal || 0) * multiplier;
+                    total.prot += (food.protein || 0) * multiplier;
+                    total.carb += (food.carbs || 0) * multiplier;
+                    total.fat += (food.fat || 0) * multiplier;
+                }
+            }
+        });
+        return total;
     }
 }
 
