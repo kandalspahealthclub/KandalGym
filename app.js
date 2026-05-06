@@ -2888,9 +2888,6 @@ Equipa KandalGym`;
                     <button class="btn btn-primary" onclick="app.sendBulkNotification('whatsapp')" style="flex:1;">
                         <i class="fab fa-whatsapp"></i> Preparar envio WhatsApp
                     </button>
-                    <button class="btn btn-secondary" onclick="app.sendBulkNotification('email')" style="flex:1;">
-                        <i class="fas fa-envelope"></i> Abrir cliente Email (BCC)
-                    </button>
                     <button class="btn btn-secondary" onclick="app.sendBulkNotification('sms')" style="flex:1;">
                         <i class="fas fa-comment-alt"></i> Preparar SMS Nativo
                     </button>
