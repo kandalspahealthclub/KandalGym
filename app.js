@@ -4207,6 +4207,26 @@ Equipa KandalGym`;
                                     <i class="fas fa-utensils" style="color:var(--text-muted); font-size:0.75rem;"></i>
                                 </div>
                                 <div style="font-size:0.9rem; white-space: pre-wrap; line-height: 1.5; color: #e2e8f0;">${m.items}</div>
+                                
+                                ${(() => {
+                                    const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+                                    const match = m.items.match(youtubeRegex);
+                                    if (match && match[1]) {
+                                        const videoId = match[1];
+                                        return `
+                                            <div style="margin-top:1rem; border-radius:12px; overflow:hidden; border:1px solid rgba(255,0,0,0.2); background:rgba(0,0,0,0.3); display:flex; align-items:center; cursor:pointer;" onclick="window.open('https://www.youtube.com/watch?v=${videoId}', '_blank')">
+                                                <div style="width:80px; height:50px; background:url('https://img.youtube.com/vi/${videoId}/mqdefault.jpg') center/cover;"></div>
+                                                <div style="padding:0 1rem; flex:1; display:flex; align-items:center; gap:8px;">
+                                                    <i class="fab fa-youtube" style="color:#ff0000; font-size:1.2rem;"></i>
+                                                    <span style="font-size:0.8rem; font-weight:600; color:#fff;">Ver Vídeo da Receita</span>
+                                                </div>
+                                                <i class="fas fa-external-link-alt" style="margin-right:1rem; font-size:0.7rem; color:var(--text-muted);"></i>
+                                            </div>
+                                        `;
+                                    }
+                                    return '';
+                                })()}
+
                                 ${mTotal.kcal > 0 ? `
                                     <div class="nutrition-summary">
                                         <span class="nu-tag nu-kcal"><strong>${Math.round(mTotal.kcal)}</strong> kcal</span>
