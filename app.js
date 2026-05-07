@@ -496,7 +496,7 @@ class FitnessApp {
                     }
                 });
 
-                const dictCollections = ['trainingPlans', 'predefinedPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments', 'planRestrictions'];
+                const dictCollections = ['trainingPlans', 'archivedTrainingPlans', 'predefinedPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments', 'planRestrictions'];
                 dictCollections.forEach(coll => { if (!this.state[coll]) this.state[coll] = {}; });
 
                 // Integridade das restrições
@@ -3916,6 +3916,7 @@ Equipa KandalGym`;
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
                 <h2 style="margin:0;">Editar Treino: ${c.name}</h2>
                 <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <button class="btn btn-ghost" style="color:var(--success);" onclick="app.handleNewPlanRequest()"><i class="fas fa-file-medical"></i> Novo Plano</button>
                     <button class="btn btn-ghost" style="color:var(--accent);" onclick="app.showLoadPredefinedPlanModal()"><i class="fas fa-copy"></i> Carregar Modelo</button>
                     <button class="btn btn-ghost" style="color:var(--danger);" onclick="app.deleteTrainingPlan(app.editingClientId)"><i class="fas fa-trash"></i> Eliminar</button>
                     <button class="btn btn-secondary" onclick="app.clearTrainingDraft(); app.setView('spy_view')">Cancelar</button>
@@ -3947,7 +3948,7 @@ Equipa KandalGym`;
                 `).join('')}
                 <button class="btn btn-ghost" onclick="app.addTrainingDay()" 
                     style="color:var(--accent); border:2px dashed rgba(var(--accent-rgb), 0.3); padding:8px 18px; border-radius:10px; font-size:0.9rem; font-weight:700;">
-                    <i class="fas fa-plus-circle"></i> Novo Plano
+                    <i class="fas fa-plus-circle"></i> Adicionar Dia
                 </button>
             </div>
 
@@ -4105,6 +4106,74 @@ Equipa KandalGym`;
             this.editingPlan[dayIdx].notes = value;
             this.saveTrainingDraft();
         }
+    }
+
+    handleNewPlanRequest() {
+        const hasExercises = this.editingPlan.some(day => day.exercises.length > 0);
+        
+        if (!hasExercises) {
+            // Se está vazio, apenas resetamos o rascunho
+            this.startFreshPlan();
+            return;
+        }
+
+        const content = `
+            <div style="text-align:center; padding:1rem;">
+                <div style="background:rgba(99, 102, 241, 0.1); width:70px; height:70px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem; color:var(--primary);">
+                    <i class="fas fa-archive" style="font-size:2rem;"></i>
+                </div>
+                <h2 style="margin-bottom:1rem;">Novo Plano de Treino</h2>
+                <p style="color:var(--text-muted); margin-bottom:2rem; line-height:1.5;">
+                    Deseja <strong>arquivar</strong> o plano atual antes de criar um novo? 
+                    Isso permitirá consultar o histórico de treinos deste aluno futuramente.
+                </p>
+                
+                <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                    <button class="btn btn-primary" onclick="app.archiveAndStartNew()" style="width:100%; padding:1rem;">
+                        <i class="fas fa-archive"></i> Arquivar e Criar Novo
+                    </button>
+                    <button class="btn btn-secondary" onclick="app.startFreshPlan()" style="width:100%; padding:1rem;">
+                        <i class="fas fa-trash-alt"></i> Apenas Substituir (Usar o antigo sem arquivar)
+                    </button>
+                    <button class="btn btn-ghost" onclick="app.closeModal()" style="width:100%;">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        `;
+        this.showModal(content, '400px');
+    }
+
+    archiveAndStartNew() {
+        const clientId = this.editingClientId;
+        if (!clientId) return;
+
+        // 1. Arquivar o plano que está atualmente na base de dados (o plano ativo)
+        const currentPlan = this.state.trainingPlans[clientId];
+        if (currentPlan && (Array.isArray(currentPlan) ? currentPlan.length > 0 : (currentPlan.days && currentPlan.days.length > 0))) {
+            if (!this.state.archivedTrainingPlans) this.state.archivedTrainingPlans = {};
+            if (!this.state.archivedTrainingPlans[clientId]) this.state.archivedTrainingPlans[clientId] = [];
+            
+            const archiveEntry = {
+                ...currentPlan,
+                archivedAt: new Date().toLocaleDateString('pt-PT') + ' ' + new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })
+            };
+            
+            this.state.archivedTrainingPlans[clientId].push(archiveEntry);
+            console.log("Plano arquivado com sucesso.");
+        }
+
+        this.startFreshPlan();
+        this.showToast("Plano arquivado e novo iniciado.", "success");
+    }
+
+    startFreshPlan() {
+        this.editingPlan = [{ title: 'Plano A', exercises: [], notes: '', rest: '' }];
+        this.editingDayIdx = 0;
+        this.saveTrainingDraft();
+        this.closeModal();
+        this.renderTrainingEditor();
+        this.showToast("Novo rascunho de plano iniciado.");
     }
 
     updateEditorExercise(dayIdx, exIdx, field, value) {
