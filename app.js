@@ -4109,39 +4109,81 @@ Equipa KandalGym`;
     }
 
     handleNewPlanRequest() {
+        const clientId = this.editingClientId;
+        const archives = (this.state.archivedTrainingPlans && this.state.archivedTrainingPlans[clientId]) ? this.state.archivedTrainingPlans[clientId] : [];
         const hasExercises = this.editingPlan.some(day => day.exercises.length > 0);
         
-        if (!hasExercises) {
-            // Se está vazio, apenas resetamos o rascunho
-            this.startFreshPlan();
-            return;
-        }
+        let archivesHtml = archives.map((plan, idx) => `
+            <div class="glass-card" style="margin-bottom:0.75rem; padding:0.75rem; display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03);">
+                <div style="text-align:left;">
+                    <div style="font-size:0.85rem; font-weight:700; color:#fff;">Arquivado em: ${plan.archivedAt}</div>
+                    <div style="font-size:0.75rem; color:var(--text-muted);">${plan.days ? plan.days.length : 0} Planos / ${(plan.days || []).reduce((acc, d) => acc + (d.exercises ? d.exercises.length : 0), 0)} Exercícios</div>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="app.reuseArchivedPlan(${idx})" style="padding:6px 12px; font-size:0.8rem;">
+                    <i class="fas fa-undo"></i> Usar
+                </button>
+            </div>
+        `).reverse().join('');
+
+        if (archives.length === 0) archivesHtml = '<p style="color:var(--text-muted); font-size:0.85rem; padding:1rem;">Nenhum plano arquivado anteriormente.</p>';
 
         const content = `
-            <div style="text-align:center; padding:1rem;">
-                <div style="background:rgba(99, 102, 241, 0.1); width:70px; height:70px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem; color:var(--primary);">
-                    <i class="fas fa-archive" style="font-size:2rem;"></i>
-                </div>
-                <h2 style="margin-bottom:1rem;">Novo Plano de Treino</h2>
-                <p style="color:var(--text-muted); margin-bottom:2rem; line-height:1.5;">
-                    Deseja <strong>arquivar</strong> o plano atual antes de criar um novo? 
-                    Isso permitirá consultar o histórico de treinos deste aluno futuramente.
-                </p>
+            <div style="text-align:center; padding:0.5rem;">
+                <h2 style="margin-bottom:1.5rem;"><i class="fas fa-file-medical"></i> Novo Plano de Treino</h2>
                 
-                <div style="display:flex; flex-direction:column; gap:0.75rem;">
-                    <button class="btn btn-primary" onclick="app.archiveAndStartNew()" style="width:100%; padding:1rem;">
+                <div class="glass-panel" style="padding:1.5rem; margin-bottom:1.5rem; border:1px solid rgba(var(--primary-rgb), 0.2);">
+                    <p style="color:var(--text-muted); margin-bottom:1rem; font-size:0.9rem; line-height:1.4;">
+                        Recomendamos <strong>arquivar</strong> o plano atual para manter o histórico do aluno.
+                    </p>
+                    <button class="btn btn-primary" onclick="app.archiveAndStartNew()" style="width:100%; padding:1rem; font-weight:700;">
                         <i class="fas fa-archive"></i> Arquivar e Criar Novo
                     </button>
-                    <button class="btn btn-secondary" onclick="app.startFreshPlan()" style="width:100%; padding:1rem;">
-                        <i class="fas fa-trash-alt"></i> Apenas Substituir (Usar o antigo sem arquivar)
-                    </button>
-                    <button class="btn btn-ghost" onclick="app.closeModal()" style="width:100%;">
-                        Cancelar
-                    </button>
+                    ${!hasExercises ? `
+                        <p style="font-size:0.75rem; color:var(--text-muted); margin-top:10px;">
+                            (O rascunho atual está vazio, pode apenas carregar um modelo abaixo)
+                        </p>
+                    ` : ''}
                 </div>
+
+                <div style="text-align:left; margin-bottom:1rem;">
+                    <h3 style="font-size:1rem; margin-bottom:0.75rem;"><i class="fas fa-history" style="color:var(--accent);"></i> Aproveitar Plano Arquivado</h3>
+                    <div style="max-height:250px; overflow-y:auto; padding-right:5px;">
+                        ${archivesHtml}
+                    </div>
+                </div>
+
+                <button class="btn btn-ghost" onclick="app.closeModal()" style="width:100%; margin-top:1rem; color:var(--text-muted);">
+                    Fechar
+                </button>
             </div>
         `;
-        this.showModal(content, '400px');
+        this.showModal(content, '450px');
+    }
+
+    reuseArchivedPlan(idx) {
+        const clientId = this.editingClientId;
+        const archives = this.state.archivedTrainingPlans[clientId];
+        if (!archives || !archives[idx]) return;
+
+        if (this.editingPlan.some(day => day.exercises.length > 0)) {
+            if (!confirm("Isso irá substituir o rascunho atual pelo plano arquivado selecionado. Deseja continuar?")) return;
+        }
+
+        const planToReuse = JSON.parse(JSON.stringify(archives[idx]));
+        // Remover metadados de arquivo para o rascunho
+        delete planToReuse.archivedAt;
+        
+        if (planToReuse.days) {
+            this.editingPlan = planToReuse.days;
+        } else if (Array.isArray(planToReuse)) {
+            this.editingPlan = planToReuse;
+        }
+
+        this.editingDayIdx = 0;
+        this.saveTrainingDraft();
+        this.closeModal();
+        this.renderTrainingEditor();
+        this.showToast("Plano arquivado carregado para edição.");
     }
 
     archiveAndStartNew() {
