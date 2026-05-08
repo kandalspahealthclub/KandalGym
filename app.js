@@ -5031,6 +5031,7 @@ Equipa KandalGym`;
                     <h3 class="client-name">${c.name}</h3>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    ${isTeacher ? `<button class="btn btn-ghost btn-sm" onclick="app.showIdealParametersModal()" title="Parâmetros Ideais" style="color: var(--accent); border: 1px solid rgba(196, 162, 77, 0.3);"><i class="fas fa-info-circle"></i> <span class="hide-mobile">Parâmetros</span></button>` : ''}
                     ${evals.length ? `<button class="btn btn-secondary btn-sm" onclick="app.downloadEvaluationPDF(${clientId})"><i class="fas fa-file-pdf"></i> <span class="hide-mobile">Exportar PDF</span></button>` : ''}
                     ${isTeacher ? `<button class="btn btn-primary btn-sm" onclick="app.showEvaluationModal(${clientId})"><i class="fas fa-plus"></i> <span class="hide-mobile">Nova Avaliação</span></button>` : ''}
                     ${this.role !== 'client' && container.id === 'main-content' ? `<button class="btn btn-secondary btn-sm" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')"><i class="fas fa-arrow-left"></i> <span class="hide-mobile">Voltar</span></button>` : ''}
@@ -5326,6 +5327,90 @@ Equipa KandalGym`;
     }
 
 
+
+    showIdealParametersModal() {
+        const content = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0;"><i class="fas fa-info-circle" style="color: var(--accent);"></i> Parâmetros de Referência</h2>
+                <button class="btn btn-ghost" onclick="app.closeModal()"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 2rem; max-height: 70vh; overflow-y: auto; padding-right: 10px;">
+                <!-- Gordura Corporal -->
+                <div class="glass-card" style="padding: 1.25rem; border-left: 4px solid var(--primary);">
+                    <h4 style="color: var(--primary); margin-top: 0; display: flex; align-items: center; gap: 8px; margin-bottom: 1rem;">
+                        <i class="fas fa-percent"></i> % Gordura Corporal
+                    </h4>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                        <tr style="border-bottom: 1px solid var(--surface-border);">
+                            <th style="text-align: left; padding: 8px; color: var(--text-muted);">Categoria</th>
+                            <th style="text-align: center; padding: 8px; color: var(--text-muted);">Homens</th>
+                            <th style="text-align: center; padding: 8px; color: var(--text-muted);">Mulheres</th>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 8px;">Atleta</td>
+                            <td style="text-align: center; padding: 8px; color: var(--success); font-weight: 600;">6 - 13%</td>
+                            <td style="text-align: center; padding: 8px; color: var(--success); font-weight: 600;">14 - 20%</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 8px;">Fitness</td>
+                            <td style="text-align: center; padding: 8px; color: #60a5fa; font-weight: 600;">14 - 17%</td>
+                            <td style="text-align: center; padding: 8px; color: #60a5fa; font-weight: 600;">21 - 24%</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 8px;">Aceitável</td>
+                            <td style="text-align: center; padding: 8px;">18 - 24%</td>
+                            <td style="text-align: center; padding: 8px;">25 - 31%</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;">Obeso</td>
+                            <td style="text-align: center; padding: 8px; color: var(--danger); font-weight: 600;">> 25%</td>
+                            <td style="text-align: center; padding: 8px; color: var(--danger); font-weight: 600;">> 32%</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Gordura Visceral -->
+                <div class="glass-card" style="padding: 1.25rem; border-left: 4px solid var(--accent);">
+                    <h4 style="color: var(--accent); margin-top: 0; display: flex; align-items: center; gap: 8px; margin-bottom: 1rem;">
+                        <i class="fas fa-fire"></i> Gordura Visceral
+                    </h4>
+                    <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem;">
+                        <div style="display: flex; justify-content: space-between; padding: 10px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                            <span style="color: var(--success); font-weight: 600;">Saudável</span>
+                            <strong>1 - 9</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 10px; background: rgba(245, 158, 11, 0.1); border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.2);">
+                            <span style="color: #f59e0b; font-weight: 600;">Elevado</span>
+                            <strong>10 - 14</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 10px; background: rgba(239, 68, 68, 0.1); border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.2);">
+                            <span style="color: var(--danger); font-weight: 600;">Muito Elevado</span>
+                            <strong>15 - 30</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Percentagem de Água -->
+                <div class="glass-card" style="padding: 1.25rem; border-left: 4px solid #60a5fa;">
+                    <h4 style="color: #60a5fa; margin-top: 0; display: flex; align-items: center; gap: 8px; margin-bottom: 1rem;">
+                        <i class="fas fa-tint"></i> % Água Corporal
+                    </h4>
+                    <div style="display: flex; gap: 1rem;">
+                        <div style="flex: 1; text-align: center; padding: 1.25rem; background: rgba(255,255,255,0.03); border-radius: 16px; border: 1px solid var(--surface-border);">
+                            <small style="display: block; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase;">Homens</small>
+                            <strong style="font-size: 1.2rem; color: #60a5fa;">50 - 65%</strong>
+                        </div>
+                        <div style="flex: 1; text-align: center; padding: 1.25rem; background: rgba(255,255,255,0.03); border-radius: 16px; border: 1px solid var(--surface-border);">
+                            <small style="display: block; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase;">Mulheres</small>
+                            <strong style="font-size: 1.2rem; color: #60a5fa;">45 - 60%</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        this.showModal(content, '550px');
+    }
 
     async deleteEvaluation(clientId, index) {
         if (confirm('Tem a certeza que deseja eliminar este registo de Avaliação?')) {
