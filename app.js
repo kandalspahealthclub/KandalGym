@@ -6830,7 +6830,17 @@ Equipa KandalGym`;
         };
 
         lines.forEach(line => {
-            // Regex melhorado para suportar ":" ou "-" como separador e unidades extras como "L"
+            // 1. Verificar se é uma linha de resumo de macros de receita (Valores: ...kcal | ...g P | ...)
+            const recipeMatch = line.match(/\(Valores:\s*(\d+(?:\.\d+)?)\s*kcal\s*\|\s*(\d+(?:\.\d+)?)\s*g\s*P\s*\|\s*(\d+(?:\.\d+)?)\s*g\s*C\s*\|\s*(\d+(?:\.\d+)?)\s*g\s*G\)/i);
+            if (recipeMatch) {
+                total.kcal += parseFloat(recipeMatch[1]);
+                total.prot += parseFloat(recipeMatch[2]);
+                total.carb += parseFloat(recipeMatch[3]);
+                total.fat += parseFloat(recipeMatch[4]);
+                return;
+            }
+
+            // 2. Alimento individual: Regex melhorado para suportar ":" ou "-" como separador e unidades extras como "L"
             const match = line.match(/^-?\s*(.*?)(?::|-)\s*(\d+(?:\.\d+)?)\s*(g|ml|l|un|c\. sopa|c\. sobremesa|c\. cafe|fatia(?:\(s\))?|chavena|copo)$/i);
             if (match) {
                 const name = match[1].trim();
