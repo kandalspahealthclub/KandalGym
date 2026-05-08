@@ -4326,6 +4326,10 @@ Equipa KandalGym`;
                                         const lines = cleanText.split('\n');
                                         cleanText = lines.filter(line => !line.includes(match[0]) && !line.toLowerCase().includes('vídeo tutorial')).join('\n').trim();
                                     }
+
+                                    // Remover a linha técnica de macros de receita (Valores: ...) para o aluno não ver
+                                    cleanText = cleanText.split('\n').filter(line => !line.includes('(Valores:')).join('\n').trim();
+
                                     return this.linkify(cleanText);
                                 })()}</div>
                                 
@@ -7418,13 +7422,20 @@ Equipa KandalGym`;
 
         mealPlan.meals.forEach(m => {
             const mN = this.getNutritionFromText(m.items);
+            
+            // Limpar o texto para o PDF (remover links e linha tecnica de macros)
+            let displayItems = m.items || '';
+            displayItems = displayItems.split('\n')
+                .filter(line => !line.includes('youtube.com') && !line.includes('youtu.be') && !line.includes('(Valores:'))
+                .join('\n').trim();
+
             htmlContent += `
                 <div style="margin-bottom: 20px; page-break-inside: avoid;">
                     <div style="background: #911B2B; color: white; padding: 8px 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
                         <span>${m.time} - ${m.name}</span>
                         ${mN.kcal > 0 ? `<span style="font-size: 12px;">${Math.round(mN.kcal)} kcal</span>` : ''}
                     </div>
-                    <div style="padding: 12px; border: 1px solid #eee; border-top: none; white-space: pre-wrap; font-size: 14px; line-height: 1.6;">${m.items || 'Sem alimentos adicionados'}</div>
+                    <div style="padding: 12px; border: 1px solid #eee; border-top: none; white-space: pre-wrap; font-size: 14px; line-height: 1.6;">${displayItems || 'Sem alimentos adicionados'}</div>
                     ${mN.kcal > 0 ? `
                     <div style="padding: 5px 12px; background: #fefefe; border: 1px solid #eee; border-top: none; font-size: 11px; color: #666;">
                         <strong>Macros:</strong> Prot: ${Math.round(mN.prot)}g | Carb: ${Math.round(mN.carb)}g | Gord: ${Math.round(mN.fat)}g
