@@ -4512,7 +4512,11 @@ Equipa KandalGym`;
                                                 <input type="number" id="food-qty-${idx}" placeholder="Qtd" min="0" class="food-qty">
                                                 <select id="food-unit-${idx}" class="food-unit">
                                                     <option value="g" style="background:#1e293b; color:#fff;">gramas</option>
+                                                    <option value="ml" style="background:#1e293b; color:#fff;">ml</option>
+                                                    <option value="l" style="background:#1e293b; color:#fff;">litros</option>
                                                     <option value="un" style="background:#1e293b; color:#fff;">unidades</option>
+                                                    <option value="copo" style="background:#1e293b; color:#fff;">copo</option>
+                                                    <option value="chavena" style="background:#1e293b; color:#fff;">chávena</option>
                                                     <option value="c. sopa" style="background:#1e293b; color:#fff;">colher de sopa</option>
                                                     <option value="c. sobremesa" style="background:#1e293b; color:#fff;">colher de sobremesa</option>
                                                     <option value="c. cafe" style="background:#1e293b; color:#fff;">colher de cafe</option>
