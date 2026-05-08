@@ -601,6 +601,14 @@ option {
     color: #60a5fa;
 }
 
+@media (max-width: 480px) {
+    .badge {
+        font-size: 0.55rem;
+        padding: 0.2rem 0.4rem;
+        white-space: nowrap;
+    }
+}
+
 /* Editor Specific Styles */
 #main-content select,
 #main-content input[type="text"] {

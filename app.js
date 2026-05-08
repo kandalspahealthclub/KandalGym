@@ -5051,8 +5051,8 @@ Equipa KandalGym`;
     renderEvaluationCard(ev, idx, clientId, isTeacher) {
         return `
             <div class="glass-panel" style="padding: 1.5rem; position: relative; border-left: 4px solid var(--primary);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 1rem;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 1.5rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 12px; min-width: 150px;">
                         <div style="background: rgba(145, 27, 43, 0.1); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--primary);">
                             <i class="fas fa-calendar-alt"></i>
                         </div>
@@ -5062,7 +5062,7 @@ Equipa KandalGym`;
                             ${ev.author ? `<small style="color: var(--accent); display:block; margin-top:2px;">Por: ${ev.author}</small>` : ''}
                         </div>
                     </div>
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; justify-content: flex-end; flex-grow: 1;">
                         <button class="btn btn-ghost btn-sm" style="color: var(--text-muted);" onclick="app.downloadEvaluationPDF(${clientId}, ${idx})" title="Exportar está Avaliação">
                             <i class="fas fa-file-pdf"></i>
                         </button>
