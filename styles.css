@@ -238,6 +238,37 @@ h3 {
         gap: 0.75rem;
     }
 
+    .classes-grid .glass-card span[style*="font-size:1rem"] {
+        font-size: 1.15rem !important;
+    }
+
+    .classes-grid .glass-card div[style*="font-size:0.65rem"] {
+        font-size: 0.8rem !important;
+    }
+
+    .classes-grid .glass-card h4 {
+        font-size: 1.05rem !important;
+    }
+
+    .classes-grid .glass-card p {
+        font-size: 0.85rem !important;
+    }
+
+    .classes-grid .glass-card .btn-sm {
+        font-size: 0.85rem !important;
+        padding: 0.6rem !important;
+    }
+
+    .classes-grid .glass-card .badge {
+        font-size: 0.7rem !important;
+        padding: 0.2rem 0.5rem !important;
+    }
+
+    #classes-content h3 {
+        font-size: 1.25rem !important;
+        margin-top: 0.5rem !important;
+    }
+
     .glass-card {
         padding: 1rem;
     }
