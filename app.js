@@ -1,4 +1,4 @@
-﻿// Tratador de Erros Global - Deve ser o primeiro a carregar
+// Tratador de Erros Global - Deve ser o primeiro a carregar
 window.onerror = function (message, source, lineno, colno, error) {
     console.error("Erro detectado:", message, "em", source, ":", lineno);
     const container = document.getElementById('main-content');
@@ -9442,9 +9442,15 @@ Equipa KandalGym`;
             return (this.state.clients || []).find(cl => Number(cl.id) === clientId);
         }).filter(x => x);
 
+        // Trial / experimental participants
+        if (!this.state.trialParticipants) this.state.trialParticipants = {};
+        const trials = this.state.trialParticipants[classIdStr] || [];
+
+        const totalCount = participants.length + trials.length;
+
         const content = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                <h2 style="margin:0;">Alunos Inscritos</h2>
+                <h2 style="margin:0;">Inscritos na Aula</h2>
                 <button class="btn btn-ghost" onclick="app.closeModal()"><i class="fas fa-times"></i></button>
             </div>
             <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">Aula: <strong>${cls ? cls.name : 'N/A'}</strong></p>
@@ -9461,11 +9467,17 @@ Equipa KandalGym`;
                         <button class="btn btn-primary btn-sm" onclick="app.enrollManualStudent('${classIdStr}')" style="white-space: nowrap;"><i class="fas fa-plus"></i> Ingresso</button>
                     </div>
                 </div>
+                <div style="margin-bottom: 1rem;">
+                    <button class="btn btn-sm" onclick="app.showAddTrialModal('${classIdStr}')" style="width:100%; background: rgba(255, 165, 0, 0.15); border: 1px solid rgba(255,165,0,0.4); color: #ffaa00; font-size:0.85rem;">
+                        <i class="fas fa-user-clock"></i> Registar Visitante / Aula Experimental
+                    </button>
+                </div>
             ` : ''}
 
             <div style="display:flex; flex-direction:column; gap:0.8rem; max-height:45vh; overflow-y:auto;">
-                ${participants.length === 0 ? '<p style="text-align:center; color:var(--text-muted);">Nenhum aluno inscrito ainda.</p>' :
-                participants.map(p => `
+                ${totalCount === 0 ? '<p style="text-align:center; color:var(--text-muted);">Nenhum inscrito ainda.</p>' : ''}
+
+                ${participants.map(p => `
                     <div style="display:flex; align-items:center; gap:0.75rem; padding:0.8rem; background:rgba(255,255,255,0.03); border-radius:12px;">
                         <div style="width:36px; height:36px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:bold;">
                             ${p.name.substring(0, 2).toUpperCase()}
@@ -9480,10 +9492,27 @@ Equipa KandalGym`;
                         ` : ''}
                     </div>
                 `).join('')}
+
+                ${trials.map(t => `
+                    <div style="display:flex; align-items:center; gap:0.75rem; padding:0.8rem; background:rgba(255,165,0,0.07); border-radius:12px; border:1px solid rgba(255,165,0,0.2);">
+                        <div style="width:36px; height:36px; border-radius:50%; background:#ffaa00; display:flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:bold; color:#000;">
+                            ${t.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size:0.95rem; font-weight:600;">${t.name} <span style="font-size:0.65rem; background:rgba(255,165,0,0.25); color:#ffaa00; padding:2px 6px; border-radius:4px; font-weight:700; vertical-align:middle;">EXPERIMENTAL</span></div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">${t.phone || 'Sem contacto'} ${t.notes ? '· ' + t.notes : ''}</div>
+                        </div>
+                        ${this.role !== 'client' ? `
+                            <button class="btn btn-ghost btn-sm" onclick="app.convertTrialToClient('${classIdStr}', '${t.id}')" title="Converter em Cliente" style="color:#ffaa00;"><i class="fas fa-user-plus"></i></button>
+                            <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.removeTrialParticipant('${classIdStr}', '${t.id}')" title="Remover"><i class="fas fa-times"></i></button>
+                        ` : ''}
+                    </div>
+                `).join('')}
             </div>
         `;
         this.showModal(content);
     }
+
 
     async enrollManualStudent(classId) {
         const select = document.getElementById('manualEnrollSelect');
@@ -9563,6 +9592,104 @@ Equipa KandalGym`;
             if (this.role === 'admin') this.renderAdminClasses(document.getElementById('main-content'));
             else if (this.role === 'teacher') this.renderTeacherClasses(document.getElementById('main-content'));
         }
+    }
+
+    showAddTrialModal(classId) {
+        const classIdStr = String(classId);
+        const cls = (this.state.classes || []).find(c => String(c.id) === classIdStr);
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content animate-fade-in" style="max-width:420px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                    <h2 style="margin:0;"><i class="fas fa-user-clock" style="color:#ffaa00; margin-right:8px;"></i>Visitante / Experimental</h2>
+                    <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()"><i class="fas fa-times"></i></button>
+                </div>
+                <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.5rem;">Registe um visitante ou prospect para a aula <strong>${cls ? cls.name : ''}</strong>. Não é necessário ter conta.</p>
+                <div style="display:flex; flex-direction:column; gap:1rem;">
+                    <div>
+                        <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Nome *</label>
+                        <input type="text" id="trial-name" placeholder="Nome do visitante" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Contacto (Telemóvel)</label>
+                        <input type="tel" id="trial-phone" placeholder="Ex: 912 345 678" style="width:100%;">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Notas (opcional)</label>
+                        <input type="text" id="trial-notes" placeholder="Ex: Interessado em Pilates, Referido por..." style="width:100%;">
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:0.5rem;">
+                        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
+                        <button class="btn btn-primary" style="background:#ffaa00; border-color:#ffaa00; color:#000;" onclick="app.addTrialParticipant('${classIdStr}')"><i class="fas fa-check"></i> Registar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    addTrialParticipant(classId) {
+        const classIdStr = String(classId);
+        const name = (document.getElementById('trial-name') || {}).value?.trim();
+        const phone = (document.getElementById('trial-phone') || {}).value?.trim();
+        const notes = (document.getElementById('trial-notes') || {}).value?.trim();
+
+        if (!name) {
+            this.showToast('O nome do visitante é obrigatório.', 'error');
+            return;
+        }
+
+        if (!this.state.trialParticipants) this.state.trialParticipants = {};
+        if (!this.state.trialParticipants[classIdStr]) this.state.trialParticipants[classIdStr] = [];
+
+        const trial = {
+            id: String(Date.now()),
+            name,
+            phone: phone || '',
+            notes: notes || '',
+            addedAt: new Date().toLocaleString('pt-PT')
+        };
+
+        this.state.trialParticipants[classIdStr].push(trial);
+        this.saveState();
+
+        // Close the trial modal
+        const trialModal = document.querySelector('.modal-overlay:last-of-type');
+        if (trialModal) trialModal.remove();
+
+        this.showToast(`${name} registado como visitante!`, 'success');
+        this.showParticipantsList(classId);
+    }
+
+    removeTrialParticipant(classId, trialId) {
+        if (!confirm('Deseja remover este visitante da aula?')) return;
+        const classIdStr = String(classId);
+        if (this.state.trialParticipants && this.state.trialParticipants[classIdStr]) {
+            this.state.trialParticipants[classIdStr] = this.state.trialParticipants[classIdStr].filter(t => t.id !== String(trialId));
+            this.saveState();
+            this.showToast('Visitante removido.', 'success');
+            this.showParticipantsList(classId);
+        }
+    }
+
+    convertTrialToClient(classId, trialId) {
+        const classIdStr = String(classId);
+        const trial = (this.state.trialParticipants?.[classIdStr] || []).find(t => t.id === String(trialId));
+        if (!trial) return;
+
+        // Close participant modal and open add user modal with pre-filled name/phone
+        this.closeModal();
+        this.showAddUserModal();
+
+        // Pre-fill after a short delay (DOM needs to render)
+        setTimeout(() => {
+            const nameEl = document.getElementById('new-user-name');
+            const phoneEl = document.getElementById('new-user-phone');
+            if (nameEl) nameEl.value = trial.name;
+            if (phoneEl) phoneEl.value = trial.phone;
+            this.showToast('Dados do visitante pré-preenchidos. Complete o formulário.', 'info');
+        }, 200);
     }
 
     renderClientClasses(container) {
