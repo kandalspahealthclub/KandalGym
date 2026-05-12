@@ -1,4 +1,4 @@
-// Tratador de Erros Global - Deve ser o primeiro a carregar
+﻿// Tratador de Erros Global - Deve ser o primeiro a carregar
 window.onerror = function (message, source, lineno, colno, error) {
     console.error("Erro detectado:", message, "em", source, ":", lineno);
     const container = document.getElementById('main-content');
@@ -165,7 +165,7 @@ class FitnessApp {
                 }
             }
         }, 8000);
-        
+
         // --- SISTEMA DE SCANNER GLOBAL ROBUSTO ---
         this.initGlobalScanner();
 
@@ -203,7 +203,7 @@ class FitnessApp {
 
         // Gestor de Foco Global (apenas para Desktop/Receção)
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
+
         if (!isMobile) {
             document.addEventListener('mousedown', (e) => {
                 // Se clicar em algo que precise de foco (inputs, botoes), não interferimos
@@ -432,7 +432,7 @@ class FitnessApp {
             console.warn('Tentativa de gravar antes de carregar dados do Firebase ignorada.');
             return;
         }
-        
+
         if (this.isSaving) {
             this.needsAnotherSave = true;
             return;
@@ -790,7 +790,7 @@ class FitnessApp {
         // Obter o email digitado, se houver
         const emailInput = document.getElementById('recovery-email');
         const email = emailInput ? emailInput.value.trim() : '';
-        
+
         let user = null;
         if (email) {
             // Procurar no estado se o email pertence a alguém conhecido
@@ -799,7 +799,7 @@ class FitnessApp {
         }
 
         let message = "Olá KandalGym! Gostaria de solicitar a recuperação da minha palavra-passe.";
-        
+
         if (user) {
             // Se encontrarmos o utilizador, enviamos Nome e Email
             message = `Olá KandalGym! O meu nome é ${user.name}, o meu email é ${user.email} e gostaria de solicitar a recuperação da minha palavra-passe.`;
@@ -977,7 +977,7 @@ class FitnessApp {
         this.currentUser = null;
         localStorage.removeItem('kandalgym_session');
         localStorage.removeItem('kg_saved_creds');
-        if (this.auth) this.auth.signOut().catch(() => {});
+        if (this.auth) this.auth.signOut().catch(() => { });
         window.location.reload();
     }
 
@@ -1303,8 +1303,8 @@ Equipa KandalGym`;
             `---------------------------------------------\n` +
             `Olá *${name}*, a sua conta de *${label}* foi criada!\n` +
             `*CREDENCIAIS DE ACESSO:*\n` +
-            `*Email:* \`${email}\`\n` +
-            `*Password:* \`${pass}\`\n` +
+            `*Email:* \${email}\\n` +
+            `*Password:* \${pass}\\n` +
             `*AVISO:* Altere a sua password no menu "Perfil" após o primeiro acesso.\n\n` +
             `_A App está em fase de teste, mas já pode usar a marcação de aulas, os planos de treino e muito mais._\n` +
             `*Acesso:* https://kandalspahealthclub.github.io/KandalGym/\n` +
@@ -2268,21 +2268,21 @@ Equipa KandalGym`;
             '<div id="user-photo-frame" class="photo-frame"><img id="user-photo" src="" style="display:none;"><i id="user-icon" class="fas fa-user"></i></div>' +
             '<h1 id="user-name" class="name">NOME DO CLIENTE</h1>' +
             '<div id="user-status" class="status">ENTRADA VÁLIDA</div></div></div>' +
-            
+
             '<!-- Scanner Invisivel (Replica da logica da Gestao de Entradas) -->' +
             '<input type="text" id="monitor-scanner-input" autocomplete="off" style="position:fixed; top:-100px; left:-100px; opacity:0;">' +
 
             '<script>' +
             'const bc = new BroadcastChannel("kandal_access"); let timeout; ' +
             'const hwInput = document.getElementById("monitor-scanner-input"); ' +
-            
-    'hwInput.onkeyup = (e) => { ' +
+
+            'hwInput.onkeyup = (e) => { ' +
             '  if (e.key === "Enter") { ' +
             '    const val = hwInput.value.trim().toUpperCase(); ' +
             '    if (val.length >= 2) { ' +
-                 '/* Feedback visual de leitura no monitor */ ' +
-                 'document.body.style.border = "10px solid var(--primary)"; ' +
-                 'setTimeout(() => document.body.style.border = "none", 500); ' +
+            '/* Feedback visual de leitura no monitor */ ' +
+            'document.body.style.border = "10px solid var(--primary)"; ' +
+            'setTimeout(() => document.body.style.border = "none", 500); ' +
             '      if (window.opener && window.opener.app) { window.opener.app.processarLeituraQR(val); } ' +
             '      else { bc.postMessage({ type: "access_request", code: val }); } ' +
             '    } ' +
@@ -4112,7 +4112,7 @@ Equipa KandalGym`;
         const clientId = this.editingClientId;
         const archives = (this.state.archivedTrainingPlans && this.state.archivedTrainingPlans[clientId]) ? this.state.archivedTrainingPlans[clientId] : [];
         const hasExercises = this.editingPlan.some(day => day.exercises.length > 0);
-        
+
         let archivesHtml = archives.map((plan, idx) => `
             <div class="glass-card" style="margin-bottom:0.75rem; padding:0.75rem; display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03);">
                 <div style="text-align:left;">
@@ -4172,7 +4172,7 @@ Equipa KandalGym`;
         const planToReuse = JSON.parse(JSON.stringify(archives[idx]));
         // Remover metadados de arquivo para o rascunho
         delete planToReuse.archivedAt;
-        
+
         if (planToReuse.days) {
             this.editingPlan = planToReuse.days;
         } else if (Array.isArray(planToReuse)) {
@@ -4195,12 +4195,12 @@ Equipa KandalGym`;
         if (currentPlan && (Array.isArray(currentPlan) ? currentPlan.length > 0 : (currentPlan.days && currentPlan.days.length > 0))) {
             if (!this.state.archivedTrainingPlans) this.state.archivedTrainingPlans = {};
             if (!this.state.archivedTrainingPlans[clientId]) this.state.archivedTrainingPlans[clientId] = [];
-            
+
             const archiveEntry = {
                 ...currentPlan,
                 archivedAt: new Date().toLocaleDateString('pt-PT') + ' ' + new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })
             };
-            
+
             this.state.archivedTrainingPlans[clientId].push(archiveEntry);
             console.log("Plano arquivado com sucesso.");
         }
@@ -4317,28 +4317,28 @@ Equipa KandalGym`;
                                     <i class="fas fa-utensils" style="color:var(--text-muted); font-size:0.75rem;"></i>
                                 </div>
                                 <div style="font-size:0.9rem; white-space: pre-wrap; line-height: 1.5; color: #e2e8f0;">${(() => {
-                                    let cleanText = m.items;
-                                    const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-                                    const match = m.items.match(youtubeRegex);
-                                    
-                                    if (match) {
-                                        // Remover a linha que contém o link do YouTube para não repetir com o card
-                                        const lines = cleanText.split('\n');
-                                        cleanText = lines.filter(line => !line.includes(match[0]) && !line.toLowerCase().includes('vídeo tutorial')).join('\n').trim();
-                                    }
+                            let cleanText = m.items;
+                            const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+                            const match = m.items.match(youtubeRegex);
 
-                                    // Remover a linha técnica de macros de receita (Valores: ...) para o aluno não ver
-                                    cleanText = cleanText.split('\n').filter(line => !line.includes('(Valores:')).join('\n').trim();
+                            if (match) {
+                                // Remover a linha que contém o link do YouTube para não repetir com o card
+                                const lines = cleanText.split('\n');
+                                cleanText = lines.filter(line => !line.includes(match[0]) && !line.toLowerCase().includes('vídeo tutorial')).join('\n').trim();
+                            }
 
-                                    return this.linkify(cleanText);
-                                })()}</div>
+                            // Remover a linha técnica de macros de receita (Valores: ...) para o aluno não ver
+                            cleanText = cleanText.split('\n').filter(line => !line.includes('(Valores:')).join('\n').trim();
+
+                            return this.linkify(cleanText);
+                        })()}</div>
                                 
                                 ${(() => {
-                                    const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-                                    const match = m.items.match(youtubeRegex);
-                                    if (match && match[1]) {
-                                        const videoId = match[1];
-                                        return `
+                            const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+                            const match = m.items.match(youtubeRegex);
+                            if (match && match[1]) {
+                                const videoId = match[1];
+                                return `
                                             <div class="glass-card" style="margin-top:1rem; padding: 0.5rem; border:1px solid rgba(255,0,0,0.3); background:rgba(255,0,0,0.05); display:flex; align-items:center; cursor:pointer; gap:12px;" onclick="window.open('https://www.youtube.com/watch?v=${videoId}', '_blank')">
                                                 <div style="width:70px; height:45px; border-radius:8px; background:url('https://img.youtube.com/vi/${videoId}/mqdefault.jpg') center/cover; position:relative; flex-shrink:0;">
                                                     <i class="fab fa-youtube" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#fff; font-size:1rem; text-shadow: 0 0 5px rgba(0,0,0,0.5);"></i>
@@ -4350,9 +4350,9 @@ Equipa KandalGym`;
                                                 <i class="fas fa-chevron-right" style="margin-right:0.5rem; color:rgba(255,255,255,0.2);"></i>
                                             </div>
                                         `;
-                                    }
-                                    return '';
-                                })()}
+                            }
+                            return '';
+                        })()}
 
                                 ${mTotal.kcal > 0 ? `
                                     <div class="nutrition-summary">
@@ -5869,7 +5869,7 @@ Equipa KandalGym`;
             if (file.size > 10 * 1024 * 1024) {
                 return alert("A imagem é demasiado grande (Máximo 10MB).");
             }
-            
+
             const reader = new FileReader();
             reader.onload = (e) => {
                 this.showCropModal(e.target.result, (croppedBase64) => {
@@ -6212,7 +6212,7 @@ Equipa KandalGym`;
     async renamePlanRestriction(oldName) {
         const newName = await this.customPrompt(`Introduza o novo nome para o plano "${oldName}":`, oldName);
         if (!newName || newName.trim() === '' || newName === oldName) return;
-        
+
         if (this.state.planRestrictions[newName]) {
             return alert("Já existe um plano com esse nome. Escolha um nome diferente.");
         }
@@ -7507,7 +7507,7 @@ Equipa KandalGym`;
 
         mealPlan.meals.forEach(m => {
             const mN = this.getNutritionFromText(m.items);
-            
+
             // Limpar o texto para o PDF (remover links e linha tecnica de macros)
             let displayItems = m.items || '';
             displayItems = displayItems.split('\n')
@@ -7905,7 +7905,7 @@ Equipa KandalGym`;
                 // Auto-reset de créditos inteligente
                 const planoStr = client.plano || '';
                 let defaultEnt = 30;
-                
+
                 // 1º Prioridade: Verificar se o admin configurou os créditos fixos nas regras do plano
                 const regras = (this.state.planRestrictions || {})[planoStr];
                 if (regras && typeof regras.maxCredits === 'number') {
@@ -7919,7 +7919,7 @@ Equipa KandalGym`;
                     else if (planoStr.includes('2x Semana')) defaultEnt = 8;
                     else if (planoStr.includes('3x Semana')) defaultEnt = 12;
                 }
-                
+
                 client.ent = defaultEnt;
             }
         });
@@ -7959,9 +7959,9 @@ Equipa KandalGym`;
                 return dateStr.startsWith(hoje) && type === 'in';
             }).length;
 
-            const limitDiario = (this.state.planRestrictions && c.plano && this.state.planRestrictions[c.plano] && this.state.planRestrictions[c.plano].maxDailyEntrances !== undefined) 
-                                ? this.state.planRestrictions[c.plano].maxDailyEntrances 
-                                : 2;
+            const limitDiario = (this.state.planRestrictions && c.plano && this.state.planRestrictions[c.plano] && this.state.planRestrictions[c.plano].maxDailyEntrances !== undefined)
+                ? this.state.planRestrictions[c.plano].maxDailyEntrances
+                : 2;
 
             const statusColor = c.ativo ? 'var(--success)' : 'var(--danger)';
 
@@ -8314,7 +8314,7 @@ Equipa KandalGym`;
             this.lastWindowY = window.pageYOffset || document.documentElement.scrollTop;
 
             this.state.qrClients[idx][field] = value;
-            
+
             if (field === 'validade') {
                 const planoStr = this.state.qrClients[idx].plano || '';
                 let defaultEnt = 30;
@@ -8330,7 +8330,7 @@ Equipa KandalGym`;
                     else if (planoStr.includes('2x Semana')) defaultEnt = 8;
                     else if (planoStr.includes('3x Semana')) defaultEnt = 12;
                 }
-                
+
                 this.state.qrClients[idx].ent = defaultEnt;
             }
 
@@ -8375,7 +8375,7 @@ Equipa KandalGym`;
         if (occupancyMini) {
             occupancyMini.outerHTML = this.getOccupancyHTML(false);
         }
-        
+
         // Se houver widgets de estatísticas isolados (como no Inicio)
         const statsWidgets = document.querySelectorAll('.dashboard .glass-panel');
         statsWidgets.forEach(w => {
@@ -8495,7 +8495,7 @@ Equipa KandalGym`;
             btn.style.color = '#fff';
             btn.style.borderColor = '#26de81';
             btn.disabled = true;
-            
+
             // Opcional: Esconder após 3 segundos
             setTimeout(() => {
                 btn.style.opacity = '0.5';
@@ -8834,9 +8834,9 @@ Equipa KandalGym`;
                     return d.startsWith(hj) && t === 'in';
                 }).length;
 
-                const limitDiario = (this.state.planRestrictions && c.plano && this.state.planRestrictions[c.plano] && this.state.planRestrictions[c.plano].maxDailyEntrances !== undefined) 
-                                    ? this.state.planRestrictions[c.plano].maxDailyEntrances 
-                                    : 2;
+                const limitDiario = (this.state.planRestrictions && c.plano && this.state.planRestrictions[c.plano] && this.state.planRestrictions[c.plano].maxDailyEntrances !== undefined)
+                    ? this.state.planRestrictions[c.plano].maxDailyEntrances
+                    : 2;
 
                 if (entriesHj >= limitDiario) {
                     this.showQRMsg(`${c.nome}: Limite diário atingido`, "bg-qr-warning");
@@ -9610,13 +9610,13 @@ Equipa KandalGym`;
                                             <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:0.2rem;">
                                                 <i class="fas fa-calendar-alt"></i> ${this.formatFullDate(c.day, c.date)}
                                                 ${(() => {
-                                                    const hn = this.isHoliday(c.date);
-                                                    if (!hn) return '';
-                                                    let msg = "Horário 08h30-13h00, sem aulas";
-                                                    if (hn === "Ano Novo" || hn === "Natal" || hn === "São João") msg = "Encerrado";
-                                                    else if (hn === "Véspera de São João" || hn === "Véspera de Natal" || hn === "Passagem de Ano") msg = "Abertos até às 16h30";
-                                                    return `<span style="color:var(--warning); font-weight:bold; margin-left:5px; display:block; margin-top:2px;">(${hn}: ${msg})</span>`;
-                                                })()}
+                        const hn = this.isHoliday(c.date);
+                        if (!hn) return '';
+                        let msg = "Horário 08h30-13h00, sem aulas";
+                        if (hn === "Ano Novo" || hn === "Natal" || hn === "São João") msg = "Encerrado";
+                        else if (hn === "Véspera de São João" || hn === "Véspera de Natal" || hn === "Passagem de Ano") msg = "Abertos até às 16h30";
+                        return `<span style="color:var(--warning); font-weight:bold; margin-left:5px; display:block; margin-top:2px;">(${hn}: ${msg})</span>`;
+                    })()}
                                             </div>
                                             <h4 style="margin-bottom:0.3rem; font-size:0.9rem; line-height:1.2; min-height:2.4em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${c.name}</h4>
                                             <p style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.8rem;">
@@ -9768,13 +9768,13 @@ Equipa KandalGym`;
         const classIdStr = String(actualClassId);
 
         const cls = this.state.classes.find(x => Number(x.id) === actualClassId);
-        
+
         if (cls && cls.date) {
             const holidayName = this.isHoliday(cls.date);
             if (holidayName) {
                 let shouldBlock = false;
                 let blockMessage = '';
-                
+
                 if (holidayName === "Ano Novo" || holidayName === "Natal" || holidayName === "São João") {
                     shouldBlock = true;
                     blockMessage = `Informação de Feriado (${holidayName}):\n\nNeste dia o ginásio encontra-se totalmente encerrado.`;
@@ -10024,11 +10024,11 @@ Equipa KandalGym`;
 
 
     // --- SISTEMA DE PLANOS PRÉ-DEFINIDOS ---
-    
+
     renderPredefinedPlans(container) {
         const plans = Object.entries(this.state.predefinedPlans || {}).map(([id, plan]) => ({ id, ...plan }));
         const isMobile = window.innerWidth <= 768;
-        
+
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${isMobile ? '1rem' : '2rem'}; flex-wrap:wrap; gap:1rem;">
                 <h2 style="margin:0; font-size:${isMobile ? '1.2rem' : '1.5rem'};"><i class="fas fa-copy" style="color:var(--primary); margin-right:10px;"></i> Modelos</h2>
@@ -10082,7 +10082,7 @@ Equipa KandalGym`;
     editPredefinedPlan(id) {
         const plan = this.state.predefinedPlans[id];
         if (!plan) return alert('Plano não encontrado.');
-        
+
         this.editingPredefinedId = id;
         this.editingPlan = JSON.parse(JSON.stringify(plan.days || []));
         this.editingPredefinedName = plan.name || '';
@@ -10250,7 +10250,7 @@ Equipa KandalGym`;
         })).filter(day => day.exercises.length > 0 || this.editingPlan.length === 1);
 
         const id = this.editingPredefinedId || Date.now().toString();
-        
+
         this.state.predefinedPlans[id] = {
             name: name,
             days: cleanDays,
@@ -10265,9 +10265,9 @@ Equipa KandalGym`;
     applyPredefinedPlanToClientModal(planId) {
         const plan = this.state.predefinedPlans[planId];
         const clients = (this.state.clients || []).sort((a, b) => a.name.localeCompare(b.name));
-        
+
         let clientOptions = clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-        
+
         const content = `
             <h3>Atribuir Plano Modelo</h3>
             <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">
@@ -10294,32 +10294,32 @@ Equipa KandalGym`;
     applyPredefinedPlanToClient(planId) {
         const clientId = document.getElementById('apply-plan-client-select').value;
         if (!clientId) return alert('Por favor, selecione um aluno.');
-        
+
         const plan = this.state.predefinedPlans[planId];
         const client = this.state.clients.find(c => c.id == clientId);
-        
+
         if (!confirm(`Confirmar atribuição do plano "${plan.name}" ao aluno ${client.name}?`)) return;
-        
+
         const newPlan = {
             days: JSON.parse(JSON.stringify(plan.days)),
             author: this.currentUser.name,
             updatedAt: new Date().toLocaleDateString('pt-PT')
         };
-        
+
         this.state.trainingPlans[clientId] = newPlan;
-        
+
         this.addAppNotification(clientId, 'Novo Plano de Treino!', `O seu professor atribuiu-lhe o plano: ${plan.name}`);
-        
+
         this.saveState();
         this.closeModal();
         this.showToast(`Plano atribuído a ${client.name}!`, 'success');
-        
+
         this.askNotificationMethod(clientId, 'Novo Plano de Treino (' + plan.name + ')');
     }
 
     showLoadPredefinedPlanModal() {
         const plans = Object.entries(this.state.predefinedPlans || {}).map(([id, plan]) => ({ id, ...plan }));
-        
+
         if (plans.length === 0) {
             return alert('Ainda não criou nenhum plano modelo. Vá à aba "Planos Pré-Definidos" para criar um.');
         }
@@ -10353,9 +10353,9 @@ Equipa KandalGym`;
     loadPredefinedPlanIntoEditor(planId) {
         const plan = this.state.predefinedPlans[planId];
         if (!plan) return;
-        
+
         if (!confirm(`Deseja carregar o modelo "${plan.name}"? Isto substituirá o treino que está a editar.`)) return;
-        
+
         this.editingPlan = JSON.parse(JSON.stringify(plan.days));
         this.editingDayIdx = 0;
         this.closeModal();
@@ -10384,10 +10384,10 @@ Equipa KandalGym`;
                         <p style="color:var(--text-muted);">Ainda não existem receitas.</p>
                     </div>
                 ` : recipes.map(recipe => {
-                    const videoId = this.extractYoutubeId(recipe.videoUrl);
-                    const thumb = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : null;
-                    
-                    return `
+            const videoId = this.extractYoutubeId(recipe.videoUrl);
+            const thumb = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : null;
+
+            return `
                     <div class="glass-card animate-scale-in" style="overflow:hidden; display:flex; flex-direction:column; height:100%; border-top: 3px solid var(--primary);">
                         ${thumb ? `
                             <div style="width:100%; height:${isMobile ? '100px' : '140px'}; background:url('${thumb}') center/cover; position:relative;">
@@ -10616,7 +10616,7 @@ Equipa KandalGym`;
     saveRecipe() {
         const data = this.editingRecipeData;
         if (!data.name.trim()) return alert('Por favor, dê um nome à receita.');
-        
+
         const id = this.editingRecipeId || Date.now().toString();
         const newRecipe = {
             id,
@@ -10687,9 +10687,9 @@ Equipa KandalGym`;
 
         const mealIdx = this.currentMealIdxForRecipe;
         const macros = this.calculateRecipeMacros(recipe);
-        
+
         let textToAdd = `\n--- RECEITA: ${recipe.name.toUpperCase()} ---\n`;
-        
+
         if (macros.kcal > 0) {
             textToAdd += `(Valores: ${Math.round(macros.kcal)}kcal | ${Math.round(macros.prot)}g P | ${Math.round(macros.carb)}g C | ${Math.round(macros.fat)}g G)\n\n`;
         }
@@ -10712,12 +10712,12 @@ Equipa KandalGym`;
         if (recipe.videoUrl) {
             textToAdd += `\nVídeo Tutorial: ${recipe.videoUrl}\n`;
         }
-        
+
         textToAdd += `----------------------------\n`;
 
         const currentItems = this.editingMeal.meals[mealIdx].items || '';
         this.editingMeal.meals[mealIdx].items = (currentItems.trim() ? currentItems.trim() + '\n' + textToAdd : textToAdd).trim();
-        
+
         this.closeModal();
         this.renderMealEditor();
         this.showToast(`Receita "${recipe.name}" adicionada!`);
@@ -10729,19 +10729,19 @@ Equipa KandalGym`;
 
         recipe.ingredients.forEach(ing => {
             if (!ing.amount) return;
-            
+
             // Tenta extrair numero e unidade do texto de dosagem (ex: "100g" ou "2 un")
             const match = ing.amount.match(/(\d+(?:\.\d+)?)\s*(g|ml|l|un|c\. sopa|c\. sobremesa|c\. cafe|fatia(?:\(s\))?|chavena|copo)/i);
             if (match) {
                 const qty = parseFloat(match[1]);
                 const unit = match[2].toLowerCase();
-                
+
                 const food = this.state.foods.find(f => f.id == ing.id || f.name.toLowerCase() === ing.name.toLowerCase());
                 if (food) {
                     const unitWeights = { 'g': 1, 'ml': 1, 'l': 1000, 'un': food.portionWeight || 50, 'fatia(s)': 30, 'c. sopa': 15, 'c. sobremesa': 10, 'c. cafe': 5, 'chavena': 200, 'copo': 200 };
                     let weight = unitWeights[unit] || (unit.includes('fatia') ? 30 : 1);
                     const multiplier = (weight * qty) / 100;
-                    
+
                     total.kcal += (food.kcal || 0) * multiplier;
                     total.prot += (food.protein || 0) * multiplier;
                     total.carb += (food.carbs || 0) * multiplier;
