@@ -9365,7 +9365,7 @@ Equipa KandalGym`;
                                         ${this.isClassFinished(c) ?
                     `<span class="badge badge-error">Finalizada</span>` :
                     `<span class="badge ${totalCount >= (c.capacity || 20) ? 'badge-purple' : 'badge-green'}">
-                                                ${participants.length}${trials.length > 0 ? `<span style="color:#ffaa00;">+${trials.length}</span>` : ''} / ${c.capacity || 20}
+                                                ${participants.length > 0 || trials.length === 0 ? participants.length : ''}${trials.length > 0 ? (participants.length > 0 ? `<span style="color:#ffaa00;">+${trials.length}</span>` : `<span style="color:#ffaa00;">${trials.length}exp</span>`) : ''} / ${c.capacity || 20}
                                             </span>`
                 }
                                     </td>
@@ -9423,7 +9423,7 @@ Equipa KandalGym`;
                         <div class="glass-card" style="display:flex; flex-direction:column; padding:0.8rem;">
                             <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:0.4rem;">
                                 <span style="font-size:1rem; font-weight:800; color:var(--primary);">${c.time}</span>
-                                <div class="badge badge-blue" style="font-size:0.6rem; padding:0.1rem 0.4rem;">${totalCount} Alunos${trials.length > 0 ? ` <span style="color:#ffaa00;">+${trials.length}exp</span>` : ''}</div>
+                                <div class="badge badge-blue" style="font-size:0.6rem; padding:0.1rem 0.4rem;">${participants.length > 0 || trials.length === 0 ? participants.length : ''}${trials.length > 0 ? (participants.length > 0 ? `<span style="color:#ffaa00;">+${trials.length}exp</span>` : `<span style="color:#ffaa00;">${trials.length}exp</span>`) : ''} Alunos</div>
                             </div>
                             <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:0.2rem;">
                                 <i class="fas fa-calendar-alt"></i> ${this.formatFullDate(c.day, c.date)}
