@@ -7753,6 +7753,7 @@ Equipa KandalGym`;
                         
                         <div style="display: grid; gap: 10px;">
                             <input type="text" id="casual-name" placeholder="Nome do Cliente" class="qr-input-sleek">
+                            <input type="tel" id="casual-phone" placeholder="Contacto (ex: 912 345 678)" class="qr-input-sleek">
                             <div style="display: flex; gap: 8px;">
                                 <select id="casual-type" class="qr-input-sleek" style="flex: 2; height: 42px;">
                                     <option value="Semanal">🗓️ Semanal (7 Dias)</option>
@@ -8132,10 +8133,12 @@ Equipa KandalGym`;
     createCasualPass() {
         const nameEl = document.getElementById('casual-name');
         const typeEl = document.getElementById('casual-type');
+        const phoneEl = document.getElementById('casual-phone');
         if (!nameEl || !typeEl) return;
 
         const name = nameEl.value.trim();
         const type = typeEl.value;
+        const phone = phoneEl ? phoneEl.value.trim() : '';
 
         if (!name) return alert('Por favor, insira o nome do cliente.');
 
@@ -8167,7 +8170,7 @@ Equipa KandalGym`;
             id: qrId,
             clientId: 0, // 0 indica cliente avulso sem conta na app
             nome: `AVULSO: ${name}`,
-            tel: "Visitante",
+            tel: phone || 'Visitante',
             ativo: true,
             ent: credits,
             plano: type,
@@ -8177,6 +8180,8 @@ Equipa KandalGym`;
 
         this.saveState();
         this.refreshQRTableUI();
+        nameEl.value = '';
+        if (phoneEl) phoneEl.value = '';
         this.showToast(`Passe ${type} criado para ${name}! Código: ${qrId}`);
     }
 
