@@ -1303,8 +1303,8 @@ Equipa KandalGym`;
             `---------------------------------------------\n` +
             `Olá *${name}*, a sua conta de *${label}* foi criada!\n` +
             `*CREDENCIAIS DE ACESSO:*\n` +
-            `*Email:* \${email}\\n` +
-            `*Password:* \${pass}\\n` +
+            `*Email:* ${email}\n` +
+            `*Password:* ${pass}\n` +
             `*AVISO:* Altere a sua password no menu "Perfil" após o primeiro acesso.\n\n` +
             `_A App está em fase de teste, mas já pode usar a marcação de aulas, os planos de treino e muito mais._\n` +
             `*Acesso:* https://kandalspahealthclub.github.io/KandalGym/\n` +
