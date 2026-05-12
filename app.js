@@ -675,7 +675,7 @@ class FitnessApp {
                     </div>
                     <div class="input-icon-group">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="login-pass" placeholder="Palavra-passe" required>
+                        <input type="password" id="login-pass" placeholder="Password" required>
                     </div>
 
                     <div style="display:flex; align-items:center; gap:8px; margin:0.2rem 0 1.2rem 4px; cursor:pointer;">
@@ -1291,7 +1291,7 @@ Poderá aceder a plataforma através do seguinte endereço: https://kandalspahea
 
 *As suas credenciais de acesso são:*
 - *Email:* ${email}
-- *Palavra-passe:* ${pass}
+- *Password:* ${pass}
 
 ⚠️ *IMPORTANTE:* Recomendamos que altere a sua palavra-passe para uma da sua preferência no menu "Perfil" após o primeiro acesso na aplicação.
 
@@ -1301,12 +1301,13 @@ Equipa KandalGym`;
 
         const whatsappText = `*Bem-vindo a KandalGym*\n` +
             `---------------------------------------------\n` +
-            `Olá *${name}*, a sua conta de *${label}* foi criada!\n\n` +
+            `Olá *${name}*, a sua conta de *${label}* foi criada!\n` +
             `*CREDENCIAIS DE ACESSO:*\n` +
-            `*Email:* \n\`${email}\`\n\n` +
-            `*Palavra-passe:* \n\`${pass}\`\n\n` +
-            `*Link de Acesso:* \nhttps://kandalspahealthclub.github.io/KandalGym/\n\n` +
-            `*AVISO:* Altere a sua palavra-passe no menu "Perfil" após o primeiro acesso.\n\n` +
+            `*Email:* \`${email}\`\n` +
+            `*Password:* \`${pass}\`\n` +
+            `*AVISO:* Altere a sua password no menu "Perfil" após o primeiro acesso.\n\n` +
+            `_A App está em fase de teste, mas já pode usar a marcação de aulas, os planos de treino e muito mais._\n` +
+            `*Acesso:* https://kandalspahealthclub.github.io/KandalGym/\n` +
             `Bons treinos!`;
 
         const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -1323,23 +1324,14 @@ Equipa KandalGym`;
                 <h2 style="margin-top: 0;">Conta Criada!</h2>
                 <p style="color: var(--text-muted); font-size: 0.9rem;">O utilizador <strong>${name}</strong> foi adicionado com sucesso ao sistema.</p>
                 
-                <div style="background: rgba(255,255,255,0.05); padding: 1.25rem; border-radius: 12px; margin: 1.5rem 0; text-align: left; font-size: 0.85rem;">
-                    <div style="margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
-                        <span><i class="fas fa-envelope" style="width: 20px; opacity: 0.6;"></i> <strong>Email:</strong> ${email}</span>
-                        <button class="btn-icon" onclick="navigator.clipboard.writeText('${email}'); app.showToast('Email copiado!');" style="background:rgba(255,255,255,0.1); width:28px; height:28px;" title="Copiar Email">
-                            <i class="fas fa-copy" style="font-size: 0.8rem;"></i>
-                        </button>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span><i class="fas fa-lock" style="width: 20px; opacity: 0.6;"></i> <strong>Senha:</strong> ${pass}</span>
-                        <button class="btn-icon" onclick="navigator.clipboard.writeText('${pass}'); app.showToast('Senha copiada!');" style="background:rgba(255,255,255,0.1); width:28px; height:28px;" title="Copiar Senha">
-                            <i class="fas fa-copy" style="font-size: 0.8rem;"></i>
-                        </button>
-                    </div>
+                <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; margin: 1.5rem 0; text-align: left; font-size: 0.85rem;">
+                    <div style="margin-bottom: 0.5rem;"><i class="fas fa-envelope" style="width: 20px;"></i> ${email}</div>
+                    <div style="margin-bottom: 0.5rem;"><i class="fas fa-phone" style="width: 20px;"></i> ${phone}</div>
+                    <div><i class="fas fa-lock" style="width: 20px;"></i> ${pass}</div>
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                    <a href="${whatsappLink}" target="_blank" class="btn" onclick="app.markInviteSent('${qrId}')" style="text-decoration: none; background: #25D366; color: white; font-weight: 600;">
+                    <a href="${whatsappLink}" target="_blank" class="btn" onclick="app.markInviteSent('${qrId}')" style="text-decoration: none; background: #25D366; color: white;">
                         <i class="fab fa-whatsapp"></i> Enviar por WhatsApp
                     </a>
                     <a href="${mailtoLink}" class="btn btn-secondary" onclick="app.markInviteSent('${qrId}')" style="text-decoration: none;">
@@ -1351,7 +1343,7 @@ Equipa KandalGym`;
                 </div>
                 
                 <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 1.5rem;">
-                    * Escolha o método de envio acima para partilhar as credenciais com o utilizador.
+                    * Escolha o metodo de envio acima para partilhar as credenciais com o utilizador.
                 </p>
             </div>
         `;
@@ -2044,7 +2036,7 @@ Equipa KandalGym`;
                 </div>
                 
                 <div style="margin-top: 1.5rem; background: rgba(255,193,7,0.1); border-left: 4px solid #ffc107; padding: 0.8rem; font-size: 0.8rem;">
-                    <i class="fas fa-info-circle"></i> <strong>Nota:</strong> O sistema irá gerar emails automáticos (ex: 912345678@kandalgym.pt) e definir a palavra-passe padrão: <strong>Kandal123</strong>.
+                    <i class="fas fa-info-circle"></i> <strong>Nota:</strong> O sistema irá gerar emails automáticos (ex: 912345678@kandalgym.pt) e definir a password padrão: <strong>Kandal123</strong>.
                 </div>
 
                 <div id="bulk-import-cancel" style="margin-top: 1.5rem; text-align: center;">
@@ -6757,7 +6749,7 @@ Equipa KandalGym`;
     }
 
     resetPass(type, id, name) {
-        const newPass = prompt(`Nova palavra-passe para ${name}: `, "123");
+        const newPass = prompt(`Nova password para ${name}: `, "123");
         if (newPass) {
             let list = this.state.clients;
             if (type === 'teacher') list = this.state.teachers;
