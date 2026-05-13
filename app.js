@@ -1796,6 +1796,59 @@ Equipa KandalGym`;
         `;
     }
 
+    getCurrentPeopleInGymHTML() {
+        const qrClientsArray = Array.isArray(this.state.qrClients) ? this.state.qrClients : Object.values(this.state.qrClients || {});
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const todayEnd = new Date();
+        todayEnd.setHours(23, 59, 59, 999);
+
+        const peopleInGym = [];
+        qrClientsArray.forEach(c => {
+            if (c.histórico) {
+                const histArray = Array.isArray(c.histórico) ? c.histórico : Object.values(c.histórico);
+                const sortedHist = histArray.map(h => ({
+                    d: new Date(typeof h === 'string' ? h : h.d),
+                    t: typeof h === 'string' ? 'in' : h.t
+                })).sort((a, b) => b.d - a.d);
+
+                const lastMoveToday = sortedHist.find(h => h.d >= todayStart && h.d <= todayEnd);
+                if (lastMoveToday && lastMoveToday.t === 'in') {
+                    peopleInGym.push({
+                        name: c.nome,
+                        time: lastMoveToday.d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        photo: c.photoUrl || null,
+                        id: c.clientId || c.id
+                    });
+                }
+            }
+        });
+
+        if (peopleInGym.length === 0) {
+            return `
+                <div style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.9rem;">
+                    <i class="fas fa-door-closed" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.3;"></i>
+                    Não existem pessoas no ginásio neste momento.
+                </div>
+            `;
+        }
+
+        return peopleInGym.map(p => `
+            <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; background: rgba(99, 102, 241, 0.05); border-left: 3px solid var(--primary);">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="width: 35px; height: 35px; border-radius: 50%; overflow: hidden; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;">
+                        ${p.photo ? `<img src="${p.photo}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i class="fas fa-user" style="font-size: 0.8rem; color: var(--text-muted);"></i>`}
+                    </div>
+                    <div>
+                        <strong>${p.name}</strong>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Entrou às ${p.time}</div>
+                    </div>
+                </div>
+                <button class="btn btn-ghost btn-sm" onclick="app.spyClient(${p.id})"><i class="fas fa-eye"></i></button>
+            </div>
+        `).join('');
+    }
+
     normalizeYoutubeUrl(url) {
         if (!url) return { embedUrl: '', videoId: '', thumbUrl: '' };
         let videoId = '';
@@ -1865,22 +1918,10 @@ Equipa KandalGym`;
                     <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
                         <div class="glass-panel" style="padding: 1.5rem;">
                             <h3 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">
-                                <i class="fas fa-user-tie"></i> Equipa de Professores
+                                <i class="fas fa-walking"></i> No Ginásio Agora
                             </h3>
                             <div class="client-list">
-                                ${this.state.teachers.map(t => `
-                                    <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; background: rgba(99, 102, 241, 0.05);">
-                                        <div>
-                                            <strong>${t.name}</strong>
-                                            <div style="font-size: 0.8rem; color: var(--text-muted);">${t.email}</div>
-                                        </div>
-                                        <div style="display:flex; gap:0.5rem;">
-                                            <button class="btn btn-ghost btn-sm" style="color:var(--primary);" onclick="app.showEditUserModal('teacher', ${t.id})" title="Editar"><i class="fas fa-edit"></i></button>
-                                            <button class="btn btn-ghost btn-sm" onclick="app.setView('users')">Gerir <i class="fas fa-chevron-right"></i></button>
-                                        </div>
-
-                                    </div>
-                                `).join('')}
+                                ${this.getCurrentPeopleInGymHTML()}
                             </div>
                         </div>
 
@@ -9423,7 +9464,10 @@ Equipa KandalGym`;
                         <div class="glass-card" style="display:flex; flex-direction:column; padding:0.8rem;">
                             <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:0.4rem;">
                                 <span style="font-size:1rem; font-weight:800; color:var(--primary);">${c.time}</span>
-                                <div class="badge badge-blue" style="font-size:0.6rem; padding:0.1rem 0.4rem;">${participants.length > 0 || trials.length === 0 ? participants.length : ''}${trials.length > 0 ? (participants.length > 0 ? `<span style="color:#ffaa00;">+${trials.length}exp</span>` : `<span style="color:#ffaa00;">${trials.length}exp</span>`) : ''} Alunos</div>
+                                <div style="display:flex; gap:4px; align-items:center;">
+                                    ${trials.length > 0 ? `<div class="badge" style="background:rgba(255,165,0,0.15); color:#ffaa00; border:1px solid rgba(255,165,0,0.4); font-size:0.6rem; padding:0.1rem 0.4rem;">${trials.length} exp</div>` : ''}
+                                    ${participants.length > 0 || trials.length === 0 ? `<div class="badge badge-blue" style="font-size:0.6rem; padding:0.1rem 0.4rem;">${participants.length} alunos</div>` : ''}
+                                </div>
                             </div>
                             <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:0.2rem;">
                                 <i class="fas fa-calendar-alt"></i> ${this.formatFullDate(c.day, c.date)}
