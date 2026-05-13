@@ -1833,20 +1833,27 @@ Equipa KandalGym`;
             `;
         }
 
-        return peopleInGym.map(p => `
-            <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; background: rgba(99, 102, 241, 0.05); border-left: 3px solid var(--primary);">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <div style="width: 35px; height: 35px; border-radius: 50%; overflow: hidden; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;">
-                        ${p.photo ? `<img src="${p.photo}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i class="fas fa-user" style="font-size: 0.8rem; color: var(--text-muted);"></i>`}
+        // DESIGN MAIS COMPACTO COM GRID E SCROLL
+        return `
+            <div style="max-height: 350px; overflow-y: auto; padding-right: 5px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.75rem;">
+                ${peopleInGym.map(p => `
+                    <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(255,255,255,0.03); border-left: 3px solid var(--primary); margin: 0; transition: transform 0.2s ease;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; min-width: 0; flex: 1;">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: rgba(255,255,255,0.05); flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1);">
+                                ${p.photo ? `<img src="${p.photo}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i class="fas fa-user" style="font-size: 0.8rem; color: var(--text-muted);"></i>`}
+                            </div>
+                            <div style="min-width: 0;">
+                                <div style="font-size: 0.85rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff;">${p.name}</div>
+                                <div style="font-size: 0.7rem; color: var(--primary); opacity: 0.8; font-weight: 600;">Desde as ${p.time}</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-ghost btn-sm" style="padding: 5px; min-width: 30px; height: 30px;" onclick="app.spyClient(${p.id})" title="Ver Perfil">
+                            <i class="fas fa-arrow-right" style="font-size: 0.75rem;"></i>
+                        </button>
                     </div>
-                    <div>
-                        <strong>${p.name}</strong>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">Entrou às ${p.time}</div>
-                    </div>
-                </div>
-                <button class="btn btn-ghost btn-sm" onclick="app.spyClient(${p.id})"><i class="fas fa-eye"></i></button>
+                `).join('')}
             </div>
-        `).join('');
+        `;
     }
 
     normalizeYoutubeUrl(url) {
@@ -1917,12 +1924,10 @@ Equipa KandalGym`;
 
                     <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
                         <div class="glass-panel" style="padding: 1.5rem;">
-                            <h3 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">
+                            <h3 style="margin-top: 0; color: var(--primary); display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
                                 <i class="fas fa-walking"></i> No Ginásio Agora
                             </h3>
-                            <div class="client-list">
-                                ${this.getCurrentPeopleInGymHTML()}
-                            </div>
+                            ${this.getCurrentPeopleInGymHTML()}
                         </div>
 
                         <div class="glass-panel" style="padding: 1.5rem;">
