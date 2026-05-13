@@ -1816,6 +1816,7 @@ Equipa KandalGym`;
                 if (lastMoveToday && lastMoveToday.t === 'in') {
                     peopleInGym.push({
                         name: c.nome,
+                        shortId: c.id,
                         time: lastMoveToday.d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                         photo: c.photoUrl || null,
                         id: c.clientId || c.id
@@ -1843,7 +1844,9 @@ Equipa KandalGym`;
                                 ${p.photo ? `<img src="${p.photo}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i class="fas fa-user" style="font-size: 0.8rem; color: var(--text-muted);"></i>`}
                             </div>
                             <div style="min-width: 0;">
-                                <div style="font-size: 0.85rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff;">${p.name}</div>
+                                <div style="font-size: 0.85rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff;">
+                                    <span style="color: var(--accent); font-size: 0.7rem; opacity: 0.9; margin-right: 2px;">${p.shortId}</span> ${p.name}
+                                </div>
                                 <div style="font-size: 0.7rem; color: var(--primary); opacity: 0.8; font-weight: 600;">Desde as ${p.time}</div>
                             </div>
                         </div>
@@ -9146,16 +9149,17 @@ Equipa KandalGym`;
     // --- CLASSES & SCHEDULING ---
 
     async checkFinishedClasses() {
+        // SEGURANÇA: Apenas Admins ou Professores devem realizar a manutenção do horário.
+        // Isto evita que clientes com relógios desajustados arquivem aulas prematuramente para todos.
+        if (this.role !== 'admin' && this.role !== 'teacher') return;
+
         // SEGURANÇA: Garantir que o estado existe e temos dados carregados
         if (!this.state || !this.state.classes || !this.hasLoadedData || this.isCheckingClasses) return;
-
-        // Se for cliente, podemos correr a manutenção mas de forma silenciosa e facultativa
-        // Staff corre prioritariamente.
 
         this.isCheckingClasses = true;
         try {
             const now = new Date();
-            const gracePeriod = 70 * 60 * 1000; // 1h aula + 10m tolerância
+            const gracePeriod = 180 * 60 * 1000; // 3h de tolerância após o início (evita limpar listas durante a aula ou logo a seguir)
 
             // IMPORTANTE: Firebase RTDB pode converter arrays com buracos em objetos. 
             // Converter sempre para array para iterar com segurança.
