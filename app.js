@@ -1847,7 +1847,7 @@ Equipa KandalGym`;
                                 <div style="font-size: 0.7rem; color: var(--primary); opacity: 0.8; font-weight: 600;">Desde as ${p.time}</div>
                             </div>
                         </div>
-                        <button class="btn btn-ghost btn-sm" style="padding: 5px; min-width: 30px; height: 30px;" onclick="app.spyClient(${p.id})" title="Ver Perfil">
+                        <button class="btn btn-ghost btn-sm" style="padding: 5px; min-width: 30px; height: 30px;" onclick="app.setView('qr_manager')" title="Ver Entradas">
                             <i class="fas fa-arrow-right" style="font-size: 0.75rem;"></i>
                         </button>
                     </div>
