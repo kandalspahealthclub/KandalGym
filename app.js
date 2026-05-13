@@ -1,20 +1,32 @@
-// Tratador de Erros Global - Deve ser o primeiro a carregar
 window.onerror = function (message, source, lineno, colno, error) {
     console.error("Erro detectado:", message, "em", source, ":", lineno);
-    const container = document.getElementById('main-content');
-    if (container && (container.innerHTML === '' || container.innerText.length < 50)) {
+    
+    // Se o erro for "Script error." com linha 0, é um erro de CORS ou falha de carregamento de CDN
+    let diagnosticMsg = "A página não conseguiu carregar corretamente ou um componente externo falhou.";
+    if (message === "Script error." && lineno === 0) {
+        diagnosticMsg = "Erro de carregamento (CORS/CDN). Verifique a sua ligação à internet ou tente limpar a cache do navegador.";
+    }
+
+    const container = document.getElementById('main-content') || document.body;
+    // Só mostramos o ecrã de erro se a página estiver em branco ou for um erro crítico inicial
+    if (container && (container.innerHTML === '' || container.innerText.length < 100 || container.querySelector('.loader'))) {
         container.innerHTML = `
-            <div class="glass-card" style="margin:2rem; padding:2rem; border:2px solid var(--danger); text-align:center;">
-                <i class="fas fa-exclamation-circle" style="font-size:3rem; color:var(--danger); margin-bottom:1rem;"></i>
-                <h2 style="color:#fff;">Ocorreu um erro na aplicação</h2>
-                <p style="color:var(--text-muted);">A página não conseguiu carregar corretamente.</p>
-                <div style="background:rgba(0,0,0,0.3); padding:1rem; border-radius:8px; margin:1rem 0; text-align:left; font-family:monospace; font-size:0.75rem; color:var(--danger); overflow-x:auto;">
+            <div class="glass-card" style="margin:2rem auto; padding:2rem; border:2px solid var(--danger); text-align:center; max-width:600px;">
+                <i class="fas fa-exclamation-triangle" style="font-size:3rem; color:var(--danger); margin-bottom:1rem;"></i>
+                <h2 style="color:#fff;">Erro de Carregamento</h2>
+                <p style="color:var(--text-muted);">${diagnosticMsg}</p>
+                <div style="background:rgba(0,0,0,0.3); padding:1rem; border-radius:8px; margin:1.5rem 0; text-align:left; font-family:monospace; font-size:0.75rem; color:var(--danger); overflow-x:auto; border:1px solid rgba(239, 68, 68, 0.2);">
+                    <strong>Detalhes Técnicos:</strong><br>
                     Erro: ${message}<br>
-                    Arquivo: ${source}<br>
+                    Arquivo: ${source || 'N/A'}<br>
                     Linha: ${lineno} | Col: ${colno}<br>
-                    ${error ? `Detalhes: ${error.stack}` : ''}
+                    ${error ? `Pilha: ${error.stack.substring(0, 200)}...` : ''}
                 </div>
-                <button class="btn btn-primary" onclick="localStorage.removeItem('kandalgym_session'); location.reload()">Reset & Recarregar</button>
+                <div style="display:grid; gap:10px;">
+                    <button class="btn btn-primary" onclick="localStorage.removeItem('kandalgym_session'); localStorage.removeItem('kandalgym_state'); localStorage.removeItem('kg_v'); location.reload()">Reset & Recarregar (Recomendado)</button>
+                    <button class="btn btn-secondary" onclick="location.reload()">Tentar Novamente</button>
+                </div>
+                <p style="font-size:0.7rem; color:var(--text-muted); margin-top:1.5rem;">Dica: Se o erro persistir, tente abrir o link em modo anónimo ou limpe a cache do navegador.</p>
             </div>
         `;
     }
