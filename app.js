@@ -1,15 +1,20 @@
 window.onerror = function (message, source, lineno, colno, error) {
     console.error("Erro detectado:", message, "em", source, ":", lineno);
     
-    // Se o erro for "Script error." com linha 0, é um erro de CORS ou falha de carregamento de CDN
-    let diagnosticMsg = "A página não conseguiu carregar corretamente ou um componente externo falhou.";
+    // Se o erro for "Script error." com linha 0, é geralmente um erro de CORS ou falha de carregamento de CDN
+    // Muitos adblockers ou extensões podem causar isto em scripts não críticos.
     if (message === "Script error." && lineno === 0) {
-        diagnosticMsg = "Erro de carregamento (CORS/CDN). Verifique a sua ligação à internet ou tente limpar a cache do navegador.";
+        console.warn("Aviso: Falha ao carregar um script externo (CORS/CDN). A app tentará continuar.");
+        return false; // Não interrompe a execução nem mostra ecrã de erro fatal
     }
 
+    const diagnosticMsg = "Ocorreu um erro inesperado. Tente recarregar a página.";
     const container = document.getElementById('main-content') || document.body;
-    // Só mostramos o ecrã de erro se a página estiver em branco ou for um erro crítico inicial
-    if (container && (container.innerHTML === '' || container.innerText.length < 100 || container.querySelector('.loader'))) {
+
+    // Só mostramos o ecrã de erro fatal se for um erro crítico inicial que impeça o carregamento
+    // e se o erro NÃO for um simples "Script error"
+    if (container && (container.innerHTML === '' || container.querySelector('.loader'))) {
+        // Se chegarmos aqui, algo falhou mesmo no arranque
         container.innerHTML = `
             <div class="glass-card" style="margin:2rem auto; padding:2rem; border:2px solid var(--danger); text-align:center; max-width:600px;">
                 <i class="fas fa-exclamation-triangle" style="font-size:3rem; color:var(--danger); margin-bottom:1rem;"></i>
@@ -19,14 +24,12 @@ window.onerror = function (message, source, lineno, colno, error) {
                     <strong>Detalhes Técnicos:</strong><br>
                     Erro: ${message}<br>
                     Arquivo: ${source || 'N/A'}<br>
-                    Linha: ${lineno} | Col: ${colno}<br>
-                    ${error ? `Pilha: ${error.stack.substring(0, 200)}...` : ''}
+                    Linha: ${lineno} | Col: ${colno}
                 </div>
                 <div style="display:grid; gap:10px;">
-                    <button class="btn btn-primary" onclick="localStorage.removeItem('kandalgym_session'); localStorage.removeItem('kandalgym_state'); localStorage.removeItem('kg_v'); location.reload()">Reset & Recarregar (Recomendado)</button>
-                    <button class="btn btn-secondary" onclick="location.reload()">Tentar Novamente</button>
+                    <button class="btn btn-primary" onclick="location.reload()">Recarregar Página</button>
+                    <button class="btn btn-secondary" onclick="localStorage.removeItem('kandalgym_session'); location.reload()">Limpar Sessão & Reset</button>
                 </div>
-                <p style="font-size:0.7rem; color:var(--text-muted); margin-top:1.5rem;">Dica: Se o erro persistir, tente abrir o link em modo anónimo ou limpe a cache do navegador.</p>
             </div>
         `;
     }
@@ -141,6 +144,14 @@ class FitnessApp {
         } else {
             this.renderAppInterface();
         }
+
+        // Failsafe: Se após 5 segundos a app não tiver renderizado nada além do loader, avisar
+        setTimeout(() => {
+            const container = document.getElementById('main-content');
+            if (container && container.querySelector('.loader') && !this.isLoggedIn) {
+                console.warn("Deteção de lentidão no carregamento inicial...");
+            }
+        }, 5000);
 
         // 2. Iniciar escuta do Firebase em segundo plano
         this.init();
