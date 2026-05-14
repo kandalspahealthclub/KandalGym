@@ -17,6 +17,7 @@
 
 :root {
     --primary: #911B2B;
+    --primary-rgb: 145, 27, 43;
     --primary-hover: #751421;
     --secondary: #5c0f1a;
     --accent: #c4a24d;

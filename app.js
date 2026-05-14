@@ -4888,10 +4888,11 @@ Equipa KandalGym`;
         return `
             <div class="exercise-grid">
                 ${exercises.map(ex => {
-                    const isSelected = this.selectedExerciseIds?.includes(ex.id);
+                    const exIdStr = String(ex.id);
+                    const isSelected = (this.selectedExerciseIds || []).some(id => String(id) === exIdStr);
                     return `
                         <div class="glass-card exercise-selection-card ${isSelected ? 'selected' : ''}" 
-                            onclick="app.toggleExerciseSelection('${ex.id}')"
+                            onclick="app.toggleExerciseSelection('${exIdStr}')"
                             style="${isSelected ? 'border: 2px solid var(--primary); background: rgba(var(--primary-rgb), 0.1) !important;' : ''}">
                             <div style="position:absolute; top:10px; right:10px; z-index:2;">
                                 <div style="width:24px; height:24px; border-radius:50%; border:2px solid ${isSelected ? 'var(--primary)' : 'rgba(255,255,255,0.2)'}; background:${isSelected ? 'var(--primary)' : 'rgba(0,0,0,0.3)'}; display:flex; align-items:center; justify-content:center;">
@@ -4927,11 +4928,13 @@ Equipa KandalGym`;
 
     toggleExerciseSelection(exId) {
         if (!this.selectedExerciseIds) this.selectedExerciseIds = [];
-        const index = this.selectedExerciseIds.indexOf(exId);
+        const sId = String(exId);
+        const index = this.selectedExerciseIds.findIndex(id => String(id) === sId);
+        
         if (index > -1) {
             this.selectedExerciseIds.splice(index, 1);
         } else {
-            this.selectedExerciseIds.push(exId);
+            this.selectedExerciseIds.push(sId);
         }
 
         // Atualizar grid para mostrar seleção
