@@ -3989,6 +3989,32 @@ Equipa KandalGym`;
         localStorage.removeItem('kandalgym_training_draft');
     }
 
+    savePredefinedDraft() {
+        if (this.activeView !== 'edit_predefined_plan') return;
+        const draftData = {
+            id: this.editingPredefinedId,
+            name: this.editingPredefinedName,
+            plan: this.editingPlan,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('kandalgym_predefined_draft', JSON.stringify(draftData));
+    }
+
+    clearPredefinedDraft() {
+        localStorage.removeItem('kandalgym_predefined_draft');
+    }
+
+    updatePredefinedExercise(dayIdx, exIdx, field, value) {
+        if (field === 'id') {
+            const libEx = this.state.exercises.find(x => x.id == value);
+            this.editingPlan[dayIdx].exercises[exIdx].id = value;
+            this.editingPlan[dayIdx].exercises[exIdx].name = libEx ? libEx.name : '';
+        } else {
+            this.editingPlan[dayIdx].exercises[exIdx][field] = value;
+        }
+        this.savePredefinedDraft();
+    }
+
     renderTrainingEditor() {
         const container = document.getElementById('main-content');
         if (!container) return;
@@ -10317,6 +10343,24 @@ Equipa KandalGym`;
     }
 
     startNewPredefinedPlan() {
+        // Verificar rascunho
+        const draft = localStorage.getItem('kandalgym_predefined_draft');
+        if (draft) {
+            const draftData = JSON.parse(draft);
+            if (!draftData.id) { // Rascunho de um NOVO plano
+                if (confirm('Detetamos um rascunho não guardado de um novo plano modelo. Deseja recuperá-lo?')) {
+                    this.editingPredefinedId = null;
+                    this.editingPlan = draftData.plan;
+                    this.editingPredefinedName = draftData.name || '';
+                    this.editingDayIdx = 0;
+                    this.setView('edit_predefined_plan');
+                    return;
+                } else {
+                    this.clearPredefinedDraft();
+                }
+            }
+        }
+
         this.editingPredefinedId = null;
         this.editingPlan = [{ title: 'Treino A', exercises: [] }];
         this.editingDayIdx = 0;
@@ -10325,6 +10369,24 @@ Equipa KandalGym`;
     }
 
     editPredefinedPlan(id) {
+        // Verificar rascunho
+        const draft = localStorage.getItem('kandalgym_predefined_draft');
+        if (draft) {
+            const draftData = JSON.parse(draft);
+            if (draftData.id === id) { // Rascunho DESTE plano
+                if (confirm('Detetamos um rascunho não guardado deste plano modelo. Deseja recuperá-lo?')) {
+                    this.editingPredefinedId = id;
+                    this.editingPlan = draftData.plan;
+                    this.editingPredefinedName = draftData.name || '';
+                    this.editingDayIdx = 0;
+                    this.setView('edit_predefined_plan');
+                    return;
+                } else {
+                    this.clearPredefinedDraft();
+                }
+            }
+        }
+
         const plan = this.state.predefinedPlans[id];
         if (!plan) return alert('Plano não encontrado.');
 
@@ -10365,7 +10427,7 @@ Equipa KandalGym`;
                 <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase; font-weight:700;">Nome do Plano</label>
                 <input type="text" id="edit-predefined-name" value="${this.editingPredefinedName || ''}" 
                     placeholder="Ex: Hipertrofia..."
-                    oninput="app.editingPredefinedName = this.value"
+                    oninput="app.editingPredefinedName = this.value; app.savePredefinedDraft()"
                     style="width:100%; max-width:500px; height:${isMobile ? '38px' : '45px'}; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 12px; font-size:${isMobile ? '0.95rem' : '1.1rem'}; font-weight:600;">
             </div>
 
@@ -10391,7 +10453,7 @@ Equipa KandalGym`;
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
                         <input type="text" value="${currentDay.title || 'Plano ' + String.fromCharCode(65 + this.editingDayIdx)}" 
                             placeholder="Nome do Plano..."
-                            oninput="app.editingPlan[${this.editingDayIdx}].title = this.value"
+                            oninput="app.editingPlan[${this.editingDayIdx}].title = this.value; app.savePredefinedDraft()"
                             onchange="app.renderPredefinedPlanEditor()"
                             style="font-weight:800; font-size:${isMobile ? '1.1rem' : '1.3rem'}; background:transparent; border:none; border-bottom:2px solid var(--primary); width:100%; max-width:250px; padding:4px 0; color:#fff; outline:none;">
                         
@@ -10399,7 +10461,7 @@ Equipa KandalGym`;
                             <div style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.05); padding:5px 12px; border-radius:10px;">
                                 <label style="font-size:0.7rem; color:var(--text-muted);">Descanso:</label>
                                 <input type="text" value="${currentDay.rest || ''}" placeholder="60s" 
-                                    onchange="app.editingPlan[${this.editingDayIdx}].rest = this.value"
+                                    onchange="app.editingPlan[${this.editingDayIdx}].rest = this.value; app.savePredefinedDraft()"
                                     style="width:50px; height:28px; background:rgba(0,0,0,0.3); color:var(--accent); border:1px solid rgba(var(--accent-rgb), 0.3); border-radius:6px; text-align:center; font-size:0.8rem;">
                             </div>
                             <button class="btn btn-ghost btn-sm" style="color:var(--danger); padding:4px;" onclick="app.removePredefinedTrainingDay(${this.editingDayIdx})">
@@ -10426,25 +10488,25 @@ Equipa KandalGym`;
                                     ${this.isCardioExercise(ex.id) ? `
                                         <div style="flex:1; min-width:120px;">
                                             <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Duração</label>
-                                            <input type="text" value="${ex.reps || ""}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].reps = this.value"
+                                            <input type="text" value="${ex.reps || ""}" onchange="app.updatePredefinedExercise(${this.editingDayIdx}, ${eIdx}, 'reps', this.value)"
                                                 style="width:100%; height:32px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--primary); border-radius:6px; text-align:center; font-size:0.85rem; font-weight:700;">
                                         </div>
                                     ` : `
                                         <div style="width:${isMobile ? '50px' : '80px'};">
                                             <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Sets</label>
-                                            <input type="text" value="${ex.sets || ""}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].sets = this.value"
+                                            <input type="text" value="${ex.sets || ""}" onchange="app.updatePredefinedExercise(${this.editingDayIdx}, ${eIdx}, 'sets', this.value)"
                                                 style="width:100%; height:32px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:6px; text-align:center; font-size:0.85rem;">
                                         </div>
                                         <div style="width:${isMobile ? '60px' : '100px'};">
                                             <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Reps</label>
-                                            <input type="text" value="${ex.reps || ""}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].reps = this.value"
+                                            <input type="text" value="${ex.reps || ""}" onchange="app.updatePredefinedExercise(${this.editingDayIdx}, ${eIdx}, 'reps', this.value)"
                                                 style="width:100%; height:32px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid var(--primary); border-radius:6px; text-align:center; font-size:0.85rem; font-weight:700;">
                                         </div>
                                     `}
                                     <div style="flex:1; min-width:${isMobile ? '100px' : '150px'};">
                                         <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Obs</label>
-                                        <input type="text" value="${ex.observations || ""}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].observations = this.value"
-                                            style="width:100%; height:32px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:0 8px; font-size:0.85rem;">
+                                        <input type="text" value="${ex.observations || ""}" onchange="app.updatePredefinedExercise(${this.editingDayIdx}, ${eIdx}, 'observations', this.value)"
+                                            style="width:100%; height:32px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:6px; padding:0 8px; font-size:0.85rem;">
                                     </div>
                                 </div>
                             </div>
@@ -10461,13 +10523,15 @@ Equipa KandalGym`;
 
     cancelPredefinedPlan() {
         if (confirm('Deseja cancelar a edição? Todas as alterações não guardadas serão perdidas.')) {
+            this.clearPredefinedDraft();
             this.setView('predefined_plans');
         }
     }
 
     addPredefinedTrainingDay() {
-        this.editingPlan.push({ title: '', exercises: [] });
+        this.editingPlan.push({ title: 'Novo Plano', exercises: [] });
         this.editingDayIdx = this.editingPlan.length - 1;
+        this.savePredefinedDraft();
         this.renderPredefinedPlanEditor();
     }
 
@@ -10476,18 +10540,23 @@ Equipa KandalGym`;
         if (confirm('Remover este dia do modelo?')) {
             this.editingPlan.splice(idx, 1);
             this.editingDayIdx = Math.max(0, idx - 1);
+            this.savePredefinedDraft();
             this.renderPredefinedPlanEditor();
         }
     }
 
     addExerciseToPredefinedEditor(dayIdx) {
         this.editingPlan[dayIdx].exercises.push({ id: '', name: '', sets: '', reps: '', observations: '' });
+        this.savePredefinedDraft();
         this.renderPredefinedPlanEditor();
     }
 
     removePredefinedExercise(dayIdx, exIdx) {
-        this.editingPlan[dayIdx].exercises.splice(exIdx, 1);
-        this.renderPredefinedPlanEditor();
+        if (confirm('Remover este exercício?')) {
+            this.editingPlan[dayIdx].exercises.splice(exIdx, 1);
+            this.savePredefinedDraft();
+            this.renderPredefinedPlanEditor();
+        }
     }
 
     movePredefinedExercise(dayIdx, exIdx, dir) {
@@ -10495,6 +10564,7 @@ Equipa KandalGym`;
         const target = exIdx + dir;
         if (target >= 0 && target < exs.length) {
             [exs[exIdx], exs[target]] = [exs[target], exs[exIdx]];
+            this.savePredefinedDraft();
             this.renderPredefinedPlanEditor();
         }
     }
@@ -10508,7 +10578,7 @@ Equipa KandalGym`;
             exercises: day.exercises.filter(ex => ex.id)
         })).filter(day => day.exercises.length > 0 || this.editingPlan.length === 1);
 
-        const id = this.editingPredefinedId || Date.now().toString();
+        const id = this.editingPredefinedId || 'pre_' + Date.now();
 
         this.state.predefinedPlans[id] = {
             name: name,
@@ -10517,6 +10587,7 @@ Equipa KandalGym`;
         };
 
         this.saveState();
+        this.clearPredefinedDraft();
         this.setView('predefined_plans');
         this.showToast('Plano modelo guardado com sucesso!', 'success');
     }
