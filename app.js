@@ -282,9 +282,11 @@ class FitnessApp {
 
     isCardioExercise(exId) {
         if (!exId) return false;
-        const libEx = this.state.exercises.find(le => le.id === exId);
+        const libEx = this.state.exercises.find(le => le.id == exId);
         if (!libEx) return false;
-        return this.normalizeText(libEx.category) === 'cardio';
+        const cat = this.normalizeText(libEx.category);
+        const name = this.normalizeText(libEx.name);
+        return cat === 'cardio' || cat === 'aerobico' || name.includes('passadeira') || name.includes('elitica') || name.includes('bicicleta') || name.includes('remo') || name.includes('corrida') || name.includes('caminhada') || name.includes('escada');
     }
 
 
@@ -10414,16 +10416,24 @@ Equipa KandalGym`;
                                     </div>
                                 </div>
                                 <div style="display:flex; flex-wrap:wrap; gap:${isMobile ? '5px' : '10px'};">
-                                    <div style="width:${isMobile ? '50px' : '80px'};">
-                                        <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Sets</label>
-                                        <input type="text" value="${ex.sets || ""}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].sets = this.value"
-                                            style="width:100%; height:32px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:6px; text-align:center; font-size:0.85rem;">
-                                    </div>
-                                    <div style="width:${isMobile ? '60px' : '100px'};">
-                                        <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Reps</label>
-                                        <input type="text" value="${ex.reps || ""}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].reps = this.value"
-                                            style="width:100%; height:32px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid var(--primary); border-radius:6px; text-align:center; font-size:0.85rem;">
-                                    </div>
+                                    ${this.isCardioExercise(ex.id) ? `
+                                        <div style="flex:1; min-width:120px;">
+                                            <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Duração</label>
+                                            <input type="text" value="${ex.reps || ""}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].reps = this.value"
+                                                style="width:100%; height:32px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--primary); border-radius:6px; text-align:center; font-size:0.85rem; font-weight:700;">
+                                        </div>
+                                    ` : `
+                                        <div style="width:${isMobile ? '50px' : '80px'};">
+                                            <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Sets</label>
+                                            <input type="text" value="${ex.sets || ""}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].sets = this.value"
+                                                style="width:100%; height:32px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:6px; text-align:center; font-size:0.85rem;">
+                                        </div>
+                                        <div style="width:${isMobile ? '60px' : '100px'};">
+                                            <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Reps</label>
+                                            <input type="text" value="${ex.reps || ""}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].reps = this.value"
+                                                style="width:100%; height:32px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid var(--primary); border-radius:6px; text-align:center; font-size:0.85rem; font-weight:700;">
+                                        </div>
+                                    `}
                                     <div style="flex:1; min-width:${isMobile ? '100px' : '150px'};">
                                         <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Obs</label>
                                         <input type="text" value="${ex.observations || ""}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].observations = this.value"
