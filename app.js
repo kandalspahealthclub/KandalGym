@@ -4837,11 +4837,24 @@ Equipa KandalGym`;
                 <div id="exercise-grid-container" style="overflow-y:auto; flex:1; padding-right:5px;">
                     ${this.renderExerciseGrid()}
                 </div>
+
+                <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                    <div id="selection-count-badge" style="color:var(--text-muted); font-size:0.9rem; font-weight:600;">
+                        0 exercícios selecionados
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
+                        <button class="btn btn-primary" id="confirm-multi-select-btn" onclick="app.confirmMultiExerciseSelection()" disabled style="opacity:0.5; padding:0 30px;">
+                            <i class="fas fa-plus"></i> Adicionar ao Plano
+                        </button>
+                    </div>
+                </div>
             </div>
         `;
 
         document.body.appendChild(modal);
         this.currentSelectionState = { dayIdx, exIdx };
+        this.selectedExerciseIds = []; // Limpar seleção ao abrir
     }
 
     renderExerciseGrid(searchQuery = '', categoryFilter = '') {
@@ -4874,23 +4887,33 @@ Equipa KandalGym`;
 
         return `
             <div class="exercise-grid">
-                ${exercises.map(ex => `
-                    <div class="glass-card exercise-selection-card" onclick="app.selectExerciseFromModal('${ex.id}')">
-                        <div class="image-container">
-                            ${ex.photoUrl ? `<img src="${ex.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : `
-                                <div style="font-size:2.5rem;">${this.getExerciseIcon(ex.muscle)}</div>
-                            `}
-                        </div>
-                        <div class="exercise-info" style="flex:1; min-width:0;">
-                            <div class="exercise-name">
-                                ${ex.name}
+                ${exercises.map(ex => {
+                    const isSelected = this.selectedExerciseIds?.includes(ex.id);
+                    return `
+                        <div class="glass-card exercise-selection-card ${isSelected ? 'selected' : ''}" 
+                            onclick="app.toggleExerciseSelection('${ex.id}')"
+                            style="${isSelected ? 'border: 2px solid var(--primary); background: rgba(var(--primary-rgb), 0.1) !important;' : ''}">
+                            <div style="position:absolute; top:10px; right:10px; z-index:2;">
+                                <div style="width:24px; height:24px; border-radius:50%; border:2px solid ${isSelected ? 'var(--primary)' : 'rgba(255,255,255,0.2)'}; background:${isSelected ? 'var(--primary)' : 'rgba(0,0,0,0.3)'}; display:flex; align-items:center; justify-content:center;">
+                                    ${isSelected ? '<i class="fas fa-check" style="font-size:0.8rem; color:#fff;"></i>' : ''}
+                                </div>
                             </div>
-                            <div class="exercise-muscle" style="color:var(--primary); font-weight:600; text-transform:uppercase; margin-bottom:5px;">
-                                ${ex.category || ex.muscle || ''}
+                            <div class="image-container">
+                                ${ex.photoUrl ? `<img src="${ex.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : `
+                                    <div style="font-size:2.5rem;">${this.getExerciseIcon(ex.muscle)}</div>
+                                `}
+                            </div>
+                            <div class="exercise-info" style="flex:1; min-width:0;">
+                                <div class="exercise-name">
+                                    ${ex.name}
+                                </div>
+                                <div class="exercise-muscle" style="color:var(--primary); font-weight:600; text-transform:uppercase; margin-bottom:5px;">
+                                    ${ex.category || ex.muscle || ''}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `).join('')}
+                    `;
+                }).join('')}
             </div>
         `;
     }
@@ -4902,22 +4925,85 @@ Equipa KandalGym`;
         }
     }
 
-    selectExerciseFromModal(exId) {
-        if (!this.currentSelectionState) return;
-        const { dayIdx, exIdx } = this.currentSelectionState;
+    toggleExerciseSelection(exId) {
+        if (!this.selectedExerciseIds) this.selectedExerciseIds = [];
+        const index = this.selectedExerciseIds.indexOf(exId);
+        if (index > -1) {
+            this.selectedExerciseIds.splice(index, 1);
+        } else {
+            this.selectedExerciseIds.push(exId);
+        }
 
-        this.updateEditorExercise(dayIdx, exIdx, 'id', exId);
+        // Atualizar grid para mostrar seleção
+        const searchQuery = document.getElementById('exercise-search-input')?.value || '';
+        const categoryFilter = document.getElementById('exercise-category-filter')?.value || '';
+        const gridContainer = document.getElementById('exercise-grid-container');
+        if (gridContainer) {
+            gridContainer.innerHTML = this.renderExerciseGrid(searchQuery, categoryFilter);
+        }
+
+        // Atualizar contador e botão
+        const countBadge = document.getElementById('selection-count-badge');
+        const confirmBtn = document.getElementById('confirm-multi-select-btn');
+        if (countBadge) {
+            countBadge.innerText = `${this.selectedExerciseIds.length} exercícios selecionados`;
+            countBadge.style.color = this.selectedExerciseIds.length > 0 ? 'var(--primary)' : 'var(--text-muted)';
+        }
+        if (confirmBtn) {
+            confirmBtn.disabled = this.selectedExerciseIds.length === 0;
+            confirmBtn.style.opacity = this.selectedExerciseIds.length === 0 ? '0.5' : '1';
+        }
+    }
+
+    confirmMultiExerciseSelection() {
+        if (!this.selectedExerciseIds || this.selectedExerciseIds.length === 0) return;
+        if (!this.currentSelectionState) return;
+
+        const { dayIdx, exIdx } = this.currentSelectionState;
+        const targetExercises = this.editingPlan[dayIdx].exercises;
+
+        // Mapear IDs para objetos de exercício
+        const selectedObjects = this.selectedExerciseIds.map(id => {
+            const libEx = this.state.exercises.find(le => le.id == id);
+            return {
+                id: id,
+                name: libEx ? libEx.name : 'Exercício Desconhecido',
+                sets: '',
+                reps: '',
+                observations: ''
+            };
+        });
+
+        // Se o slot original estava vazio, substituímos o primeiro
+        if (exIdx < targetExercises.length && !targetExercises[exIdx].id) {
+            targetExercises[exIdx] = selectedObjects[0];
+            if (selectedObjects.length > 1) {
+                targetExercises.splice(exIdx + 1, 0, ...selectedObjects.slice(1));
+            }
+        } else {
+            // Caso contrário, inserimos após o slot atual
+            targetExercises.splice(exIdx + 1, 0, ...selectedObjects);
+        }
+
+        this.saveTrainingDraft();
+        this.savePredefinedDraft();
 
         // Fechar modal
         const modal = document.querySelector('.modal-overlay');
         if (modal) modal.remove();
 
-        // Renderizar novamente para atualizar o nome no botão
+        // Renderizar editor correto
         if (this.activeView === 'edit_predefined_plan') {
             this.renderPredefinedPlanEditor();
         } else {
             this.renderTrainingEditor();
         }
+    }
+
+    selectExerciseFromModal(exId) {
+        // Mantido para compatibilidade se houver chamadas externas, mas redireciona para o novo sistema
+        this.selectedExerciseIds = [exId];
+        this.confirmMultiExerciseSelection();
     }
 
     showFoodSelectionModal(mealIdx) {
