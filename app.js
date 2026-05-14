@@ -280,6 +280,13 @@ class FitnessApp {
         return text.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     }
 
+    isCardioExercise(exId) {
+        if (!exId) return false;
+        const libEx = this.state.exercises.find(le => le.id === exId);
+        if (!libEx) return false;
+        return this.normalizeText(libEx.category) === 'cardio';
+    }
+
 
 
     async connectArduino() {
@@ -3660,7 +3667,12 @@ Equipa KandalGym`;
                                         </div>
                                         <div style="display:flex; align-items:center; gap:8px;">
                                             <span style="background:${muscleColor}22; color:${muscleColor}; font-size:0.55rem; font-weight:800; padding:2px 6px; border-radius:4px; text-transform:uppercase;">${libEx?.category || libEx?.muscle || ''}</span>
-                                            <span style="font-size:0.75rem; color:#fff; font-weight:700;">${ex.sets}<small style="color:var(--text-muted); font-weight:400; font-size:0.65rem; margin:0 3px;">x</small>${ex.reps}</span>
+                                            <span style="font-size:0.75rem; color:#fff; font-weight:700;">
+                                                ${this.isCardioExercise(ex.id) ? 
+                                                    `<i class="fas fa-clock" style="font-size:0.65rem; margin-right:4px; opacity:0.7;"></i>${ex.reps}` : 
+                                                    `${ex.sets}<small style="color:var(--text-muted); font-weight:400; font-size:0.65rem; margin:0 3px;">x</small>${ex.reps}`
+                                                }
+                                            </span>
                                             ${ex.rest ? `<span style="font-size:0.65rem; color:var(--text-muted);"><i class="fas fa-clock" style="font-size:0.6rem;"></i> ${ex.rest}</span>` : ''}
                                         </div>
                                     </div>
@@ -4074,16 +4086,24 @@ Equipa KandalGym`;
                                 </div>
                                 
                                 <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
-                                    <div style="width:90px;">
-                                        <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Séries</label>
-                                        <input type="text" value="${ex.sets || ''}" placeholder="Ex: 4" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'sets', this.value)"
-                                            style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:600;">
-                                    </div>
-                                    <div style="flex:2; min-width:140px;">
-                                        <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Repetições (Reps)</label>
-                                        <input type="text" value="${ex.reps || ''}" placeholder="Ex: 12-15 ou Falha" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'reps', this.value)"
-                                            style="width:100%; height:45px; background:rgba(255,255,255,0.05); color:#fff; border:2px solid var(--primary); border-radius:8px; padding:0 15px; text-align:center; font-size:1.1rem; font-weight:700;">
-                                    </div>
+                                    ${this.isCardioExercise(ex.id) ? `
+                                        <div style="flex:2; min-width:180px;">
+                                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Duração / Tempo</label>
+                                            <input type="text" value="${ex.reps || ''}" placeholder="Ex: 20 min ou 5km" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'reps', this.value)"
+                                                style="width:100%; height:45px; background:rgba(255,255,255,0.05); color:#fff; border:2px solid var(--primary); border-radius:8px; padding:0 15px; text-align:center; font-size:1.1rem; font-weight:700;">
+                                        </div>
+                                    ` : `
+                                        <div style="width:90px;">
+                                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Séries</label>
+                                            <input type="text" value="${ex.sets || ''}" placeholder="Ex: 4" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'sets', this.value)"
+                                                style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:600;">
+                                        </div>
+                                        <div style="flex:2; min-width:140px;">
+                                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Repetições (Reps)</label>
+                                            <input type="text" value="${ex.reps || ''}" placeholder="Ex: 12-15 ou Falha" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'reps', this.value)"
+                                                style="width:100%; height:45px; background:rgba(255,255,255,0.05); color:#fff; border:2px solid var(--primary); border-radius:8px; padding:0 15px; text-align:center; font-size:1.1rem; font-weight:700;">
+                                        </div>
+                                    `}
                                     <div style="flex:3; min-width:200px;">
                                         <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Observações do Exercício</label>
                                         <input type="text" value="${ex.observations || ''}" placeholder="Ex: Foco na descida" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'observations', this.value)"
@@ -7493,8 +7513,11 @@ Equipa KandalGym`;
                 html += `
                     <tr>
                         <td style="padding: 8px; border: 1px solid #ddd;"><strong>${ex.name}</strong></td>
-                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${ex.sets}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${ex.reps}</td>
+                        ${this.isCardioExercise(ex.id) ? 
+                            `<td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: center; background:#f9f9f9;">${ex.reps}</td>` : 
+                            `<td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${ex.sets}</td>
+                             <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${ex.reps}</td>`
+                        }
                         <td style="padding: 8px; border: 1px solid #ddd; color: #555;">${ex.observations || '-'}</td>
                     </tr>
                 `;
