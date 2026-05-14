@@ -3986,13 +3986,13 @@ Equipa KandalGym`;
 
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
-                <h2 style="margin:0;">Editar Treino: ${c.name}</h2>
-                <div style="display:flex; gap:0.5rem; align-items:center;">
-                    <button class="btn btn-ghost" style="color:var(--success);" onclick="app.handleNewPlanRequest()"><i class="fas fa-file-medical"></i> Novo Plano</button>
-                    <button class="btn btn-ghost" style="color:var(--accent);" onclick="app.showLoadPredefinedPlanModal()"><i class="fas fa-copy"></i> Carregar Modelo</button>
-                    <button class="btn btn-ghost" style="color:var(--danger);" onclick="app.deleteTrainingPlan(app.editingClientId)"><i class="fas fa-trash"></i> Eliminar</button>
-                    <button class="btn btn-secondary" onclick="app.clearTrainingDraft(); app.setView('spy_view')">Cancelar</button>
-                    <button class="btn btn-primary" onclick="app.saveTrainingPlan()"><i class="fas fa-save"></i> Guardar Plano</button>
+                <h2 style="margin:0; font-size: 1.2rem;">Editar Treino: ${c.name}</h2>
+                <div style="display:flex; gap:0.4rem; align-items:center; flex-wrap: wrap;">
+                    <button class="btn btn-ghost" style="color:var(--success); padding: 0.6rem 0.8rem;" onclick="app.handleNewPlanRequest()" title="Novo Plano"><i class="fas fa-file-medical"></i> <span class="hide-mobile">Novo Plano</span></button>
+                    <button class="btn btn-ghost" style="color:var(--accent); padding: 0.6rem 0.8rem;" onclick="app.showLoadPredefinedPlanModal()" title="Carregar Modelo"><i class="fas fa-copy"></i> <span class="hide-mobile">Carregar</span></button>
+                    <button class="btn btn-ghost" style="color:var(--danger); padding: 0.6rem 0.8rem;" onclick="app.deleteTrainingPlan(app.editingClientId)" title="Eliminar"><i class="fas fa-trash"></i> <span class="hide-mobile">Eliminar</span></button>
+                    <button class="btn btn-secondary" style="padding: 0.6rem 0.8rem;" onclick="app.clearTrainingDraft(); app.setView('spy_view')"> <span class="hide-mobile">Cancelar</span><i class="fas fa-times mobile-only"></i></button>
+                    <button class="btn btn-primary" style="padding: 0.6rem 0.8rem;" onclick="app.saveTrainingPlan()"><i class="fas fa-save"></i> <span class="hide-mobile">Guardar Plano</span><span class="mobile-only">Guardar</span></button>
                 </div>
             </div>
 
