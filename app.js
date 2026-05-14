@@ -4005,7 +4005,7 @@ Equipa KandalGym`;
                     <button class="btn btn-ghost" style="color:var(--success); padding: 0.6rem 0.8rem;" onclick="app.handleNewPlanRequest()" title="Novo Plano"><i class="fas fa-file-medical"></i> <span class="hide-mobile">Novo Plano</span></button>
                     <button class="btn btn-ghost" style="color:var(--accent); padding: 0.6rem 0.8rem;" onclick="app.showLoadPredefinedPlanModal()" title="Carregar Modelo"><i class="fas fa-copy"></i> <span class="hide-mobile">Carregar</span></button>
                     <button class="btn btn-ghost" style="color:var(--danger); padding: 0.6rem 0.8rem;" onclick="app.deleteTrainingPlan(app.editingClientId)" title="Eliminar"><i class="fas fa-trash"></i> <span class="hide-mobile">Eliminar</span></button>
-                    <button class="btn btn-secondary" style="padding: 0.6rem 0.8rem;" onclick="app.clearTrainingDraft(); app.setView('spy_view')"> <span class="hide-mobile">Cancelar</span><i class="fas fa-times mobile-only"></i></button>
+                    <button class="btn btn-secondary" style="padding: 0.6rem 0.8rem;" onclick="app.cancelTrainingEdit()"> <span class="hide-mobile">Cancelar</span><i class="fas fa-times mobile-only"></i></button>
                     <button class="btn btn-primary" style="padding: 0.6rem 0.8rem;" onclick="app.saveTrainingPlan()"><i class="fas fa-save"></i> <span class="hide-mobile">Guardar Plano</span><span class="mobile-only">Guardar</span></button>
                 </div>
             </div>
@@ -4321,6 +4321,13 @@ Equipa KandalGym`;
             this.editingPlan[dayIdx].exercises[exIdx][field] = value;
         }
         this.saveTrainingDraft();
+    }
+
+    cancelTrainingEdit() {
+        if (confirm('Deseja cancelar a edição? Todas as alterações não guardadas serão perdidas.')) {
+            this.clearTrainingDraft();
+            this.setView('spy_view');
+        }
     }
 
     saveTrainingPlan() {
@@ -10349,7 +10356,7 @@ Equipa KandalGym`;
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${isMobile ? '0.75rem' : '1.5rem'}; flex-wrap:wrap; gap:1rem;">
                 <h2 style="margin:0; font-size:${isMobile ? '1.2rem' : '1.5rem'};">${this.editingPredefinedId ? 'Editar Modelo' : 'Novo Modelo'}</h2>
                 <div style="display:flex; gap:0.5rem; align-items:center;">
-                    <button class="btn btn-secondary" onclick="app.setView('predefined_plans')" style="${isMobile ? 'padding: 6px 12px; font-size: 0.8rem;' : ''}">Cancelar</button>
+                    <button class="btn btn-secondary" onclick="app.cancelPredefinedPlan()" style="${isMobile ? 'padding: 6px 12px; font-size: 0.8rem;' : ''}">Cancelar</button>
                     <button class="btn btn-primary" onclick="app.savePredefinedPlan()" style="${isMobile ? 'padding: 6px 12px; font-size: 0.8rem;' : ''}"><i class="fas fa-save"></i> Guardar</button>
                 </div>
             </div>
@@ -10450,6 +10457,12 @@ Equipa KandalGym`;
                 </div>
             </div>
         `;
+    }
+
+    cancelPredefinedPlan() {
+        if (confirm('Deseja cancelar a edição? Todas as alterações não guardadas serão perdidas.')) {
+            this.setView('predefined_plans');
+        }
     }
 
     addPredefinedTrainingDay() {
