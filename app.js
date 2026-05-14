@@ -4807,19 +4807,18 @@ Equipa KandalGym`;
         }
 
         return `
-            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:1rem; padding:0.5rem;">
+            <div class="exercise-grid">
                 ${exercises.map(ex => `
-                    <div class="glass-card food-card" onclick="app.selectExerciseFromModal('${ex.id}')" 
-                        style="cursor:pointer; padding:1rem; transition:all 0.2s ease; border:2px solid transparent; text-align:center;">
-                        <div style="width:100%; height:120px; border-radius:10px; overflow:hidden; margin-bottom:0.75rem; background:rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">
+                    <div class="glass-card exercise-selection-card" onclick="app.selectExerciseFromModal('${ex.id}')">
+                        <div class="image-container">
                             ${ex.photoUrl ? `<img src="${ex.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : `
                                 <div style="font-size:2.5rem;">${this.getExerciseIcon(ex.muscle)}</div>
                             `}
                         </div>
-                        <div style="font-weight:700; font-size:0.95rem; margin-bottom:0.25rem; color:#fff; line-height:1.2; padding:0 5px;">
+                        <div class="exercise-name">
                             ${ex.name}
                         </div>
-                        <div style="font-size:0.7rem; color:var(--primary); font-weight:600; text-transform:uppercase; margin-bottom:5px;">
+                        <div class="exercise-muscle" style="color:var(--primary); font-weight:600; text-transform:uppercase; margin-bottom:5px;">
                             ${ex.muscle || 'Geral'}
                         </div>
                     </div>
