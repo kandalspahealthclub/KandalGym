@@ -4815,11 +4815,13 @@ Equipa KandalGym`;
                                 <div style="font-size:2.5rem;">${this.getExerciseIcon(ex.muscle)}</div>
                             `}
                         </div>
-                        <div class="exercise-name">
-                            ${ex.name}
-                        </div>
-                        <div class="exercise-muscle" style="color:var(--primary); font-weight:600; text-transform:uppercase; margin-bottom:5px;">
-                            ${ex.category || ex.muscle || ''}
+                        <div class="exercise-info" style="flex:1; min-width:0;">
+                            <div class="exercise-name">
+                                ${ex.name}
+                            </div>
+                            <div class="exercise-muscle" style="color:var(--primary); font-weight:600; text-transform:uppercase; margin-bottom:5px;">
+                                ${ex.category || ex.muscle || ''}
+                            </div>
                         </div>
                     </div>
                 `).join('')}
