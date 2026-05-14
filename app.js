@@ -1367,7 +1367,7 @@ Equipa KandalGym`;
         modal.className = 'modal-overlay';
         this.tempExercisePhoto = null;
 
-        const cats = this.state.exerciseCategories || ["Geral"];
+        const cats = this.state.exerciseCategories || [];
         const options = cats.map(c => `<option value="${c}">${c}</option>`).join('');
 
         modal.innerHTML = `
@@ -1441,7 +1441,7 @@ Equipa KandalGym`;
             name: name,
             videoUrl: finalUrl,
             photoUrl: this.tempExercisePhoto || '',
-            category: cat || 'Geral'
+            category: cat || '',
         });
 
         this.saveState();
@@ -2569,7 +2569,7 @@ Equipa KandalGym`;
     }
 
     renderExerciseListGrouped(searchQuery = '') {
-        const cats = this.state.exerciseCategories || ["Geral"];
+        const cats = this.state.exerciseCategories || [];
         let filtered = this.state.exercises || [];
 
         if (searchQuery) {
@@ -2583,10 +2583,10 @@ Equipa KandalGym`;
 
         const grouped = {};
         cats.forEach(c => grouped[c] = []);
-        grouped['Geral'] = grouped['Geral'] || [];
+        // Agrupamento
 
         filtered.forEach(ex => {
-            const c = ex.category || 'Geral';
+            const c = ex.category || '';
             if (!grouped[c]) grouped[c] = [];
             grouped[c].push(ex);
         });
@@ -2611,7 +2611,7 @@ Equipa KandalGym`;
 
             return `
                 <div style="margin-bottom: 2rem;">
-                    <h3 style="color:var(--primary); font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px; margin-bottom:15px;">${catName}</h3>
+                    <h3 style="color:var(--primary); font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px; margin-bottom:15px;">${catName || 'Sem Categoria'}</h3>
                     <div class="video-grid">
                         ${exercises.map(ex => {
                 const yt = this.normalizeYoutubeUrl(ex.videoUrl);
@@ -2637,7 +2637,7 @@ Equipa KandalGym`;
                     <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                         <div>
                             <strong style="font-size:1rem; color:#fff;">${ex.name}</strong><br>
-                                <small style="color:var(--text-muted);">${ex.category || ex.muscle || 'Geral'}</small>
+                                <small style="color:var(--text-muted);">${ex.category || ex.muscle || ''}</small>
                         </div>
                         <div style="display:flex; gap:0.4rem;">
                             ${this.role === 'admin' ? `
@@ -2739,7 +2739,7 @@ Equipa KandalGym`;
     }
 
     showManageExerciseCategoriesModal() {
-        if (!this.state.exerciseCategories) this.state.exerciseCategories = ["Geral"];
+        if (!this.state.exerciseCategories) this.state.exerciseCategories = [];
 
         const renderListIdx = () => {
             return this.state.exerciseCategories.map((c, idx) => `
@@ -2813,10 +2813,10 @@ Equipa KandalGym`;
 
     async deleteExerciseCategory(idx) {
         const name = this.state.exerciseCategories[idx];
-        if (confirm(`Tem a certeza que deseja eliminar a categoria "${name}"? Exercícios nesta categoria serao movidos para "Geral".`)) {
+        if (confirm(`Tem a certeza que deseja eliminar a categoria "${name}"? Exercícios nesta categoria ficarão sem categoria definida.`)) {
             this.state.exerciseCategories.splice(idx, 1);
             this.state.exercises.forEach(ex => {
-                if (ex.category === name) ex.category = 'Geral';
+                if (ex.category === name) ex.category = '';
             });
             this.saveState();
             document.getElementById('manage-ex-cats-modal').remove();
@@ -2830,7 +2830,7 @@ Equipa KandalGym`;
         const ex = this.state.exercises.find(e => e.id === id);
         if (!ex) return;
 
-        const cats = this.state.exerciseCategories || ["Geral"];
+        const cats = this.state.exerciseCategories || [];
         const options = cats.map(c => `<option value="${c}" ${c === ex.category ? 'selected' : ''}>${c}</option>`).join('');
 
         const modal = document.createElement('div');
@@ -2894,7 +2894,7 @@ Equipa KandalGym`;
             ex.name = name;
             ex.videoUrl = finalUrl;
             ex.photoUrl = this.tempExercisePhoto || '';
-            ex.category = cat || 'Geral';
+            ex.category = cat || '';
             delete ex.muscle;
 
             this.saveState();
@@ -3648,7 +3648,7 @@ Equipa KandalGym`;
                                                 ` : ''}
                                         </div>
                                         <div style="display:flex; align-items:center; gap:8px;">
-                                            <span style="background:${muscleColor}22; color:${muscleColor}; font-size:0.55rem; font-weight:800; padding:2px 6px; border-radius:4px; text-transform:uppercase;">${libEx?.category || libEx?.muscle || 'Geral'}</span>
+                                            <span style="background:${muscleColor}22; color:${muscleColor}; font-size:0.55rem; font-weight:800; padding:2px 6px; border-radius:4px; text-transform:uppercase;">${libEx?.category || libEx?.muscle || ''}</span>
                                             <span style="font-size:0.75rem; color:#fff; font-weight:700;">${ex.sets}<small style="color:var(--text-muted); font-weight:400; font-size:0.65rem; margin:0 3px;">x</small>${ex.reps}</span>
                                             ${ex.rest ? `<span style="font-size:0.65rem; color:var(--text-muted);"><i class="fas fa-clock" style="font-size:0.6rem;"></i> ${ex.rest}</span>` : ''}
                                         </div>
@@ -4819,7 +4819,7 @@ Equipa KandalGym`;
                             ${ex.name}
                         </div>
                         <div class="exercise-muscle" style="color:var(--primary); font-weight:600; text-transform:uppercase; margin-bottom:5px;">
-                            ${ex.muscle || 'Geral'}
+                            ${ex.category || ex.muscle || ''}
                         </div>
                     </div>
                 `).join('')}
