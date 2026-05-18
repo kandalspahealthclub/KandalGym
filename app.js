@@ -1860,6 +1860,10 @@ Equipa KandalGym`;
         const weekDaysCount = [0,0,0,0,0,0,0]; 
         const weekDaysLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
+        // 4. Meses do Ano (0-11)
+        const monthCounts = new Array(12).fill(0);
+        const monthLabels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
         qrClientsArray.forEach(c => {
             if (c.histórico) {
                 const histArray = Array.isArray(c.histórico) ? c.histórico : Object.values(c.histórico);
@@ -1881,6 +1885,9 @@ Equipa KandalGym`;
 
                         // Weekday distribution
                         weekDaysCount[dateObj.getDay()]++;
+
+                        // Month distribution
+                        monthCounts[dateObj.getMonth()]++;
                     }
                 });
             }
@@ -1889,14 +1896,15 @@ Equipa KandalGym`;
         const max7Days = Math.max(...last7Days.map(d => d.count), 1);
         const maxHourly = Math.max(...Object.values(hourCounts), 1);
         const maxWeekDays = Math.max(...weekDaysCount, 1);
+        const maxMonths = Math.max(...monthCounts, 1);
 
-        const buildBars = (data, max, isHourly) => {
+        const buildBars = (data, max, isCompact) => {
             return data.map(item => {
                 const height = (item.count / max) * 100;
                 return `
-                    <div style="display:flex; flex-direction:column; align-items:center; flex:1; min-width:${isHourly ? '20px' : '40px'};">
+                    <div style="display:flex; flex-direction:column; align-items:center; flex:1; min-width:${isCompact ? '20px' : '40px'};">
                         <span style="font-size:0.7rem; color:var(--text-muted); margin-bottom:6px; font-weight:bold;">${item.count}</span>
-                        <div style="width:100%; max-width:${isHourly ? '15px' : '30px'}; height:150px; background:rgba(255,255,255,0.05); border-radius:8px; position:relative; overflow:hidden; border: 1px solid rgba(255,255,255,0.05);">
+                        <div style="width:100%; max-width:${isCompact ? '15px' : '30px'}; height:150px; background:rgba(255,255,255,0.05); border-radius:8px; position:relative; overflow:hidden; border: 1px solid rgba(255,255,255,0.05);">
                             <div style="position:absolute; bottom:0; left:0; right:0; height:${height}%; background:linear-gradient(to top, var(--primary), var(--secondary)); border-radius:8px; transition:height 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
                         </div>
                         <span style="font-size:0.7rem; color:var(--text-muted); margin-top:8px; font-weight:600; text-transform:uppercase;">${item.label}</span>
@@ -1907,6 +1915,7 @@ Equipa KandalGym`;
 
         const hourlyData = Object.keys(hourCounts).map(h => ({ label: h+'h', count: hourCounts[h] }));
         const weekData = weekDaysCount.map((count, i) => ({ label: weekDaysLabels[i], count })).slice(1).concat([{label: 'Dom', count: weekDaysCount[0]}]); // Seg a Dom
+        const monthData = monthCounts.map((count, i) => ({ label: monthLabels[i], count }));
 
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
@@ -1929,6 +1938,15 @@ Equipa KandalGym`;
                         </h3>
                         <div style="display:flex; justify-content:space-between; align-items:flex-end; gap: 5px;">
                             ${buildBars(last7Days, max7Days, false)}
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="padding: 1.5rem; background: rgba(0,0,0,0.2);">
+                        <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: #fff; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-calendar-alt" style="color: #e84393;"></i> Afluência por Mês (Global)
+                        </h3>
+                        <div style="display:flex; justify-content:space-between; align-items:flex-end; gap: 5px; overflow-x:auto; padding-bottom: 5px;">
+                            ${buildBars(monthData, maxMonths, true)}
                         </div>
                     </div>
 
