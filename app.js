@@ -1893,15 +1893,15 @@ Equipa KandalGym`;
         const buildBars = (data, max, isHourly) => {
             return data.map(item => {
                 const height = (item.count / max) * 100;
-                return \`
-                    <div style="display:flex; flex-direction:column; align-items:center; flex:1; min-width:\${isHourly ? '20px' : '40px'};">
-                        <span style="font-size:0.7rem; color:var(--text-muted); margin-bottom:6px; font-weight:bold;">\${item.count}</span>
-                        <div style="width:100%; max-width:\${isHourly ? '15px' : '30px'}; height:150px; background:rgba(255,255,255,0.05); border-radius:8px; position:relative; overflow:hidden; border: 1px solid rgba(255,255,255,0.05);">
-                            <div style="position:absolute; bottom:0; left:0; right:0; height:\${height}%; background:linear-gradient(to top, var(--primary), var(--secondary)); border-radius:8px; transition:height 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
+                return `
+                    <div style="display:flex; flex-direction:column; align-items:center; flex:1; min-width:${isHourly ? '20px' : '40px'};">
+                        <span style="font-size:0.7rem; color:var(--text-muted); margin-bottom:6px; font-weight:bold;">${item.count}</span>
+                        <div style="width:100%; max-width:${isHourly ? '15px' : '30px'}; height:150px; background:rgba(255,255,255,0.05); border-radius:8px; position:relative; overflow:hidden; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="position:absolute; bottom:0; left:0; right:0; height:${height}%; background:linear-gradient(to top, var(--primary), var(--secondary)); border-radius:8px; transition:height 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
                         </div>
-                        <span style="font-size:0.7rem; color:var(--text-muted); margin-top:8px; font-weight:600; text-transform:uppercase;">\${item.label}</span>
+                        <span style="font-size:0.7rem; color:var(--text-muted); margin-top:8px; font-weight:600; text-transform:uppercase;">${item.label}</span>
                     </div>
-                \`;
+                `;
             }).join('');
         };
 
@@ -1910,7 +1910,7 @@ Equipa KandalGym`;
 
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
-        modal.innerHTML = \`
+        modal.innerHTML = `
             <div class="modal-content animate-fade-in" style="max-width: 800px; width: 95%; max-height: 90vh; overflow-y: auto; background: var(--surface); padding: 2rem; border-radius: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 1rem;">
                     <h2 style="margin: 0; color: var(--text-base); display: flex; align-items: center; gap: 10px;">
@@ -1928,7 +1928,7 @@ Equipa KandalGym`;
                             <i class="fas fa-calendar-day" style="color: var(--secondary);"></i> Últimos 7 Dias
                         </h3>
                         <div style="display:flex; justify-content:space-between; align-items:flex-end; gap: 5px;">
-                            \${buildBars(last7Days, max7Days, false)}
+                            ${buildBars(last7Days, max7Days, false)}
                         </div>
                     </div>
 
@@ -1938,7 +1938,7 @@ Equipa KandalGym`;
                                 <i class="fas fa-clock" style="color: var(--accent);"></i> Horas de Pico (Global)
                             </h3>
                             <div style="display:flex; justify-content:space-between; align-items:flex-end; gap: 2px; overflow-x:auto; padding-bottom: 5px;">
-                                \${buildBars(hourlyData, maxHourly, true)}
+                                ${buildBars(hourlyData, maxHourly, true)}
                             </div>
                         </div>
 
@@ -1947,13 +1947,13 @@ Equipa KandalGym`;
                                 <i class="fas fa-calendar-week" style="color: #f1c40f;"></i> Dias da Semana (Global)
                             </h3>
                             <div style="display:flex; justify-content:space-between; align-items:flex-end; gap: 5px;">
-                                \${buildBars(weekData, maxWeekDays, false)}
+                                ${buildBars(weekData, maxWeekDays, false)}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        \`;
+        `;
         document.body.appendChild(modal);
 
         setTimeout(() => {
