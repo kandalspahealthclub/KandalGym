@@ -1812,6 +1812,9 @@ Equipa KandalGym`;
                     <div style="display:flex; align-items:center; gap:0.5rem;">
                         <i class="fas fa-chart-line" style="color:var(--accent);"></i> 
                         <span>Afluência Estimada</span>
+                        <button class="btn btn-ghost btn-sm" onclick="app.showAffluenceGraphsModal()" style="margin-left: 10px; color: var(--primary); padding: 5px 10px;" title="Ver Histórico de Afluência">
+                            <i class="fas fa-chart-bar"></i> Gráficos
+                        </button>
                     </div>
                     <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                         <div style="background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.2); padding:6px 12px; border-radius:12px; display:flex; align-items:center; gap:6px;">
@@ -1826,6 +1829,143 @@ Equipa KandalGym`;
                 </div>
             </div>
         `;
+    }
+
+    showAffluenceGraphsModal() {
+        const qrClientsArray = Array.isArray(this.state.qrClients) ? this.state.qrClients : Object.values(this.state.qrClients || {});
+        if (qrClientsArray.length === 0) {
+            this.showToast('Sem dados para mostrar.');
+            return;
+        }
+
+        // 1. Calcular Últimos 7 Dias
+        const last7Days = [];
+        const today = new Date();
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+            last7Days.push({
+                dateStart: new Date(d.setHours(0,0,0,0)),
+                dateEnd: new Date(d.setHours(23,59,59,999)),
+                label: d.toLocaleDateString('pt-PT', { weekday: 'short', day: '2-digit' }).replace('.', ''),
+                count: 0
+            });
+        }
+
+        // 2. Calcular Média Horária Global
+        const hourCounts = {};
+        for(let i=7; i<=22; i++) hourCounts[i] = 0;
+
+        // 3. Dias da Semana (0-6)
+        const weekDaysCount = [0,0,0,0,0,0,0]; 
+        const weekDaysLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+        qrClientsArray.forEach(c => {
+            if (c.histórico) {
+                const histArray = Array.isArray(c.histórico) ? c.histórico : Object.values(c.histórico);
+                histArray.forEach(h => {
+                    const isObj = typeof h !== 'string';
+                    const t = isObj ? h.t : 'in';
+                    if (t === 'in') {
+                        const dateObj = new Date(isObj ? h.d : h);
+                        
+                        // Last 7 days
+                        const dayObj = last7Days.find(day => dateObj >= day.dateStart && dateObj <= day.dateEnd);
+                        if (dayObj) dayObj.count++;
+
+                        // Hourly distribution (7-22)
+                        const hHour = dateObj.getHours();
+                        if (hHour >= 7 && hHour <= 22) {
+                            hourCounts[hHour]++;
+                        }
+
+                        // Weekday distribution
+                        weekDaysCount[dateObj.getDay()]++;
+                    }
+                });
+            }
+        });
+
+        const max7Days = Math.max(...last7Days.map(d => d.count), 1);
+        const maxHourly = Math.max(...Object.values(hourCounts), 1);
+        const maxWeekDays = Math.max(...weekDaysCount, 1);
+
+        const buildBars = (data, max, isHourly) => {
+            return data.map(item => {
+                const height = (item.count / max) * 100;
+                return \`
+                    <div style="display:flex; flex-direction:column; align-items:center; flex:1; min-width:\${isHourly ? '20px' : '40px'};">
+                        <span style="font-size:0.7rem; color:var(--text-muted); margin-bottom:6px; font-weight:bold;">\${item.count}</span>
+                        <div style="width:100%; max-width:\${isHourly ? '15px' : '30px'}; height:150px; background:rgba(255,255,255,0.05); border-radius:8px; position:relative; overflow:hidden; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="position:absolute; bottom:0; left:0; right:0; height:\${height}%; background:linear-gradient(to top, var(--primary), var(--secondary)); border-radius:8px; transition:height 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
+                        </div>
+                        <span style="font-size:0.7rem; color:var(--text-muted); margin-top:8px; font-weight:600; text-transform:uppercase;">\${item.label}</span>
+                    </div>
+                \`;
+            }).join('');
+        };
+
+        const hourlyData = Object.keys(hourCounts).map(h => ({ label: h+'h', count: hourCounts[h] }));
+        const weekData = weekDaysCount.map((count, i) => ({ label: weekDaysLabels[i], count })).slice(1).concat([{label: 'Dom', count: weekDaysCount[0]}]); // Seg a Dom
+
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = \`
+            <div class="modal-content animate-fade-in" style="max-width: 800px; width: 95%; max-height: 90vh; overflow-y: auto; background: var(--surface); padding: 2rem; border-radius: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 1rem;">
+                    <h2 style="margin: 0; color: var(--text-base); display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-chart-bar" style="color: var(--primary);"></i> Análise de Afluência
+                    </h2>
+                    <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">
+                        <i class="fas fa-times" style="font-size: 1.2rem;"></i>
+                    </button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
+                    
+                    <div class="glass-card" style="padding: 1.5rem; background: rgba(0,0,0,0.2);">
+                        <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: #fff; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-calendar-day" style="color: var(--secondary);"></i> Últimos 7 Dias
+                        </h3>
+                        <div style="display:flex; justify-content:space-between; align-items:flex-end; gap: 5px;">
+                            \${buildBars(last7Days, max7Days, false)}
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                        <div class="glass-card" style="padding: 1.5rem; background: rgba(0,0,0,0.2);">
+                            <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: #fff; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-clock" style="color: var(--accent);"></i> Horas de Pico (Global)
+                            </h3>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-end; gap: 2px; overflow-x:auto; padding-bottom: 5px;">
+                                \${buildBars(hourlyData, maxHourly, true)}
+                            </div>
+                        </div>
+
+                        <div class="glass-card" style="padding: 1.5rem; background: rgba(0,0,0,0.2);">
+                            <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: #fff; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-calendar-week" style="color: #f1c40f;"></i> Dias da Semana (Global)
+                            </h3>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-end; gap: 5px;">
+                                \${buildBars(weekData, maxWeekDays, false)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        \`;
+        document.body.appendChild(modal);
+
+        setTimeout(() => {
+            const bars = modal.querySelectorAll('.glass-card > div > div > div > div');
+            bars.forEach(bar => {
+                const targetHeight = bar.style.height;
+                bar.style.height = '0%';
+                setTimeout(() => {
+                    bar.style.height = targetHeight;
+                }, 50);
+            });
+        }, 10);
     }
 
     getCurrentPeopleInGymHTML() {
