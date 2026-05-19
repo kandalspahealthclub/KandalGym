@@ -8428,8 +8428,9 @@ Equipa KandalGym`;
                                 </div>
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
-                                <div style="display:flex; align-items:center; gap:6px;">
-                                    <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" class="qr-input-sleek" style="font-weight:800; font-size:1.1rem; padding:0.6rem 0.8rem !important; flex:1; letter-spacing: 0.2px;">
+                                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                    <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" class="qr-input-sleek" style="font-weight:800; font-size:1.1rem; padding:0.6rem 0.8rem !important; flex:1; letter-spacing: 0.2px; min-width:150px;">
+                                    ${Number(c.clientId) === 0 ? `<span style="font-size:0.65rem; background:rgba(var(--primary-rgb),0.15); color:var(--primary); padding:4px 8px; border-radius:6px; font-weight:800; text-transform:uppercase; border: 1px solid rgba(var(--primary-rgb),0.3);"><i class="fas fa-ticket-alt"></i> ${c.plano || 'Avulso'}</span>` : ''}
                                     ${showIcon ? `<i class="fas fa-paper-plane" title="${tooltipText}" style="color:${(hasLastLogin || hasHistory) ? '#26de81' : 'var(--success)'}; font-size:0.8rem;"></i>` : ''}
                                 </div>
                                 <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" class="qr-input-sleek" style="color:var(--text-muted); font-size:0.75rem; padding:0.3rem 0.6rem !important;" placeholder="Telemóvel...">
@@ -8442,15 +8443,21 @@ Equipa KandalGym`;
                             style="background:rgba(var(--primary-rgb), 0.1); color:var(--primary); font-weight:600; border:1px solid rgba(var(--primary-rgb), 0.3); border-radius:20px; padding:6px 12px; outline:none; cursor:pointer; width:100%; font-size:0.8rem; appearance:none; text-align:center;">
                             ${isStaff ? '<option value="Staff">Staff / Vitalício</option>' : (() => {
                     const plans = Object.keys(this.state.planRestrictions || {});
+                    let html = '';
                     if (plans.length === 0) {
-                        return `
+                        html = `
                                         <option value="Livre Trânsito" ${c.plano === 'Livre Trânsito' ? 'selected' : ''}>Livre Trânsito</option>
                                         <option value="3x Semana" ${c.plano === '3x Semana' ? 'selected' : ''}>3x Semana</option>
                                         <option value="2x Semana" ${c.plano === '2x Semana' ? 'selected' : ''}>2x Semana</option>
                                         <option value="Pontual" ${c.plano === 'Pontual' ? 'selected' : ''}>Pontual</option>
                                      `;
+                    } else {
+                        html = plans.map(p => `<option value="${p}" ${c.plano === p ? 'selected' : ''}>${p}</option>`).join('');
                     }
-                    return plans.map(p => `<option value="${p}" ${c.plano === p ? 'selected' : ''}>${p}</option>`).join('');
+                    if (Number(c.clientId) === 0 && !html.includes(`value="${c.plano}"`)) {
+                        html += `<option value="${c.plano}" selected>${c.plano}</option><option value="Diária">Diária</option><option value="Semanal">Semanal</option><option value="Mensal">Mensal</option>`;
+                    }
+                    return html;
                 })()}
                         </select>
                     </td>
@@ -8590,7 +8597,7 @@ Equipa KandalGym`;
         this.state.qrClients.push({
             id: qrId,
             clientId: 0, // 0 indica cliente avulso sem conta na app
-            nome: `AVULSO: ${name}`,
+            nome: name,
             tel: phone || 'Visitante',
             ativo: true,
             ent: credits,
