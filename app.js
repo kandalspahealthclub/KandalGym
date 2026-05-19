@@ -8185,9 +8185,12 @@ Equipa KandalGym`;
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.8rem;">
+                <div style="display: flex; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.8rem;">
                     <button class="btn ${this.qrActiveTab === 'alunos' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('alunos')" style="padding: 6px 12px; font-size:0.8rem;">
                         <i class="fas fa-user-friends"></i> Alunos
+                    </button>
+                    <button class="btn ${this.qrActiveTab === 'avulsos' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('avulsos')" style="padding: 6px 12px; font-size:0.8rem;">
+                        <i class="fas fa-ticket-alt"></i> Diárias / Avulsos
                     </button>
                     <button class="btn ${this.qrActiveTab === 'teachers' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('teachers')" style="padding: 6px 12px; font-size:0.8rem;">
                         <i class="fas fa-user-tie"></i> Staff (Adm/Prof)
@@ -8340,7 +8343,17 @@ Equipa KandalGym`;
         const qrList = (this.state.qrClients || []).filter(c => {
             const isStaff = (this.state.teachers || []).some(t => Number(t.id) === Number(c.clientId)) ||
                 (this.state.admins || []).some(a => Number(a.id) === Number(c.clientId));
-            const matchesRole = this.qrActiveTab === 'teachers' ? isStaff : !isStaff;
+            const isAvulso = Number(c.clientId) === 0;
+
+            let matchesRole = false;
+            if (this.qrActiveTab === 'teachers') {
+                matchesRole = isStaff;
+            } else if (this.qrActiveTab === 'avulsos') {
+                matchesRole = isAvulso;
+            } else {
+                matchesRole = !isStaff && !isAvulso;
+            }
+
             if (!matchesRole) return false;
 
             const f = this.normalizeText(filter);
