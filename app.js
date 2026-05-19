@@ -1864,6 +1864,9 @@ Equipa KandalGym`;
         const monthCounts = new Array(12).fill(0);
         const monthLabels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
+        // 5. Anos (Dinâmico)
+        const yearCounts = {};
+
         qrClientsArray.forEach(c => {
             if (c.histórico) {
                 const histArray = Array.isArray(c.histórico) ? c.histórico : Object.values(c.histórico);
@@ -1888,6 +1891,11 @@ Equipa KandalGym`;
 
                         // Month distribution
                         monthCounts[dateObj.getMonth()]++;
+
+                        // Year distribution
+                        const yYear = dateObj.getFullYear();
+                        if (!yearCounts[yYear]) yearCounts[yYear] = 0;
+                        yearCounts[yYear]++;
                     }
                 });
             }
@@ -1897,6 +1905,7 @@ Equipa KandalGym`;
         const maxHourly = Math.max(...Object.values(hourCounts), 1);
         const maxWeekDays = Math.max(...weekDaysCount, 1);
         const maxMonths = Math.max(...monthCounts, 1);
+        const maxYears = Math.max(...Object.values(yearCounts), 1);
 
         const buildBars = (data, max, isCompact) => {
             return data.map(item => {
@@ -1916,6 +1925,7 @@ Equipa KandalGym`;
         const hourlyData = Object.keys(hourCounts).map(h => ({ label: h+'h', count: hourCounts[h] }));
         const weekData = weekDaysCount.map((count, i) => ({ label: weekDaysLabels[i], count })).slice(1).concat([{label: 'Dom', count: weekDaysCount[0]}]); // Seg a Dom
         const monthData = monthCounts.map((count, i) => ({ label: monthLabels[i], count }));
+        const yearData = Object.keys(yearCounts).sort().map(y => ({ label: y, count: yearCounts[y] }));
 
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
@@ -1932,12 +1942,23 @@ Equipa KandalGym`;
 
                 <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
                     
-                    <div class="glass-card" style="padding: 1.5rem; background: rgba(0,0,0,0.2);">
-                        <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: #fff; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-calendar-day" style="color: var(--secondary);"></i> Últimos 7 Dias
-                        </h3>
-                        <div style="display:flex; justify-content:space-between; align-items:flex-end; gap: 5px;">
-                            ${buildBars(last7Days, max7Days, false)}
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                        <div class="glass-card" style="padding: 1.5rem; background: rgba(0,0,0,0.2);">
+                            <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: #fff; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-calendar-day" style="color: var(--secondary);"></i> Últimos 7 Dias
+                            </h3>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-end; gap: 5px;">
+                                ${buildBars(last7Days, max7Days, false)}
+                            </div>
+                        </div>
+
+                        <div class="glass-card" style="padding: 1.5rem; background: rgba(0,0,0,0.2);">
+                            <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: #fff; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-layer-group" style="color: #00cec9;"></i> Afluência por Ano (Global)
+                            </h3>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-end; gap: 5px; overflow-x:auto; padding-bottom: 5px;">
+                                ${buildBars(yearData, maxYears, true)}
+                            </div>
                         </div>
                     </div>
 
@@ -5135,15 +5156,18 @@ Equipa KandalGym`;
             };
         });
 
-        // Se o slot original estava vazio, substituímos o primeiro
-        if (exIdx < targetExercises.length && !targetExercises[exIdx].id) {
-            targetExercises[exIdx] = selectedObjects[0];
-            if (selectedObjects.length > 1) {
-                targetExercises.splice(exIdx + 1, 0, ...selectedObjects.slice(1));
-            }
-        } else {
-            // Caso contrário, inserimos após o slot atual
-            targetExercises.splice(exIdx + 1, 0, ...selectedObjects);
+        // Preservar os dados do exercício atual (sets, reps, observations) para o primeiro exercício selecionado
+        const originalEx = targetExercises[exIdx] || {};
+        selectedObjects[0].sets = originalEx.sets || '';
+        selectedObjects[0].reps = originalEx.reps || '';
+        selectedObjects[0].observations = originalEx.observations || '';
+
+        // Substituir o exercício atual
+        targetExercises[exIdx] = selectedObjects[0];
+
+        // Se foram selecionados múltiplos exercícios, inseri-los a seguir
+        if (selectedObjects.length > 1) {
+            targetExercises.splice(exIdx + 1, 0, ...selectedObjects.slice(1));
         }
 
         this.saveTrainingDraft();
