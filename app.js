@@ -8155,9 +8155,13 @@ Equipa KandalGym`;
                         
                         <div style="display: grid; gap: 10px;">
                             <input type="text" id="casual-name" placeholder="Nome do Cliente" class="qr-input-sleek">
-                            <input type="tel" id="casual-phone" placeholder="Contacto (ex: 912 345 678)" class="qr-input-sleek">
+                            <div style="display: flex; gap: 8px;">
+                                <input type="tel" id="casual-phone" placeholder="Contacto (ex: 912 345 678)" class="qr-input-sleek" style="flex: 2;">
+                                <input type="number" id="casual-price" placeholder="Valor Pago (€)" class="qr-input-sleek" style="flex: 1;">
+                            </div>
                             <div style="display: flex; gap: 8px;">
                                 <select id="casual-type" class="qr-input-sleek" style="flex: 2; height: 42px;">
+                                    <option value="Diária">🎟️ Diária (1 Dia)</option>
                                     <option value="Semanal">🗓️ Semanal (7 Dias)</option>
                                     <option value="Mensal">📅 Mensal (30 Dias)</option>
                                 </select>
@@ -8536,11 +8540,13 @@ Equipa KandalGym`;
         const nameEl = document.getElementById('casual-name');
         const typeEl = document.getElementById('casual-type');
         const phoneEl = document.getElementById('casual-phone');
+        const priceEl = document.getElementById('casual-price');
         if (!nameEl || !typeEl) return;
 
         const name = nameEl.value.trim();
         const type = typeEl.value;
         const phone = phoneEl ? phoneEl.value.trim() : '';
+        const price = priceEl ? parseFloat(priceEl.value) || 0 : 0;
 
         if (!name) return alert('Por favor, insira o nome do cliente.');
 
@@ -8576,6 +8582,7 @@ Equipa KandalGym`;
             ativo: true,
             ent: credits,
             plano: type,
+            valorPago: price,
             validade: validDate.toISOString().split('T')[0],
             histórico: []
         });
@@ -8584,6 +8591,7 @@ Equipa KandalGym`;
         this.refreshQRTableUI();
         nameEl.value = '';
         if (phoneEl) phoneEl.value = '';
+        if (priceEl) priceEl.value = '';
         this.showToast(`Passe ${type} criado para ${name}! Código: ${qrId}`);
     }
 
