@@ -1057,7 +1057,7 @@ class FitnessApp {
                             <button class="btn btn-ghost btn-sm" style="padding:4px 8px; font-size:0.7rem; background:rgba(255,255,255,0.05);" onclick="app.generateRandomPassword()">Gerar</button>
                         </div>
                     </div>
-                    <input type="tel" id="new-user-phone" placeholder="Contacto (ex: 912345678)">
+                    <input type="text" id="new-user-phone" placeholder="Contacto (ex: +351... ou +44...)">
                     <div id="client-dob-container">
                         <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Data de Nascimento</label>
                         <input type="date" id="new-user-dob" style="color-scheme: dark;">
@@ -8156,7 +8156,7 @@ Equipa KandalGym`;
                         <div style="display: grid; gap: 10px;">
                             <input type="text" id="casual-name" placeholder="Nome do Cliente" class="qr-input-sleek">
                             <div style="display: flex; gap: 8px;">
-                                <input type="tel" id="casual-phone" placeholder="Contacto (ex: 912 345 678)" class="qr-input-sleek" style="flex: 2;">
+                                <input type="text" id="casual-phone" placeholder="Contacto (ex: +351... ou +44...)" class="qr-input-sleek" style="flex: 2;">
                                 <input type="number" id="casual-price" placeholder="Valor Pago (€)" class="qr-input-sleek" style="flex: 1;">
                             </div>
                             <div style="display: flex; gap: 8px;">
@@ -8430,7 +8430,7 @@ Equipa KandalGym`;
                             <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
                                 <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                                     <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" class="qr-input-sleek" style="font-weight:800; font-size:1.1rem; padding:0.6rem 0.8rem !important; flex:1; letter-spacing: 0.2px; min-width:150px;">
-                                    ${Number(c.clientId) === 0 ? `<span style="font-size:0.65rem; background:rgba(var(--primary-rgb),0.15); color:var(--primary); padding:4px 8px; border-radius:6px; font-weight:800; text-transform:uppercase; border: 1px solid rgba(var(--primary-rgb),0.3);"><i class="fas fa-ticket-alt"></i> ${c.plano || 'Avulso'}</span>` : ''}
+                                    ${Number(c.clientId) === 0 ? `<span style="font-size:0.65rem; background:rgba(var(--primary-rgb),0.15); color:var(--primary); padding:4px 8px; border-radius:6px; font-weight:800; text-transform:uppercase; border: 1px solid rgba(var(--primary-rgb),0.3);"><i class="fas fa-ticket-alt"></i> ${c.plano || 'Avulso'}${c.valorPago ? ` - ${c.valorPago}€` : ''}</span>` : ''}
                                     ${showIcon ? `<i class="fas fa-paper-plane" title="${tooltipText}" style="color:${(hasLastLogin || hasHistory) ? '#26de81' : 'var(--success)'}; font-size:0.8rem;"></i>` : ''}
                                 </div>
                                 <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" class="qr-input-sleek" style="color:var(--text-muted); font-size:0.75rem; padding:0.3rem 0.6rem !important;" placeholder="Telemóvel...">
