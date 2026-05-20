@@ -1847,7 +1847,7 @@ Equipa KandalGym`;
             last7Days.push({
                 dateStart: new Date(d.setHours(0,0,0,0)),
                 dateEnd: new Date(d.setHours(23,59,59,999)),
-                label: d.toLocaleDateString('pt-PT', { weekday: 'short', day: '2-digit' }).replace('.', ''),
+                label: d.toLocaleDateString('pt-PT', { weekday: 'short' }).replace('.', '').substring(0, 3) + '<br>' + String(d.getDate()).padStart(2, '0'),
                 count: 0
             });
         }
@@ -1916,7 +1916,7 @@ Equipa KandalGym`;
                         <div style="width:100%; max-width:${isCompact ? '15px' : '30px'}; height:150px; background:rgba(255,255,255,0.05); border-radius:8px; position:relative; overflow:hidden; border: 1px solid rgba(255,255,255,0.05);">
                             <div style="position:absolute; bottom:0; left:0; right:0; height:${height}%; background:linear-gradient(to top, var(--primary), var(--secondary)); border-radius:8px; transition:height 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
                         </div>
-                        <span style="font-size:0.7rem; color:var(--text-muted); margin-top:8px; font-weight:600; text-transform:uppercase;">${item.label}</span>
+                        <span style="font-size:0.65rem; color:var(--text-muted); margin-top:8px; font-weight:600; text-transform:uppercase; text-align:center; line-height:1.2;">${item.label}</span>
                     </div>
                 `;
             }).join('');
