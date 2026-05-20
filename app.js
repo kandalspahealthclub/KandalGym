@@ -8226,7 +8226,7 @@ Equipa KandalGym`;
                             <thead>
                                 <tr>
                                     ${this.qrActiveTab === 'alunos' ? '<th style="width: 40px; text-align:center;"><i class="fas fa-check-square"></i></th>' : ''}
-                                    <th style="min-width: 320px;">${this.qrActiveTab === 'alunos' ? 'Aluno (Nome / Tel)' : 'Staff (Nome / Tel)'}</th>
+                                    <th style="min-width: 220px;">${this.qrActiveTab === 'alunos' ? 'Aluno (Nome / Tel)' : 'Staff (Nome / Tel)'}</th>
                                     <th style="width: 140px;">Plano</th>
                                     <th style="text-align:center; width: 80px;">Estado</th>
                                     <th style="text-align:center; width: 110px;">Créditos</th>
@@ -8418,9 +8418,9 @@ Equipa KandalGym`;
                     </td>
                     ` : (this.qrActiveTab === 'alunos' ? '<td></td>' : '')}
                     <td>
-                        <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
                             <div style="position:relative;">
-                                <div style="width: 45px; height: 45px; border-radius: 50%; background: ${userPhoto ? 'none' : 'linear-gradient(135deg, rgba(var(--primary-rgb),0.8), rgba(var(--accent-rgb),0.8))'}; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); overflow:hidden; border: 2px solid rgba(255,255,255,0.1);">
+                                <div style="width: 38px; height: 38px; border-radius: 50%; background: ${userPhoto ? 'none' : 'linear-gradient(135deg, rgba(var(--primary-rgb),0.8), rgba(var(--accent-rgb),0.8))'}; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); overflow:hidden; border: 2px solid rgba(255,255,255,0.1);">
                                     ${userPhoto ? `<img src="${userPhoto}" style="width:100%; height:100%; object-fit:cover;">` : avatarLetra}
                                 </div>
                                 <div style="position: absolute; bottom: -4px; right: -8px; background: #2a2a2a; border-radius: 6px; padding: 2px 4px; border: 1px solid rgba(255,255,255,0.1); font-size: 0.55rem; font-weight: 800; color: var(--accent); white-space: nowrap;">
@@ -8429,7 +8429,7 @@ Equipa KandalGym`;
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width:0;">
                                 <div style="position:relative; width:100%;">
-                                    <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" class="qr-input-sleek" style="font-weight:800; font-size:1.1rem; padding:0.6rem ${showIcon ? '32px' : '0.8rem'} 0.6rem 0.8rem !important; width:100%; letter-spacing: 0.2px; text-overflow: ellipsis; box-sizing: border-box;">
+                                    <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" class="qr-input-sleek" style="font-weight:800; font-size:0.95rem; padding:0.4rem ${showIcon ? '28px' : '0.5rem'} 0.4rem 0.5rem !important; width:100%; letter-spacing: 0.2px; text-overflow: ellipsis; box-sizing: border-box;">
                                     ${showIcon ? `<i class="fas fa-paper-plane" title="${tooltipText}" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); color:${(hasLastLogin || hasHistory) ? '#26de81' : 'var(--success)'}; font-size:0.9rem; z-index: 2;"></i>` : ''}
                                 </div>
                                 <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; width:100%;">
