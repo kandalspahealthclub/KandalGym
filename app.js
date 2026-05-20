@@ -3152,6 +3152,14 @@ Equipa KandalGym`;
                     <label style="font-weight: 600; margin-bottom: 0.8rem; display: block; font-size:1rem; color:var(--primary);">2. Escreva a Mensagem:</label>
                     <textarea id="bulk-notify-message" rows="5" placeholder="Escreva aqui a sua mensagem..." 
                               style="width: 100%; border: 1px solid var(--surface-border); border-radius: 8px; padding: 12px; background: rgba(0,0,0,0.3); color: #fff; resize: none; font-size:1rem; line-height:1.5;"></textarea>
+                              
+                    <label style="font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.8rem; display: block; font-size:1rem; color:var(--primary);">3. Link de Imagem (Opcional):</label>
+                    <div style="display:flex; align-items:center; background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); border-radius: 8px; padding-right:12px;">
+                        <input type="url" id="bulk-notify-image-url" placeholder="Cole aqui o link de uma imagem (ex: https://site.com/foto.jpg)" 
+                               style="flex:1; border: none; padding: 12px; background: transparent; color: #fff; font-size:1rem; outline:none;">
+                        <i class="fas fa-image" style="color:var(--text-muted);"></i>
+                    </div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 8px;"><i class="fas fa-info-circle"></i> O WhatsApp gera automaticamente uma pré-visualização da imagem se usar um link público. (O envio direto de ficheiros do telemóvel não é suportado pelo protocolo de envio em massa do WhatsApp).</p>
                 </div>
 
                 <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
@@ -3236,10 +3244,15 @@ Equipa KandalGym`;
     }
 
     sendBulkNotification(type) {
-        const msg = document.getElementById('bulk-notify-message').value.trim();
+        let msg = document.getElementById('bulk-notify-message').value.trim();
+        const imgUrl = document.getElementById('bulk-notify-image-url') ? document.getElementById('bulk-notify-image-url').value.trim() : '';
 
         if (this.selectedNotifyIds.size === 0) return alert('Selecione pelo menos um destinatário.');
-        if (!msg) return alert('A mensagem não pode estar vazia.');
+        if (!msg && !imgUrl) return alert('A mensagem ou o link da imagem não podem estar vazios.');
+
+        if (imgUrl) {
+            msg = msg ? msg + '\\n\\n' + imgUrl : imgUrl;
+        }
 
         const clients = (this.state.clients || []).filter(c => this.selectedNotifyIds.has(String(c.id)));
 
