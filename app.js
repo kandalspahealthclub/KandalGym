@@ -3153,13 +3153,33 @@ Equipa KandalGym`;
                     <textarea id="bulk-notify-message" rows="5" placeholder="Escreva aqui a sua mensagem..." 
                               style="width: 100%; border: 1px solid var(--surface-border); border-radius: 8px; padding: 12px; background: rgba(0,0,0,0.3); color: #fff; resize: none; font-size:1rem; line-height:1.5;"></textarea>
                               
-                    <label style="font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.8rem; display: block; font-size:1rem; color:var(--primary);">3. Link de Imagem (Opcional):</label>
-                    <div style="display:flex; align-items:center; background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); border-radius: 8px; padding-right:12px;">
-                        <input type="url" id="bulk-notify-image-url" placeholder="Cole aqui o link de uma imagem (ex: https://site.com/foto.jpg)" 
-                               style="flex:1; border: none; padding: 12px; background: transparent; color: #fff; font-size:1rem; outline:none;">
-                        <i class="fas fa-image" style="color:var(--text-muted);"></i>
+                    <label style="font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.8rem; display: block; font-size:1rem; color:var(--primary);">3. Anexar Imagem (Cartaz / Foto):</label>
+                    <div style="display:flex; gap: 1rem; flex-wrap: wrap; background: rgba(0,0,0,0.2); padding: 1.2rem; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
+                        <div style="flex:1; min-width:250px; display:flex; flex-direction:column; justify-content:center;">
+                            <div style="display:flex; align-items:center; background: rgba(0,0,0,0.4); border: 1px solid var(--surface-border); border-radius: 8px; padding-right:12px; transition:0.3s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--surface-border)'">
+                                <input type="url" id="bulk-notify-image-url" placeholder="Cole o link público da imagem (ex: site, instagram)..." 
+                                       oninput="app.previewBulkImage(this.value)"
+                                       style="flex:1; border: none; padding: 12px; background: transparent; color: #fff; font-size:0.95rem; outline:none;">
+                                <i class="fas fa-link" style="color:var(--text-muted);"></i>
+                            </div>
+                            <div style="margin-top: 12px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
+                                <div style="display:flex; gap:8px; margin-bottom:6px;">
+                                    <i class="fab fa-whatsapp" style="color:#25D366; font-size:1.1rem;"></i> 
+                                    <span>O WhatsApp gera o cartão da imagem se usar um link público.</span>
+                                </div>
+                                <div style="display:flex; gap:8px; color:rgba(255,255,255,0.5);">
+                                    <i class="fas fa-exclamation-triangle" style="color:var(--warning);"></i>
+                                    <span>Não é possível anexar fotos da sua galeria automaticamente no envio em massa.</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="bulk-img-preview-container" style="width: 120px; height: 120px; border-radius: 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                            <div style="text-align:center; color:rgba(255,255,255,0.2);">
+                                <i class="fas fa-image" style="font-size:2rem; margin-bottom:5px; display:block;"></i>
+                                <span style="font-size:0.6rem; text-transform:uppercase; font-weight:bold;">Preview</span>
+                            </div>
+                        </div>
                     </div>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 8px;"><i class="fas fa-info-circle"></i> O WhatsApp gera automaticamente uma pré-visualização da imagem se usar um link público. (O envio direto de ficheiros do telemóvel não é suportado pelo protocolo de envio em massa do WhatsApp).</p>
                 </div>
 
                 <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
@@ -3172,6 +3192,16 @@ Equipa KandalGym`;
                 </div>
             </div>
         `;
+    }
+
+    previewBulkImage(url) {
+        const container = document.getElementById('bulk-img-preview-container');
+        if (!container) return;
+        if (url && url.length > 5) {
+            container.innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:cover;" onerror="this.outerHTML='<div style=\\'text-align:center;color:var(--danger);font-size:0.7rem;\\'><i class=\\'fas fa-broken-link\\' style=\\'font-size:1.5rem;margin-bottom:5px;display:block;\\'></i>Link Inválido</div>'">`;
+        } else {
+            container.innerHTML = `<div style="text-align:center; color:rgba(255,255,255,0.2);"><i class="fas fa-image" style="font-size:2rem; margin-bottom:5px; display:block;"></i><span style="font-size:0.6rem; text-transform:uppercase; font-weight:bold;">Preview</span></div>`;
+        }
     }
 
     toggleAllNotifyClients(checked) {
