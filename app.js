@@ -8226,7 +8226,7 @@ Equipa KandalGym`;
                             <thead>
                                 <tr>
                                     ${this.qrActiveTab === 'alunos' ? '<th style="width: 40px; text-align:center;"><i class="fas fa-check-square"></i></th>' : ''}
-                                    <th style="min-width: 200px;">${this.qrActiveTab === 'alunos' ? 'Aluno (Nome / Tel)' : 'Staff (Nome / Tel)'}</th>
+                                    <th style="min-width: 320px;">${this.qrActiveTab === 'alunos' ? 'Aluno (Nome / Tel)' : 'Staff (Nome / Tel)'}</th>
                                     <th style="width: 140px;">Plano</th>
                                     <th style="text-align:center; width: 80px;">Estado</th>
                                     <th style="text-align:center; width: 110px;">Créditos</th>
