@@ -3228,24 +3228,45 @@ Equipa KandalGym`;
     async copyBulkImageToClipboard() {
         const img = document.getElementById('bulk-uploaded-img');
         if (!img) return alert("Nenhuma imagem carregada.");
-        try {
-            const response = await fetch(img.src);
-            const blob = await response.blob();
-            const item = new ClipboardItem({ [blob.type]: blob });
-            await navigator.clipboard.write([item]);
-            
-            const btn = document.getElementById('btn-copy-bulk-img');
-            btn.innerHTML = '<i class="fas fa-check"></i> Imagem Copiada!';
-            btn.style.background = 'var(--success)';
-            btn.style.borderColor = 'var(--success)';
-            setTimeout(() => {
-                btn.innerHTML = '<i class="fas fa-copy"></i> Copiar Imagem';
-                btn.style.background = '';
-                btn.style.borderColor = '';
-            }, 3000);
-        } catch (err) {
-            console.error(err);
-            alert("O seu navegador não suporta a cópia direta de imagens. Use a Opção B (Link).");
+        
+        const doCopy = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth || img.width;
+                canvas.height = img.naturalHeight || img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+
+                canvas.toBlob(async (blob) => {
+                    if (!blob) return alert("Erro ao processar imagem.");
+                    try {
+                        const item = new ClipboardItem({ 'image/png': blob });
+                        await navigator.clipboard.write([item]);
+                        
+                        const btn = document.getElementById('btn-copy-bulk-img');
+                        btn.innerHTML = '<i class="fas fa-check"></i> Copiada (Faça Ctrl+V no chat!)';
+                        btn.style.background = 'var(--success)';
+                        btn.style.borderColor = 'var(--success)';
+                        setTimeout(() => {
+                            btn.innerHTML = '<i class="fas fa-copy"></i> Copiar Imagem';
+                            btn.style.background = '';
+                            btn.style.borderColor = '';
+                        }, 4000);
+                    } catch (err) {
+                        console.error('Clipboard error:', err);
+                        alert("O seu navegador bloqueou a cópia. Tente usar o botão direito sobre a miniatura ou use a Opção B (Link).");
+                    }
+                }, 'image/png');
+            } catch (err) {
+                console.error('Canvas error:', err);
+                alert("Erro ao ler imagem.");
+            }
+        };
+
+        if (img.complete && img.naturalWidth > 0) {
+            doCopy();
+        } else {
+            img.onload = doCopy;
         }
     }
 
@@ -3348,16 +3369,25 @@ Equipa KandalGym`;
 
     sendBulkNotification(type) {
         let msg = document.getElementById('bulk-notify-message').value.trim();
-        const imgUrl = document.getElementById('bulk-notify-image-url') ? document.getElementById('bulk-notify-image-url').value.trim() : '';
+        const imgUrlInput = document.getElementById('bulk-notify-image-url');
+        const imgUrl = imgUrlInput ? imgUrlInput.value.trim() : '';
+        const uploadedImg = document.getElementById('bulk-uploaded-img');
 
         if (this.selectedNotifyIds.size === 0) return alert('Selecione pelo menos um destinatário.');
-        if (!msg && !imgUrl) return alert('A mensagem ou o link da imagem não podem estar vazios.');
+        if (!msg && !imgUrl && !uploadedImg) return alert('A mensagem, a imagem ou o link não podem estar vazios.');
 
         if (imgUrl) {
             let finalUrl = imgUrl;
             if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
                 finalUrl = 'https://' + finalUrl;
             }
+            
+            if (finalUrl.includes('imgur.com/') && !finalUrl.includes('i.imgur.com') && !finalUrl.match(/\\.(jpg|jpeg|png|gif|webp)$/i)) {
+                const parts = finalUrl.split('/');
+                const id = parts[parts.length - 1].split('.')[0];
+                finalUrl = `https://i.imgur.com/${id}.jpg`;
+            }
+            
             msg = msg ? msg + '\\n\\n' + finalUrl : finalUrl;
         }
 
