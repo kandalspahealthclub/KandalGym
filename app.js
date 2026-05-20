@@ -1847,7 +1847,7 @@ Equipa KandalGym`;
             last7Days.push({
                 dateStart: new Date(d.setHours(0,0,0,0)),
                 dateEnd: new Date(d.setHours(23,59,59,999)),
-                label: d.toLocaleDateString('pt-PT', { weekday: 'short' }).replace('.', '').substring(0, 3) + '<br>' + String(d.getDate()).padStart(2, '0'),
+                label: d.toLocaleDateString('pt-PT', { weekday: 'short' }).replace('.', '').substring(0, 3) + '<br>' + String(d.getDate()).padStart(2, '0') + ' ' + d.toLocaleDateString('pt-PT', { month: 'short' }).replace('.', '').substring(0, 3),
                 count: 0
             });
         }
