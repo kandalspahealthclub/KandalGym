@@ -3156,24 +3156,35 @@ Equipa KandalGym`;
                     <label style="font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.8rem; display: block; font-size:1rem; color:var(--primary);">3. Anexar Imagem (Cartaz / Foto):</label>
                     <div style="display:flex; gap: 1rem; flex-wrap: wrap; background: rgba(0,0,0,0.2); padding: 1.2rem; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
                         <div style="flex:1; min-width:250px; display:flex; flex-direction:column; justify-content:center;">
-                            <div style="display:flex; align-items:center; background: rgba(0,0,0,0.4); border: 1px solid var(--surface-border); border-radius: 8px; padding-right:12px; transition:0.3s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--surface-border)'">
-                                <input type="url" id="bulk-notify-image-url" placeholder="Cole o link público da imagem (ex: site, instagram)..." 
-                                       oninput="app.previewBulkImage(this.value)"
-                                       style="flex:1; border: none; padding: 12px; background: transparent; color: #fff; font-size:0.95rem; outline:none;">
-                                <i class="fas fa-link" style="color:var(--text-muted);"></i>
+                            
+                            <div style="margin-bottom: 15px;">
+                                <label style="font-size:0.85rem; color:var(--text-muted); margin-bottom:5px; display:block;"><i class="fas fa-upload"></i> Opção A: Carregar Imagem do Computador</label>
+                                <input type="file" id="bulk-notify-file" accept="image/*" onchange="app.handleBulkImageUpload(this)"
+                                       style="width:100%; border: 1px solid var(--surface-border); border-radius: 8px; padding: 8px; background: rgba(0,0,0,0.4); color: #fff; font-size:0.9rem; cursor:pointer;">
+                                <button id="btn-copy-bulk-img" class="btn btn-sm btn-secondary" style="display:none; margin-top:8px; width:100%; transition:all 0.3s;" onclick="app.copyBulkImageToClipboard()">
+                                    <i class="fas fa-copy"></i> Copiar Imagem
+                                </button>
+                                <p id="bulk-file-hint" style="display:none; font-size: 0.75rem; color: var(--success); margin-top: 5px; line-height:1.4;">
+                                    <i class="fas fa-check-circle"></i> 1. Clique no botão acima para copiar.<br><i class="fab fa-whatsapp"></i> 2. No WhatsApp, faça <b>"Colar" (Ctrl+V)</b> em cada chat.
+                                </p>
                             </div>
-                            <div style="margin-top: 12px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
-                                <div style="display:flex; gap:8px; margin-bottom:6px;">
-                                    <i class="fab fa-whatsapp" style="color:#25D366; font-size:1.1rem;"></i> 
-                                    <span>O WhatsApp gera o cartão da imagem se usar um link público.</span>
-                                </div>
-                                <div style="display:flex; gap:8px; color:rgba(255,255,255,0.5);">
-                                    <i class="fas fa-exclamation-triangle" style="color:var(--warning);"></i>
-                                    <span>Não é possível anexar fotos da sua galeria automaticamente no envio em massa.</span>
+
+                            <div style="text-align:center; color:var(--text-muted); font-size:0.8rem; margin-bottom:15px; position:relative;">
+                                <hr style="border-color:rgba(255,255,255,0.05); position:absolute; width:100%; top:50%; margin:0; z-index:1;">
+                                <span style="background:#1a1a1a; padding:0 10px; position:relative; z-index:2; font-weight:bold;">OU</span>
+                            </div>
+
+                            <div>
+                                <label style="font-size:0.85rem; color:var(--text-muted); margin-bottom:5px; display:block;"><i class="fas fa-link"></i> Opção B: Usar Link (WhatsApp cria cartão automático)</label>
+                                <div style="display:flex; align-items:center; background: rgba(0,0,0,0.4); border: 1px solid var(--surface-border); border-radius: 8px; padding-right:12px; transition:0.3s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--surface-border)'">
+                                    <input type="url" id="bulk-notify-image-url" placeholder="Ex: site.com/cartaz.jpg (deve começar com http)" 
+                                           oninput="app.previewBulkImage(this.value)"
+                                           style="flex:1; border: none; padding: 10px; background: transparent; color: #fff; font-size:0.95rem; outline:none;">
                                 </div>
                             </div>
+
                         </div>
-                        <div id="bulk-img-preview-container" style="width: 120px; height: 120px; border-radius: 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                        <div id="bulk-img-preview-container" style="width: 130px; height: 130px; border-radius: 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
                             <div style="text-align:center; color:rgba(255,255,255,0.2);">
                                 <i class="fas fa-image" style="font-size:2rem; margin-bottom:5px; display:block;"></i>
                                 <span style="font-size:0.6rem; text-transform:uppercase; font-weight:bold;">Preview</span>
@@ -3194,11 +3205,73 @@ Equipa KandalGym`;
         `;
     }
 
+    handleBulkImageUpload(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const dataUrl = e.target.result;
+            const container = document.getElementById('bulk-img-preview-container');
+            container.innerHTML = `<img id="bulk-uploaded-img" src="${dataUrl}" style="width:100%; height:100%; object-fit:cover;">`;
+            
+            const btn = document.getElementById('btn-copy-bulk-img');
+            const hint = document.getElementById('bulk-file-hint');
+            if (btn) btn.style.display = 'block';
+            if (hint) hint.style.display = 'block';
+            
+            const urlInput = document.getElementById('bulk-notify-image-url');
+            if (urlInput) urlInput.value = '';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async copyBulkImageToClipboard() {
+        const img = document.getElementById('bulk-uploaded-img');
+        if (!img) return alert("Nenhuma imagem carregada.");
+        try {
+            const response = await fetch(img.src);
+            const blob = await response.blob();
+            const item = new ClipboardItem({ [blob.type]: blob });
+            await navigator.clipboard.write([item]);
+            
+            const btn = document.getElementById('btn-copy-bulk-img');
+            btn.innerHTML = '<i class="fas fa-check"></i> Imagem Copiada!';
+            btn.style.background = 'var(--success)';
+            btn.style.borderColor = 'var(--success)';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-copy"></i> Copiar Imagem';
+                btn.style.background = '';
+                btn.style.borderColor = '';
+            }, 3000);
+        } catch (err) {
+            console.error(err);
+            alert("O seu navegador não suporta a cópia direta de imagens. Use a Opção B (Link).");
+        }
+    }
+
     previewBulkImage(url) {
         const container = document.getElementById('bulk-img-preview-container');
         if (!container) return;
+        
+        const btn = document.getElementById('btn-copy-bulk-img');
+        const hint = document.getElementById('bulk-file-hint');
+        if (btn) btn.style.display = 'none';
+        if (hint) hint.style.display = 'none';
+        
+        const fileInput = document.getElementById('bulk-notify-file');
+        if (fileInput) fileInput.value = '';
+
         if (url && url.length > 5) {
-            container.innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:cover;" onerror="this.outerHTML='<div style=\\'text-align:center;color:var(--danger);font-size:0.7rem;\\'><i class=\\'fas fa-broken-link\\' style=\\'font-size:1.5rem;margin-bottom:5px;display:block;\\'></i>Link Inválido</div>'">`;
+            let previewUrl = url;
+            if (!previewUrl.startsWith('http')) previewUrl = 'https://' + previewUrl;
+            
+            if (previewUrl.includes('imgur.com/') && !previewUrl.includes('i.imgur.com') && !previewUrl.match(/\\.(jpg|jpeg|png|gif|webp)$/i)) {
+                const parts = previewUrl.split('/');
+                const id = parts[parts.length - 1].split('.')[0];
+                previewUrl = `https://i.imgur.com/${id}.jpg`;
+            }
+            
+            container.innerHTML = `<img src="${previewUrl}" style="width:100%; height:100%; object-fit:cover;" onerror="this.outerHTML='<div style=\\'text-align:center;color:var(--danger);font-size:0.7rem;padding:5px;\\'><i class=\\'fas fa-broken-link\\' style=\\'font-size:1.5rem;margin-bottom:5px;display:block;\\'></i>Link Inválido<br><span style=\\'font-size:0.55rem;color:var(--text-muted)\\'>Tente um link direto (.jpg/.png)</span></div>'">`;
         } else {
             container.innerHTML = `<div style="text-align:center; color:rgba(255,255,255,0.2);"><i class="fas fa-image" style="font-size:2rem; margin-bottom:5px; display:block;"></i><span style="font-size:0.6rem; text-transform:uppercase; font-weight:bold;">Preview</span></div>`;
         }
@@ -3281,7 +3354,11 @@ Equipa KandalGym`;
         if (!msg && !imgUrl) return alert('A mensagem ou o link da imagem não podem estar vazios.');
 
         if (imgUrl) {
-            msg = msg ? msg + '\\n\\n' + imgUrl : imgUrl;
+            let finalUrl = imgUrl;
+            if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+                finalUrl = 'https://' + finalUrl;
+            }
+            msg = msg ? msg + '\\n\\n' + finalUrl : finalUrl;
         }
 
         const clients = (this.state.clients || []).filter(c => this.selectedNotifyIds.has(String(c.id)));
