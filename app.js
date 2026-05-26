@@ -11043,9 +11043,14 @@ Equipa KandalGym`;
                                 </div>
                             </div>
                             <div style="margin-top:auto; padding-top:0.75rem; display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.05);">
-                                <span style="font-size:${isMobile ? '0.65rem' : '0.75rem'}; color:var(--accent); font-weight:700;">
-                                    <i class="fas fa-mortar-pestle"></i> ${recipe.ingredients ? recipe.ingredients.length : 0} Ing.
-                                </span>
+                                <div style="display:flex; gap:10px; align-items:center;">
+                                    <span style="font-size:${isMobile ? '0.65rem' : '0.75rem'}; color:var(--accent); font-weight:700;">
+                                        <i class="fas fa-mortar-pestle"></i> ${recipe.ingredients ? recipe.ingredients.length : 0} Ing.
+                                    </span>
+                                    <span style="font-size:${isMobile ? '0.65rem' : '0.75rem'}; color:var(--text-muted); font-weight:700;">
+                                        <i class="fas fa-bullseye"></i> ${recipe.portions || 1} porç.
+                                    </span>
+                                </div>
                                 ${recipe.videoUrl ? `
                                     <a href="${recipe.videoUrl}" target="_blank" style="color:red; font-size:${isMobile ? '0.75rem' : '0.85rem'}; text-decoration:none; font-weight:bold;">
                                         <i class="fab fa-youtube"></i> Vídeo
@@ -11070,6 +11075,7 @@ Equipa KandalGym`;
             name: '',
             description: '',
             videoUrl: '',
+            portions: 1,
             ingredients: []
         };
         this.setView('edit_recipe');
@@ -11109,12 +11115,20 @@ Equipa KandalGym`;
             <div style="display:grid; grid-template-columns:${isMobile ? '1fr' : '1.5fr 1fr'}; gap:1.5rem; align-items:start;">
                 
                 <div class="glass-panel" style="padding:1.5rem; display:flex; flex-direction:column; gap:1.5rem;">
-                    <div>
-                        <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Nome da Receita</label>
-                        <input type="text" id="recipe-name" value="${recipe.name || ''}" 
-                            placeholder="Ex: Panquecas de Aveia e Banana..."
-                            oninput="app.editingRecipeData.name = this.value"
-                            style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1.1rem; font-weight:600;">
+                    <div style="display:grid; grid-template-columns:${isMobile ? '1fr' : '3fr 1fr'}; gap:15px;">
+                        <div>
+                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Nome da Receita</label>
+                            <input type="text" id="recipe-name" value="${recipe.name || ''}" 
+                                placeholder="Ex: Panquecas de Aveia e Banana..."
+                                oninput="app.editingRecipeData.name = this.value"
+                                style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1.1rem; font-weight:600;">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Porções (Rendimento)</label>
+                            <input type="number" id="recipe-portions" value="${recipe.portions || 1}" min="1" step="1"
+                                oninput="app.editingRecipeData.portions = Math.max(1, parseInt(this.value) || 1)"
+                                style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1.1rem; font-weight:600; text-align:center;">
+                        </div>
                     </div>
 
                     <div>
@@ -11257,6 +11271,7 @@ Equipa KandalGym`;
             name: data.name.trim(),
             description: data.description.trim(),
             videoUrl: data.videoUrl.trim(),
+            portions: Math.max(1, parseInt(data.portions) || 1),
             ingredients: (data.ingredients || []).filter(ing => ing.name),
             updatedAt: new Date().toLocaleDateString('pt-PT')
         };
@@ -11302,7 +11317,7 @@ Equipa KandalGym`;
                 ${recipes.length === 0 ? `
                     <p style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--text-muted);">Não existem receitas criadas.</p>
                 ` : recipes.map(r => `
-                    <div class="glass-card" onclick="app.addRecipeToMeal('${r.id}')" 
+                    <div class="glass-card" onclick="app.askRecipePortions('${r.id}')" 
                         style="padding:12px; cursor:pointer; text-align:center; border:1px solid transparent; transition:all 0.2s;"
                         onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'">
                         <div style="font-size:1.5rem; margin-bottom:5px;">${this.extractYoutubeId(r.videoUrl) ? '<i class="fab fa-youtube" style="color:red;"></i>' : '<i class="fas fa-utensils" style="color:var(--primary);"></i>'}</div>
@@ -11315,20 +11330,111 @@ Equipa KandalGym`;
         this.showModal(content, '600px');
     }
 
-    addRecipeToMeal(recipeId) {
+    askRecipePortions(recipeId) {
+        const recipe = this.state.recipes.find(r => r.id === recipeId);
+        if (!recipe) return;
+
+        const portionsYield = recipe.portions || 1;
+        const macros = this.calculateRecipeMacros(recipe);
+
+        const content = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h2 style="margin:0;"><i class="fas fa-utensils"></i> Ajustar Porções</h2>
+                <button class="btn btn-ghost" onclick="app.closeModal()" style="padding:8px;"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                <div>
+                    <h3 style="margin:0 0 5px; color:#fff;">${recipe.name}</h3>
+                    <span style="font-size:0.8rem; color:var(--accent); font-weight:700;">
+                        Rendimento Total: ${portionsYield} porç${portionsYield > 1 ? 'ões' : 'ão'}
+                    </span>
+                </div>
+
+                <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); padding:12px; border-radius:10px;">
+                    <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px; text-transform:uppercase; font-weight:700;">Valores Totais da Receita</span>
+                    <strong style="color:#fff; font-size:0.95rem;">
+                        ${Math.round(macros.kcal)} kcal | ${Math.round(macros.prot)}g P | ${Math.round(macros.carb)}g C | ${Math.round(macros.fat)}g G
+                    </strong>
+                </div>
+
+                <div>
+                    <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Quantas porções deseja incluir nesta refeição?</label>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <input type="number" id="add-recipe-portions-input" value="1" min="0.1" step="0.5"
+                            oninput="app.triggerRecipePortionPreviewUpdate(this.value)"
+                            style="width:100px; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1.1rem; font-weight:600; text-align:center;">
+                        <span style="color:var(--text-muted); font-size:0.9rem;">porção(ões)</span>
+                    </div>
+                </div>
+
+                <div id="recipe-portion-preview"></div>
+
+                <button class="btn btn-primary" onclick="app.confirmAddRecipeToMeal('${recipe.id}')"
+                    style="width:100%; height:48px; border-radius:12px; font-weight:800; font-size:1rem; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <i class="fas fa-check"></i> Adicionar ao Plano
+                </button>
+            </div>
+        `;
+
+        this.showModal(content, '480px');
+        
+        this.tempRecipeMacros = macros;
+        this.tempRecipePortionsYield = portionsYield;
+        
+        this.triggerRecipePortionPreviewUpdate(1);
+    }
+
+    triggerRecipePortionPreviewUpdate(val) {
+        const p = Math.max(0.1, parseFloat(val) || 1);
+        const factor = p / this.tempRecipePortionsYield;
+        const pKcal = Math.round(this.tempRecipeMacros.kcal * factor);
+        const pProt = Math.round(this.tempRecipeMacros.prot * factor);
+        const pCarb = Math.round(this.tempRecipeMacros.carb * factor);
+        const pFat = Math.round(this.tempRecipeMacros.fat * factor);
+
+        const previewEl = document.getElementById('recipe-portion-preview');
+        if (previewEl) {
+            previewEl.innerHTML = `
+                <div style="background:rgba(var(--primary-rgb), 0.1); border:1px solid rgba(var(--primary-rgb), 0.2); padding:12px; border-radius:10px; text-align:center;">
+                    <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px; text-transform:uppercase; font-weight:700;">Valores a Adicionar (${p} porção${p !== 1 ? 'ões' : ''} de ${this.tempRecipePortionsYield})</span>
+                    <strong style="color:var(--primary); font-size:1.1rem;">
+                        ${pKcal} kcal | ${pProt}g P | ${pCarb}g C | ${pFat}g G
+                    </strong>
+                </div>
+            `;
+        }
+    }
+
+    confirmAddRecipeToMeal(recipeId) {
+        const input = document.getElementById('add-recipe-portions-input');
+        const selectedPortions = Math.max(0.1, parseFloat(input.value) || 1);
+        this.addRecipeToMealWithPortions(recipeId, selectedPortions);
+    }
+
+    addRecipeToMealWithPortions(recipeId, selectedPortions) {
         const recipe = this.state.recipes.find(r => r.id === recipeId);
         if (!recipe) return;
 
         const mealIdx = this.currentMealIdxForRecipe;
-        const macros = this.calculateRecipeMacros(recipe);
+        const totalMacros = this.calculateRecipeMacros(recipe);
+        const portionsYield = recipe.portions || 1;
+        
+        const factor = selectedPortions / portionsYield;
+        const macros = {
+            kcal: totalMacros.kcal * factor,
+            prot: totalMacros.prot * factor,
+            carb: totalMacros.carb * factor,
+            fat: totalMacros.fat * factor
+        };
 
-        let textToAdd = `\n--- RECEITA: ${recipe.name.toUpperCase()} ---\n`;
+        let textToAdd = `\n--- RECEITA: ${recipe.name.toUpperCase()} (${selectedPortions} Porção${selectedPortions !== 1 ? 'ões' : ''} de ${portionsYield}) ---\n`;
 
         if (macros.kcal > 0) {
             textToAdd += `(Valores: ${Math.round(macros.kcal)}kcal | ${Math.round(macros.prot)}g P | ${Math.round(macros.carb)}g C | ${Math.round(macros.fat)}g G)\n\n`;
         }
 
-        textToAdd += `INGREDIENTES:\n`;
+        textToAdd += `INGREDIENTES DA RECEITA COMPLETA (Rende ${portionsYield} porç${portionsYield > 1 ? 'ões' : 'ão'}):\n`;
         if (recipe.ingredients && recipe.ingredients.length > 0) {
             recipe.ingredients.forEach(ing => {
                 if (ing.name && ing.amount) {
@@ -11354,7 +11460,11 @@ Equipa KandalGym`;
 
         this.closeModal();
         this.renderMealEditor();
-        this.showToast(`Receita "${recipe.name}" adicionada!`);
+        this.showToast(`Receita "${recipe.name}" adicionada (${selectedPortions} porção/ões)!`);
+    }
+
+    addRecipeToMeal(recipeId) {
+        this.askRecipePortions(recipeId);
     }
 
     calculateRecipeMacros(recipe) {
