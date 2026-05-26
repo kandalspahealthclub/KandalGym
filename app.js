@@ -286,7 +286,10 @@ class FitnessApp {
         if (!libEx) return false;
         const cat = this.normalizeText(libEx.category);
         const name = this.normalizeText(libEx.name);
-        return cat === 'cardio' || cat === 'aerobico' || name.includes('passadeira') || name.includes('elitica') || name.includes('bicicleta') || name.includes('remo') || name.includes('corrida') || name.includes('caminhada') || name.includes('escada');
+        if (cat === 'cardio' || cat === 'aerobico') return true;
+        if (cat && cat !== 'geral' && cat !== 'outros') return false;
+        return (name.includes('passadeira') || name.includes('elitica') || name.includes('bicicleta') || name.includes('corrida') || name.includes('caminhada') || name.includes('escada')) 
+            && !name.includes('remo') && !name.includes('remada');
     }
 
 
