@@ -203,6 +203,10 @@ class FitnessApp {
                 }
             }
         };
+
+        // --- SERIAL SCANNER CONNECTION ---
+        this.serialScannerPort = null;
+        this.serialScannerReader = null;
     }
 
     initGlobalScanner() {
@@ -331,6 +335,65 @@ class FitnessApp {
                 this.serialWriter = null;
                 this.serialPort = null;
             }
+        }
+    }
+
+    async connectSerialScanner() {
+        if (!("serial" in navigator)) {
+            alert("O seu navegador não suporta a Web Serial API. Use o Google Chrome ou Microsoft Edge.");
+            return;
+        }
+
+        try {
+            this.serialScannerPort = await navigator.serial.requestPort();
+            await this.serialScannerPort.open({ baudRate: 9600 });
+
+            this.showToast("Scanner Serial ligado com sucesso!", "success");
+            this.startSerialScannerReader();
+            this.renderContent(); // Re-render para atualizar o estado do botão
+        } catch (err) {
+            console.error("Erro ao ligar ao Scanner Serial:", err);
+            alert("Não foi possível conectar ao Scanner Serial.");
+        }
+    }
+
+    async startSerialScannerReader() {
+        if (!this.serialScannerPort || !this.serialScannerPort.readable) return;
+        try {
+            const textDecoder = new TextDecoderStream();
+            this.serialScannerReadableStream = this.serialScannerPort.readable.pipeTo(textDecoder.writable);
+            const reader = textDecoder.readable.getReader();
+            this.serialScannerReader = reader;
+            
+            let buffer = '';
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) {
+                    reader.releaseLock();
+                    break;
+                }
+                if (value) {
+                    buffer += value;
+                    // Os leitores normalmente enviam \r ou \n ou \r\n no final de uma leitura
+                    if (buffer.includes('\n') || buffer.includes('\r')) {
+                        const codes = buffer.split(/[\r\n]+/);
+                        // Processar todos os códigos completos, deixar o último incompleto no buffer
+                        buffer = codes.pop() || '';
+                        for (const code of codes) {
+                            const cleanCode = code.trim();
+                            if (cleanCode.length >= 2) {
+                                console.log("Leitura Serial (Scanner):", cleanCode);
+                                this.processarLeituraQR(cleanCode);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Erro na leitura do Scanner Serial:", err);
+            this.serialScannerReader = null;
+            this.serialScannerPort = null;
+            this.renderContent();
         }
     }
 
@@ -2580,9 +2643,16 @@ Equipa KandalGym`;
                         O leitor de hardware está ativo nesta página. Pode também projetar num segundo ecrã.
                     </p>
                 </div>
-                <button class="btn btn-primary" onclick="app.openAccessMonitor()" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);">
-                    <i class="fas fa-external-link-alt"></i> Abrir Ecrã de Cliente (2º Monitor)
-                </button>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn ${this.serialScannerPort ? 'btn-success' : 'btn-secondary'}" 
+                        style="border: 1px solid ${this.serialScannerPort ? 'var(--success)' : 'var(--primary)'}; color: ${this.serialScannerPort ? '#fff' : 'var(--primary)'}; background: ${this.serialScannerPort ? 'var(--success)' : 'rgba(145, 27, 43, 0.05)'}; height: 44px; border-radius: 12px;" 
+                        onclick="app.connectSerialScanner()">
+                        <i class="fas fa-barcode"></i> ${this.serialScannerPort ? 'Scanner Serial Conetado' : 'Ligar Scanner Serial'}
+                    </button>
+                    <button class="btn btn-primary" onclick="app.openAccessMonitor()" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2); height: 44px;">
+                        <i class="fas fa-external-link-alt"></i> Abrir Ecrã de Cliente (2º Monitor)
+                    </button>
+                </div>
             </div>
 
             <div id="local-display-container">
@@ -8271,15 +8341,20 @@ Equipa KandalGym`;
                         </h3>
                         <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;">Utilize o leitor físico para ler os códigos QR dos alunos.</p>
                         
-                        <div style="display: flex; gap: 8px; margin-bottom: 20px;">
-                            <div style="flex: 1; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 10px; display: flex; align-items: center; gap: 10px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px;">
+                            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                                 <span class="pulse-green" style="width:10px; height:10px; background:#10b981; border-radius:50%;"></span>
-                                <span style="font-size:0.85rem; color:#10b981; font-weight:700;">Pronto para leitura</span>
+                                <span style="font-size:0.85rem; color:#10b981; font-weight:700;">Pronto</span>
                             </div>
                             <button class="btn ${this.serialWriter ? 'btn-success' : 'btn-secondary'}" 
-                                style="flex: 1; border: 1px solid ${this.serialWriter ? 'var(--success)' : 'var(--primary)'}; color: ${this.serialWriter ? '#fff' : 'var(--primary)'}; background: ${this.serialWriter ? 'var(--success)' : 'rgba(145, 27, 43, 0.05)'}; height: 44px;" 
+                                style="border: 1px solid ${this.serialWriter ? 'var(--success)' : 'var(--primary)'}; color: ${this.serialWriter ? '#fff' : 'var(--primary)'}; background: ${this.serialWriter ? 'var(--success)' : 'rgba(145, 27, 43, 0.05)'}; height: 44px; font-size: 0.8rem; padding: 0 5px;" 
                                 onclick="app.connectArduino()">
-                                <i class="fas fa-plug"></i> ${this.serialWriter ? 'Arduino Conetado' : 'Ligar Arduino'}
+                                <i class="fas fa-plug"></i> ${this.serialWriter ? 'Arduino Ok' : 'Ligar Arduino'}
+                            </button>
+                            <button class="btn ${this.serialScannerPort ? 'btn-success' : 'btn-secondary'}" 
+                                style="border: 1px solid ${this.serialScannerPort ? 'var(--success)' : 'var(--primary)'}; color: ${this.serialScannerPort ? '#fff' : 'var(--primary)'}; background: ${this.serialScannerPort ? 'var(--success)' : 'rgba(145, 27, 43, 0.05)'}; height: 44px; font-size: 0.8rem; padding: 0 5px;" 
+                                onclick="app.connectSerialScanner()">
+                                <i class="fas fa-barcode"></i> ${this.serialScannerPort ? 'Scanner Ok' : 'Ligar Scanner'}
                             </button>
                         </div>
 
