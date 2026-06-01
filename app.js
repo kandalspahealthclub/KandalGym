@@ -195,8 +195,12 @@ class FitnessApp {
         // --- CANAL DE COMUNICAÇÃO PARA MONITOR ---
         this.accessChannel = new BroadcastChannel("kandal_access");
         this.accessChannel.onmessage = (ev) => {
-            if (ev.data && ev.data.type === 'access_request') {
-                this.processarLeituraQR(ev.data.code);
+            if (ev.data) {
+                if (ev.data.type === 'access_request') {
+                    this.processarLeituraQR(ev.data.code);
+                } else if (ev.data.type === 'access_event') {
+                    this.handleLocalMonitorAccessEvent(ev.data.data);
+                }
             }
         };
     }
@@ -2482,22 +2486,165 @@ Equipa KandalGym`;
 
     renderMonitorView(container) {
         container.innerHTML = `
-            <div style="height: calc(100vh - 150px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2rem;">
-                <div class="glass-panel" style="max-width: 600px; padding: 3rem; border-radius: 30px; border: 2px solid var(--primary);">
-                    <i class="fas fa-desktop" style="font-size: 4rem; color: var(--primary); margin-bottom: 2rem;"></i>
-                    <h2 style="font-size: 2rem; margin-bottom: 1rem;">Monitor de Acesso</h2>
-                    <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2rem;">
-                        Esta funcionalidade foi desenhada para um segundo ecrã (TV ou Monitor) virado para o cliente na receção.
-                    </p>
-                    <button class="btn btn-primary btn-lg" onclick="app.openAccessMonitor()" style="padding: 1.5rem 3rem; font-size: 1.2rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);">
-                        <i class="fas fa-external-link-alt"></i> Abrir Ecra de Cliente
-                    </button>
-                    <p style="margin-top: 2rem; font-size: 0.9rem; color: var(--text-muted);">
-                        <i class="fas fa-info-circle"></i> Após abrir, arraste a nova janela para o segundo monitor e coloque em ecrã inteiro (tecla F11).
+            <style>
+                #local-display-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    text-align: center;
+                    position: relative;
+                    min-height: calc(100vh - 240px);
+                    background: rgba(15, 23, 42, 0.4);
+                    border: 1px solid var(--surface-border);
+                    border-radius: 24px;
+                    padding: 2rem;
+                    overflow: hidden;
+                    margin-top: 1rem;
+                }
+                #local-display-container .logo {
+                    width: 250px;
+                    opacity: 0.8;
+                    animation: localPulse 3s infinite ease-in-out;
+                }
+                #local-display-container .user-card {
+                    display: none;
+                    flex-direction: column;
+                    align-items: center;
+                    animation: localSlideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+                }
+                #local-display-container .photo-frame {
+                    width: 220px;
+                    height: 220px;
+                    border-radius: 50%;
+                    border: 10px solid var(--primary);
+                    overflow: hidden;
+                    background: #1e293b;
+                    margin-bottom: 1.5rem;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                #local-display-container .photo-frame img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+                #local-display-container .photo-frame i {
+                    font-size: 5rem;
+                    color: #334155;
+                }
+                #local-display-container .name {
+                    font-size: 3rem;
+                    font-weight: 800;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    margin: 0;
+                }
+                #local-display-container .status {
+                    font-size: 1.6rem;
+                    font-weight: 600;
+                    padding: 0.8rem 2.2rem;
+                    border-radius: 50px;
+                    margin-top: 1rem;
+                }
+                #local-display-container .bg-valid {
+                    background: linear-gradient(135deg, #064e3b, #065f46) !important;
+                    color: #fff !important;
+                }
+                #local-display-container .bg-invalid {
+                    background: linear-gradient(135deg, #7f1d1d, #991b1b) !important;
+                    color: #fff !important;
+                }
+                #local-display-container .border-valid {
+                    border-color: var(--success) !important;
+                }
+                #local-display-container .border-invalid {
+                    border-color: var(--danger) !important;
+                }
+                @keyframes localPulse {
+                    0%, 100% { transform: scale(1); opacity: 0.8; }
+                    50% { transform: scale(1.05); opacity: 1; }
+                }
+                @keyframes localSlideUp {
+                    from { opacity: 0; transform: translateY(50px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            </style>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="margin: 0;"><i class="fas fa-desktop"></i> Monitor de Entrada</h2>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; margin-top: 0.2rem;">
+                        O leitor de hardware está ativo nesta página. Pode também projetar num segundo ecrã.
                     </p>
                 </div>
+                <button class="btn btn-primary" onclick="app.openAccessMonitor()" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);">
+                    <i class="fas fa-external-link-alt"></i> Abrir Ecrã de Cliente (2º Monitor)
+                </button>
+            </div>
+
+            <div id="local-display-container">
+                <div id="local-standby" class="logo">
+                    <img src="logo.png" style="width:100%; filter: drop-shadow(0 0 30px rgba(99,102,241,0.3));">
+                </div>
+                
+                <div id="local-user-display" class="user-card">
+                    <div id="local-user-photo-frame" class="photo-frame">
+                        <img id="local-user-photo" src="" style="display:none;">
+                        <i id="local-user-icon" class="fas fa-user"></i>
+                    </div>
+                    <h1 id="local-user-name" class="name">NOME DO CLIENTE</h1>
+                    <div id="local-user-status" class="status">ENTRADA VÁLIDA</div>
+                </div>
+                
+                <!-- Input do Scanner de Hardware Escondido -->
+                <input type="text" id="local-monitor-scanner-input" autocomplete="off" 
+                    style="position: absolute; top: -100px; left: -100px; opacity: 0; width: 1px; height: 1px;">
             </div>
         `;
+
+        // --- AUTO FOCUS NO HARDWARE SCANNER PARA O MONITOR LOCAL ---
+        setTimeout(() => {
+            const hwInput = document.getElementById('local-monitor-scanner-input');
+            if (hwInput) {
+                hwInput.focus({ preventScroll: true });
+                
+                // Tratar o keyup para processar a leitura
+                hwInput.onkeyup = (e) => {
+                    if (e.key === 'Enter') {
+                        const val = hwInput.value.trim().toUpperCase();
+                        if (val.length >= 2) {
+                            // Feedback visual rápido
+                            const containerEl = document.getElementById('local-display-container');
+                            if (containerEl) {
+                                containerEl.style.border = '2px solid var(--primary)';
+                                setTimeout(() => containerEl.style.border = '1px solid var(--surface-border)', 500);
+                            }
+                            this.processarLeituraQR(val);
+                        }
+                        hwInput.value = '';
+                    }
+                };
+
+                // Manter foco persistente apenas se NÃO estivermos a interagir com outros campos
+                document.onmousedown = (e) => {
+                    if (this.activeView !== 'monitor' || !hwInput) return;
+
+                    const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'];
+                    if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button') || e.target.closest('a')) {
+                        return;
+                    }
+
+                    setTimeout(() => {
+                        if (this.activeView === 'monitor' && hwInput && document.activeElement.tagName !== 'INPUT') {
+                            hwInput.focus({ preventScroll: true });
+                        }
+                    }, 100);
+                };
+            }
+        }, 500);
     }
 
     openAccessMonitor() {
@@ -9144,6 +9291,66 @@ Equipa KandalGym`;
         }
     }
 
+    broadcastAccessEvent(data) {
+        new BroadcastChannel('kandal_access').postMessage({
+            type: 'access_event',
+            data: data
+        });
+        this.handleLocalMonitorAccessEvent(data);
+    }
+
+    handleLocalMonitorAccessEvent(data) {
+        const standby = document.getElementById('local-standby');
+        const userDisplay = document.getElementById('local-user-display');
+        if (!standby || !userDisplay) return;
+
+        if (this.localMonitorTimeout) clearTimeout(this.localMonitorTimeout);
+
+        standby.style.display = 'none';
+        userDisplay.style.display = 'flex';
+
+        const nameEl = document.getElementById('local-user-name');
+        const statusEl = document.getElementById('local-user-status');
+        const frameEl = document.getElementById('local-user-photo-frame');
+        const photoEl = document.getElementById('local-user-photo');
+        const iconEl = document.getElementById('local-user-icon');
+
+        if (nameEl) {
+            nameEl.innerText = data.name;
+            nameEl.className = 'name ' + (data.valid ? 'border-valid' : 'border-invalid');
+            if (data.valid) {
+                nameEl.style.color = 'var(--secondary)'; // matching client monitor css theme
+            } else {
+                nameEl.style.color = 'var(--danger)';
+            }
+        }
+        if (statusEl) {
+            statusEl.innerText = data.msg.toUpperCase();
+            statusEl.className = 'status ' + (data.valid ? 'bg-valid' : 'bg-invalid');
+        }
+        if (frameEl) {
+            frameEl.className = 'photo-frame ' + (data.valid ? 'border-valid' : 'border-invalid');
+        }
+
+        if (photoEl && iconEl) {
+            if (data.photo) {
+                photoEl.src = data.photo;
+                photoEl.style.display = 'block';
+                iconEl.style.display = 'none';
+            } else {
+                photoEl.style.display = 'none';
+                iconEl.style.display = 'block';
+            }
+        }
+
+        this.localMonitorTimeout = setTimeout(() => {
+            const currentStandby = document.getElementById('local-standby');
+            const currentDisplay = document.getElementById('local-user-display');
+            if (currentStandby) currentStandby.style.display = 'block';
+            if (currentDisplay) currentDisplay.style.display = 'none';
+        }, 5000);
+    }
+
     processarLeituraQR(id) {
         const st = document.getElementById("scan-status");
         const formattedId = String(id).trim().toUpperCase();
@@ -9164,10 +9371,7 @@ Equipa KandalGym`;
 
         if (!c) {
             this.showQRMsg(" Codigo não reconhecido", "bg-qr-danger");
-            new BroadcastChannel('kandal_access').postMessage({
-                type: 'access_event',
-                data: { name: 'INVÁLIDOÂLIDO', msg: 'Cáâ€œDIGO DESCONHECIDO', valid: false, photo: null }
-            });
+            this.broadcastAccessEvent({ name: 'INVÁLIDO LIDO', msg: 'CÓDIGO DESCONHECIDO', valid: false, photo: null });
             this.sendToArduino('B');
             this.lastProcessedQR = formattedId;
             this.lastProcessedTime = Date.now();
@@ -9176,10 +9380,7 @@ Equipa KandalGym`;
 
         if (!c.ativo) {
             this.showQRMsg(` ${c.nome}: Conta Inativa`, "bg-qr-danger");
-            new BroadcastChannel('kandal_access').postMessage({
-                type: 'access_event',
-                data: { name: c.nome, msg: 'CONTA INATIVA', valid: false, photo: c.photoUrl || null }
-            });
+            this.broadcastAccessEvent({ name: c.nome, msg: 'CONTA INATIVA', valid: false, photo: c.photoUrl || null });
             this.sendToArduino('B');
             this.lastProcessedQR = formattedId;
             this.lastProcessedTime = Date.now();
@@ -9226,17 +9427,14 @@ Equipa KandalGym`;
 
 
         if (isExit) {
-            // --- LOGICA DE SAáÂDA ---
+            // --- LOGICA DE SAÍDA ---
             if (!c.histórico) c.histórico = [];
             c.histórico.unshift({ d: agora.toISOString(), t: 'out' });
 
             this.showQRMsg(`Até amanhã, ${c.nome}! Saída registada.`, "bg-qr-warning");
             this.showToast(`Saída registada: ${c.nome}`, "info");
 
-            new BroadcastChannel('kandal_access').postMessage({
-                type: 'access_event',
-                data: { name: c.nome, msg: 'ATÉ AMANHÃ! (SAÍDA)', valid: true, photo: c.photoUrl || null }
-            });
+            this.broadcastAccessEvent({ name: c.nome, msg: 'ATÉ AMANHÃ! (SAÍDA)', valid: true, photo: c.photoUrl || null });
             this.sendToArduino('A');
 
         } else {
@@ -9245,10 +9443,7 @@ Equipa KandalGym`;
                 // Validar data
                 if (hj > (c.validade || '')) {
                     this.showQRMsg(`${c.nome}: Validade Expirada`, "bg-qr-warning");
-                    new BroadcastChannel('kandal_access').postMessage({
-                        type: 'access_event',
-                        data: { name: c.nome, msg: 'VALIDADE EXPIRADA', valid: false, photo: c.photoUrl || null }
-                    });
+                    this.broadcastAccessEvent({ name: c.nome, msg: 'VALIDADE EXPIRADA', valid: false, photo: c.photoUrl || null });
                     this.sendToArduino('B');
                     return;
                 }
@@ -9256,10 +9451,7 @@ Equipa KandalGym`;
                 // Validar créditos
                 if ((c.ent || 0) <= 0) {
                     this.showQRMsg(`${c.nome}: Sem créditos`, "bg-qr-danger");
-                    new BroadcastChannel('kandal_access').postMessage({
-                        type: 'access_event',
-                        data: { name: c.nome, msg: 'SEM CRÉDITOS', valid: false, photo: c.photoUrl || null }
-                    });
+                    this.broadcastAccessEvent({ name: c.nome, msg: 'SEM CRÉDITOS', valid: false, photo: c.photoUrl || null });
                     this.sendToArduino('B');
                     return;
                 }
@@ -9280,10 +9472,7 @@ Equipa KandalGym`;
 
                 if (entriesHj >= limitDiario) {
                     this.showQRMsg(`${c.nome}: Limite diário atingido`, "bg-qr-warning");
-                    new BroadcastChannel('kandal_access').postMessage({
-                        type: 'access_event',
-                        data: { name: c.nome, msg: 'LIMITE DIÁRIO', valid: false, photo: c.photoUrl || null }
-                    });
+                    this.broadcastAccessEvent({ name: c.nome, msg: 'LIMITE DIÁRIO', valid: false, photo: c.photoUrl || null });
                     this.sendToArduino('B');
                     return;
                 }
@@ -9297,10 +9486,7 @@ Equipa KandalGym`;
             this.showQRMsg(`Bem-vindo, ${c.nome}! Entrada validada.`, "bg-qr-success");
             this.showToast(`Entrada validada: ${c.nome}`, "success");
 
-            new BroadcastChannel('kandal_access').postMessage({
-                type: 'access_event',
-                data: { name: c.nome, msg: 'BEM-VINDO!', valid: true, photo: c.photoUrl || null }
-            });
+            this.broadcastAccessEvent({ name: c.nome, msg: 'BEM-VINDO!', valid: true, photo: c.photoUrl || null });
             this.sendToArduino('A');
         }
 
@@ -11047,9 +11233,9 @@ Equipa KandalGym`;
                                     <span style="font-size:${isMobile ? '0.65rem' : '0.75rem'}; color:var(--accent); font-weight:700;">
                                         <i class="fas fa-mortar-pestle"></i> ${recipe.ingredients ? recipe.ingredients.length : 0} Ing.
                                     </span>
-                                    <span style="font-size:${isMobile ? '0.65rem' : '0.75rem'}; color:var(--text-muted); font-weight:700;">
-                                        <i class="fas fa-bullseye"></i> ${recipe.portions || 1} porç.
-                                    </span>
+                                    ${recipe.totalWeight ? `<span style="font-size:${isMobile ? '0.65rem' : '0.75rem'}; color:var(--text-muted); font-weight:700;">
+                                        <i class="fas fa-weight-hanging"></i> ${recipe.totalWeight}g total
+                                    </span>` : ''}
                                 </div>
                                 ${recipe.videoUrl ? `
                                     <a href="${recipe.videoUrl}" target="_blank" style="color:red; font-size:${isMobile ? '0.75rem' : '0.85rem'}; text-decoration:none; font-weight:bold;">
@@ -11075,7 +11261,7 @@ Equipa KandalGym`;
             name: '',
             description: '',
             videoUrl: '',
-            portions: 1,
+            totalWeight: '',
             ingredients: []
         };
         this.setView('edit_recipe');
@@ -11124,9 +11310,10 @@ Equipa KandalGym`;
                                 style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1.1rem; font-weight:600;">
                         </div>
                         <div>
-                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Porções (Rendimento)</label>
-                            <input type="number" id="recipe-portions" value="${recipe.portions || 1}" min="1" step="1"
-                                oninput="app.editingRecipeData.portions = Math.max(1, parseInt(this.value) || 1)"
+                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Peso Total (g)</label>
+                            <input type="number" id="recipe-total-weight" value="${recipe.totalWeight || ''}" min="1" step="1"
+                                placeholder="Ex: 600"
+                                oninput="app.editingRecipeData.totalWeight = parseFloat(this.value) || null"
                                 style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1.1rem; font-weight:600; text-align:center;">
                         </div>
                     </div>
