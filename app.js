@@ -204,9 +204,16 @@ class FitnessApp {
             }
         };
 
+        window.addEventListener('message', (ev) => {
+            if (ev.data && ev.data.type === 'kandal_scan') {
+                this.processarLeituraQR(ev.data.code);
+            }
+        });
+
         // --- SERIAL SCANNER CONNECTION ---
         this.serialScannerPort = null;
         this.serialScannerReader = null;
+        this.monitorScannerListenerAttached = false;
     }
 
     initGlobalScanner() {
@@ -2713,6 +2720,32 @@ Equipa KandalGym`;
                         }
                     }, 100);
                 };
+
+                if (!this.monitorScannerListenerAttached) {
+                    let scanBuffer = '';
+                    let scanTimer = null;
+                    document.addEventListener('keydown', (e) => {
+                        if (this.activeView !== 'monitor') return;
+                        const targetTag = e.target && e.target.tagName ? e.target.tagName.toUpperCase() : '';
+                        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(targetTag)) return;
+
+                        if (e.key === 'Enter') {
+                            const val = scanBuffer.trim().toUpperCase();
+                            scanBuffer = '';
+                            if (val.length >= 2) {
+                                this.processarLeituraQR(val);
+                            }
+                            return;
+                        }
+
+                        if (e.key.length === 1) {
+                            scanBuffer += e.key;
+                            clearTimeout(scanTimer);
+                            scanTimer = setTimeout(() => { scanBuffer = ''; }, 400);
+                        }
+                    });
+                    this.monitorScannerListenerAttached = true;
+                }
             }
         }, 500);
     }
@@ -2720,6 +2753,151 @@ Equipa KandalGym`;
     openAccessMonitor() {
         const monitorWindow = window.open('', 'KandalMonitor', 'width=1200,height=800');
         if (!monitorWindow) return alert("Por favor, permita pop-ups para abrir o monitor.");
+
+        // Store reference for postMessage communication
+        this.monitorWindow = monitorWindow;
+
+        const css =
+            ':root { --primary: #911B2B; --secondary: #10b981; --danger: #ef4444; --bg: #0f1218; --text: #f8fafc; --accent: #c4a24d; } ' +
+            '* { margin: 0; padding: 0; box-sizing: border-box; font-family: \'Outfit\', sans-serif; } ' +
+            'body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; } ' +
+            '.container { text-align: center; width: 100%; height: calc(100vh - 48px); display: flex; flex-direction: column; align-items: center; justify-content: center; } ' +
+            '.logo { width: 380px; opacity: 0.85; animation: pulse 3s infinite ease-in-out; } ' +
+            '.user-card { display: none; flex-direction: column; align-items: center; animation: slideUp 0.5s cubic-bezier(0.23, 1, 0.32, 1); } ' +
+            '.photo-frame { width: 300px; height: 300px; border-radius: 50%; border: 12px solid var(--primary); overflow: hidden; background: #1e293b; margin-bottom: 1.5rem; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; } ' +
+            '.photo-frame img { width: 100%; height: 100%; object-fit: cover; } ' +
+            '.photo-frame i { font-size: 7rem; color: #334155; } ' +
+            '.name { font-size: 4.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin: 0; line-height: 1; } ' +
+            '.status-badge { font-size: 2rem; font-weight: 700; padding: 0.8rem 2.5rem; border-radius: 50px; margin-top: 1.2rem; } ' +
+            '.bg-valid { background: linear-gradient(135deg, #064e3b, #065f46); color: #34d399; } ' +
+            '.bg-invalid { background: linear-gradient(135deg, #7f1d1d, #991b1b); color: #fca5a5; } ' +
+            '.border-valid { border-color: #10b981 !important; color: #10b981; } ' +
+            '.border-invalid { border-color: #ef4444 !important; color: #ef4444; } ' +
+            '.debug-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 48px; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 0.8rem; color: rgba(255,255,255,0.5); border-top: 1px solid rgba(255,255,255,0.08); } ' +
+            '.debug-bar .code-lido { font-family: monospace; background: rgba(255,255,255,0.05); padding: 3px 10px; border-radius: 6px; color: #a78bfa; letter-spacing: 1px; } ' +
+            '.debug-bar .status-conn { display: flex; align-items: center; gap: 6px; } ' +
+            '.dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: blink 2s infinite; } ' +
+            '@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.04); opacity: 1; } } ' +
+            '@keyframes slideUp { from { opacity: 0; transform: translateY(80px); } to { opacity: 1; transform: translateY(0); } } ' +
+            '@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } } ' +
+            '@keyframes flash { 0% { background: rgba(145,27,43,0.3); } 100% { background: transparent; } }';
+
+        const script =
+            '(function() {' +
+            '  const bc = new BroadcastChannel("kandal_access");' +
+            '  let scanTimeout;' +
+            '  const hwInput = document.getElementById("monitor-scanner-input");' +
+            '  const debugCode = document.getElementById("debug-code");' +
+            '  const debugStatus = document.getElementById("debug-status");' +
+            '' +
+            '  function enviarCodigo(val) {' +
+            '    if (!val || val.length < 2) return;' +
+            '    if (debugCode) debugCode.textContent = val;' +
+            '    document.body.style.animation = "flash 0.4s ease";' +
+            '    setTimeout(() => { document.body.style.animation = ""; }, 400);' +
+            '    /* Tentar via postMessage (mais fiável que window.opener.app direto) */' +
+            '    try {' +
+            '      if (window.opener && !window.opener.closed) {' +
+            '        window.opener.postMessage({ type: "kandal_scan", code: val }, "*");' +
+            '      }' +
+            '    } catch(e) {}' +
+            '    /* Sempre enviar também via BroadcastChannel como fallback */' +
+            '    bc.postMessage({ type: "access_request", code: val });' +
+            '  }' +
+            '' +
+            '  hwInput.addEventListener("keydown", function(e) {' +
+            '    if (e.key === "Enter") {' +
+            '      const val = hwInput.value.trim().toUpperCase();' +
+            '      hwInput.value = "";' +
+            '      enviarCodigo(val);' +
+            '    }' +
+            '  });' +
+            '' +
+            '  /* Capturar também input rapid (scanner nao usa Enter em alguns modos) */' +
+            '  let scanBuffer = ""; let scanTimer;' +
+            '  document.addEventListener("keydown", function(e) {' +
+            '    if (e.target === hwInput) return;' +
+            '    if (e.key === "Enter" && scanBuffer.length >= 2) {' +
+            '      const code = scanBuffer.trim().toUpperCase();' +
+            '      scanBuffer = "";' +
+            '      clearTimeout(scanTimer);' +
+            '      enviarCodigo(code);' +
+            '    } else if (e.key.length === 1) {' +
+            '      scanBuffer += e.key;' +
+            '      clearTimeout(scanTimer);' +
+            '      scanTimer = setTimeout(() => { scanBuffer = ""; }, 500);' +
+            '    }' +
+            '  });' +
+            '' +
+            '  /* Auto-foco persistente no hwInput */' +
+            '  function keepFocus() { if (document.activeElement !== hwInput) hwInput.focus({ preventScroll: true }); }' +
+            '  setInterval(keepFocus, 1500);' +
+            '  setTimeout(keepFocus, 300);' +
+            '  document.addEventListener("click", () => setTimeout(keepFocus, 100));' +
+            '' +
+            '  /* Receber resultado da aplicação principal */' +
+            '  bc.onmessage = function(ev) {' +
+            '    if (!ev.data || ev.data.type !== "access_event") return;' +
+            '    const data = ev.data.data;' +
+            '    clearTimeout(scanTimeout);' +
+            '    if (debugStatus) debugStatus.textContent = data.valid ? "✓ Válido" : "✗ " + data.msg;' +
+            '    document.getElementById("standby").style.display = "none";' +
+            '    const ud = document.getElementById("user-display");' +
+            '    ud.style.display = "none"; void ud.offsetWidth; ud.style.display = "flex";' +
+            '    document.getElementById("user-name").innerText = data.name;' +
+            '    document.getElementById("user-name").className = "name " + (data.valid ? "border-valid" : "border-invalid");' +
+            '    const sb = document.getElementById("user-status-badge");' +
+            '    sb.innerText = data.msg.toUpperCase();' +
+            '    sb.className = "status-badge " + (data.valid ? "bg-valid" : "bg-invalid");' +
+            '    const frame = document.getElementById("user-photo-frame");' +
+            '    frame.className = "photo-frame " + (data.valid ? "border-valid" : "border-invalid");' +
+            '    const photo = document.getElementById("user-photo");' +
+            '    const icon = document.getElementById("user-icon");' +
+            '    if (data.photo) { photo.src = data.photo; photo.style.display = "block"; icon.style.display = "none"; }' +
+            '    else { photo.style.display = "none"; icon.style.display = "block"; }' +
+            '    scanTimeout = setTimeout(function() {' +
+            '      document.getElementById("standby").style.display = "block";' +
+            '      ud.style.display = "none";' +
+            '      if (debugStatus) debugStatus.textContent = "A aguardar leitura...";' +
+            '    }, 5000);' +
+            '  };' +
+            '' +
+            '  /* Receber via postMessage da janela principal */' +
+            '  window.addEventListener("message", function(ev) {' +
+            '    if (ev.data && ev.data.type === "kandal_access_event") {' +
+            '      bc.dispatchEvent ? null : null;' +
+            '      /* Simular como se fosse do BroadcastChannel */' +
+            '      bc.onmessage({ data: { type: "access_event", data: ev.data.data } });' +
+            '    }' +
+            '  });' +
+            '})();';
+
+        const html =
+            '<html><head><title>KandalGym - Monitor de Acesso</title>' +
+            '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">' +
+            '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">' +
+            '<style>' + css + '</style></head><body>' +
+            '<div class="container">' +
+            '<div id="standby" class="logo"><img src="logo.png" style="width:100%; filter: drop-shadow(0 0 30px rgba(145,27,43,0.3));"></div>' +
+            '<div id="user-display" class="user-card">' +
+            '<div id="user-photo-frame" class="photo-frame"><img id="user-photo" src="" style="display:none;"><i id="user-icon" class="fas fa-user"></i></div>' +
+            '<h1 id="user-name" class="name">-</h1>' +
+            '<div id="user-status-badge" class="status-badge">-</div>' +
+            '</div>' +
+            '</div>' +
+            '<input type="text" id="monitor-scanner-input" autocomplete="off" style="position:fixed; top:-200px; left:-200px; opacity:0; width:1px; height:1px;">' +
+            '<div class="debug-bar">' +
+            '<div class="status-conn"><div class="dot"></div><span>Monitor Ativo</span></div>' +
+            '<div>Último código: <span id="debug-code" class="code-lido">---</span></div>' +
+            '<div id="debug-status" style="color:rgba(255,255,255,0.4);">A aguardar leitura...</div>' +
+            '</div>' +
+            '<script>' + script + '<\/script>' +
+            '</body></html>';
+
+        monitorWindow.document.open();
+        monitorWindow.document.write(html);
+        monitorWindow.document.close();
+    }
 
         const css = ':root { --primary: #6366f1; --secondary: #10b981; --danger: #ef4444; --bg: #0f172a; --text: #f8fafc; } ' +
             'body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: \'Outfit\', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; } ' +
