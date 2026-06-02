@@ -9407,11 +9407,19 @@ Equipa KandalGym`;
     processarLeituraQR(id) {
         const st = document.getElementById("scan-status");
         const formattedId = String(id).trim().toUpperCase();
+        
+        console.log("[processarLeituraQR] ID recebido:", id);
+        console.log("[processarLeituraQR] ID formatado:", formattedId);
+        console.log("[processarLeituraQR] Total de QR Clients:", this.state.qrClients ? this.state.qrClients.length : 0);
+        if (this.state.qrClients && this.state.qrClients.length > 0) {
+            console.log("[processarLeituraQR] Primeiros 5 IDs disponíveis:", this.state.qrClients.slice(0, 5).map(c => c.id));
+        }
 
         // Prevent multiple processing of the same scan within 3 seconds
         if (this.lastProcessedQR === formattedId && (Date.now() - this.lastProcessedTime < 3000)) return;
 
         const c = this.state.qrClients.find(cli => String(cli.id).toUpperCase() === formattedId);
+        console.log("[processarLeituraQR] Cliente encontrado:", c ? c.nome : "NÃO ENCONTRADO");
 
         if (c) {
             // Sincronizar foto mais recente antes de enviar para o ecrã
