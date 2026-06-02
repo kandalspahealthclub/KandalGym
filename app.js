@@ -2628,7 +2628,7 @@ Equipa KandalGym`;
                 
                 <!-- Input do Scanner de Hardware Escondido -->
                 <input type="text" id="local-monitor-scanner-input" autocomplete="off" 
-                    style="position: absolute; top: -100px; left: -100px; opacity: 0; width: 1px; height: 1px;">
+                    style="position: fixed; top: -100px; left: -100px; opacity: 0; width: 1px; height: 1px; border: none; padding: 0;">
             </div>
         `;
 
@@ -2636,33 +2636,48 @@ Equipa KandalGym`;
         setTimeout(() => {
             const hwInput = document.getElementById('local-monitor-scanner-input');
             if (hwInput) {
-                // Focar o input imediatamente
+                console.log("[renderMonitorView] Input encontrado, configurando scanner");
+                
+                // Focar o input
                 hwInput.focus({ preventScroll: true });
                 
-                // Tratar o keyup para processar a leitura
-                hwInput.onkeyup = (e) => {
+                // Handler global keydown para capturar scanner
+                const handleKeyDown = (e) => {
+                    if (this.activeView !== 'monitor') return;
+                    
+                    // Se é Enter, processa o que está no input
                     if (e.key === 'Enter') {
                         const val = hwInput.value.trim().toUpperCase();
+                        console.log("[Scanner] Enter pressionado, valor:", val, "comprimento:", val.length);
                         if (val.length >= 2) {
-                            console.log("[Monitor Local] QR Lido:", val);
+                            console.log("[Scanner] Processando QR:", val);
                             this.processarLeituraQR(val);
                         }
                         hwInput.value = '';
                         hwInput.focus({ preventScroll: true });
+                    } else if (e.key.length === 1 && e.target === hwInput) {
+                        // Deixa o input captar caracteres normalmente
+                        console.log("[Scanner] Char capturado no input:", e.key);
                     }
                 };
                 
-                // Auto-refocus quando clica (exceto em botões)
-                const refocusMonitor = (e) => {
-                    if (this.activeView !== 'monitor') return;
-                    const targetTag = e.target.tagName.toUpperCase();
-                    if (!['BUTTON', 'A', 'INPUT'].includes(targetTag) && !e.target.closest('button')) {
-                        setTimeout(() => hwInput.focus({ preventScroll: true }), 50);
+                hwInput.addEventListener('keydown', handleKeyDown);
+                
+                // Refocus ao clicar
+                document.addEventListener('click', () => {
+                    if (this.activeView === 'monitor') {
+                        setTimeout(() => {
+                            hwInput.focus({ preventScroll: true });
+                            console.log("[Scanner] Re-focado após clique");
+                        }, 50);
                     }
-                };
-                document.addEventListener('click', refocusMonitor);
+                });
+                
+                console.log("[renderMonitorView] Scanner configurado com sucesso");
+            } else {
+                console.log("[renderMonitorView] ERRO: Input não encontrado!");
             }
-        }, 200);
+        }, 100);
     }
 
     openAccessMonitor() {
@@ -8430,20 +8445,41 @@ Equipa KandalGym`;
             // --- AUTO FOCUS NO HARDWARE SCANNER - GESTÃO DE ENTRADAS ---
             setTimeout(() => {
                 const hwInput = document.getElementById('qr-manager-scanner-input');
-                if (hwInput && this.activeView === 'qr_manager') {
+                if (hwInput) {
+                    console.log("[renderQRManager] Input encontrado, configurando scanner");
+                    
                     hwInput.focus({ preventScroll: true });
-                    hwInput.onkeyup = (e) => {
+                    
+                    // Handler direto no input
+                    hwInput.addEventListener('keydown', (e) => {
                         if (e.key === 'Enter') {
                             const val = hwInput.value.trim().toUpperCase();
+                            console.log("[QRManager] Enter pressionado, valor:", val, "comprimento:", val.length);
                             if (val.length >= 2) {
+                                console.log("[QRManager] Processando QR:", val);
                                 this.processarLeituraQR(val);
                             }
                             hwInput.value = '';
                             hwInput.focus({ preventScroll: true });
+                            e.preventDefault();
                         }
-                    };
+                    });
+                    
+                    // Refocus ao clicar na página
+                    document.addEventListener('click', () => {
+                        if (this.activeView === 'qr_manager') {
+                            setTimeout(() => {
+                                hwInput.focus({ preventScroll: true });
+                                console.log("[QRManager] Re-focado após clique");
+                            }, 50);
+                        }
+                    });
+                    
+                    console.log("[renderQRManager] Scanner configurado com sucesso");
+                } else {
+                    console.log("[renderQRManager] ERRO: Input não encontrado!");
                 }
-            }, 500);
+            }, 100);
 
         } catch (error) {
             console.error("Erro ao renderizar QR Manager:", error);
