@@ -2636,6 +2636,7 @@ Equipa KandalGym`;
         setTimeout(() => {
             const hwInput = document.getElementById('local-monitor-scanner-input');
             if (hwInput) {
+                // Focar o input imediatamente
                 hwInput.focus({ preventScroll: true });
                 
                 // Tratar o keyup para processar a leitura
@@ -2643,24 +2644,23 @@ Equipa KandalGym`;
                     if (e.key === 'Enter') {
                         const val = hwInput.value.trim().toUpperCase();
                         if (val.length >= 2) {
-                            console.log("Monitor Scanner:", val);
                             this.processarLeituraQR(val);
                         }
                         hwInput.value = '';
+                        hwInput.focus({ preventScroll: true });
                     }
                 };
-
-                // Auto-foco persistente no Monitor
-                document.addEventListener('click', () => {
-                    if (this.activeView === 'monitor') {
-                        setTimeout(() => hwInput.focus({ preventScroll: true }), 100);
-                    }
-                });
-
-                // Foco inicial
-                hwInput.focus({ preventScroll: true });
             }
-        }, 300);
+        }, 200);
+
+        // Auto-refocus quando clica na página
+        document.addEventListener('click', (e) => {
+            if (this.activeView !== 'monitor') return;
+            const hwInput = document.getElementById('local-monitor-scanner-input');
+            if (hwInput && !['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(e.target.tagName)) {
+                setTimeout(() => hwInput.focus({ preventScroll: true }), 50);
+            }
+        }, { once: false });
     }
 
     openAccessMonitor() {
@@ -8433,11 +8433,7 @@ Equipa KandalGym`;
 
                         <div style="background: rgba(0,0,0,0.2); border: 1px dashed var(--surface-border); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px;">
                             <i class="fas fa-qrcode" style="font-size: 3rem; color: rgba(255,255,255,0.05); margin-bottom: 10px; display: block;"></i>
-                            <input type="text" id="hardware-scanner-input" 
-                                placeholder="Aguardando QR..." 
-                                onkeyup="if(event.key === 'Enter') { app.processarLeituraQR(this.value); this.value=''; }"
-                                autocomplete="off"
-                                style="width: 100%; height: 50px; background: rgba(0,0,0,0.4); border: 2px solid var(--primary); border-radius: 10px; color: #fff; text-align: center; font-size: 1.2rem; font-weight: 700; letter-spacing: 2px; outline: none; box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.1);">
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">O leitor de QR está ativo no <strong>Monitor de Entrada</strong>. Aceda a essa página para utilizar o scanner.</p>
                         </div>
 
                         <div id="scan-status" style="min-height: 50px;">
@@ -8558,29 +8554,7 @@ Equipa KandalGym`;
                 });
             });
 
-            // --- AUTO FOCUS NO HARDWARE SCANNER ---
-            setTimeout(() => {
-                const hwInput = document.getElementById('hardware-scanner-input');
-                if (hwInput) {
-                    hwInput.focus({ preventScroll: true });
-                    // Manter foco apenas se NÃO estivermos a interagir com outros campos
-                    document.onmousedown = (e) => {
-                        if (this.activeView !== 'qr_manager' || !hwInput) return;
-
-                        // Lista de elementos que NÃO devem ser interrompidos
-                        const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'];
-                        if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button')) {
-                            return; // Deixa o utilizador interagir com o campo
-                        }
-
-                        setTimeout(() => {
-                            if (this.activeView === 'qr_manager' && hwInput && document.activeElement.tagName !== 'INPUT') {
-                                hwInput.focus({ preventScroll: true });
-                            }
-                        }, 100);
-                    };
-                }
-            }, 500);
+            // --- AUTO FOCUS REMOVIDO - SCANNER EXCLUSIVO NO MONITOR DE ACESSO ---
 
         } catch (error) {
             console.error("Erro ao renderizar QR Manager:", error);
