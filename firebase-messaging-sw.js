@@ -13,7 +13,7 @@ const ASSETS = [
     'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
     'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js'
+    'https://unpkg.com/jsqr/dist/jsQR.js'
 ];
 
 self.addEventListener('install', event => {
