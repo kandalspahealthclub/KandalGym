@@ -229,21 +229,27 @@ class FitnessApp {
         }
 
         input.onkeyup = (e) => {
+            // Scanner APENAS funciona na página Monitor de Acesso
+            if (this.activeView !== 'monitor') return;
+            
             if (e.key === 'Enter') {
                 const val = input.value.trim().toUpperCase();
                 if (val.length >= 2) {
-                    console.log("Scanner detetado (Global):", val);
+                    console.log("Scanner detetado (Monitor):", val);
                     this.processarLeituraQR(val);
                 }
                 input.value = '';
             }
         };
 
-        // Gestor de Foco Global (apenas para Desktop/Receção)
+        // Gestor de Foco Global (apenas para Desktop/Receção e na página Monitor)
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         if (!isMobile) {
             document.addEventListener('mousedown', (e) => {
+                // Se não estamos no Monitor, não gerimos o foco do scanner
+                if (this.activeView !== 'monitor') return;
+                
                 // Se clicar em algo que precise de foco (inputs, botoes), não interferimos
                 const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'];
                 if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button') || e.target.closest('a')) {
@@ -259,8 +265,12 @@ class FitnessApp {
                 }, 200);
             });
 
-            // Foco inicial
-            setTimeout(() => input.focus({ preventScroll: true }), 1000);
+            // Foco inicial quando entra no Monitor
+            document.addEventListener('viewChange', () => {
+                if (this.activeView === 'monitor') {
+                    setTimeout(() => input.focus({ preventScroll: true }), 500);
+                }
+            });
         }
     }
 
@@ -1738,6 +1748,16 @@ Equipa KandalGym`;
 
     setView(view, skipScroll = false) {
         this.activeView = view;
+        
+        // Ativar/Desativar scanner QR conforme a página
+        if (view === 'monitor') {
+            const scannerInput = document.getElementById('global-scanner-input');
+            if (scannerInput) {
+                setTimeout(() => scannerInput.focus({ preventScroll: true }), 300);
+            }
+            console.log("Scanner QR ativado para Monitor de Acesso");
+        }
+        
         if (view === 'notifications_manager') {
             this.selectedNotifyIds = new Set();
         }
