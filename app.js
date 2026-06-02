@@ -538,6 +538,12 @@ class FitnessApp {
                 this.hasLoadedData = true;
 
                 const data = snapshot.val();
+                console.log("[Firebase] Dados recebidos:", {
+                    has_data: !!data,
+                    qrClients: data?.qrClients ? Object.keys(data.qrClients).length : 0,
+                    clients: data?.clients ? Object.keys(data.clients).length : 0
+                });
+                
                 // Só sobrescreve o estado local se não estivermos no meio de uma gravação nossa
                 // para evitar conflitos de latência (compensation)
                 if (data && !this.isSaving) {
@@ -554,9 +560,8 @@ class FitnessApp {
                         this.state[coll] = Object.values(this.state[coll]);
                     }
                 });
-
-                const dictCollections = ['trainingPlans', 'archivedTrainingPlans', 'predefinedPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments', 'planRestrictions'];
-                dictCollections.forEach(coll => { if (!this.state[coll]) this.state[coll] = {}; });
+                
+                console.log("[Firebase] Após processamento - qrClients:", this.state.qrClients ? this.state.qrClients.length : 0);
 
                 // Integridade das restrições
                 if (Object.keys(this.state.planRestrictions || {}).length === 0) {
@@ -1169,6 +1174,9 @@ class FitnessApp {
 
     syncQRUsers() {
         if (!this.state.qrClients) this.state.qrClients = [];
+        console.log("[syncQRUsers] Iniciado. Clientes atuais:", this.state.qrClients.length);
+        console.log("[syncQRUsers] isLoggedIn:", this.isLoggedIn, "role:", this.role);
+        
         let changed = false;
 
         const hasAccess = (uid) => {
@@ -1179,23 +1187,29 @@ class FitnessApp {
 
         // Staff (Admins e Professores)
         const staff = [...(this.state.admins || []), ...(this.state.teachers || [])];
+        console.log("[syncQRUsers] Staff total:", staff.length);
         staff.forEach(s => {
             if (s && s.id && !hasAccess(s.id)) {
-                console.log(`Ativando QR automático para Staff: ${s.name}`);
+                console.log(`[syncQRUsers] Ativando QR automático para Staff: ${s.name} (ID: ${s.id})`);
                 this.enableQRForClient(s.id, false, true);
                 changed = true;
             }
         });
 
         // Alunos
-        (this.state.clients || []).forEach(c => {
+        const clients = this.state.clients || [];
+        console.log("[syncQRUsers] Clientes total:", clients.length);
+        clients.forEach(c => {
             if (c && c.id && !c.qrDisabled && !hasAccess(c.id)) {
+                console.log(`[syncQRUsers] Ativando QR automático para Cliente: ${c.name} (ID: ${c.id})`);
                 this.enableQRForClient(c.id, false, false);
                 changed = true;
             }
         });
 
+        console.log("[syncQRUsers] Concluído. Mudanças:", changed, "Total QR:", this.state.qrClients.length);
         if (changed && (this.role === 'admin' || this.role === 'teacher')) {
+            console.log("[syncQRUsers] Guardando estado...");
             this.saveState();
         }
     }
@@ -8815,15 +8829,19 @@ Equipa KandalGym`;
     }
 
     enableQRForClient(clientId, autoRedirect = true, isStaff = false) {
+        console.log("[enableQRForClient] Iniciado para clientId:", clientId, "isStaff:", isStaff);
         if (!this.state.qrClients) this.state.qrClients = [];
 
         const client = isStaff
             ? [...(this.state.teachers || []), ...(this.state.admins || [])].find(t => Number(t.id) === Number(clientId))
             : (this.state.clients || []).find(c => Number(c.id) === Number(clientId));
+        
+        console.log("[enableQRForClient] Cliente encontrado:", client ? client.name : "NÃO");
         if (!client) return;
 
         const exists = this.state.qrClients.find(qc => Number(qc.clientId) === Number(clientId));
         if (exists) {
+            console.log("[enableQRForClient] QR já existe:", exists.id);
             if (autoRedirect) {
                 this.setView('qr_manager');
                 this.showToast('Este utilizador já tem acesso QR ativo.');
@@ -8845,7 +8863,7 @@ Equipa KandalGym`;
             validDate.setDate(validDate.getDate() + 30);
         }
 
-        this.state.qrClients.push({
+        const newQR = {
             id: qrId,
             clientId: Number(clientId),
             nome: client.name,
@@ -8855,7 +8873,10 @@ Equipa KandalGym`;
             plano: isStaff ? 'Staff' : 'Novo QR',
             validade: validDate.toISOString().split('T')[0],
             histórico: []
-        });
+        };
+        
+        console.log("[enableQRForClient] Criando novo QR:", newQR);
+        this.state.qrClients.push(newQR);
 
         if (autoRedirect) {
             this.saveState();
