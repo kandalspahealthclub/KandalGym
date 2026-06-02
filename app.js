@@ -189,6 +189,9 @@ class FitnessApp {
             }
         }, 8000);
 
+        // --- SISTEMA DE SCANNER GLOBAL ROBUSTO ---
+        this.initGlobalScanner();
+
         // --- CANAL DE COMUNICAÇÃO PARA MONITOR ---
         this.accessChannel = new BroadcastChannel("kandal_access");
         this.accessChannel.onmessage = (ev) => {
@@ -201,18 +204,58 @@ class FitnessApp {
             }
         };
 
-        window.addEventListener('message', (ev) => {
-            if (ev.data && ev.data.type === 'kandal_scan') {
-                this.processarLeituraQR(ev.data.code);
-            }
-        });
-
         // --- SERIAL SCANNER CONNECTION ---
         this.serialScannerPort = null;
         this.serialScannerReader = null;
-        this.monitorScannerListenerAttached = false;
     }
 
+    initGlobalScanner() {
+        // Criar um input invisível para capturar o scanner em qualquer menu
+        let input = document.getElementById('global-scanner-input');
+        if (!input) {
+            input = document.createElement('input');
+            input.id = 'global-scanner-input';
+            input.type = 'text';
+            input.setAttribute('inputmode', 'none'); // Previne abertura do teclado virtual em mobile
+            input.style.cssText = 'position:fixed; top:-1000px; left:-1000px; opacity:0; z-index:-1;';
+            document.body.appendChild(input);
+        }
+
+        input.onkeyup = (e) => {
+            if (e.key === 'Enter') {
+                const val = input.value.trim().toUpperCase();
+                if (val.length >= 2) {
+                    console.log("Scanner detetado (Global):", val);
+                    this.processarLeituraQR(val);
+                }
+                input.value = '';
+            }
+        };
+
+        // Gestor de Foco Global (apenas para Desktop/Receção)
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        if (!isMobile) {
+            document.addEventListener('mousedown', (e) => {
+                // Se clicar em algo que precise de foco (inputs, botoes), não interferimos
+                const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'];
+                if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button') || e.target.closest('a')) {
+                    return;
+                }
+
+                // Caso contrário, devolvemos o foco ao scanner após um pequeno delay
+                setTimeout(() => {
+                    const active = document.activeElement;
+                    if (!active || !['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) {
+                        input.focus({ preventScroll: true });
+                    }
+                }, 200);
+            });
+
+            // Foco inicial
+            setTimeout(() => input.focus({ preventScroll: true }), 1000);
+        }
+    }
 
     checkForForceUpdate() {
         try {
@@ -538,12 +581,6 @@ class FitnessApp {
                 this.hasLoadedData = true;
 
                 const data = snapshot.val();
-                console.log("[Firebase] Dados recebidos:", {
-                    has_data: !!data,
-                    qrClients: data?.qrClients ? Object.keys(data.qrClients).length : 0,
-                    clients: data?.clients ? Object.keys(data.clients).length : 0
-                });
-                
                 // Só sobrescreve o estado local se não estivermos no meio de uma gravação nossa
                 // para evitar conflitos de latência (compensation)
                 if (data && !this.isSaving) {
@@ -560,8 +597,9 @@ class FitnessApp {
                         this.state[coll] = Object.values(this.state[coll]);
                     }
                 });
-                
-                console.log("[Firebase] Após processamento - qrClients:", this.state.qrClients ? this.state.qrClients.length : 0);
+
+                const dictCollections = ['trainingPlans', 'archivedTrainingPlans', 'predefinedPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments', 'planRestrictions'];
+                dictCollections.forEach(coll => { if (!this.state[coll]) this.state[coll] = {}; });
 
                 // Integridade das restrições
                 if (Object.keys(this.state.planRestrictions || {}).length === 0) {
@@ -1174,9 +1212,6 @@ class FitnessApp {
 
     syncQRUsers() {
         if (!this.state.qrClients) this.state.qrClients = [];
-        console.log("[syncQRUsers] Iniciado. Clientes atuais:", this.state.qrClients.length);
-        console.log("[syncQRUsers] isLoggedIn:", this.isLoggedIn, "role:", this.role);
-        
         let changed = false;
 
         const hasAccess = (uid) => {
@@ -1187,29 +1222,23 @@ class FitnessApp {
 
         // Staff (Admins e Professores)
         const staff = [...(this.state.admins || []), ...(this.state.teachers || [])];
-        console.log("[syncQRUsers] Staff total:", staff.length);
         staff.forEach(s => {
             if (s && s.id && !hasAccess(s.id)) {
-                console.log(`[syncQRUsers] Ativando QR automático para Staff: ${s.name} (ID: ${s.id})`);
+                console.log(`Ativando QR automático para Staff: ${s.name}`);
                 this.enableQRForClient(s.id, false, true);
                 changed = true;
             }
         });
 
         // Alunos
-        const clients = this.state.clients || [];
-        console.log("[syncQRUsers] Clientes total:", clients.length);
-        clients.forEach(c => {
+        (this.state.clients || []).forEach(c => {
             if (c && c.id && !c.qrDisabled && !hasAccess(c.id)) {
-                console.log(`[syncQRUsers] Ativando QR automático para Cliente: ${c.name} (ID: ${c.id})`);
                 this.enableQRForClient(c.id, false, false);
                 changed = true;
             }
         });
 
-        console.log("[syncQRUsers] Concluído. Mudanças:", changed, "Total QR:", this.state.qrClients.length);
         if (changed && (this.role === 'admin' || this.role === 'teacher')) {
-            console.log("[syncQRUsers] Guardando estado...");
             this.saveState();
         }
     }
@@ -2642,7 +2671,7 @@ Equipa KandalGym`;
                 
                 <!-- Input do Scanner de Hardware Escondido -->
                 <input type="text" id="local-monitor-scanner-input" autocomplete="off" 
-                    style="position: fixed; top: -100px; left: -100px; opacity: 0; width: 1px; height: 1px; border: none; padding: 0;">
+                    style="position: absolute; top: -100px; left: -100px; opacity: 0; width: 1px; height: 1px;">
             </div>
         `;
 
@@ -2650,119 +2679,264 @@ Equipa KandalGym`;
         setTimeout(() => {
             const hwInput = document.getElementById('local-monitor-scanner-input');
             if (hwInput) {
-                console.log("[renderMonitorView] Input encontrado, configurando scanner");
-                
-                // Focar o input
                 hwInput.focus({ preventScroll: true });
                 
-                // Handler global keydown para capturar scanner
-                const handleKeyDown = (e) => {
-                    if (this.activeView !== 'monitor') return;
-                    
-                    // Se é Enter, processa o que está no input
+                // Tratar o keyup para processar a leitura
+                hwInput.onkeyup = (e) => {
                     if (e.key === 'Enter') {
                         const val = hwInput.value.trim().toUpperCase();
-                        console.log("[Scanner] Enter pressionado, valor:", val, "comprimento:", val.length);
                         if (val.length >= 2) {
-                            console.log("[Scanner] Processando QR:", val);
+                            // Feedback visual rápido
+                            const containerEl = document.getElementById('local-display-container');
+                            if (containerEl) {
+                                containerEl.style.border = '2px solid var(--primary)';
+                                setTimeout(() => containerEl.style.border = '1px solid var(--surface-border)', 500);
+                            }
                             this.processarLeituraQR(val);
                         }
                         hwInput.value = '';
-                        hwInput.focus({ preventScroll: true });
-                    } else if (e.key.length === 1 && e.target === hwInput) {
-                        // Deixa o input captar caracteres normalmente
-                        console.log("[Scanner] Char capturado no input:", e.key);
                     }
                 };
-                
-                hwInput.addEventListener('keydown', handleKeyDown);
-                
-                // Refocus ao clicar
-                document.addEventListener('click', () => {
-                    if (this.activeView === 'monitor') {
-                        setTimeout(() => {
-                            hwInput.focus({ preventScroll: true });
-                            console.log("[Scanner] Re-focado após clique");
-                        }, 50);
+
+                // Manter foco persistente apenas se NÃO estivermos a interagir com outros campos
+                document.onmousedown = (e) => {
+                    if (this.activeView !== 'monitor' || !hwInput) return;
+
+                    const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'];
+                    if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button') || e.target.closest('a')) {
+                        return;
                     }
-                });
-                
-                console.log("[renderMonitorView] Scanner configurado com sucesso");
-            } else {
-                console.log("[renderMonitorView] ERRO: Input não encontrado!");
+
+                    setTimeout(() => {
+                        if (this.activeView === 'monitor' && hwInput && document.activeElement.tagName !== 'INPUT') {
+                            hwInput.focus({ preventScroll: true });
+                        }
+                    }, 100);
+                };
             }
-        }, 100);
+        }, 500);
     }
 
     openAccessMonitor() {
         const monitorWindow = window.open('', 'KandalMonitor', 'width=1200,height=800');
         if (!monitorWindow) return alert("Por favor, permita pop-ups para abrir o monitor.");
 
-        const css = 
-            ':root{--primary:#911B2B;--secondary:#10b981;--danger:#ef4444;--bg:#0f1218;--text:#f8fafc}' +
-            '*{margin:0;padding:0;box-sizing:border-box;font-family:"Outfit",sans-serif}' +
-            'body{background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden}' +
-            '.container{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;text-align:center}' +
-            '.logo{width:380px;opacity:0.85;animation:pulse 3s infinite ease-in-out;margin-bottom:2rem}' +
-            '.user-card{display:none;flex-direction:column;align-items:center;animation:slideUp 0.5s ease}' +
-            '.photo-frame{width:300px;height:300px;border-radius:50%;border:12px solid var(--primary);overflow:hidden;background:#1e293b;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:center}' +
-            '.photo-frame img{width:100%;height:100%;object-fit:cover}' +
-            '.photo-frame i{font-size:7rem;color:#334155}' +
-            '.name{font-size:4.5rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin:0}' +
-            '.status-badge{font-size:2rem;font-weight:700;padding:1rem 2.5rem;border-radius:50px;margin-top:1rem}' +
-            '.bg-valid{background:linear-gradient(135deg,#064e3b,#065f46);color:#34d399}' +
-            '.bg-invalid{background:linear-gradient(135deg,#7f1d1d,#991b1b);color:#fca5a5}' +
-            '@keyframes pulse{0%,100%{transform:scale(1);opacity:0.85}50%{transform:scale(1.04);opacity:1}}' +
-            '@keyframes slideUp{from{opacity:0;transform:translateY(80px)}to{opacity:1;transform:translateY(0)}}';
+        // Store reference for postMessage communication
+        this.monitorWindow = monitorWindow;
+
+        const css =
+            ':root { --primary: #911B2B; --secondary: #10b981; --danger: #ef4444; --bg: #0f1218; --text: #f8fafc; --accent: #c4a24d; } ' +
+            '* { margin: 0; padding: 0; box-sizing: border-box; font-family: \'Outfit\', sans-serif; } ' +
+            'body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; } ' +
+            '.container { text-align: center; width: 100%; height: calc(100vh - 48px); display: flex; flex-direction: column; align-items: center; justify-content: center; } ' +
+            '.logo { width: 380px; opacity: 0.85; animation: pulse 3s infinite ease-in-out; } ' +
+            '.user-card { display: none; flex-direction: column; align-items: center; animation: slideUp 0.5s cubic-bezier(0.23, 1, 0.32, 1); } ' +
+            '.photo-frame { width: 300px; height: 300px; border-radius: 50%; border: 12px solid var(--primary); overflow: hidden; background: #1e293b; margin-bottom: 1.5rem; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; } ' +
+            '.photo-frame img { width: 100%; height: 100%; object-fit: cover; } ' +
+            '.photo-frame i { font-size: 7rem; color: #334155; } ' +
+            '.name { font-size: 4.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin: 0; line-height: 1; } ' +
+            '.status-badge { font-size: 2rem; font-weight: 700; padding: 0.8rem 2.5rem; border-radius: 50px; margin-top: 1.2rem; } ' +
+            '.bg-valid { background: linear-gradient(135deg, #064e3b, #065f46); color: #34d399; } ' +
+            '.bg-invalid { background: linear-gradient(135deg, #7f1d1d, #991b1b); color: #fca5a5; } ' +
+            '.border-valid { border-color: #10b981 !important; color: #10b981; } ' +
+            '.border-invalid { border-color: #ef4444 !important; color: #ef4444; } ' +
+            '.debug-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 48px; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 0.8rem; color: rgba(255,255,255,0.5); border-top: 1px solid rgba(255,255,255,0.08); } ' +
+            '.debug-bar .code-lido { font-family: monospace; background: rgba(255,255,255,0.05); padding: 3px 10px; border-radius: 6px; color: #a78bfa; letter-spacing: 1px; } ' +
+            '.debug-bar .status-conn { display: flex; align-items: center; gap: 6px; } ' +
+            '.dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: blink 2s infinite; } ' +
+            '@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.04); opacity: 1; } } ' +
+            '@keyframes slideUp { from { opacity: 0; transform: translateY(80px); } to { opacity: 1; transform: translateY(0); } } ' +
+            '@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } } ' +
+            '@keyframes flash { 0% { background: rgba(145,27,43,0.3); } 100% { background: transparent; } }';
+
+        const script =
+            '(function() {' +
+            '  const bc = new BroadcastChannel("kandal_access");' +
+            '  let scanTimeout;' +
+            '  const hwInput = document.getElementById("monitor-scanner-input");' +
+            '  const debugCode = document.getElementById("debug-code");' +
+            '  const debugStatus = document.getElementById("debug-status");' +
+            '' +
+            '  function enviarCodigo(val) {' +
+            '    if (!val || val.length < 2) return;' +
+            '    if (debugCode) debugCode.textContent = val;' +
+            '    document.body.style.animation = "flash 0.4s ease";' +
+            '    setTimeout(() => { document.body.style.animation = ""; }, 400);' +
+            '    /* Tentar via postMessage (mais fiável que window.opener.app direto) */' +
+            '    try {' +
+            '      if (window.opener && !window.opener.closed) {' +
+            '        window.opener.postMessage({ type: "kandal_scan", code: val }, "*");' +
+            '      }' +
+            '    } catch(e) {}' +
+            '    /* Sempre enviar também via BroadcastChannel como fallback */' +
+            '    bc.postMessage({ type: "access_request", code: val });' +
+            '  }' +
+            '' +
+            '  hwInput.addEventListener("keydown", function(e) {' +
+            '    if (e.key === "Enter") {' +
+            '      const val = hwInput.value.trim().toUpperCase();' +
+            '      hwInput.value = "";' +
+            '      enviarCodigo(val);' +
+            '    }' +
+            '  });' +
+            '' +
+            '  /* Capturar também input rapid (scanner nao usa Enter em alguns modos) */' +
+            '  let scanBuffer = ""; let scanTimer;' +
+            '  document.addEventListener("keydown", function(e) {' +
+            '    if (e.target === hwInput) return;' +
+            '    if (e.key === "Enter" && scanBuffer.length >= 2) {' +
+            '      const code = scanBuffer.trim().toUpperCase();' +
+            '      scanBuffer = "";' +
+            '      clearTimeout(scanTimer);' +
+            '      enviarCodigo(code);' +
+            '    } else if (e.key.length === 1) {' +
+            '      scanBuffer += e.key;' +
+            '      clearTimeout(scanTimer);' +
+            '      scanTimer = setTimeout(() => { scanBuffer = ""; }, 500);' +
+            '    }' +
+            '  });' +
+            '' +
+            '  /* Auto-foco persistente no hwInput */' +
+            '  function keepFocus() { if (document.activeElement !== hwInput) hwInput.focus({ preventScroll: true }); }' +
+            '  setInterval(keepFocus, 1500);' +
+            '  setTimeout(keepFocus, 300);' +
+            '  document.addEventListener("click", () => setTimeout(keepFocus, 100));' +
+            '' +
+            '  /* Receber resultado da aplicação principal */' +
+            '  bc.onmessage = function(ev) {' +
+            '    if (!ev.data || ev.data.type !== "access_event") return;' +
+            '    const data = ev.data.data;' +
+            '    clearTimeout(scanTimeout);' +
+            '    if (debugStatus) debugStatus.textContent = data.valid ? "✓ Válido" : "✗ " + data.msg;' +
+            '    document.getElementById("standby").style.display = "none";' +
+            '    const ud = document.getElementById("user-display");' +
+            '    ud.style.display = "none"; void ud.offsetWidth; ud.style.display = "flex";' +
+            '    document.getElementById("user-name").innerText = data.name;' +
+            '    document.getElementById("user-name").className = "name " + (data.valid ? "border-valid" : "border-invalid");' +
+            '    const sb = document.getElementById("user-status-badge");' +
+            '    sb.innerText = data.msg.toUpperCase();' +
+            '    sb.className = "status-badge " + (data.valid ? "bg-valid" : "bg-invalid");' +
+            '    const frame = document.getElementById("user-photo-frame");' +
+            '    frame.className = "photo-frame " + (data.valid ? "border-valid" : "border-invalid");' +
+            '    const photo = document.getElementById("user-photo");' +
+            '    const icon = document.getElementById("user-icon");' +
+            '    if (data.photo) { photo.src = data.photo; photo.style.display = "block"; icon.style.display = "none"; }' +
+            '    else { photo.style.display = "none"; icon.style.display = "block"; }' +
+            '    scanTimeout = setTimeout(function() {' +
+            '      document.getElementById("standby").style.display = "block";' +
+            '      ud.style.display = "none";' +
+            '      if (debugStatus) debugStatus.textContent = "A aguardar leitura...";' +
+            '    }, 5000);' +
+            '  };' +
+            '' +
+            '  /* Receber via postMessage da janela principal */' +
+            '  window.addEventListener("message", function(ev) {' +
+            '    if (ev.data && ev.data.type === "kandal_access_event") {' +
+            '      bc.dispatchEvent ? null : null;' +
+            '      /* Simular como se fosse do BroadcastChannel */' +
+            '      bc.onmessage({ data: { type: "access_event", data: ev.data.data } });' +
+            '    }' +
+            '  });' +
+            '})();';
 
         const html =
-            '<!DOCTYPE html>' +
-            '<html><head>' +
-            '<meta charset="UTF-8">' +
-            '<title>Monitor Acesso</title>' +
+            '<html><head><title>KandalGym - Monitor de Acesso</title>' +
             '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">' +
             '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">' +
-            '<style>' + css + '</style>' +
-            '</head><body>' +
+            '<style>' + css + '</style></head><body>' +
             '<div class="container">' +
-            '<div id="standby" class="logo"><img src="logo.png" style="width:100%;filter:drop-shadow(0 0 30px rgba(145,27,43,0.3))"></div>' +
+            '<div id="standby" class="logo"><img src="logo.png" style="width:100%; filter: drop-shadow(0 0 30px rgba(145,27,43,0.3));"></div>' +
             '<div id="user-display" class="user-card">' +
-            '<div id="user-photo-frame" class="photo-frame"><img id="user-photo" src="" style="display:none"><i id="user-icon" class="fas fa-user"></i></div>' +
+            '<div id="user-photo-frame" class="photo-frame"><img id="user-photo" src="" style="display:none;"><i id="user-icon" class="fas fa-user"></i></div>' +
             '<h1 id="user-name" class="name">-</h1>' +
-            '<div id="user-status" class="status-badge">-</div>' +
-            '</div></div>' +
-            '<script>' +
-            '(function(){' +
-            'const bc=new BroadcastChannel("kandal_access");' +
-            'let timeout;' +
-            'console.log("[Monitor Remoto] BroadcastChannel criado");' +
-            'bc.onmessage=function(ev){' +
-            'console.log("[Monitor Remoto] Evento recebido:", ev.data);' +
-            'if(!ev.data||ev.data.type!=="access_event"){console.log("Tipo não é access_event");return;}' +
-            'const data=ev.data.data;' +
-            'clearTimeout(timeout);' +
-            'document.getElementById("standby").style.display="none";' +
-            'document.getElementById("user-display").style.display="flex";' +
-            'document.getElementById("user-name").innerText=data.name;' +
-            'document.getElementById("user-name").style.color=data.valid?"#34d399":"#fca5a5";' +
-            'document.getElementById("user-status").innerText=data.msg.toUpperCase();' +
-            'document.getElementById("user-status").className="status-badge "+(data.valid?"bg-valid":"bg-invalid");' +
-            'const frame=document.getElementById("user-photo-frame");' +
-            'frame.style.borderColor=data.valid?"#10b981":"#ef4444";' +
-            'const photo=document.getElementById("user-photo");' +
-            'const icon=document.getElementById("user-icon");' +
-            'if(data.photo){photo.src=data.photo;photo.style.display="block";icon.style.display="none"}' +
-            'else{photo.style.display="none";icon.style.display="block"}' +
-            'timeout=setTimeout(()=>{' +
-            'document.getElementById("standby").style.display="block";' +
-            'document.getElementById("user-display").style.display="none"' +
-            '},5000);' +
-            '};' +
-            '})();' +
-            '<\/script>' +
+            '<div id="user-status-badge" class="status-badge">-</div>' +
+            '</div>' +
+            '</div>' +
+            '<input type="text" id="monitor-scanner-input" autocomplete="off" style="position:fixed; top:-200px; left:-200px; opacity:0; width:1px; height:1px;">' +
+            '<div class="debug-bar">' +
+            '<div class="status-conn"><div class="dot"></div><span>Monitor Ativo</span></div>' +
+            '<div>Último código: <span id="debug-code" class="code-lido">---</span></div>' +
+            '<div id="debug-status" style="color:rgba(255,255,255,0.4);">A aguardar leitura...</div>' +
+            '</div>' +
+            '<script>' + script + '<\/script>' +
             '</body></html>';
 
         monitorWindow.document.open();
+        monitorWindow.document.write(html);
+        monitorWindow.document.close();
+    }
+
+        const css = ':root { --primary: #6366f1; --secondary: #10b981; --danger: #ef4444; --bg: #0f172a; --text: #f8fafc; } ' +
+            'body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: \'Outfit\', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; } ' +
+            '.container { text-align: center; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.5s ease; } ' +
+            '.logo { width: 400px; opacity: 0.8; animation: pulse 3s infinite ease-in-out; } ' +
+            '.user-card { display: none; flex-direction: column; align-items: center; animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1); } ' +
+            '.photo-frame { width: 350px; height: 350px; border-radius: 50%; border: 15px solid var(--primary); overflow: hidden; background: #1e293b; margin-bottom: 2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.5); } ' +
+            '.photo-frame img { width: 100%; height: 100%; object-fit: cover; } ' +
+            '.photo-frame i { font-size: 8rem; margin-top: 5rem; color: #334155; } ' +
+            '.name { font-size: 5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin: 0; } ' +
+            '.status { font-size: 2.5rem; font-weight: 600; padding: 1rem 3rem; border-radius: 50px; margin-top: 1.5rem; } ' +
+            '.bg-valid { background: linear-gradient(135deg, #064e3b, #065f46); } ' +
+            '.bg-invalid { background: linear-gradient(135deg, #7f1d1d, #991b1b); } ' +
+            '.border-valid { border-color: var(--secondary) !important; color: var(--secondary); } ' +
+            '.border-invalid { border-color: var(--danger) !important; color: var(--danger); } ' +
+            '@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } } ' +
+            '@keyframes slideUp { from { opacity: 0; transform: translateY(100px); } to { opacity: 1; transform: translateY(0); } }';
+
+        let html = '<html><head><title>KandalGym - Monitor de Acesso</title>' +
+            '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">' +
+            '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">' +
+            '<style>' + css + '</style></head><body>' +
+            '<div id="display-container" class="container">' +
+            '<div id="standby" class="logo"><img src="logo.png" style="width:100%; filter: drop-shadow(0 0 30px rgba(99,102,241,0.3));"></div>' +
+            '<div id="user-display" class="user-card">' +
+            '<div id="user-photo-frame" class="photo-frame"><img id="user-photo" src="" style="display:none;"><i id="user-icon" class="fas fa-user"></i></div>' +
+            '<h1 id="user-name" class="name">NOME DO CLIENTE</h1>' +
+            '<div id="user-status" class="status">ENTRADA VÁLIDA</div></div></div>' +
+
+            '<!-- Scanner Invisivel (Replica da logica da Gestao de Entradas) -->' +
+            '<input type="text" id="monitor-scanner-input" autocomplete="off" style="position:fixed; top:-100px; left:-100px; opacity:0;">' +
+
+            '<script>' +
+            'const bc = new BroadcastChannel("kandal_access"); let timeout; ' +
+            'const hwInput = document.getElementById("monitor-scanner-input"); ' +
+
+            'hwInput.onkeyup = (e) => { ' +
+            '  if (e.key === "Enter") { ' +
+            '    const val = hwInput.value.trim().toUpperCase(); ' +
+            '    if (val.length >= 2) { ' +
+            '/* Feedback visual de leitura no monitor */ ' +
+            'document.body.style.border = "10px solid var(--primary)"; ' +
+            'setTimeout(() => document.body.style.border = "none", 500); ' +
+            '      if (window.opener && window.opener.app) { window.opener.app.processarLeituraQR(val); } ' +
+            '      else { bc.postMessage({ type: "access_request", code: val }); } ' +
+            '    } ' +
+            '    hwInput.value = ""; ' +
+            '  } ' +
+            '}; ' +
+
+            '/* Auto-foco persistente */ ' +
+            'document.addEventListener("mousedown", () => { ' +
+            '  setTimeout(() => hwInput.focus({ preventScroll: true }), 100); ' +
+            '}); ' +
+            'setTimeout(() => hwInput.focus({ preventScroll: true }), 500); ' +
+            'setInterval(() => { if(document.activeElement !== hwInput) hwInput.focus({ preventScroll: true }); }, 2000); ' +
+
+            'bc.onmessage = (ev) => { const { type, data } = ev.data; if (type === "access_event") { ' +
+            'clearTimeout(timeout); document.getElementById("standby").style.display = "none"; ' +
+            'document.getElementById("user-display").style.display = "flex"; ' +
+            'const nameEl = document.getElementById("user-name"); const statusEl = document.getElementById("user-status"); ' +
+            'const frameEl = document.getElementById("user-photo-frame"); const photoEl = document.getElementById("user-photo"); ' +
+            'const iconEl = document.getElementById("user-icon"); nameEl.innerText = data.name; ' +
+            'nameEl.className = "name " + (data.valid ? "border-valid" : "border-invalid"); ' +
+            'statusEl.innerText = data.msg.toUpperCase(); statusEl.className = "status " + (data.valid ? "bg-valid" : "bg-invalid"); ' +
+            'frameEl.className = "photo-frame " + (data.valid ? "border-valid" : "border-invalid"); ' +
+            'if (data.photo) { photoEl.src = data.photo; photoEl.style.display = "block"; iconEl.style.display = "none"; } ' +
+            'else { photoEl.style.display = "none"; iconEl.style.display = "block"; } ' +
+            'timeout = setTimeout(() => { document.getElementById("standby").style.display = "block"; ' +
+            'document.getElementById("user-display").style.display = "none"; }, 5000); } };' +
+            '</script></body></html>';
+
         monitorWindow.document.write(html);
         monitorWindow.document.close();
     }
@@ -8331,7 +8505,7 @@ Equipa KandalGym`;
 
                         <div style="background: rgba(0,0,0,0.2); border: 1px dashed var(--surface-border); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px;">
                             <i class="fas fa-qrcode" style="font-size: 3rem; color: rgba(255,255,255,0.05); margin-bottom: 10px; display: block;"></i>
-                            <input type="text" id="qr-manager-scanner-input" 
+                            <input type="text" id="hardware-scanner-input" 
                                 placeholder="Aguardando QR..." 
                                 onkeyup="if(event.key === 'Enter') { app.processarLeituraQR(this.value); this.value=''; }"
                                 autocomplete="off"
@@ -8456,44 +8630,29 @@ Equipa KandalGym`;
                 });
             });
 
-            // --- AUTO FOCUS NO HARDWARE SCANNER - GESTÃO DE ENTRADAS ---
+            // --- AUTO FOCUS NO HARDWARE SCANNER ---
             setTimeout(() => {
-                const hwInput = document.getElementById('qr-manager-scanner-input');
+                const hwInput = document.getElementById('hardware-scanner-input');
                 if (hwInput) {
-                    console.log("[renderQRManager] Input encontrado, configurando scanner");
-                    
                     hwInput.focus({ preventScroll: true });
-                    
-                    // Handler direto no input
-                    hwInput.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') {
-                            const val = hwInput.value.trim().toUpperCase();
-                            console.log("[QRManager] Enter pressionado, valor:", val, "comprimento:", val.length);
-                            if (val.length >= 2) {
-                                console.log("[QRManager] Processando QR:", val);
-                                this.processarLeituraQR(val);
-                            }
-                            hwInput.value = '';
-                            hwInput.focus({ preventScroll: true });
-                            e.preventDefault();
+                    // Manter foco apenas se NÃO estivermos a interagir com outros campos
+                    document.onmousedown = (e) => {
+                        if (this.activeView !== 'qr_manager' || !hwInput) return;
+
+                        // Lista de elementos que NÃO devem ser interrompidos
+                        const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'];
+                        if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button')) {
+                            return; // Deixa o utilizador interagir com o campo
                         }
-                    });
-                    
-                    // Refocus ao clicar na página
-                    document.addEventListener('click', () => {
-                        if (this.activeView === 'qr_manager') {
-                            setTimeout(() => {
+
+                        setTimeout(() => {
+                            if (this.activeView === 'qr_manager' && hwInput && document.activeElement.tagName !== 'INPUT') {
                                 hwInput.focus({ preventScroll: true });
-                                console.log("[QRManager] Re-focado após clique");
-                            }, 50);
-                        }
-                    });
-                    
-                    console.log("[renderQRManager] Scanner configurado com sucesso");
-                } else {
-                    console.log("[renderQRManager] ERRO: Input não encontrado!");
+                            }
+                        }, 100);
+                    };
                 }
-            }, 100);
+            }, 500);
 
         } catch (error) {
             console.error("Erro ao renderizar QR Manager:", error);
@@ -8829,19 +8988,15 @@ Equipa KandalGym`;
     }
 
     enableQRForClient(clientId, autoRedirect = true, isStaff = false) {
-        console.log("[enableQRForClient] Iniciado para clientId:", clientId, "isStaff:", isStaff);
         if (!this.state.qrClients) this.state.qrClients = [];
 
         const client = isStaff
             ? [...(this.state.teachers || []), ...(this.state.admins || [])].find(t => Number(t.id) === Number(clientId))
             : (this.state.clients || []).find(c => Number(c.id) === Number(clientId));
-        
-        console.log("[enableQRForClient] Cliente encontrado:", client ? client.name : "NÃO");
         if (!client) return;
 
         const exists = this.state.qrClients.find(qc => Number(qc.clientId) === Number(clientId));
         if (exists) {
-            console.log("[enableQRForClient] QR já existe:", exists.id);
             if (autoRedirect) {
                 this.setView('qr_manager');
                 this.showToast('Este utilizador já tem acesso QR ativo.');
@@ -8863,7 +9018,7 @@ Equipa KandalGym`;
             validDate.setDate(validDate.getDate() + 30);
         }
 
-        const newQR = {
+        this.state.qrClients.push({
             id: qrId,
             clientId: Number(clientId),
             nome: client.name,
@@ -8873,10 +9028,7 @@ Equipa KandalGym`;
             plano: isStaff ? 'Staff' : 'Novo QR',
             validade: validDate.toISOString().split('T')[0],
             histórico: []
-        };
-        
-        console.log("[enableQRForClient] Criando novo QR:", newQR);
-        this.state.qrClients.push(newQR);
+        });
 
         if (autoRedirect) {
             this.saveState();
@@ -9360,16 +9512,10 @@ Equipa KandalGym`;
     }
 
     broadcastAccessEvent(data) {
-        console.log("[Broadcast] Enviando evento:", data);
-        if (this.accessChannel) {
-            console.log("[Broadcast] Canal disponível, postando mensagem");
-            this.accessChannel.postMessage({
-                type: 'access_event',
-                data: data
-            });
-        } else {
-            console.log("[Broadcast] ERRO: Canal não disponível");
-        }
+        new BroadcastChannel('kandal_access').postMessage({
+            type: 'access_event',
+            data: data
+        });
         this.handleLocalMonitorAccessEvent(data);
     }
 
@@ -9428,19 +9574,11 @@ Equipa KandalGym`;
     processarLeituraQR(id) {
         const st = document.getElementById("scan-status");
         const formattedId = String(id).trim().toUpperCase();
-        
-        console.log("[processarLeituraQR] ID recebido:", id);
-        console.log("[processarLeituraQR] ID formatado:", formattedId);
-        console.log("[processarLeituraQR] Total de QR Clients:", this.state.qrClients ? this.state.qrClients.length : 0);
-        if (this.state.qrClients && this.state.qrClients.length > 0) {
-            console.log("[processarLeituraQR] Primeiros 5 IDs disponíveis:", this.state.qrClients.slice(0, 5).map(c => c.id));
-        }
 
         // Prevent multiple processing of the same scan within 3 seconds
         if (this.lastProcessedQR === formattedId && (Date.now() - this.lastProcessedTime < 3000)) return;
 
         const c = this.state.qrClients.find(cli => String(cli.id).toUpperCase() === formattedId);
-        console.log("[processarLeituraQR] Cliente encontrado:", c ? c.nome : "NÃO ENCONTRADO");
 
         if (c) {
             // Sincronizar foto mais recente antes de enviar para o ecrã
