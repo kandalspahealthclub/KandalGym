@@ -2899,30 +2899,12 @@ Equipa KandalGym`;
         monitorWindow.document.close();
     }
 
-        const css = ':root { --primary: #6366f1; --secondary: #10b981; --danger: #ef4444; --bg: #0f172a; --text: #f8fafc; } ' +
-            'body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: \'Outfit\', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; } ' +
-            '.container { text-align: center; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.5s ease; } ' +
-            '.logo { width: 400px; opacity: 0.8; animation: pulse 3s infinite ease-in-out; } ' +
-            '.user-card { display: none; flex-direction: column; align-items: center; animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1); } ' +
-            '.photo-frame { width: 350px; height: 350px; border-radius: 50%; border: 15px solid var(--primary); overflow: hidden; background: #1e293b; margin-bottom: 2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.5); } ' +
-            '.photo-frame img { width: 100%; height: 100%; object-fit: cover; } ' +
-            '.photo-frame i { font-size: 8rem; margin-top: 5rem; color: #334155; } ' +
-            '.name { font-size: 5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin: 0; } ' +
-            '.status { font-size: 2.5rem; font-weight: 600; padding: 1rem 3rem; border-radius: 50px; margin-top: 1.5rem; } ' +
-            '.bg-valid { background: linear-gradient(135deg, #064e3b, #065f46); } ' +
-            '.bg-invalid { background: linear-gradient(135deg, #7f1d1d, #991b1b); } ' +
-            '.border-valid { border-color: var(--secondary) !important; color: var(--secondary); } ' +
-            '.border-invalid { border-color: var(--danger) !important; color: var(--danger); } ' +
-            '@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } } ' +
-            '@keyframes slideUp { from { opacity: 0; transform: translateY(100px); } to { opacity: 1; transform: translateY(0); } }';
-
-        let html = '<html><head><title>KandalGym - Monitor de Acesso</title>' +
-            '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">' +
-            '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">' +
-            '<style>' + css + '</style></head><body>' +
-            '<div id="display-container" class="container">' +
-            '<div id="standby" class="logo"><img src="logo.png" style="width:100%; filter: drop-shadow(0 0 30px rgba(99,102,241,0.3));"></div>' +
-            '<div id="user-display" class="user-card">' +
+    renderTeacherContent(container) {
+        if (!this.hasLoadedData) {
+            container.innerHTML = `<div style="padding:5rem; text-align:center;"><div class="loader" style="margin:0 auto;"></div></div>`;
+            return;
+        }
+        const teacherClients = this.state.clients.filter(c => c.teacherId === this.currentUser.id);
             '<div id="user-photo-frame" class="photo-frame"><img id="user-photo" src="" style="display:none;"><i id="user-icon" class="fas fa-user"></i></div>' +
             '<h1 id="user-name" class="name">NOME DO CLIENTE</h1>' +
             '<div id="user-status" class="status">ENTRADA VÁLIDA</div></div></div>' +
