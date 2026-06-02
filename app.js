@@ -189,9 +189,6 @@ class FitnessApp {
             }
         }, 8000);
 
-        // --- SISTEMA DE SCANNER GLOBAL ROBUSTO ---
-        this.initGlobalScanner();
-
         // --- CANAL DE COMUNICAÇÃO PARA MONITOR ---
         this.accessChannel = new BroadcastChannel("kandal_access");
         this.accessChannel.onmessage = (ev) => {
@@ -216,63 +213,6 @@ class FitnessApp {
         this.monitorScannerListenerAttached = false;
     }
 
-    initGlobalScanner() {
-        // Criar um input invisível para capturar o scanner em qualquer menu
-        let input = document.getElementById('global-scanner-input');
-        if (!input) {
-            input = document.createElement('input');
-            input.id = 'global-scanner-input';
-            input.type = 'text';
-            input.setAttribute('inputmode', 'none'); // Previne abertura do teclado virtual em mobile
-            input.style.cssText = 'position:fixed; top:-1000px; left:-1000px; opacity:0; z-index:-1;';
-            document.body.appendChild(input);
-        }
-
-        input.onkeyup = (e) => {
-            // Scanner APENAS funciona na página Monitor de Acesso
-            if (this.activeView !== 'monitor') return;
-            
-            if (e.key === 'Enter') {
-                const val = input.value.trim().toUpperCase();
-                if (val.length >= 2) {
-                    console.log("Scanner detetado (Monitor):", val);
-                    this.processarLeituraQR(val);
-                }
-                input.value = '';
-            }
-        };
-
-        // Gestor de Foco Global (apenas para Desktop/Receção e na página Monitor)
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-        if (!isMobile) {
-            document.addEventListener('mousedown', (e) => {
-                // Se não estamos no Monitor, não gerimos o foco do scanner
-                if (this.activeView !== 'monitor') return;
-                
-                // Se clicar em algo que precise de foco (inputs, botoes), não interferimos
-                const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'];
-                if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button') || e.target.closest('a')) {
-                    return;
-                }
-
-                // Caso contrário, devolvemos o foco ao scanner após um pequeno delay
-                setTimeout(() => {
-                    const active = document.activeElement;
-                    if (!active || !['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) {
-                        input.focus({ preventScroll: true });
-                    }
-                }, 200);
-            });
-
-            // Foco inicial quando entra no Monitor
-            document.addEventListener('viewChange', () => {
-                if (this.activeView === 'monitor') {
-                    setTimeout(() => input.focus({ preventScroll: true }), 500);
-                }
-            });
-        }
-    }
 
     checkForForceUpdate() {
         try {
@@ -1748,16 +1688,6 @@ Equipa KandalGym`;
 
     setView(view, skipScroll = false) {
         this.activeView = view;
-        
-        // Ativar/Desativar scanner QR conforme a página
-        if (view === 'monitor') {
-            const scannerInput = document.getElementById('global-scanner-input');
-            if (scannerInput) {
-                setTimeout(() => scannerInput.focus({ preventScroll: true }), 300);
-            }
-            console.log("Scanner QR ativado para Monitor de Acesso");
-        }
-        
         if (view === 'notifications_manager') {
             this.selectedNotifyIds = new Set();
         }
@@ -2713,61 +2643,24 @@ Equipa KandalGym`;
                     if (e.key === 'Enter') {
                         const val = hwInput.value.trim().toUpperCase();
                         if (val.length >= 2) {
-                            // Feedback visual rápido
-                            const containerEl = document.getElementById('local-display-container');
-                            if (containerEl) {
-                                containerEl.style.border = '2px solid var(--primary)';
-                                setTimeout(() => containerEl.style.border = '1px solid var(--surface-border)', 500);
-                            }
+                            console.log("Monitor Scanner:", val);
                             this.processarLeituraQR(val);
                         }
                         hwInput.value = '';
                     }
                 };
 
-                // Manter foco persistente apenas se NÃO estivermos a interagir com outros campos
-                document.onmousedown = (e) => {
-                    if (this.activeView !== 'monitor' || !hwInput) return;
-
-                    const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'];
-                    if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button') || e.target.closest('a')) {
-                        return;
+                // Auto-foco persistente no Monitor
+                document.addEventListener('click', () => {
+                    if (this.activeView === 'monitor') {
+                        setTimeout(() => hwInput.focus({ preventScroll: true }), 100);
                     }
+                });
 
-                    setTimeout(() => {
-                        if (this.activeView === 'monitor' && hwInput && document.activeElement.tagName !== 'INPUT') {
-                            hwInput.focus({ preventScroll: true });
-                        }
-                    }, 100);
-                };
-
-                if (!this.monitorScannerListenerAttached) {
-                    let scanBuffer = '';
-                    let scanTimer = null;
-                    document.addEventListener('keydown', (e) => {
-                        if (this.activeView !== 'monitor') return;
-                        const targetTag = e.target && e.target.tagName ? e.target.tagName.toUpperCase() : '';
-                        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(targetTag)) return;
-
-                        if (e.key === 'Enter') {
-                            const val = scanBuffer.trim().toUpperCase();
-                            scanBuffer = '';
-                            if (val.length >= 2) {
-                                this.processarLeituraQR(val);
-                            }
-                            return;
-                        }
-
-                        if (e.key.length === 1) {
-                            scanBuffer += e.key;
-                            clearTimeout(scanTimer);
-                            scanTimer = setTimeout(() => { scanBuffer = ''; }, 400);
-                        }
-                    });
-                    this.monitorScannerListenerAttached = true;
-                }
+                // Foco inicial
+                hwInput.focus({ preventScroll: true });
             }
-        }, 500);
+        }, 300);
     }
 
     openAccessMonitor() {
