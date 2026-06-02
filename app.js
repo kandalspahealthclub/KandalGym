@@ -2669,9 +2669,69 @@ Equipa KandalGym`;
         const monitorWindow = window.open('', 'KandalMonitor', 'width=1200,height=800');
         if (!monitorWindow) return alert("Por favor, permita pop-ups para abrir o monitor.");
 
-        const css = ':root{--primary:#911B2B;--secondary:#10b981;--danger:#ef4444;--bg:#0f1218;--text:#f8fafc}*{margin:0;padding:0;box-sizing:border-box;font-family:Outfit,sans-serif}body{background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden}.container{text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%}.logo{width:380px;opacity:0.85;animation:pulse 3s infinite ease-in-out;margin-bottom:2rem}.user-card{display:none;flex-direction:column;align-items:center;animation:slideUp 0.5s ease}.photo-frame{width:300px;height:300px;border-radius:50%;border:12px solid var(--primary);overflow:hidden;background:#1e293b;margin-bottom:1.5rem;box-shadow:0 20px 50px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center}.photo-frame img{width:100%;height:100%;object-fit:cover}.photo-frame i{font-size:7rem;color:#334155}.name{font-size:4.5rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin:0}.status-badge{font-size:2rem;font-weight:700;padding:1rem 2.5rem;border-radius:50px;margin-top:1rem}.bg-valid{background:linear-gradient(135deg,#064e3b,#065f46);color:#34d399}.bg-invalid{background:linear-gradient(135deg,#7f1d1d,#991b1b);color:#fca5a5}@keyframes pulse{0%,100%{transform:scale(1);opacity:0.85}50%{transform:scale(1.04);opacity:1}}@keyframes slideUp{from{opacity:0;transform:translateY(80px)}to{opacity:1;transform:translateY(0)}}';
+        const css = 
+            ':root{--primary:#911B2B;--secondary:#10b981;--danger:#ef4444;--bg:#0f1218;--text:#f8fafc}' +
+            '*{margin:0;padding:0;box-sizing:border-box;font-family:"Outfit",sans-serif}' +
+            'body{background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden}' +
+            '.container{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;text-align:center}' +
+            '.logo{width:380px;opacity:0.85;animation:pulse 3s infinite ease-in-out;margin-bottom:2rem}' +
+            '.user-card{display:none;flex-direction:column;align-items:center;animation:slideUp 0.5s ease}' +
+            '.photo-frame{width:300px;height:300px;border-radius:50%;border:12px solid var(--primary);overflow:hidden;background:#1e293b;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:center}' +
+            '.photo-frame img{width:100%;height:100%;object-fit:cover}' +
+            '.photo-frame i{font-size:7rem;color:#334155}' +
+            '.name{font-size:4.5rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin:0}' +
+            '.status-badge{font-size:2rem;font-weight:700;padding:1rem 2.5rem;border-radius:50px;margin-top:1rem}' +
+            '.bg-valid{background:linear-gradient(135deg,#064e3b,#065f46);color:#34d399}' +
+            '.bg-invalid{background:linear-gradient(135deg,#7f1d1d,#991b1b);color:#fca5a5}' +
+            '@keyframes pulse{0%,100%{transform:scale(1);opacity:0.85}50%{transform:scale(1.04);opacity:1}}' +
+            '@keyframes slideUp{from{opacity:0;transform:translateY(80px)}to{opacity:1;transform:translateY(0)}}';
 
-        const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Monitor Acesso</title><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"><style>' + css + '</style></head><body><div class="container"><div id="standby" class="logo"><img src="logo.png" style="width:100%;filter:drop-shadow(0 0 30px rgba(145,27,43,0.3))"></div><div id="user-display" class="user-card"><div id="user-photo-frame" class="photo-frame"><img id="user-photo" src="" style="display:none"><i id="user-icon" class="fas fa-user"></i></div><h1 id="user-name" class="name">-</h1><div id="user-status" class="status-badge">-</div></div></div><script>const bc=new BroadcastChannel("kandal_access");let timeout;bc.onmessage=(ev)=>{if(!ev.data||ev.data.type!=="access_event")return;const data=ev.data.data;clearTimeout(timeout);document.getElementById("standby").style.display="none";document.getElementById("user-display").style.display="flex";document.getElementById("user-name").innerText=data.name;document.getElementById("user-name").style.color=data.valid?"#34d399":"#fca5a5";document.getElementById("user-status").innerText=data.msg.toUpperCase();document.getElementById("user-status").className="status-badge "+(data.valid?"bg-valid":"bg-invalid");const frame=document.getElementById("user-photo-frame");frame.style.borderColor=data.valid?"#10b981":"#ef4444";const photo=document.getElementById("user-photo");const icon=document.getElementById("user-icon");if(data.photo){photo.src=data.photo;photo.style.display="block";icon.style.display="none"}else{photo.style.display="none";icon.style.display="block"}timeout=setTimeout(()=>{document.getElementById("standby").style.display="block";document.getElementById("user-display").style.display="none"},5000)}<\/script></body></html>';
+        const html =
+            '<!DOCTYPE html>' +
+            '<html><head>' +
+            '<meta charset="UTF-8">' +
+            '<title>Monitor Acesso</title>' +
+            '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">' +
+            '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">' +
+            '<style>' + css + '</style>' +
+            '</head><body>' +
+            '<div class="container">' +
+            '<div id="standby" class="logo"><img src="logo.png" style="width:100%;filter:drop-shadow(0 0 30px rgba(145,27,43,0.3))"></div>' +
+            '<div id="user-display" class="user-card">' +
+            '<div id="user-photo-frame" class="photo-frame"><img id="user-photo" src="" style="display:none"><i id="user-icon" class="fas fa-user"></i></div>' +
+            '<h1 id="user-name" class="name">-</h1>' +
+            '<div id="user-status" class="status-badge">-</div>' +
+            '</div></div>' +
+            '<script>' +
+            '(function(){' +
+            'const bc=new BroadcastChannel("kandal_access");' +
+            'let timeout;' +
+            'console.log("[Monitor Remoto] BroadcastChannel criado");' +
+            'bc.onmessage=function(ev){' +
+            'console.log("[Monitor Remoto] Evento recebido:", ev.data);' +
+            'if(!ev.data||ev.data.type!=="access_event"){console.log("Tipo não é access_event");return;}' +
+            'const data=ev.data.data;' +
+            'clearTimeout(timeout);' +
+            'document.getElementById("standby").style.display="none";' +
+            'document.getElementById("user-display").style.display="flex";' +
+            'document.getElementById("user-name").innerText=data.name;' +
+            'document.getElementById("user-name").style.color=data.valid?"#34d399":"#fca5a5";' +
+            'document.getElementById("user-status").innerText=data.msg.toUpperCase();' +
+            'document.getElementById("user-status").className="status-badge "+(data.valid?"bg-valid":"bg-invalid");' +
+            'const frame=document.getElementById("user-photo-frame");' +
+            'frame.style.borderColor=data.valid?"#10b981":"#ef4444";' +
+            'const photo=document.getElementById("user-photo");' +
+            'const icon=document.getElementById("user-icon");' +
+            'if(data.photo){photo.src=data.photo;photo.style.display="block";icon.style.display="none"}' +
+            'else{photo.style.display="none";icon.style.display="block"}' +
+            'timeout=setTimeout(()=>{' +
+            'document.getElementById("standby").style.display="block";' +
+            'document.getElementById("user-display").style.display="none"' +
+            '},5000);' +
+            '};' +
+            '})();' +
+            '<\/script>' +
+            '</body></html>';
 
         monitorWindow.document.open();
         monitorWindow.document.write(html);
@@ -9243,10 +9303,16 @@ Equipa KandalGym`;
     }
 
     broadcastAccessEvent(data) {
-        new BroadcastChannel('kandal_access').postMessage({
-            type: 'access_event',
-            data: data
-        });
+        console.log("[Broadcast] Enviando evento:", data);
+        if (this.accessChannel) {
+            console.log("[Broadcast] Canal disponível, postando mensagem");
+            this.accessChannel.postMessage({
+                type: 'access_event',
+                data: data
+            });
+        } else {
+            console.log("[Broadcast] ERRO: Canal não disponível");
+        }
         this.handleLocalMonitorAccessEvent(data);
     }
 
