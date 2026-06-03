@@ -9468,7 +9468,7 @@ Equipa KandalGym`;
         }
 
         if (!c) {
-            this.showQRMsg(` Inválido: "${formattedId}"`, "bg-qr-danger");
+            this.showQRMsg(` Inválido: fmt="${formattedId}" / raw="${id}"`, "bg-qr-danger");
             this.broadcastAccessEvent({ name: 'INVÁLIDO', msg: `ID: ${formattedId}`, valid: false, photo: null });
             this.sendToArduino('B');
             this.lastProcessedQR = formattedId;
