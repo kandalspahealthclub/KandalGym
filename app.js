@@ -4038,9 +4038,11 @@ Equipa KandalGym`;
                                         <div style="flex:1; min-width:0;">
                                             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                                                 <span style="font-weight:700; font-size:0.92rem; color:#fff; display:block; margin-bottom:2px; line-height:1.2; ${isCurrent ? 'color:var(--primary);' : ''}">${ex.name}</span>
+                                                <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
                                                 ${libEx && libEx.videoUrl ? `
-                                                    <i class="fas fa-play-circle" onclick="app.viewExerciseVideo('${libEx.videoUrl}', '${ex.name}')" style="color:var(--primary); font-size:1rem; opacity:0.8; padding:2px;"></i>
+                                                    <i class="fas fa-play-circle" onclick="event.stopPropagation(); app.viewExerciseVideo('${libEx.videoUrl}', '${ex.name}')" style="color:var(--primary); font-size:1.2rem; cursor:pointer; z-index:10; position:relative; pointer-events:all;" title="Ver vídeo do exercício"></i>
                                                 ` : ''}
+                                                </div>
                                         </div>
                                         <div style="display:flex; align-items:center; gap:8px;">
                                             <span style="background:${muscleColor}22; color:${muscleColor}; font-size:0.55rem; font-weight:800; padding:2px 6px; border-radius:4px; text-transform:uppercase;">${libEx?.category || libEx?.muscle || ''}</span>
