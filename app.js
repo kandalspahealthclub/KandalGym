@@ -740,7 +740,7 @@ class FitnessApp {
                     <div class="input-icon-group" style="position: relative;">
                         <i class="fas fa-lock"></i>
                         <input type="password" id="login-pass" placeholder="Password" required style="padding-right: 40px;">
-                        <i class="fas fa-eye" id="toggle-pass" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted); opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7" onclick="const pwd = document.getElementById('login-pass'); if(pwd.type === 'password') { pwd.type = 'text'; this.classList.remove('fa-eye'); this.classList.add('fa-eye-slash'); } else { pwd.type = 'password'; this.classList.remove('fa-eye-slash'); this.classList.add('fa-eye'); }"></i>
+                        <i class="fas fa-eye" id="toggle-pass" style="position: absolute; right: 15px; left: auto; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted); opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7" onclick="const pwd = document.getElementById('login-pass'); if(pwd.type === 'password') { pwd.type = 'text'; this.classList.remove('fa-eye'); this.classList.add('fa-eye-slash'); } else { pwd.type = 'password'; this.classList.remove('fa-eye-slash'); this.classList.add('fa-eye'); }"></i>
                     </div>
 
                     <div style="display:flex; align-items:center; gap:8px; margin:0.2rem 0 1.2rem 4px; cursor:pointer;">
