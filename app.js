@@ -9468,8 +9468,8 @@ Equipa KandalGym`;
         }
 
         if (!c) {
-            this.showQRMsg(" Codigo não reconhecido", "bg-qr-danger");
-            this.broadcastAccessEvent({ name: 'INVÁLIDO LIDO', msg: 'CÓDIGO DESCONHECIDO', valid: false, photo: null });
+            this.showQRMsg(` Inválido: "${formattedId}"`, "bg-qr-danger");
+            this.broadcastAccessEvent({ name: 'INVÁLIDO', msg: `ID: ${formattedId}`, valid: false, photo: null });
             this.sendToArduino('B');
             this.lastProcessedQR = formattedId;
             this.lastProcessedTime = Date.now();
