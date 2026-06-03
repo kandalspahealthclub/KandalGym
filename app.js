@@ -9435,7 +9435,15 @@ Equipa KandalGym`;
 
     processarLeituraQR(id) {
         const st = document.getElementById("scan-status");
-        const formattedId = String(id).trim().toUpperCase();
+        let formattedId = String(id).trim().toUpperCase();
+        
+        // Remove possível AIM ID de leitores hardware (]Q1, ]Q2)
+        // O layout de teclado PT pode transformar o ']' num '+' ou '´'
+        if (formattedId.match(/^[\]+´]Q\d/)) {
+            formattedId = formattedId.substring(3);
+        }
+        // Limpar possíveis aspas ou apóstrofes geradas por erro de layout
+        formattedId = formattedId.replace(/^['"]+|['"]+$/g, '');
         
         console.log("[processarLeituraQR] ID recebido:", id);
         console.log("[processarLeituraQR] ID formatado:", formattedId);
