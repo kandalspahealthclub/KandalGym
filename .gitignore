@@ -13,3 +13,6 @@ yarn-error.log*
 # OS Files
 .DS_Store
 Thumbs.db
+
+# Node
+node_modules/

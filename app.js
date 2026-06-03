@@ -1,15 +1,20 @@
 window.onerror = function (message, source, lineno, colno, error) {
     console.error("Erro detectado:", message, "em", source, ":", lineno);
     
-    // Se o erro for "Script error." com linha 0, é um erro de CORS ou falha de carregamento de CDN
-    let diagnosticMsg = "A página não conseguiu carregar corretamente ou um componente externo falhou.";
+    // Se o erro for "Script error." com linha 0, é geralmente um erro de CORS ou falha de carregamento de CDN
+    // Muitos adblockers ou extensões podem causar isto em scripts não críticos.
     if (message === "Script error." && lineno === 0) {
-        diagnosticMsg = "Erro de carregamento (CORS/CDN). Verifique a sua ligação à internet ou tente limpar a cache do navegador.";
+        console.warn("Aviso: Falha ao carregar um script externo (CORS/CDN). A app tentará continuar.");
+        return false; // Não interrompe a execução nem mostra ecrã de erro fatal
     }
 
+    const diagnosticMsg = "Ocorreu um erro inesperado. Tente recarregar a página.";
     const container = document.getElementById('main-content') || document.body;
-    // Só mostramos o ecrã de erro se a página estiver em branco ou for um erro crítico inicial
-    if (container && (container.innerHTML === '' || container.innerText.length < 100 || container.querySelector('.loader'))) {
+
+    // Só mostramos o ecrã de erro fatal se for um erro crítico inicial que impeça o carregamento
+    // e se o erro NÃO for um simples "Script error"
+    if (container && (container.innerHTML === '' || container.querySelector('.loader'))) {
+        // Se chegarmos aqui, algo falhou mesmo no arranque
         container.innerHTML = `
             <div class="glass-card" style="margin:2rem auto; padding:2rem; border:2px solid var(--danger); text-align:center; max-width:600px;">
                 <i class="fas fa-exclamation-triangle" style="font-size:3rem; color:var(--danger); margin-bottom:1rem;"></i>
@@ -19,14 +24,12 @@ window.onerror = function (message, source, lineno, colno, error) {
                     <strong>Detalhes Técnicos:</strong><br>
                     Erro: ${message}<br>
                     Arquivo: ${source || 'N/A'}<br>
-                    Linha: ${lineno} | Col: ${colno}<br>
-                    ${error ? `Pilha: ${error.stack.substring(0, 200)}...` : ''}
+                    Linha: ${lineno} | Col: ${colno}
                 </div>
                 <div style="display:grid; gap:10px;">
-                    <button class="btn btn-primary" onclick="localStorage.removeItem('kandalgym_session'); localStorage.removeItem('kandalgym_state'); localStorage.removeItem('kg_v'); location.reload()">Reset & Recarregar (Recomendado)</button>
-                    <button class="btn btn-secondary" onclick="location.reload()">Tentar Novamente</button>
+                    <button class="btn btn-primary" onclick="location.reload()">Recarregar Página</button>
+                    <button class="btn btn-secondary" onclick="localStorage.removeItem('kandalgym_session'); location.reload()">Limpar Sessão & Reset</button>
                 </div>
-                <p style="font-size:0.7rem; color:var(--text-muted); margin-top:1.5rem;">Dica: Se o erro persistir, tente abrir o link em modo anónimo ou limpe a cache do navegador.</p>
             </div>
         `;
     }
@@ -142,6 +145,14 @@ class FitnessApp {
             this.renderAppInterface();
         }
 
+        // Failsafe: Se após 5 segundos a app não tiver renderizado nada além do loader, avisar
+        setTimeout(() => {
+            const container = document.getElementById('main-content');
+            if (container && container.querySelector('.loader') && !this.isLoggedIn) {
+                console.warn("Deteção de lentidão no carregamento inicial...");
+            }
+        }, 5000);
+
         // 2. Iniciar escuta do Firebase em segundo plano
         this.init();
 
@@ -178,65 +189,30 @@ class FitnessApp {
             }
         }, 8000);
 
-        // --- SISTEMA DE SCANNER GLOBAL ROBUSTO ---
-        this.initGlobalScanner();
-
         // --- CANAL DE COMUNICAÇÃO PARA MONITOR ---
         this.accessChannel = new BroadcastChannel("kandal_access");
         this.accessChannel.onmessage = (ev) => {
-            if (ev.data && ev.data.type === 'access_request') {
+            if (ev.data) {
+                if (ev.data.type === 'access_request') {
+                    this.processarLeituraQR(ev.data.code);
+                } else if (ev.data.type === 'access_event') {
+                    this.handleLocalMonitorAccessEvent(ev.data.data);
+                }
+            }
+        };
+
+        window.addEventListener('message', (ev) => {
+            if (ev.data && ev.data.type === 'kandal_scan') {
                 this.processarLeituraQR(ev.data.code);
             }
-        };
+        });
+
+        // --- SERIAL SCANNER CONNECTION ---
+        this.serialScannerPort = null;
+        this.serialScannerReader = null;
+        this.monitorScannerListenerAttached = false;
     }
 
-    initGlobalScanner() {
-        // Criar um input invisível para capturar o scanner em qualquer menu
-        let input = document.getElementById('global-scanner-input');
-        if (!input) {
-            input = document.createElement('input');
-            input.id = 'global-scanner-input';
-            input.type = 'text';
-            input.setAttribute('inputmode', 'none'); // Previne abertura do teclado virtual em mobile
-            input.style.cssText = 'position:fixed; top:-1000px; left:-1000px; opacity:0; z-index:-1;';
-            document.body.appendChild(input);
-        }
-
-        input.onkeyup = (e) => {
-            if (e.key === 'Enter') {
-                const val = input.value.trim().toUpperCase();
-                if (val.length >= 2) {
-                    console.log("Scanner detetado (Global):", val);
-                    this.processarLeituraQR(val);
-                }
-                input.value = '';
-            }
-        };
-
-        // Gestor de Foco Global (apenas para Desktop/Receção)
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-        if (!isMobile) {
-            document.addEventListener('mousedown', (e) => {
-                // Se clicar em algo que precise de foco (inputs, botoes), não interferimos
-                const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'];
-                if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button') || e.target.closest('a')) {
-                    return;
-                }
-
-                // Caso contrário, devolvemos o foco ao scanner após um pequeno delay
-                setTimeout(() => {
-                    const active = document.activeElement;
-                    if (!active || !['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) {
-                        input.focus({ preventScroll: true });
-                    }
-                }, 200);
-            });
-
-            // Foco inicial
-            setTimeout(() => input.focus({ preventScroll: true }), 1000);
-        }
-    }
 
     checkForForceUpdate() {
         try {
@@ -267,6 +243,18 @@ class FitnessApp {
     normalizeText(text) {
         if (!text) return '';
         return text.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    isCardioExercise(exId) {
+        if (!exId) return false;
+        const libEx = this.state.exercises.find(le => le.id == exId);
+        if (!libEx) return false;
+        const cat = this.normalizeText(libEx.category);
+        const name = this.normalizeText(libEx.name);
+        if (cat === 'cardio' || cat === 'aerobico') return true;
+        if (cat && cat !== 'geral' && cat !== 'outros') return false;
+        return (name.includes('passadeira') || name.includes('elitica') || name.includes('bicicleta') || name.includes('corrida') || name.includes('caminhada') || name.includes('escada')) 
+            && !name.includes('remo') && !name.includes('remada');
     }
 
 
@@ -304,6 +292,65 @@ class FitnessApp {
                 this.serialWriter = null;
                 this.serialPort = null;
             }
+        }
+    }
+
+    async connectSerialScanner() {
+        if (!("serial" in navigator)) {
+            alert("O seu navegador não suporta a Web Serial API. Use o Google Chrome ou Microsoft Edge.");
+            return;
+        }
+
+        try {
+            this.serialScannerPort = await navigator.serial.requestPort();
+            await this.serialScannerPort.open({ baudRate: 9600 });
+
+            this.showToast("Scanner Serial ligado com sucesso!", "success");
+            this.startSerialScannerReader();
+            this.renderContent(); // Re-render para atualizar o estado do botão
+        } catch (err) {
+            console.error("Erro ao ligar ao Scanner Serial:", err);
+            alert("Não foi possível conectar ao Scanner Serial.");
+        }
+    }
+
+    async startSerialScannerReader() {
+        if (!this.serialScannerPort || !this.serialScannerPort.readable) return;
+        try {
+            const textDecoder = new TextDecoderStream();
+            this.serialScannerReadableStream = this.serialScannerPort.readable.pipeTo(textDecoder.writable);
+            const reader = textDecoder.readable.getReader();
+            this.serialScannerReader = reader;
+            
+            let buffer = '';
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) {
+                    reader.releaseLock();
+                    break;
+                }
+                if (value) {
+                    buffer += value;
+                    // Os leitores normalmente enviam \r ou \n ou \r\n no final de uma leitura
+                    if (buffer.includes('\n') || buffer.includes('\r')) {
+                        const codes = buffer.split(/[\r\n]+/);
+                        // Processar todos os códigos completos, deixar o último incompleto no buffer
+                        buffer = codes.pop() || '';
+                        for (const code of codes) {
+                            const cleanCode = code.trim();
+                            if (cleanCode.length >= 2) {
+                                console.log("Leitura Serial (Scanner):", cleanCode);
+                                this.processarLeituraQR(cleanCode);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Erro na leitura do Scanner Serial:", err);
+            this.serialScannerReader = null;
+            this.serialScannerPort = null;
+            this.renderContent();
         }
     }
 
@@ -491,6 +538,12 @@ class FitnessApp {
                 this.hasLoadedData = true;
 
                 const data = snapshot.val();
+                console.log("[Firebase] Dados recebidos:", {
+                    has_data: !!data,
+                    qrClients: data?.qrClients ? Object.keys(data.qrClients).length : 0,
+                    clients: data?.clients ? Object.keys(data.clients).length : 0
+                });
+                
                 // Só sobrescreve o estado local se não estivermos no meio de uma gravação nossa
                 // para evitar conflitos de latência (compensation)
                 if (data && !this.isSaving) {
@@ -507,9 +560,8 @@ class FitnessApp {
                         this.state[coll] = Object.values(this.state[coll]);
                     }
                 });
-
-                const dictCollections = ['trainingPlans', 'archivedTrainingPlans', 'predefinedPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments', 'planRestrictions'];
-                dictCollections.forEach(coll => { if (!this.state[coll]) this.state[coll] = {}; });
+                
+                console.log("[Firebase] Após processamento - qrClients:", this.state.qrClients ? this.state.qrClients.length : 0);
 
                 // Integridade das restrições
                 if (Object.keys(this.state.planRestrictions || {}).length === 0) {
@@ -1037,7 +1089,7 @@ class FitnessApp {
                             <button class="btn btn-ghost btn-sm" style="padding:4px 8px; font-size:0.7rem; background:rgba(255,255,255,0.05);" onclick="app.generateRandomPassword()">Gerar</button>
                         </div>
                     </div>
-                    <input type="tel" id="new-user-phone" placeholder="Contacto (ex: 912345678)">
+                    <input type="text" id="new-user-phone" placeholder="Contacto (ex: +351... ou +44...)">
                     <div id="client-dob-container">
                         <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; color:var(--text-muted);">Data de Nascimento</label>
                         <input type="date" id="new-user-dob" style="color-scheme: dark;">
@@ -1122,6 +1174,9 @@ class FitnessApp {
 
     syncQRUsers() {
         if (!this.state.qrClients) this.state.qrClients = [];
+        console.log("[syncQRUsers] Iniciado. Clientes atuais:", this.state.qrClients.length);
+        console.log("[syncQRUsers] isLoggedIn:", this.isLoggedIn, "role:", this.role);
+        
         let changed = false;
 
         const hasAccess = (uid) => {
@@ -1132,23 +1187,29 @@ class FitnessApp {
 
         // Staff (Admins e Professores)
         const staff = [...(this.state.admins || []), ...(this.state.teachers || [])];
+        console.log("[syncQRUsers] Staff total:", staff.length);
         staff.forEach(s => {
             if (s && s.id && !hasAccess(s.id)) {
-                console.log(`Ativando QR automático para Staff: ${s.name}`);
+                console.log(`[syncQRUsers] Ativando QR automático para Staff: ${s.name} (ID: ${s.id})`);
                 this.enableQRForClient(s.id, false, true);
                 changed = true;
             }
         });
 
         // Alunos
-        (this.state.clients || []).forEach(c => {
+        const clients = this.state.clients || [];
+        console.log("[syncQRUsers] Clientes total:", clients.length);
+        clients.forEach(c => {
             if (c && c.id && !c.qrDisabled && !hasAccess(c.id)) {
+                console.log(`[syncQRUsers] Ativando QR automático para Cliente: ${c.name} (ID: ${c.id})`);
                 this.enableQRForClient(c.id, false, false);
                 changed = true;
             }
         });
 
+        console.log("[syncQRUsers] Concluído. Mudanças:", changed, "Total QR:", this.state.qrClients.length);
         if (changed && (this.role === 'admin' || this.role === 'teacher')) {
+            console.log("[syncQRUsers] Guardando estado...");
             this.saveState();
         }
     }
@@ -1367,7 +1428,7 @@ Equipa KandalGym`;
         modal.className = 'modal-overlay';
         this.tempExercisePhoto = null;
 
-        const cats = this.state.exerciseCategories || ["Geral"];
+        const cats = this.state.exerciseCategories || [];
         const options = cats.map(c => `<option value="${c}">${c}</option>`).join('');
 
         modal.innerHTML = `
@@ -1441,7 +1502,7 @@ Equipa KandalGym`;
             name: name,
             videoUrl: finalUrl,
             photoUrl: this.tempExercisePhoto || '',
-            category: cat || 'Geral'
+            category: cat || '',
         });
 
         this.saveState();
@@ -1792,6 +1853,9 @@ Equipa KandalGym`;
                     <div style="display:flex; align-items:center; gap:0.5rem;">
                         <i class="fas fa-chart-line" style="color:var(--accent);"></i> 
                         <span>Afluência Estimada</span>
+                        <button class="btn btn-ghost btn-sm" onclick="app.showAffluenceGraphsModal()" style="margin-left: 10px; color: var(--primary); padding: 5px 10px;" title="Ver Histórico de Afluência">
+                            <i class="fas fa-chart-bar"></i> Gráficos
+                        </button>
                     </div>
                     <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                         <div style="background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.2); padding:6px 12px; border-radius:12px; display:flex; align-items:center; gap:6px;">
@@ -1806,6 +1870,182 @@ Equipa KandalGym`;
                 </div>
             </div>
         `;
+    }
+
+    showAffluenceGraphsModal() {
+        const qrClientsArray = Array.isArray(this.state.qrClients) ? this.state.qrClients : Object.values(this.state.qrClients || {});
+        if (qrClientsArray.length === 0) {
+            this.showToast('Sem dados para mostrar.');
+            return;
+        }
+
+        // 1. Calcular Últimos 7 Dias
+        const last7Days = [];
+        const today = new Date();
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+            last7Days.push({
+                dateStart: new Date(d.setHours(0,0,0,0)),
+                dateEnd: new Date(d.setHours(23,59,59,999)),
+                label: d.toLocaleDateString('pt-PT', { weekday: 'short' }).replace('.', '').substring(0, 3) + '<br>' + String(d.getDate()).padStart(2, '0') + ' ' + d.toLocaleDateString('pt-PT', { month: 'short' }).replace('.', '').substring(0, 3),
+                count: 0
+            });
+        }
+
+        // 2. Calcular Média Horária Global
+        const hourCounts = {};
+        for(let i=7; i<=22; i++) hourCounts[i] = 0;
+
+        // 3. Dias da Semana (0-6)
+        const weekDaysCount = [0,0,0,0,0,0,0]; 
+        const weekDaysLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+        // 4. Meses do Ano (0-11)
+        const monthCounts = new Array(12).fill(0);
+        const monthLabels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+        // 5. Anos (Dinâmico)
+        const yearCounts = {};
+
+        qrClientsArray.forEach(c => {
+            if (c.histórico) {
+                const histArray = Array.isArray(c.histórico) ? c.histórico : Object.values(c.histórico);
+                histArray.forEach(h => {
+                    const isObj = typeof h !== 'string';
+                    const t = isObj ? h.t : 'in';
+                    if (t === 'in') {
+                        const dateObj = new Date(isObj ? h.d : h);
+                        
+                        // Last 7 days
+                        const dayObj = last7Days.find(day => dateObj >= day.dateStart && dateObj <= day.dateEnd);
+                        if (dayObj) dayObj.count++;
+
+                        // Hourly distribution (7-22)
+                        const hHour = dateObj.getHours();
+                        if (hHour >= 7 && hHour <= 22) {
+                            hourCounts[hHour]++;
+                        }
+
+                        // Weekday distribution
+                        weekDaysCount[dateObj.getDay()]++;
+
+                        // Month distribution
+                        monthCounts[dateObj.getMonth()]++;
+
+                        // Year distribution
+                        const yYear = dateObj.getFullYear();
+                        if (!yearCounts[yYear]) yearCounts[yYear] = 0;
+                        yearCounts[yYear]++;
+                    }
+                });
+            }
+        });
+
+        const max7Days = Math.max(...last7Days.map(d => d.count), 1);
+        const maxHourly = Math.max(...Object.values(hourCounts), 1);
+        const maxWeekDays = Math.max(...weekDaysCount, 1);
+        const maxMonths = Math.max(...monthCounts, 1);
+        const maxYears = Math.max(...Object.values(yearCounts), 1);
+
+        const buildBars = (data, max, isCompact) => {
+            return data.map(item => {
+                const height = (item.count / max) * 100;
+                return `
+                    <div style="display:flex; flex-direction:column; align-items:center; flex:1; min-width:${isCompact ? '20px' : '40px'};">
+                        <span style="font-size:0.7rem; color:var(--text-muted); margin-bottom:6px; font-weight:bold;">${item.count}</span>
+                        <div style="width:100%; max-width:${isCompact ? '15px' : '30px'}; height:150px; background:rgba(255,255,255,0.05); border-radius:8px; position:relative; overflow:hidden; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="position:absolute; bottom:0; left:0; right:0; height:${height}%; background:linear-gradient(to top, var(--primary), var(--secondary)); border-radius:8px; transition:height 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
+                        </div>
+                        <span style="font-size:0.65rem; color:var(--text-muted); margin-top:8px; font-weight:600; text-transform:uppercase; text-align:center; line-height:1.2;">${item.label}</span>
+                    </div>
+                `;
+            }).join('');
+        };
+
+        const hourlyData = Object.keys(hourCounts).map(h => ({ label: h+'h', count: hourCounts[h] }));
+        const weekData = weekDaysCount.map((count, i) => ({ label: weekDaysLabels[i], count })).slice(1).concat([{label: 'Dom', count: weekDaysCount[0]}]); // Seg a Dom
+        const monthData = monthCounts.map((count, i) => ({ label: monthLabels[i], count }));
+        const yearData = Object.keys(yearCounts).sort().map(y => ({ label: y, count: yearCounts[y] }));
+
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content animate-fade-in" style="max-width: 800px; width: 95%; max-height: 90vh; overflow-y: auto; background: var(--surface); padding: 2rem; border-radius: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 1rem;">
+                    <h2 style="margin: 0; color: var(--text-base); display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-chart-bar" style="color: var(--primary);"></i> Análise de Afluência
+                    </h2>
+                    <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">
+                        <i class="fas fa-times" style="font-size: 1.2rem;"></i>
+                    </button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                        <div class="glass-card" style="padding: 1.5rem; background: rgba(0,0,0,0.2);">
+                            <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: #fff; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-calendar-day" style="color: var(--secondary);"></i> Últimos 7 Dias
+                            </h3>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-end; gap: 5px;">
+                                ${buildBars(last7Days, max7Days, false)}
+                            </div>
+                        </div>
+
+                        <div class="glass-card" style="padding: 1.5rem; background: rgba(0,0,0,0.2);">
+                            <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: #fff; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-layer-group" style="color: #00cec9;"></i> Afluência por Ano (Global)
+                            </h3>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-end; gap: 5px; overflow-x:auto; padding-bottom: 5px;">
+                                ${buildBars(yearData, maxYears, true)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="padding: 1.5rem; background: rgba(0,0,0,0.2);">
+                        <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: #fff; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-calendar-alt" style="color: #e84393;"></i> Afluência por Mês (Global)
+                        </h3>
+                        <div style="display:flex; justify-content:space-between; align-items:flex-end; gap: 5px; overflow-x:auto; padding-bottom: 5px;">
+                            ${buildBars(monthData, maxMonths, true)}
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                        <div class="glass-card" style="padding: 1.5rem; background: rgba(0,0,0,0.2);">
+                            <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: #fff; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-clock" style="color: var(--accent);"></i> Horas de Pico (Global)
+                            </h3>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-end; gap: 2px; overflow-x:auto; padding-bottom: 5px;">
+                                ${buildBars(hourlyData, maxHourly, true)}
+                            </div>
+                        </div>
+
+                        <div class="glass-card" style="padding: 1.5rem; background: rgba(0,0,0,0.2);">
+                            <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: #fff; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-calendar-week" style="color: #f1c40f;"></i> Dias da Semana (Global)
+                            </h3>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-end; gap: 5px;">
+                                ${buildBars(weekData, maxWeekDays, false)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        setTimeout(() => {
+            const bars = modal.querySelectorAll('.glass-card > div > div > div > div');
+            bars.forEach(bar => {
+                const targetHeight = bar.style.height;
+                bar.style.height = '0%';
+                setTimeout(() => {
+                    bar.style.height = targetHeight;
+                }, 50);
+            });
+        }, 10);
     }
 
     getCurrentPeopleInGymHTML() {
@@ -2280,99 +2520,249 @@ Equipa KandalGym`;
 
     renderMonitorView(container) {
         container.innerHTML = `
-            <div style="height: calc(100vh - 150px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2rem;">
-                <div class="glass-panel" style="max-width: 600px; padding: 3rem; border-radius: 30px; border: 2px solid var(--primary);">
-                    <i class="fas fa-desktop" style="font-size: 4rem; color: var(--primary); margin-bottom: 2rem;"></i>
-                    <h2 style="font-size: 2rem; margin-bottom: 1rem;">Monitor de Acesso</h2>
-                    <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2rem;">
-                        Esta funcionalidade foi desenhada para um segundo ecrã (TV ou Monitor) virado para o cliente na receção.
-                    </p>
-                    <button class="btn btn-primary btn-lg" onclick="app.openAccessMonitor()" style="padding: 1.5rem 3rem; font-size: 1.2rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);">
-                        <i class="fas fa-external-link-alt"></i> Abrir Ecra de Cliente
-                    </button>
-                    <p style="margin-top: 2rem; font-size: 0.9rem; color: var(--text-muted);">
-                        <i class="fas fa-info-circle"></i> Após abrir, arraste a nova janela para o segundo monitor e coloque em ecrã inteiro (tecla F11).
+            <style>
+                #local-display-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    text-align: center;
+                    position: relative;
+                    min-height: calc(100vh - 240px);
+                    background: rgba(15, 23, 42, 0.4);
+                    border: 1px solid var(--surface-border);
+                    border-radius: 24px;
+                    padding: 2rem;
+                    overflow: hidden;
+                    margin-top: 1rem;
+                }
+                #local-display-container .logo {
+                    width: 250px;
+                    opacity: 0.8;
+                    animation: localPulse 3s infinite ease-in-out;
+                }
+                #local-display-container .user-card {
+                    display: none;
+                    flex-direction: column;
+                    align-items: center;
+                    animation: localSlideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+                }
+                #local-display-container .photo-frame {
+                    width: 220px;
+                    height: 220px;
+                    border-radius: 50%;
+                    border: 10px solid var(--primary);
+                    overflow: hidden;
+                    background: #1e293b;
+                    margin-bottom: 1.5rem;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                #local-display-container .photo-frame img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+                #local-display-container .photo-frame i {
+                    font-size: 5rem;
+                    color: #334155;
+                }
+                #local-display-container .name {
+                    font-size: 3rem;
+                    font-weight: 800;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    margin: 0;
+                }
+                #local-display-container .status {
+                    font-size: 1.6rem;
+                    font-weight: 600;
+                    padding: 0.8rem 2.2rem;
+                    border-radius: 50px;
+                    margin-top: 1rem;
+                }
+                #local-display-container .bg-valid {
+                    background: linear-gradient(135deg, #064e3b, #065f46) !important;
+                    color: #fff !important;
+                }
+                #local-display-container .bg-invalid {
+                    background: linear-gradient(135deg, #7f1d1d, #991b1b) !important;
+                    color: #fff !important;
+                }
+                #local-display-container .border-valid {
+                    border-color: var(--success) !important;
+                }
+                #local-display-container .border-invalid {
+                    border-color: var(--danger) !important;
+                }
+                @keyframes localPulse {
+                    0%, 100% { transform: scale(1); opacity: 0.8; }
+                    50% { transform: scale(1.05); opacity: 1; }
+                }
+                @keyframes localSlideUp {
+                    from { opacity: 0; transform: translateY(50px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            </style>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="margin: 0;"><i class="fas fa-desktop"></i> Monitor de Entrada</h2>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0; margin-top: 0.2rem;">
+                        O leitor de hardware está ativo nesta página. Pode também projetar num segundo ecrã.
                     </p>
                 </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn ${this.serialScannerPort ? 'btn-success' : 'btn-secondary'}" 
+                        style="border: 1px solid ${this.serialScannerPort ? 'var(--success)' : 'var(--primary)'}; color: ${this.serialScannerPort ? '#fff' : 'var(--primary)'}; background: ${this.serialScannerPort ? 'var(--success)' : 'rgba(145, 27, 43, 0.05)'}; height: 44px; border-radius: 12px;" 
+                        onclick="app.connectSerialScanner()">
+                        <i class="fas fa-barcode"></i> ${this.serialScannerPort ? 'Scanner Serial Conetado' : 'Ligar Scanner Serial'}
+                    </button>
+                    <button class="btn btn-primary" onclick="app.openAccessMonitor()" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2); height: 44px;">
+                        <i class="fas fa-external-link-alt"></i> Abrir Ecrã de Cliente (2º Monitor)
+                    </button>
+                </div>
+            </div>
+
+            <div id="local-display-container">
+                <div id="local-standby" class="logo">
+                    <img src="logo.png" style="width:100%; filter: drop-shadow(0 0 30px rgba(99,102,241,0.3));">
+                </div>
+                
+                <div id="local-user-display" class="user-card">
+                    <div id="local-user-photo-frame" class="photo-frame">
+                        <img id="local-user-photo" src="" style="display:none;">
+                        <i id="local-user-icon" class="fas fa-user"></i>
+                    </div>
+                    <h1 id="local-user-name" class="name">NOME DO CLIENTE</h1>
+                    <div id="local-user-status" class="status">ENTRADA VÁLIDA</div>
+                </div>
+                
+                <!-- Input do Scanner de Hardware Escondido -->
+                <input type="text" id="local-monitor-scanner-input" autocomplete="off" 
+                    style="position: fixed; top: -100px; left: -100px; opacity: 0; width: 1px; height: 1px; border: none; padding: 0;">
             </div>
         `;
+
+        // --- AUTO FOCUS NO HARDWARE SCANNER PARA O MONITOR LOCAL ---
+        setTimeout(() => {
+            const hwInput = document.getElementById('local-monitor-scanner-input');
+            if (hwInput) {
+                console.log("[renderMonitorView] Input encontrado, configurando scanner");
+                
+                // Focar o input
+                hwInput.focus({ preventScroll: true });
+                
+                // Handler global keydown para capturar scanner
+                const handleKeyDown = (e) => {
+                    if (this.activeView !== 'monitor') return;
+                    
+                    // Se é Enter, processa o que está no input
+                    if (e.key === 'Enter') {
+                        const val = hwInput.value.trim().toUpperCase();
+                        console.log("[Scanner] Enter pressionado, valor:", val, "comprimento:", val.length);
+                        if (val.length >= 2) {
+                            console.log("[Scanner] Processando QR:", val);
+                            this.processarLeituraQR(val);
+                        }
+                        hwInput.value = '';
+                        hwInput.focus({ preventScroll: true });
+                    } else if (e.key.length === 1 && e.target === hwInput) {
+                        // Deixa o input captar caracteres normalmente
+                        console.log("[Scanner] Char capturado no input:", e.key);
+                    }
+                };
+                
+                hwInput.addEventListener('keydown', handleKeyDown);
+                
+                // Refocus ao clicar
+                document.addEventListener('click', () => {
+                    if (this.activeView === 'monitor') {
+                        setTimeout(() => {
+                            hwInput.focus({ preventScroll: true });
+                            console.log("[Scanner] Re-focado após clique");
+                        }, 50);
+                    }
+                });
+                
+                console.log("[renderMonitorView] Scanner configurado com sucesso");
+            } else {
+                console.log("[renderMonitorView] ERRO: Input não encontrado!");
+            }
+        }, 100);
     }
 
     openAccessMonitor() {
         const monitorWindow = window.open('', 'KandalMonitor', 'width=1200,height=800');
         if (!monitorWindow) return alert("Por favor, permita pop-ups para abrir o monitor.");
 
-        const css = ':root { --primary: #6366f1; --secondary: #10b981; --danger: #ef4444; --bg: #0f172a; --text: #f8fafc; } ' +
-            'body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: \'Outfit\', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; } ' +
-            '.container { text-align: center; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.5s ease; } ' +
-            '.logo { width: 400px; opacity: 0.8; animation: pulse 3s infinite ease-in-out; } ' +
-            '.user-card { display: none; flex-direction: column; align-items: center; animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1); } ' +
-            '.photo-frame { width: 350px; height: 350px; border-radius: 50%; border: 15px solid var(--primary); overflow: hidden; background: #1e293b; margin-bottom: 2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.5); } ' +
-            '.photo-frame img { width: 100%; height: 100%; object-fit: cover; } ' +
-            '.photo-frame i { font-size: 8rem; margin-top: 5rem; color: #334155; } ' +
-            '.name { font-size: 5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin: 0; } ' +
-            '.status { font-size: 2.5rem; font-weight: 600; padding: 1rem 3rem; border-radius: 50px; margin-top: 1.5rem; } ' +
-            '.bg-valid { background: linear-gradient(135deg, #064e3b, #065f46); } ' +
-            '.bg-invalid { background: linear-gradient(135deg, #7f1d1d, #991b1b); } ' +
-            '.border-valid { border-color: var(--secondary) !important; color: var(--secondary); } ' +
-            '.border-invalid { border-color: var(--danger) !important; color: var(--danger); } ' +
-            '@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } } ' +
-            '@keyframes slideUp { from { opacity: 0; transform: translateY(100px); } to { opacity: 1; transform: translateY(0); } }';
+        const css = 
+            ':root{--primary:#911B2B;--secondary:#10b981;--danger:#ef4444;--bg:#0f1218;--text:#f8fafc}' +
+            '*{margin:0;padding:0;box-sizing:border-box;font-family:"Outfit",sans-serif}' +
+            'body{background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden}' +
+            '.container{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;text-align:center}' +
+            '.logo{width:380px;opacity:0.85;animation:pulse 3s infinite ease-in-out;margin-bottom:2rem}' +
+            '.user-card{display:none;flex-direction:column;align-items:center;animation:slideUp 0.5s ease}' +
+            '.photo-frame{width:300px;height:300px;border-radius:50%;border:12px solid var(--primary);overflow:hidden;background:#1e293b;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:center}' +
+            '.photo-frame img{width:100%;height:100%;object-fit:cover}' +
+            '.photo-frame i{font-size:7rem;color:#334155}' +
+            '.name{font-size:4.5rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin:0}' +
+            '.status-badge{font-size:2rem;font-weight:700;padding:1rem 2.5rem;border-radius:50px;margin-top:1rem}' +
+            '.bg-valid{background:linear-gradient(135deg,#064e3b,#065f46);color:#34d399}' +
+            '.bg-invalid{background:linear-gradient(135deg,#7f1d1d,#991b1b);color:#fca5a5}' +
+            '@keyframes pulse{0%,100%{transform:scale(1);opacity:0.85}50%{transform:scale(1.04);opacity:1}}' +
+            '@keyframes slideUp{from{opacity:0;transform:translateY(80px)}to{opacity:1;transform:translateY(0)}}';
 
-        let html = '<html><head><title>KandalGym - Monitor de Acesso</title>' +
+        const html =
+            '<!DOCTYPE html>' +
+            '<html><head>' +
+            '<meta charset="UTF-8">' +
+            '<title>Monitor Acesso</title>' +
             '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">' +
             '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">' +
-            '<style>' + css + '</style></head><body>' +
-            '<div id="display-container" class="container">' +
-            '<div id="standby" class="logo"><img src="logo.png" style="width:100%; filter: drop-shadow(0 0 30px rgba(99,102,241,0.3));"></div>' +
+            '<style>' + css + '</style>' +
+            '</head><body>' +
+            '<div class="container">' +
+            '<div id="standby" class="logo"><img src="logo.png" style="width:100%;filter:drop-shadow(0 0 30px rgba(145,27,43,0.3))"></div>' +
             '<div id="user-display" class="user-card">' +
-            '<div id="user-photo-frame" class="photo-frame"><img id="user-photo" src="" style="display:none;"><i id="user-icon" class="fas fa-user"></i></div>' +
-            '<h1 id="user-name" class="name">NOME DO CLIENTE</h1>' +
-            '<div id="user-status" class="status">ENTRADA VÁLIDA</div></div></div>' +
-
-            '<!-- Scanner Invisivel (Replica da logica da Gestao de Entradas) -->' +
-            '<input type="text" id="monitor-scanner-input" autocomplete="off" style="position:fixed; top:-100px; left:-100px; opacity:0;">' +
-
+            '<div id="user-photo-frame" class="photo-frame"><img id="user-photo" src="" style="display:none"><i id="user-icon" class="fas fa-user"></i></div>' +
+            '<h1 id="user-name" class="name">-</h1>' +
+            '<div id="user-status" class="status-badge">-</div>' +
+            '</div></div>' +
             '<script>' +
-            'const bc = new BroadcastChannel("kandal_access"); let timeout; ' +
-            'const hwInput = document.getElementById("monitor-scanner-input"); ' +
+            '(function(){' +
+            'const bc=new BroadcastChannel("kandal_access");' +
+            'let timeout;' +
+            'console.log("[Monitor Remoto] BroadcastChannel criado");' +
+            'bc.onmessage=function(ev){' +
+            'console.log("[Monitor Remoto] Evento recebido:", ev.data);' +
+            'if(!ev.data||ev.data.type!=="access_event"){console.log("Tipo não é access_event");return;}' +
+            'const data=ev.data.data;' +
+            'clearTimeout(timeout);' +
+            'document.getElementById("standby").style.display="none";' +
+            'document.getElementById("user-display").style.display="flex";' +
+            'document.getElementById("user-name").innerText=data.name;' +
+            'document.getElementById("user-name").style.color=data.valid?"#34d399":"#fca5a5";' +
+            'document.getElementById("user-status").innerText=data.msg.toUpperCase();' +
+            'document.getElementById("user-status").className="status-badge "+(data.valid?"bg-valid":"bg-invalid");' +
+            'const frame=document.getElementById("user-photo-frame");' +
+            'frame.style.borderColor=data.valid?"#10b981":"#ef4444";' +
+            'const photo=document.getElementById("user-photo");' +
+            'const icon=document.getElementById("user-icon");' +
+            'if(data.photo){photo.src=data.photo;photo.style.display="block";icon.style.display="none"}' +
+            'else{photo.style.display="none";icon.style.display="block"}' +
+            'timeout=setTimeout(()=>{' +
+            'document.getElementById("standby").style.display="block";' +
+            'document.getElementById("user-display").style.display="none"' +
+            '},5000);' +
+            '};' +
+            '})();' +
+            '<\/script>' +
+            '</body></html>';
 
-            'hwInput.onkeyup = (e) => { ' +
-            '  if (e.key === "Enter") { ' +
-            '    const val = hwInput.value.trim().toUpperCase(); ' +
-            '    if (val.length >= 2) { ' +
-            '/* Feedback visual de leitura no monitor */ ' +
-            'document.body.style.border = "10px solid var(--primary)"; ' +
-            'setTimeout(() => document.body.style.border = "none", 500); ' +
-            '      if (window.opener && window.opener.app) { window.opener.app.processarLeituraQR(val); } ' +
-            '      else { bc.postMessage({ type: "access_request", code: val }); } ' +
-            '    } ' +
-            '    hwInput.value = ""; ' +
-            '  } ' +
-            '}; ' +
-
-            '/* Auto-foco persistente */ ' +
-            'document.addEventListener("mousedown", () => { ' +
-            '  setTimeout(() => hwInput.focus({ preventScroll: true }), 100); ' +
-            '}); ' +
-            'setTimeout(() => hwInput.focus({ preventScroll: true }), 500); ' +
-            'setInterval(() => { if(document.activeElement !== hwInput) hwInput.focus({ preventScroll: true }); }, 2000); ' +
-
-            'bc.onmessage = (ev) => { const { type, data } = ev.data; if (type === "access_event") { ' +
-            'clearTimeout(timeout); document.getElementById("standby").style.display = "none"; ' +
-            'document.getElementById("user-display").style.display = "flex"; ' +
-            'const nameEl = document.getElementById("user-name"); const statusEl = document.getElementById("user-status"); ' +
-            'const frameEl = document.getElementById("user-photo-frame"); const photoEl = document.getElementById("user-photo"); ' +
-            'const iconEl = document.getElementById("user-icon"); nameEl.innerText = data.name; ' +
-            'nameEl.className = "name " + (data.valid ? "border-valid" : "border-invalid"); ' +
-            'statusEl.innerText = data.msg.toUpperCase(); statusEl.className = "status " + (data.valid ? "bg-valid" : "bg-invalid"); ' +
-            'frameEl.className = "photo-frame " + (data.valid ? "border-valid" : "border-invalid"); ' +
-            'if (data.photo) { photoEl.src = data.photo; photoEl.style.display = "block"; iconEl.style.display = "none"; } ' +
-            'else { photoEl.style.display = "none"; iconEl.style.display = "block"; } ' +
-            'timeout = setTimeout(() => { document.getElementById("standby").style.display = "block"; ' +
-            'document.getElementById("user-display").style.display = "none"; }, 5000); } };' +
-            '</script></body></html>';
-
+        monitorWindow.document.open();
         monitorWindow.document.write(html);
         monitorWindow.document.close();
     }
@@ -2569,7 +2959,7 @@ Equipa KandalGym`;
     }
 
     renderExerciseListGrouped(searchQuery = '') {
-        const cats = this.state.exerciseCategories || ["Geral"];
+        const cats = this.state.exerciseCategories || [];
         let filtered = this.state.exercises || [];
 
         if (searchQuery) {
@@ -2583,10 +2973,10 @@ Equipa KandalGym`;
 
         const grouped = {};
         cats.forEach(c => grouped[c] = []);
-        grouped['Geral'] = grouped['Geral'] || [];
+        // Agrupamento
 
         filtered.forEach(ex => {
-            const c = ex.category || 'Geral';
+            const c = ex.category || '';
             if (!grouped[c]) grouped[c] = [];
             grouped[c].push(ex);
         });
@@ -2611,7 +3001,7 @@ Equipa KandalGym`;
 
             return `
                 <div style="margin-bottom: 2rem;">
-                    <h3 style="color:var(--primary); font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px; margin-bottom:15px;">${catName}</h3>
+                    <h3 style="color:var(--primary); font-size:1.1rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:5px; margin-bottom:15px;">${catName || 'Sem Categoria'}</h3>
                     <div class="video-grid">
                         ${exercises.map(ex => {
                 const yt = this.normalizeYoutubeUrl(ex.videoUrl);
@@ -2637,7 +3027,7 @@ Equipa KandalGym`;
                     <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                         <div>
                             <strong style="font-size:1rem; color:#fff;">${ex.name}</strong><br>
-                                <small style="color:var(--text-muted);">${ex.category || ex.muscle || 'Geral'}</small>
+                                <small style="color:var(--text-muted);">${ex.category || ex.muscle || ''}</small>
                         </div>
                         <div style="display:flex; gap:0.4rem;">
                             ${this.role === 'admin' ? `
@@ -2739,7 +3129,7 @@ Equipa KandalGym`;
     }
 
     showManageExerciseCategoriesModal() {
-        if (!this.state.exerciseCategories) this.state.exerciseCategories = ["Geral"];
+        if (!this.state.exerciseCategories) this.state.exerciseCategories = [];
 
         const renderListIdx = () => {
             return this.state.exerciseCategories.map((c, idx) => `
@@ -2813,10 +3203,10 @@ Equipa KandalGym`;
 
     async deleteExerciseCategory(idx) {
         const name = this.state.exerciseCategories[idx];
-        if (confirm(`Tem a certeza que deseja eliminar a categoria "${name}"? Exercícios nesta categoria serao movidos para "Geral".`)) {
+        if (confirm(`Tem a certeza que deseja eliminar a categoria "${name}"? Exercícios nesta categoria ficarão sem categoria definida.`)) {
             this.state.exerciseCategories.splice(idx, 1);
             this.state.exercises.forEach(ex => {
-                if (ex.category === name) ex.category = 'Geral';
+                if (ex.category === name) ex.category = '';
             });
             this.saveState();
             document.getElementById('manage-ex-cats-modal').remove();
@@ -2830,7 +3220,7 @@ Equipa KandalGym`;
         const ex = this.state.exercises.find(e => e.id === id);
         if (!ex) return;
 
-        const cats = this.state.exerciseCategories || ["Geral"];
+        const cats = this.state.exerciseCategories || [];
         const options = cats.map(c => `<option value="${c}" ${c === ex.category ? 'selected' : ''}>${c}</option>`).join('');
 
         const modal = document.createElement('div');
@@ -2894,7 +3284,7 @@ Equipa KandalGym`;
             ex.name = name;
             ex.videoUrl = finalUrl;
             ex.photoUrl = this.tempExercisePhoto || '';
-            ex.category = cat || 'Geral';
+            ex.category = cat || '';
             delete ex.muscle;
 
             this.saveState();
@@ -3648,8 +4038,13 @@ Equipa KandalGym`;
                                                 ` : ''}
                                         </div>
                                         <div style="display:flex; align-items:center; gap:8px;">
-                                            <span style="background:${muscleColor}22; color:${muscleColor}; font-size:0.55rem; font-weight:800; padding:2px 6px; border-radius:4px; text-transform:uppercase;">${libEx?.category || libEx?.muscle || 'Geral'}</span>
-                                            <span style="font-size:0.75rem; color:#fff; font-weight:700;">${ex.sets}<small style="color:var(--text-muted); font-weight:400; font-size:0.65rem; margin:0 3px;">x</small>${ex.reps}</span>
+                                            <span style="background:${muscleColor}22; color:${muscleColor}; font-size:0.55rem; font-weight:800; padding:2px 6px; border-radius:4px; text-transform:uppercase;">${libEx?.category || libEx?.muscle || ''}</span>
+                                            <span style="font-size:0.75rem; color:#fff; font-weight:700;">
+                                                ${this.isCardioExercise(ex.id) ? 
+                                                    `<i class="fas fa-clock" style="font-size:0.65rem; margin-right:4px; opacity:0.7;"></i>${ex.reps}` : 
+                                                    `${ex.sets}<small style="color:var(--text-muted); font-weight:400; font-size:0.65rem; margin:0 3px;">x</small>${ex.reps}`
+                                                }
+                                            </span>
                                             ${ex.rest ? `<span style="font-size:0.65rem; color:var(--text-muted);"><i class="fas fa-clock" style="font-size:0.6rem;"></i> ${ex.rest}</span>` : ''}
                                         </div>
                                     </div>
@@ -3964,6 +4359,32 @@ Equipa KandalGym`;
         localStorage.removeItem('kandalgym_training_draft');
     }
 
+    savePredefinedDraft() {
+        if (this.activeView !== 'edit_predefined_plan') return;
+        const draftData = {
+            id: this.editingPredefinedId,
+            name: this.editingPredefinedName,
+            plan: this.editingPlan,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('kandalgym_predefined_draft', JSON.stringify(draftData));
+    }
+
+    clearPredefinedDraft() {
+        localStorage.removeItem('kandalgym_predefined_draft');
+    }
+
+    updatePredefinedExercise(dayIdx, exIdx, field, value) {
+        if (field === 'id') {
+            const libEx = this.state.exercises.find(x => x.id == value);
+            this.editingPlan[dayIdx].exercises[exIdx].id = value;
+            this.editingPlan[dayIdx].exercises[exIdx].name = libEx ? libEx.name : '';
+        } else {
+            this.editingPlan[dayIdx].exercises[exIdx][field] = value;
+        }
+        this.savePredefinedDraft();
+    }
+
     renderTrainingEditor() {
         const container = document.getElementById('main-content');
         if (!container) return;
@@ -3975,13 +4396,13 @@ Equipa KandalGym`;
 
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
-                <h2 style="margin:0;">Editar Treino: ${c.name}</h2>
-                <div style="display:flex; gap:0.5rem; align-items:center;">
-                    <button class="btn btn-ghost" style="color:var(--success);" onclick="app.handleNewPlanRequest()"><i class="fas fa-file-medical"></i> Novo Plano</button>
-                    <button class="btn btn-ghost" style="color:var(--accent);" onclick="app.showLoadPredefinedPlanModal()"><i class="fas fa-copy"></i> Carregar Modelo</button>
-                    <button class="btn btn-ghost" style="color:var(--danger);" onclick="app.deleteTrainingPlan(app.editingClientId)"><i class="fas fa-trash"></i> Eliminar</button>
-                    <button class="btn btn-secondary" onclick="app.clearTrainingDraft(); app.setView('spy_view')">Cancelar</button>
-                    <button class="btn btn-primary" onclick="app.saveTrainingPlan()"><i class="fas fa-save"></i> Guardar Plano</button>
+                <h2 style="margin:0; font-size: 1.2rem;">Editar Treino: ${c.name}</h2>
+                <div style="display:flex; gap:0.4rem; align-items:center; flex-wrap: wrap;">
+                    <button class="btn btn-ghost" style="color:var(--success); padding: 0.6rem 0.8rem;" onclick="app.handleNewPlanRequest()" title="Novo Plano"><i class="fas fa-file-medical"></i> <span class="hide-mobile">Novo Plano</span></button>
+                    <button class="btn btn-ghost" style="color:var(--accent); padding: 0.6rem 0.8rem;" onclick="app.showLoadPredefinedPlanModal()" title="Carregar Modelo"><i class="fas fa-copy"></i> <span class="hide-mobile">Carregar</span></button>
+                    <button class="btn btn-ghost" style="color:var(--danger); padding: 0.6rem 0.8rem;" onclick="app.deleteTrainingPlan(app.editingClientId)" title="Eliminar"><i class="fas fa-trash"></i> <span class="hide-mobile">Eliminar</span></button>
+                    <button class="btn btn-secondary" style="padding: 0.6rem 0.8rem;" onclick="app.cancelTrainingEdit()"> <span class="hide-mobile">Cancelar</span><i class="fas fa-times mobile-only"></i></button>
+                    <button class="btn btn-primary" style="padding: 0.6rem 0.8rem;" onclick="app.saveTrainingPlan()"><i class="fas fa-save"></i> <span class="hide-mobile">Guardar Plano</span><span class="mobile-only">Guardar</span></button>
                 </div>
             </div>
 
@@ -4063,16 +4484,24 @@ Equipa KandalGym`;
                                 </div>
                                 
                                 <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
-                                    <div style="width:90px;">
-                                        <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Séries</label>
-                                        <input type="text" value="${ex.sets || ''}" placeholder="Ex: 4" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'sets', this.value)"
-                                            style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:600;">
-                                    </div>
-                                    <div style="flex:2; min-width:140px;">
-                                        <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Repetições (Reps)</label>
-                                        <input type="text" value="${ex.reps || ''}" placeholder="Ex: 12-15 ou Falha" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'reps', this.value)"
-                                            style="width:100%; height:45px; background:rgba(255,255,255,0.05); color:#fff; border:2px solid var(--primary); border-radius:8px; padding:0 15px; text-align:center; font-size:1.1rem; font-weight:700;">
-                                    </div>
+                                    ${this.isCardioExercise(ex.id) ? `
+                                        <div style="flex:2; min-width:180px;">
+                                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Duração / Tempo</label>
+                                            <input type="text" value="${ex.reps || ''}" placeholder="Ex: 20 min ou 5km" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'reps', this.value)"
+                                                style="width:100%; height:45px; background:rgba(255,255,255,0.05); color:#fff; border:2px solid var(--primary); border-radius:8px; padding:0 15px; text-align:center; font-size:1.1rem; font-weight:700;">
+                                        </div>
+                                    ` : `
+                                        <div style="width:90px;">
+                                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Séries</label>
+                                            <input type="text" value="${ex.sets || ''}" placeholder="Ex: 4" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'sets', this.value)"
+                                                style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 10px; text-align:center; font-size:1.1rem; font-weight:600;">
+                                        </div>
+                                        <div style="flex:2; min-width:140px;">
+                                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Repetições (Reps)</label>
+                                            <input type="text" value="${ex.reps || ''}" placeholder="Ex: 12-15 ou Falha" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'reps', this.value)"
+                                                style="width:100%; height:45px; background:rgba(255,255,255,0.05); color:#fff; border:2px solid var(--primary); border-radius:8px; padding:0 15px; text-align:center; font-size:1.1rem; font-weight:700;">
+                                        </div>
+                                    `}
                                     <div style="flex:3; min-width:200px;">
                                         <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">Observações do Exercício</label>
                                         <input type="text" value="${ex.observations || ''}" placeholder="Ex: Foco na descida" onchange="app.updateEditorExercise(${this.editingDayIdx}, ${eIdx}, 'observations', this.value)"
@@ -4288,6 +4717,13 @@ Equipa KandalGym`;
             this.editingPlan[dayIdx].exercises[exIdx][field] = value;
         }
         this.saveTrainingDraft();
+    }
+
+    cancelTrainingEdit() {
+        if (confirm('Deseja cancelar a edição? Todas as alterações não guardadas serão perdidas.')) {
+            this.clearTrainingDraft();
+            this.setView('spy_view');
+        }
     }
 
     saveTrainingPlan() {
@@ -4771,11 +5207,24 @@ Equipa KandalGym`;
                 <div id="exercise-grid-container" style="overflow-y:auto; flex:1; padding-right:5px;">
                     ${this.renderExerciseGrid()}
                 </div>
+
+                <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                    <div id="selection-count-badge" style="color:var(--text-muted); font-size:0.9rem; font-weight:600;">
+                        0 exercícios selecionados
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
+                        <button class="btn btn-primary" id="confirm-multi-select-btn" onclick="app.confirmMultiExerciseSelection()" disabled style="opacity:0.5; padding:0 30px;">
+                            <i class="fas fa-plus"></i> Adicionar ao Plano
+                        </button>
+                    </div>
+                </div>
             </div>
         `;
 
         document.body.appendChild(modal);
         this.currentSelectionState = { dayIdx, exIdx };
+        this.selectedExerciseIds = []; // Limpar seleção ao abrir
     }
 
     renderExerciseGrid(searchQuery = '', categoryFilter = '') {
@@ -4807,23 +5256,35 @@ Equipa KandalGym`;
         }
 
         return `
-            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:1rem; padding:0.5rem;">
-                ${exercises.map(ex => `
-                    <div class="glass-card food-card" onclick="app.selectExerciseFromModal('${ex.id}')" 
-                        style="cursor:pointer; padding:1rem; transition:all 0.2s ease; border:2px solid transparent; text-align:center;">
-                        <div style="width:100%; height:120px; border-radius:10px; overflow:hidden; margin-bottom:0.75rem; background:rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">
-                            ${ex.photoUrl ? `<img src="${ex.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : `
-                                <div style="font-size:2.5rem;">${this.getExerciseIcon(ex.muscle)}</div>
-                            `}
+            <div class="exercise-grid">
+                ${exercises.map(ex => {
+                    const exIdStr = String(ex.id);
+                    const isSelected = (this.selectedExerciseIds || []).some(id => String(id) === exIdStr);
+                    return `
+                        <div class="glass-card exercise-selection-card ${isSelected ? 'selected' : ''}" 
+                            onclick="app.toggleExerciseSelection('${exIdStr}')"
+                            style="${isSelected ? 'border: 2px solid var(--primary); background: rgba(var(--primary-rgb), 0.1) !important;' : ''}">
+                            <div style="position:absolute; top:10px; right:10px; z-index:2;">
+                                <div style="width:24px; height:24px; border-radius:50%; border:2px solid ${isSelected ? 'var(--primary)' : 'rgba(255,255,255,0.2)'}; background:${isSelected ? 'var(--primary)' : 'rgba(0,0,0,0.3)'}; display:flex; align-items:center; justify-content:center;">
+                                    ${isSelected ? '<i class="fas fa-check" style="font-size:0.8rem; color:#fff;"></i>' : ''}
+                                </div>
+                            </div>
+                            <div class="image-container">
+                                ${ex.photoUrl ? `<img src="${ex.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : `
+                                    <div style="font-size:2.5rem;">${this.getExerciseIcon(ex.muscle)}</div>
+                                `}
+                            </div>
+                            <div class="exercise-info" style="flex:1; min-width:0;">
+                                <div class="exercise-name">
+                                    ${ex.name}
+                                </div>
+                                <div class="exercise-muscle" style="color:var(--primary); font-weight:600; text-transform:uppercase; margin-bottom:5px;">
+                                    ${ex.category || ex.muscle || ''}
+                                </div>
+                            </div>
                         </div>
-                        <div style="font-weight:700; font-size:0.95rem; margin-bottom:0.25rem; color:#fff; line-height:1.2; padding:0 5px;">
-                            ${ex.name}
-                        </div>
-                        <div style="font-size:0.7rem; color:var(--primary); font-weight:600; text-transform:uppercase; margin-bottom:5px;">
-                            ${ex.muscle || 'Geral'}
-                        </div>
-                    </div>
-                `).join('')}
+                    `;
+                }).join('')}
             </div>
         `;
     }
@@ -4835,22 +5296,90 @@ Equipa KandalGym`;
         }
     }
 
-    selectExerciseFromModal(exId) {
-        if (!this.currentSelectionState) return;
-        const { dayIdx, exIdx } = this.currentSelectionState;
+    toggleExerciseSelection(exId) {
+        if (!this.selectedExerciseIds) this.selectedExerciseIds = [];
+        const sId = String(exId);
+        const index = this.selectedExerciseIds.findIndex(id => String(id) === sId);
+        
+        if (index > -1) {
+            this.selectedExerciseIds.splice(index, 1);
+        } else {
+            this.selectedExerciseIds.push(sId);
+        }
 
-        this.updateEditorExercise(dayIdx, exIdx, 'id', exId);
+        // Atualizar grid para mostrar seleção
+        const searchQuery = document.getElementById('exercise-search-input')?.value || '';
+        const categoryFilter = document.getElementById('exercise-category-filter')?.value || '';
+        const gridContainer = document.getElementById('exercise-grid-container');
+        if (gridContainer) {
+            gridContainer.innerHTML = this.renderExerciseGrid(searchQuery, categoryFilter);
+        }
+
+        // Atualizar contador e botão
+        const countBadge = document.getElementById('selection-count-badge');
+        const confirmBtn = document.getElementById('confirm-multi-select-btn');
+        if (countBadge) {
+            countBadge.innerText = `${this.selectedExerciseIds.length} exercícios selecionados`;
+            countBadge.style.color = this.selectedExerciseIds.length > 0 ? 'var(--primary)' : 'var(--text-muted)';
+        }
+        if (confirmBtn) {
+            confirmBtn.disabled = this.selectedExerciseIds.length === 0;
+            confirmBtn.style.opacity = this.selectedExerciseIds.length === 0 ? '0.5' : '1';
+        }
+    }
+
+    confirmMultiExerciseSelection() {
+        if (!this.selectedExerciseIds || this.selectedExerciseIds.length === 0) return;
+        if (!this.currentSelectionState) return;
+
+        const { dayIdx, exIdx } = this.currentSelectionState;
+        const targetExercises = this.editingPlan[dayIdx].exercises;
+
+        // Mapear IDs para objetos de exercício
+        const selectedObjects = this.selectedExerciseIds.map(id => {
+            const libEx = this.state.exercises.find(le => le.id == id);
+            return {
+                id: id,
+                name: libEx ? libEx.name : 'Exercício Desconhecido',
+                sets: '',
+                reps: '',
+                observations: ''
+            };
+        });
+
+        // Preservar os dados do exercício atual (sets, reps, observations) para o primeiro exercício selecionado
+        const originalEx = targetExercises[exIdx] || {};
+        selectedObjects[0].sets = originalEx.sets || '';
+        selectedObjects[0].reps = originalEx.reps || '';
+        selectedObjects[0].observations = originalEx.observations || '';
+
+        // Substituir o exercício atual
+        targetExercises[exIdx] = selectedObjects[0];
+
+        // Se foram selecionados múltiplos exercícios, inseri-los a seguir
+        if (selectedObjects.length > 1) {
+            targetExercises.splice(exIdx + 1, 0, ...selectedObjects.slice(1));
+        }
+
+        this.saveTrainingDraft();
+        this.savePredefinedDraft();
 
         // Fechar modal
         const modal = document.querySelector('.modal-overlay');
         if (modal) modal.remove();
 
-        // Renderizar novamente para atualizar o nome no botão
+        // Renderizar editor correto
         if (this.activeView === 'edit_predefined_plan') {
             this.renderPredefinedPlanEditor();
         } else {
             this.renderTrainingEditor();
         }
+    }
+
+    selectExerciseFromModal(exId) {
+        // Mantido para compatibilidade se houver chamadas externas, mas redireciona para o novo sistema
+        this.selectedExerciseIds = [exId];
+        this.confirmMultiExerciseSelection();
     }
 
     showFoodSelectionModal(mealIdx) {
@@ -7481,8 +8010,11 @@ Equipa KandalGym`;
                 html += `
                     <tr>
                         <td style="padding: 8px; border: 1px solid #ddd;"><strong>${ex.name}</strong></td>
-                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${ex.sets}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${ex.reps}</td>
+                        ${this.isCardioExercise(ex.id) ? 
+                            `<td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: center; background:#f9f9f9;">${ex.reps}</td>` : 
+                            `<td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${ex.sets}</td>
+                             <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${ex.reps}</td>`
+                        }
                         <td style="padding: 8px; border: 1px solid #ddd; color: #555;">${ex.observations || '-'}</td>
                     </tr>
                 `;
@@ -7780,21 +8312,26 @@ Equipa KandalGym`;
                         </h3>
                         <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;">Utilize o leitor físico para ler os códigos QR dos alunos.</p>
                         
-                        <div style="display: flex; gap: 8px; margin-bottom: 20px;">
-                            <div style="flex: 1; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 10px; display: flex; align-items: center; gap: 10px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px;">
+                            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                                 <span class="pulse-green" style="width:10px; height:10px; background:#10b981; border-radius:50%;"></span>
-                                <span style="font-size:0.85rem; color:#10b981; font-weight:700;">Pronto para leitura</span>
+                                <span style="font-size:0.85rem; color:#10b981; font-weight:700;">Pronto</span>
                             </div>
                             <button class="btn ${this.serialWriter ? 'btn-success' : 'btn-secondary'}" 
-                                style="flex: 1; border: 1px solid ${this.serialWriter ? 'var(--success)' : 'var(--primary)'}; color: ${this.serialWriter ? '#fff' : 'var(--primary)'}; background: ${this.serialWriter ? 'var(--success)' : 'rgba(145, 27, 43, 0.05)'}; height: 44px;" 
+                                style="border: 1px solid ${this.serialWriter ? 'var(--success)' : 'var(--primary)'}; color: ${this.serialWriter ? '#fff' : 'var(--primary)'}; background: ${this.serialWriter ? 'var(--success)' : 'rgba(145, 27, 43, 0.05)'}; height: 44px; font-size: 0.8rem; padding: 0 5px;" 
                                 onclick="app.connectArduino()">
-                                <i class="fas fa-plug"></i> ${this.serialWriter ? 'Arduino Conetado' : 'Ligar Arduino'}
+                                <i class="fas fa-plug"></i> ${this.serialWriter ? 'Arduino Ok' : 'Ligar Arduino'}
+                            </button>
+                            <button class="btn ${this.serialScannerPort ? 'btn-success' : 'btn-secondary'}" 
+                                style="border: 1px solid ${this.serialScannerPort ? 'var(--success)' : 'var(--primary)'}; color: ${this.serialScannerPort ? '#fff' : 'var(--primary)'}; background: ${this.serialScannerPort ? 'var(--success)' : 'rgba(145, 27, 43, 0.05)'}; height: 44px; font-size: 0.8rem; padding: 0 5px;" 
+                                onclick="app.connectSerialScanner()">
+                                <i class="fas fa-barcode"></i> ${this.serialScannerPort ? 'Scanner Ok' : 'Ligar Scanner'}
                             </button>
                         </div>
 
                         <div style="background: rgba(0,0,0,0.2); border: 1px dashed var(--surface-border); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px;">
                             <i class="fas fa-qrcode" style="font-size: 3rem; color: rgba(255,255,255,0.05); margin-bottom: 10px; display: block;"></i>
-                            <input type="text" id="hardware-scanner-input" 
+                            <input type="text" id="qr-manager-scanner-input" 
                                 placeholder="Aguardando QR..." 
                                 onkeyup="if(event.key === 'Enter') { app.processarLeituraQR(this.value); this.value=''; }"
                                 autocomplete="off"
@@ -7814,9 +8351,13 @@ Equipa KandalGym`;
                         
                         <div style="display: grid; gap: 10px;">
                             <input type="text" id="casual-name" placeholder="Nome do Cliente" class="qr-input-sleek">
-                            <input type="tel" id="casual-phone" placeholder="Contacto (ex: 912 345 678)" class="qr-input-sleek">
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="casual-phone" placeholder="Contacto (ex: +351... ou +44...)" class="qr-input-sleek" style="flex: 2;">
+                                <input type="number" id="casual-price" placeholder="Valor Pago (€)" class="qr-input-sleek" style="flex: 1;">
+                            </div>
                             <div style="display: flex; gap: 8px;">
                                 <select id="casual-type" class="qr-input-sleek" style="flex: 2; height: 42px;">
+                                    <option value="Diária">🎟️ Diária (1 Dia)</option>
                                     <option value="Semanal">🗓️ Semanal (7 Dias)</option>
                                     <option value="Mensal">📅 Mensal (30 Dias)</option>
                                 </select>
@@ -7840,9 +8381,12 @@ Equipa KandalGym`;
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.8rem;">
+                <div style="display: flex; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.8rem;">
                     <button class="btn ${this.qrActiveTab === 'alunos' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('alunos')" style="padding: 6px 12px; font-size:0.8rem;">
                         <i class="fas fa-user-friends"></i> Alunos
+                    </button>
+                    <button class="btn ${this.qrActiveTab === 'avulsos' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('avulsos')" style="padding: 6px 12px; font-size:0.8rem;">
+                        <i class="fas fa-ticket-alt"></i> Diárias / Avulsos
                     </button>
                     <button class="btn ${this.qrActiveTab === 'teachers' ? 'btn-primary' : 'btn-secondary'}" onclick="app.switchQRTab('teachers')" style="padding: 6px 12px; font-size:0.8rem;">
                         <i class="fas fa-user-tie"></i> Staff (Adm/Prof)
@@ -7878,7 +8422,7 @@ Equipa KandalGym`;
                             <thead>
                                 <tr>
                                     ${this.qrActiveTab === 'alunos' ? '<th style="width: 40px; text-align:center;"><i class="fas fa-check-square"></i></th>' : ''}
-                                    <th style="min-width: 200px;">${this.qrActiveTab === 'alunos' ? 'Aluno (Nome / Tel)' : 'Staff (Nome / Tel)'}</th>
+                                    <th style="min-width: 220px;">${this.qrActiveTab === 'alunos' ? 'Aluno (Nome / Tel)' : 'Staff (Nome / Tel)'}</th>
                                     <th style="width: 140px;">Plano</th>
                                     <th style="text-align:center; width: 80px;">Estado</th>
                                     <th style="text-align:center; width: 110px;">Créditos</th>
@@ -7912,29 +8456,44 @@ Equipa KandalGym`;
                 });
             });
 
-            // --- AUTO FOCUS NO HARDWARE SCANNER ---
+            // --- AUTO FOCUS NO HARDWARE SCANNER - GESTÃO DE ENTRADAS ---
             setTimeout(() => {
-                const hwInput = document.getElementById('hardware-scanner-input');
+                const hwInput = document.getElementById('qr-manager-scanner-input');
                 if (hwInput) {
+                    console.log("[renderQRManager] Input encontrado, configurando scanner");
+                    
                     hwInput.focus({ preventScroll: true });
-                    // Manter foco apenas se NÃO estivermos a interagir com outros campos
-                    document.onmousedown = (e) => {
-                        if (this.activeView !== 'qr_manager' || !hwInput) return;
-
-                        // Lista de elementos que NÃO devem ser interrompidos
-                        const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'];
-                        if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button')) {
-                            return; // Deixa o utilizador interagir com o campo
-                        }
-
-                        setTimeout(() => {
-                            if (this.activeView === 'qr_manager' && hwInput && document.activeElement.tagName !== 'INPUT') {
-                                hwInput.focus({ preventScroll: true });
+                    
+                    // Handler direto no input
+                    hwInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            const val = hwInput.value.trim().toUpperCase();
+                            console.log("[QRManager] Enter pressionado, valor:", val, "comprimento:", val.length);
+                            if (val.length >= 2) {
+                                console.log("[QRManager] Processando QR:", val);
+                                this.processarLeituraQR(val);
                             }
-                        }, 100);
-                    };
+                            hwInput.value = '';
+                            hwInput.focus({ preventScroll: true });
+                            e.preventDefault();
+                        }
+                    });
+                    
+                    // Refocus ao clicar na página
+                    document.addEventListener('click', () => {
+                        if (this.activeView === 'qr_manager') {
+                            setTimeout(() => {
+                                hwInput.focus({ preventScroll: true });
+                                console.log("[QRManager] Re-focado após clique");
+                            }, 50);
+                        }
+                    });
+                    
+                    console.log("[renderQRManager] Scanner configurado com sucesso");
+                } else {
+                    console.log("[renderQRManager] ERRO: Input não encontrado!");
                 }
-            }, 500);
+            }, 100);
 
         } catch (error) {
             console.error("Erro ao renderizar QR Manager:", error);
@@ -7995,7 +8554,17 @@ Equipa KandalGym`;
         const qrList = (this.state.qrClients || []).filter(c => {
             const isStaff = (this.state.teachers || []).some(t => Number(t.id) === Number(c.clientId)) ||
                 (this.state.admins || []).some(a => Number(a.id) === Number(c.clientId));
-            const matchesRole = this.qrActiveTab === 'teachers' ? isStaff : !isStaff;
+            const isAvulso = Number(c.clientId) === 0;
+
+            let matchesRole = false;
+            if (this.qrActiveTab === 'teachers') {
+                matchesRole = isStaff;
+            } else if (this.qrActiveTab === 'avulsos') {
+                matchesRole = isAvulso;
+            } else {
+                matchesRole = !isStaff && !isAvulso;
+            }
+
             if (!matchesRole) return false;
 
             const f = this.normalizeText(filter);
@@ -8060,22 +8629,25 @@ Equipa KandalGym`;
                     </td>
                     ` : (this.qrActiveTab === 'alunos' ? '<td></td>' : '')}
                     <td>
-                        <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
                             <div style="position:relative;">
-                                <div style="width: 45px; height: 45px; border-radius: 50%; background: ${userPhoto ? 'none' : 'linear-gradient(135deg, rgba(var(--primary-rgb),0.8), rgba(var(--accent-rgb),0.8))'}; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); overflow:hidden; border: 2px solid rgba(255,255,255,0.1);">
+                                <div style="width: 38px; height: 38px; border-radius: 50%; background: ${userPhoto ? 'none' : 'linear-gradient(135deg, rgba(var(--primary-rgb),0.8), rgba(var(--accent-rgb),0.8))'}; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); overflow:hidden; border: 2px solid rgba(255,255,255,0.1);">
                                     ${userPhoto ? `<img src="${userPhoto}" style="width:100%; height:100%; object-fit:cover;">` : avatarLetra}
                                 </div>
                                 <div style="position: absolute; bottom: -4px; right: -8px; background: #2a2a2a; border-radius: 6px; padding: 2px 4px; border: 1px solid rgba(255,255,255,0.1); font-size: 0.55rem; font-weight: 800; color: var(--accent); white-space: nowrap;">
                                     ${c.id}
                                 </div>
                             </div>
-                            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1;">
-                                <div style="display:flex; align-items:center; gap:6px;">
-                                    <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" class="qr-input-sleek" style="font-weight:800; font-size:1.1rem; padding:0.6rem 0.8rem !important; flex:1; letter-spacing: 0.2px;">
-                                    ${showIcon ? `<i class="fas fa-paper-plane" title="${tooltipText}" style="color:${(hasLastLogin || hasHistory) ? '#26de81' : 'var(--success)'}; font-size:0.8rem;"></i>` : ''}
+                            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width:0;">
+                                <div style="position:relative; width:100%;">
+                                    <input type="text" value="${c.nome}" onchange="app.updateQRClientField('${c.id}', 'nome', this.value)" class="qr-input-sleek" style="font-weight:800; font-size:0.95rem; padding:0.4rem ${showIcon ? '28px' : '0.5rem'} 0.4rem 0.5rem !important; width:100%; letter-spacing: 0.2px; text-overflow: ellipsis; box-sizing: border-box;">
+                                    ${showIcon ? `<i class="fas fa-paper-plane" title="${tooltipText}" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); color:${(hasLastLogin || hasHistory) ? '#26de81' : 'var(--success)'}; font-size:0.9rem; z-index: 2;"></i>` : ''}
                                 </div>
-                                <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" class="qr-input-sleek" style="color:var(--text-muted); font-size:0.75rem; padding:0.3rem 0.6rem !important;" placeholder="Telemóvel...">
-                                <span style="font-size:0.6rem; color:var(--text-muted);">Ref: ${c.clientId || '-'}</span>
+                                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; width:100%;">
+                                    <input type="text" value="${c.tel}" onchange="app.updateQRClientField('${c.id}', 'tel', this.value)" class="qr-input-sleek" style="color:var(--text-muted); font-size:0.75rem; padding:0.3rem 0.6rem !important; flex:1; min-width:80px; text-overflow:ellipsis; box-sizing: border-box;" placeholder="Telemóvel...">
+                                    ${Number(c.clientId) === 0 ? `<span style="font-size:0.65rem; background:rgba(var(--primary-rgb),0.15); color:var(--primary); padding:4px 8px; border-radius:6px; font-weight:800; text-transform:uppercase; border: 1px solid rgba(var(--primary-rgb),0.3); flex-shrink:0; white-space:nowrap;"><i class="fas fa-ticket-alt"></i> ${c.plano || 'Avulso'}${c.valorPago ? ` - ${c.valorPago}€` : ''}</span>` : ''}
+                                </div>
+                                <span style="font-size:0.6rem; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Ref: ${c.clientId || '-'}</span>
                             </div>
                         </div>
                     </td>
@@ -8084,15 +8656,21 @@ Equipa KandalGym`;
                             style="background:rgba(var(--primary-rgb), 0.1); color:var(--primary); font-weight:600; border:1px solid rgba(var(--primary-rgb), 0.3); border-radius:20px; padding:6px 12px; outline:none; cursor:pointer; width:100%; font-size:0.8rem; appearance:none; text-align:center;">
                             ${isStaff ? '<option value="Staff">Staff / Vitalício</option>' : (() => {
                     const plans = Object.keys(this.state.planRestrictions || {});
+                    let html = '';
                     if (plans.length === 0) {
-                        return `
+                        html = `
                                         <option value="Livre Trânsito" ${c.plano === 'Livre Trânsito' ? 'selected' : ''}>Livre Trânsito</option>
                                         <option value="3x Semana" ${c.plano === '3x Semana' ? 'selected' : ''}>3x Semana</option>
                                         <option value="2x Semana" ${c.plano === '2x Semana' ? 'selected' : ''}>2x Semana</option>
                                         <option value="Pontual" ${c.plano === 'Pontual' ? 'selected' : ''}>Pontual</option>
                                      `;
+                    } else {
+                        html = plans.map(p => `<option value="${p}" ${c.plano === p ? 'selected' : ''}>${p}</option>`).join('');
                     }
-                    return plans.map(p => `<option value="${p}" ${c.plano === p ? 'selected' : ''}>${p}</option>`).join('');
+                    if (Number(c.clientId) === 0 && !html.includes(`value="${c.plano}"`)) {
+                        html += `<option value="${c.plano}" selected>${c.plano}</option><option value="Diária">Diária</option><option value="Semanal">Semanal</option><option value="Mensal">Mensal</option>`;
+                    }
+                    return html;
                 })()}
                         </select>
                     </td>
@@ -8195,11 +8773,13 @@ Equipa KandalGym`;
         const nameEl = document.getElementById('casual-name');
         const typeEl = document.getElementById('casual-type');
         const phoneEl = document.getElementById('casual-phone');
+        const priceEl = document.getElementById('casual-price');
         if (!nameEl || !typeEl) return;
 
         const name = nameEl.value.trim();
         const type = typeEl.value;
         const phone = phoneEl ? phoneEl.value.trim() : '';
+        const price = priceEl ? parseFloat(priceEl.value) || 0 : 0;
 
         if (!name) return alert('Por favor, insira o nome do cliente.');
 
@@ -8230,11 +8810,12 @@ Equipa KandalGym`;
         this.state.qrClients.push({
             id: qrId,
             clientId: 0, // 0 indica cliente avulso sem conta na app
-            nome: `AVULSO: ${name}`,
+            nome: name,
             tel: phone || 'Visitante',
             ativo: true,
             ent: credits,
             plano: type,
+            valorPago: price,
             validade: validDate.toISOString().split('T')[0],
             histórico: []
         });
@@ -8243,19 +8824,24 @@ Equipa KandalGym`;
         this.refreshQRTableUI();
         nameEl.value = '';
         if (phoneEl) phoneEl.value = '';
+        if (priceEl) priceEl.value = '';
         this.showToast(`Passe ${type} criado para ${name}! Código: ${qrId}`);
     }
 
     enableQRForClient(clientId, autoRedirect = true, isStaff = false) {
+        console.log("[enableQRForClient] Iniciado para clientId:", clientId, "isStaff:", isStaff);
         if (!this.state.qrClients) this.state.qrClients = [];
 
         const client = isStaff
             ? [...(this.state.teachers || []), ...(this.state.admins || [])].find(t => Number(t.id) === Number(clientId))
             : (this.state.clients || []).find(c => Number(c.id) === Number(clientId));
+        
+        console.log("[enableQRForClient] Cliente encontrado:", client ? client.name : "NÃO");
         if (!client) return;
 
         const exists = this.state.qrClients.find(qc => Number(qc.clientId) === Number(clientId));
         if (exists) {
+            console.log("[enableQRForClient] QR já existe:", exists.id);
             if (autoRedirect) {
                 this.setView('qr_manager');
                 this.showToast('Este utilizador já tem acesso QR ativo.');
@@ -8277,7 +8863,7 @@ Equipa KandalGym`;
             validDate.setDate(validDate.getDate() + 30);
         }
 
-        this.state.qrClients.push({
+        const newQR = {
             id: qrId,
             clientId: Number(clientId),
             nome: client.name,
@@ -8287,7 +8873,10 @@ Equipa KandalGym`;
             plano: isStaff ? 'Staff' : 'Novo QR',
             validade: validDate.toISOString().split('T')[0],
             histórico: []
-        });
+        };
+        
+        console.log("[enableQRForClient] Criando novo QR:", newQR);
+        this.state.qrClients.push(newQR);
 
         if (autoRedirect) {
             this.saveState();
@@ -8770,14 +9359,88 @@ Equipa KandalGym`;
         }
     }
 
+    broadcastAccessEvent(data) {
+        console.log("[Broadcast] Enviando evento:", data);
+        if (this.accessChannel) {
+            console.log("[Broadcast] Canal disponível, postando mensagem");
+            this.accessChannel.postMessage({
+                type: 'access_event',
+                data: data
+            });
+        } else {
+            console.log("[Broadcast] ERRO: Canal não disponível");
+        }
+        this.handleLocalMonitorAccessEvent(data);
+    }
+
+    handleLocalMonitorAccessEvent(data) {
+        const standby = document.getElementById('local-standby');
+        const userDisplay = document.getElementById('local-user-display');
+        if (!standby || !userDisplay) return;
+
+        if (this.localMonitorTimeout) clearTimeout(this.localMonitorTimeout);
+
+        standby.style.display = 'none';
+        userDisplay.style.display = 'flex';
+
+        const nameEl = document.getElementById('local-user-name');
+        const statusEl = document.getElementById('local-user-status');
+        const frameEl = document.getElementById('local-user-photo-frame');
+        const photoEl = document.getElementById('local-user-photo');
+        const iconEl = document.getElementById('local-user-icon');
+
+        if (nameEl) {
+            nameEl.innerText = data.name;
+            nameEl.className = 'name ' + (data.valid ? 'border-valid' : 'border-invalid');
+            if (data.valid) {
+                nameEl.style.color = 'var(--secondary)'; // matching client monitor css theme
+            } else {
+                nameEl.style.color = 'var(--danger)';
+            }
+        }
+        if (statusEl) {
+            statusEl.innerText = data.msg.toUpperCase();
+            statusEl.className = 'status ' + (data.valid ? 'bg-valid' : 'bg-invalid');
+        }
+        if (frameEl) {
+            frameEl.className = 'photo-frame ' + (data.valid ? 'border-valid' : 'border-invalid');
+        }
+
+        if (photoEl && iconEl) {
+            if (data.photo) {
+                photoEl.src = data.photo;
+                photoEl.style.display = 'block';
+                iconEl.style.display = 'none';
+            } else {
+                photoEl.style.display = 'none';
+                iconEl.style.display = 'block';
+            }
+        }
+
+        this.localMonitorTimeout = setTimeout(() => {
+            const currentStandby = document.getElementById('local-standby');
+            const currentDisplay = document.getElementById('local-user-display');
+            if (currentStandby) currentStandby.style.display = 'block';
+            if (currentDisplay) currentDisplay.style.display = 'none';
+        }, 5000);
+    }
+
     processarLeituraQR(id) {
         const st = document.getElementById("scan-status");
         const formattedId = String(id).trim().toUpperCase();
+        
+        console.log("[processarLeituraQR] ID recebido:", id);
+        console.log("[processarLeituraQR] ID formatado:", formattedId);
+        console.log("[processarLeituraQR] Total de QR Clients:", this.state.qrClients ? this.state.qrClients.length : 0);
+        if (this.state.qrClients && this.state.qrClients.length > 0) {
+            console.log("[processarLeituraQR] Primeiros 5 IDs disponíveis:", this.state.qrClients.slice(0, 5).map(c => c.id));
+        }
 
         // Prevent multiple processing of the same scan within 3 seconds
         if (this.lastProcessedQR === formattedId && (Date.now() - this.lastProcessedTime < 3000)) return;
 
         const c = this.state.qrClients.find(cli => String(cli.id).toUpperCase() === formattedId);
+        console.log("[processarLeituraQR] Cliente encontrado:", c ? c.nome : "NÃO ENCONTRADO");
 
         if (c) {
             // Sincronizar foto mais recente antes de enviar para o ecrã
@@ -8790,10 +9453,7 @@ Equipa KandalGym`;
 
         if (!c) {
             this.showQRMsg(" Codigo não reconhecido", "bg-qr-danger");
-            new BroadcastChannel('kandal_access').postMessage({
-                type: 'access_event',
-                data: { name: 'INVÁLIDOÂLIDO', msg: 'Cáâ€œDIGO DESCONHECIDO', valid: false, photo: null }
-            });
+            this.broadcastAccessEvent({ name: 'INVÁLIDO LIDO', msg: 'CÓDIGO DESCONHECIDO', valid: false, photo: null });
             this.sendToArduino('B');
             this.lastProcessedQR = formattedId;
             this.lastProcessedTime = Date.now();
@@ -8802,10 +9462,7 @@ Equipa KandalGym`;
 
         if (!c.ativo) {
             this.showQRMsg(` ${c.nome}: Conta Inativa`, "bg-qr-danger");
-            new BroadcastChannel('kandal_access').postMessage({
-                type: 'access_event',
-                data: { name: c.nome, msg: 'CONTA INATIVA', valid: false, photo: c.photoUrl || null }
-            });
+            this.broadcastAccessEvent({ name: c.nome, msg: 'CONTA INATIVA', valid: false, photo: c.photoUrl || null });
             this.sendToArduino('B');
             this.lastProcessedQR = formattedId;
             this.lastProcessedTime = Date.now();
@@ -8852,17 +9509,14 @@ Equipa KandalGym`;
 
 
         if (isExit) {
-            // --- LOGICA DE SAáÂDA ---
+            // --- LOGICA DE SAÍDA ---
             if (!c.histórico) c.histórico = [];
             c.histórico.unshift({ d: agora.toISOString(), t: 'out' });
 
             this.showQRMsg(`Até amanhã, ${c.nome}! Saída registada.`, "bg-qr-warning");
             this.showToast(`Saída registada: ${c.nome}`, "info");
 
-            new BroadcastChannel('kandal_access').postMessage({
-                type: 'access_event',
-                data: { name: c.nome, msg: 'ATÉ AMANHÃ! (SAÍDA)', valid: true, photo: c.photoUrl || null }
-            });
+            this.broadcastAccessEvent({ name: c.nome, msg: 'ATÉ AMANHÃ! (SAÍDA)', valid: true, photo: c.photoUrl || null });
             this.sendToArduino('A');
 
         } else {
@@ -8871,10 +9525,7 @@ Equipa KandalGym`;
                 // Validar data
                 if (hj > (c.validade || '')) {
                     this.showQRMsg(`${c.nome}: Validade Expirada`, "bg-qr-warning");
-                    new BroadcastChannel('kandal_access').postMessage({
-                        type: 'access_event',
-                        data: { name: c.nome, msg: 'VALIDADE EXPIRADA', valid: false, photo: c.photoUrl || null }
-                    });
+                    this.broadcastAccessEvent({ name: c.nome, msg: 'VALIDADE EXPIRADA', valid: false, photo: c.photoUrl || null });
                     this.sendToArduino('B');
                     return;
                 }
@@ -8882,10 +9533,7 @@ Equipa KandalGym`;
                 // Validar créditos
                 if ((c.ent || 0) <= 0) {
                     this.showQRMsg(`${c.nome}: Sem créditos`, "bg-qr-danger");
-                    new BroadcastChannel('kandal_access').postMessage({
-                        type: 'access_event',
-                        data: { name: c.nome, msg: 'SEM CRÉDITOS', valid: false, photo: c.photoUrl || null }
-                    });
+                    this.broadcastAccessEvent({ name: c.nome, msg: 'SEM CRÉDITOS', valid: false, photo: c.photoUrl || null });
                     this.sendToArduino('B');
                     return;
                 }
@@ -8906,10 +9554,7 @@ Equipa KandalGym`;
 
                 if (entriesHj >= limitDiario) {
                     this.showQRMsg(`${c.nome}: Limite diário atingido`, "bg-qr-warning");
-                    new BroadcastChannel('kandal_access').postMessage({
-                        type: 'access_event',
-                        data: { name: c.nome, msg: 'LIMITE DIÁRIO', valid: false, photo: c.photoUrl || null }
-                    });
+                    this.broadcastAccessEvent({ name: c.nome, msg: 'LIMITE DIÁRIO', valid: false, photo: c.photoUrl || null });
                     this.sendToArduino('B');
                     return;
                 }
@@ -8923,10 +9568,7 @@ Equipa KandalGym`;
             this.showQRMsg(`Bem-vindo, ${c.nome}! Entrada validada.`, "bg-qr-success");
             this.showToast(`Entrada validada: ${c.nome}`, "success");
 
-            new BroadcastChannel('kandal_access').postMessage({
-                type: 'access_event',
-                data: { name: c.nome, msg: 'BEM-VINDO!', valid: true, photo: c.photoUrl || null }
-            });
+            this.broadcastAccessEvent({ name: c.nome, msg: 'BEM-VINDO!', valid: true, photo: c.photoUrl || null });
             this.sendToArduino('A');
         }
 
@@ -10273,6 +10915,24 @@ Equipa KandalGym`;
     }
 
     startNewPredefinedPlan() {
+        // Verificar rascunho
+        const draft = localStorage.getItem('kandalgym_predefined_draft');
+        if (draft) {
+            const draftData = JSON.parse(draft);
+            if (!draftData.id) { // Rascunho de um NOVO plano
+                if (confirm('Detetamos um rascunho não guardado de um novo plano modelo. Deseja recuperá-lo?')) {
+                    this.editingPredefinedId = null;
+                    this.editingPlan = draftData.plan;
+                    this.editingPredefinedName = draftData.name || '';
+                    this.editingDayIdx = 0;
+                    this.setView('edit_predefined_plan');
+                    return;
+                } else {
+                    this.clearPredefinedDraft();
+                }
+            }
+        }
+
         this.editingPredefinedId = null;
         this.editingPlan = [{ title: 'Treino A', exercises: [] }];
         this.editingDayIdx = 0;
@@ -10281,6 +10941,24 @@ Equipa KandalGym`;
     }
 
     editPredefinedPlan(id) {
+        // Verificar rascunho
+        const draft = localStorage.getItem('kandalgym_predefined_draft');
+        if (draft) {
+            const draftData = JSON.parse(draft);
+            if (draftData.id === id) { // Rascunho DESTE plano
+                if (confirm('Detetamos um rascunho não guardado deste plano modelo. Deseja recuperá-lo?')) {
+                    this.editingPredefinedId = id;
+                    this.editingPlan = draftData.plan;
+                    this.editingPredefinedName = draftData.name || '';
+                    this.editingDayIdx = 0;
+                    this.setView('edit_predefined_plan');
+                    return;
+                } else {
+                    this.clearPredefinedDraft();
+                }
+            }
+        }
+
         const plan = this.state.predefinedPlans[id];
         if (!plan) return alert('Plano não encontrado.');
 
@@ -10312,7 +10990,7 @@ Equipa KandalGym`;
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${isMobile ? '0.75rem' : '1.5rem'}; flex-wrap:wrap; gap:1rem;">
                 <h2 style="margin:0; font-size:${isMobile ? '1.2rem' : '1.5rem'};">${this.editingPredefinedId ? 'Editar Modelo' : 'Novo Modelo'}</h2>
                 <div style="display:flex; gap:0.5rem; align-items:center;">
-                    <button class="btn btn-secondary" onclick="app.setView('predefined_plans')" style="${isMobile ? 'padding: 6px 12px; font-size: 0.8rem;' : ''}">Cancelar</button>
+                    <button class="btn btn-secondary" onclick="app.cancelPredefinedPlan()" style="${isMobile ? 'padding: 6px 12px; font-size: 0.8rem;' : ''}">Cancelar</button>
                     <button class="btn btn-primary" onclick="app.savePredefinedPlan()" style="${isMobile ? 'padding: 6px 12px; font-size: 0.8rem;' : ''}"><i class="fas fa-save"></i> Guardar</button>
                 </div>
             </div>
@@ -10321,7 +10999,7 @@ Equipa KandalGym`;
                 <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase; font-weight:700;">Nome do Plano</label>
                 <input type="text" id="edit-predefined-name" value="${this.editingPredefinedName || ''}" 
                     placeholder="Ex: Hipertrofia..."
-                    oninput="app.editingPredefinedName = this.value"
+                    oninput="app.editingPredefinedName = this.value; app.savePredefinedDraft()"
                     style="width:100%; max-width:500px; height:${isMobile ? '38px' : '45px'}; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 12px; font-size:${isMobile ? '0.95rem' : '1.1rem'}; font-weight:600;">
             </div>
 
@@ -10347,7 +11025,7 @@ Equipa KandalGym`;
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
                         <input type="text" value="${currentDay.title || 'Plano ' + String.fromCharCode(65 + this.editingDayIdx)}" 
                             placeholder="Nome do Plano..."
-                            oninput="app.editingPlan[${this.editingDayIdx}].title = this.value"
+                            oninput="app.editingPlan[${this.editingDayIdx}].title = this.value; app.savePredefinedDraft()"
                             onchange="app.renderPredefinedPlanEditor()"
                             style="font-weight:800; font-size:${isMobile ? '1.1rem' : '1.3rem'}; background:transparent; border:none; border-bottom:2px solid var(--primary); width:100%; max-width:250px; padding:4px 0; color:#fff; outline:none;">
                         
@@ -10355,7 +11033,7 @@ Equipa KandalGym`;
                             <div style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.05); padding:5px 12px; border-radius:10px;">
                                 <label style="font-size:0.7rem; color:var(--text-muted);">Descanso:</label>
                                 <input type="text" value="${currentDay.rest || ''}" placeholder="60s" 
-                                    onchange="app.editingPlan[${this.editingDayIdx}].rest = this.value"
+                                    onchange="app.editingPlan[${this.editingDayIdx}].rest = this.value; app.savePredefinedDraft()"
                                     style="width:50px; height:28px; background:rgba(0,0,0,0.3); color:var(--accent); border:1px solid rgba(var(--accent-rgb), 0.3); border-radius:6px; text-align:center; font-size:0.8rem;">
                             </div>
                             <button class="btn btn-ghost btn-sm" style="color:var(--danger); padding:4px;" onclick="app.removePredefinedTrainingDay(${this.editingDayIdx})">
@@ -10379,20 +11057,28 @@ Equipa KandalGym`;
                                     </div>
                                 </div>
                                 <div style="display:flex; flex-wrap:wrap; gap:${isMobile ? '5px' : '10px'};">
-                                    <div style="width:${isMobile ? '50px' : '80px'};">
-                                        <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Sets</label>
-                                        <input type="text" value="${ex.sets || ""}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].sets = this.value"
-                                            style="width:100%; height:32px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:6px; text-align:center; font-size:0.85rem;">
-                                    </div>
-                                    <div style="width:${isMobile ? '60px' : '100px'};">
-                                        <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Reps</label>
-                                        <input type="text" value="${ex.reps || ""}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].reps = this.value"
-                                            style="width:100%; height:32px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid var(--primary); border-radius:6px; text-align:center; font-size:0.85rem;">
-                                    </div>
+                                    ${this.isCardioExercise(ex.id) ? `
+                                        <div style="flex:1; min-width:120px;">
+                                            <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Duração</label>
+                                            <input type="text" value="${ex.reps || ""}" onchange="app.updatePredefinedExercise(${this.editingDayIdx}, ${eIdx}, 'reps', this.value)"
+                                                style="width:100%; height:32px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--primary); border-radius:6px; text-align:center; font-size:0.85rem; font-weight:700;">
+                                        </div>
+                                    ` : `
+                                        <div style="width:${isMobile ? '50px' : '80px'};">
+                                            <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Sets</label>
+                                            <input type="text" value="${ex.sets || ""}" onchange="app.updatePredefinedExercise(${this.editingDayIdx}, ${eIdx}, 'sets', this.value)"
+                                                style="width:100%; height:32px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:6px; text-align:center; font-size:0.85rem;">
+                                        </div>
+                                        <div style="width:${isMobile ? '60px' : '100px'};">
+                                            <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Reps</label>
+                                            <input type="text" value="${ex.reps || ""}" onchange="app.updatePredefinedExercise(${this.editingDayIdx}, ${eIdx}, 'reps', this.value)"
+                                                style="width:100%; height:32px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid var(--primary); border-radius:6px; text-align:center; font-size:0.85rem; font-weight:700;">
+                                        </div>
+                                    `}
                                     <div style="flex:1; min-width:${isMobile ? '100px' : '150px'};">
                                         <label style="display:block; font-size:0.65rem; color:var(--text-muted); margin-bottom:2px;">Obs</label>
-                                        <input type="text" value="${ex.observations || ""}" onchange="app.editingPlan[${this.editingDayIdx}].exercises[${eIdx}].observations = this.value"
-                                            style="width:100%; height:32px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:0 8px; font-size:0.85rem;">
+                                        <input type="text" value="${ex.observations || ""}" onchange="app.updatePredefinedExercise(${this.editingDayIdx}, ${eIdx}, 'observations', this.value)"
+                                            style="width:100%; height:32px; background:rgba(0,0,0,0.3); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:6px; padding:0 8px; font-size:0.85rem;">
                                     </div>
                                 </div>
                             </div>
@@ -10407,9 +11093,17 @@ Equipa KandalGym`;
         `;
     }
 
+    cancelPredefinedPlan() {
+        if (confirm('Deseja cancelar a edição? Todas as alterações não guardadas serão perdidas.')) {
+            this.clearPredefinedDraft();
+            this.setView('predefined_plans');
+        }
+    }
+
     addPredefinedTrainingDay() {
-        this.editingPlan.push({ title: '', exercises: [] });
+        this.editingPlan.push({ title: 'Novo Plano', exercises: [] });
         this.editingDayIdx = this.editingPlan.length - 1;
+        this.savePredefinedDraft();
         this.renderPredefinedPlanEditor();
     }
 
@@ -10418,18 +11112,23 @@ Equipa KandalGym`;
         if (confirm('Remover este dia do modelo?')) {
             this.editingPlan.splice(idx, 1);
             this.editingDayIdx = Math.max(0, idx - 1);
+            this.savePredefinedDraft();
             this.renderPredefinedPlanEditor();
         }
     }
 
     addExerciseToPredefinedEditor(dayIdx) {
         this.editingPlan[dayIdx].exercises.push({ id: '', name: '', sets: '', reps: '', observations: '' });
+        this.savePredefinedDraft();
         this.renderPredefinedPlanEditor();
     }
 
     removePredefinedExercise(dayIdx, exIdx) {
-        this.editingPlan[dayIdx].exercises.splice(exIdx, 1);
-        this.renderPredefinedPlanEditor();
+        if (confirm('Remover este exercício?')) {
+            this.editingPlan[dayIdx].exercises.splice(exIdx, 1);
+            this.savePredefinedDraft();
+            this.renderPredefinedPlanEditor();
+        }
     }
 
     movePredefinedExercise(dayIdx, exIdx, dir) {
@@ -10437,6 +11136,7 @@ Equipa KandalGym`;
         const target = exIdx + dir;
         if (target >= 0 && target < exs.length) {
             [exs[exIdx], exs[target]] = [exs[target], exs[exIdx]];
+            this.savePredefinedDraft();
             this.renderPredefinedPlanEditor();
         }
     }
@@ -10450,7 +11150,7 @@ Equipa KandalGym`;
             exercises: day.exercises.filter(ex => ex.id)
         })).filter(day => day.exercises.length > 0 || this.editingPlan.length === 1);
 
-        const id = this.editingPredefinedId || Date.now().toString();
+        const id = this.editingPredefinedId || 'pre_' + Date.now();
 
         this.state.predefinedPlans[id] = {
             name: name,
@@ -10459,6 +11159,7 @@ Equipa KandalGym`;
         };
 
         this.saveState();
+        this.clearPredefinedDraft();
         this.setView('predefined_plans');
         this.showToast('Plano modelo guardado com sucesso!', 'success');
     }
@@ -10610,9 +11311,14 @@ Equipa KandalGym`;
                                 </div>
                             </div>
                             <div style="margin-top:auto; padding-top:0.75rem; display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.05);">
-                                <span style="font-size:${isMobile ? '0.65rem' : '0.75rem'}; color:var(--accent); font-weight:700;">
-                                    <i class="fas fa-mortar-pestle"></i> ${recipe.ingredients ? recipe.ingredients.length : 0} Ing.
-                                </span>
+                                <div style="display:flex; gap:10px; align-items:center;">
+                                    <span style="font-size:${isMobile ? '0.65rem' : '0.75rem'}; color:var(--accent); font-weight:700;">
+                                        <i class="fas fa-mortar-pestle"></i> ${recipe.ingredients ? recipe.ingredients.length : 0} Ing.
+                                    </span>
+                                    ${recipe.totalWeight ? `<span style="font-size:${isMobile ? '0.65rem' : '0.75rem'}; color:var(--text-muted); font-weight:700;">
+                                        <i class="fas fa-weight-hanging"></i> ${recipe.totalWeight}g total
+                                    </span>` : ''}
+                                </div>
                                 ${recipe.videoUrl ? `
                                     <a href="${recipe.videoUrl}" target="_blank" style="color:red; font-size:${isMobile ? '0.75rem' : '0.85rem'}; text-decoration:none; font-weight:bold;">
                                         <i class="fab fa-youtube"></i> Vídeo
@@ -10637,6 +11343,7 @@ Equipa KandalGym`;
             name: '',
             description: '',
             videoUrl: '',
+            totalWeight: '',
             ingredients: []
         };
         this.setView('edit_recipe');
@@ -10676,12 +11383,21 @@ Equipa KandalGym`;
             <div style="display:grid; grid-template-columns:${isMobile ? '1fr' : '1.5fr 1fr'}; gap:1.5rem; align-items:start;">
                 
                 <div class="glass-panel" style="padding:1.5rem; display:flex; flex-direction:column; gap:1.5rem;">
-                    <div>
-                        <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Nome da Receita</label>
-                        <input type="text" id="recipe-name" value="${recipe.name || ''}" 
-                            placeholder="Ex: Panquecas de Aveia e Banana..."
-                            oninput="app.editingRecipeData.name = this.value"
-                            style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1.1rem; font-weight:600;">
+                    <div style="display:grid; grid-template-columns:${isMobile ? '1fr' : '3fr 1fr'}; gap:15px;">
+                        <div>
+                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Nome da Receita</label>
+                            <input type="text" id="recipe-name" value="${recipe.name || ''}" 
+                                placeholder="Ex: Panquecas de Aveia e Banana..."
+                                oninput="app.editingRecipeData.name = this.value"
+                                style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1.1rem; font-weight:600;">
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Peso Total (g)</label>
+                            <input type="number" id="recipe-total-weight" value="${recipe.totalWeight || ''}" min="1" step="1"
+                                placeholder="Ex: 600"
+                                oninput="app.editingRecipeData.totalWeight = parseFloat(this.value) || null"
+                                style="width:100%; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1.1rem; font-weight:600; text-align:center;">
+                        </div>
                     </div>
 
                     <div>
@@ -10824,6 +11540,7 @@ Equipa KandalGym`;
             name: data.name.trim(),
             description: data.description.trim(),
             videoUrl: data.videoUrl.trim(),
+            portions: Math.max(1, parseInt(data.portions) || 1),
             ingredients: (data.ingredients || []).filter(ing => ing.name),
             updatedAt: new Date().toLocaleDateString('pt-PT')
         };
@@ -10869,7 +11586,7 @@ Equipa KandalGym`;
                 ${recipes.length === 0 ? `
                     <p style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--text-muted);">Não existem receitas criadas.</p>
                 ` : recipes.map(r => `
-                    <div class="glass-card" onclick="app.addRecipeToMeal('${r.id}')" 
+                    <div class="glass-card" onclick="app.askRecipePortions('${r.id}')" 
                         style="padding:12px; cursor:pointer; text-align:center; border:1px solid transparent; transition:all 0.2s;"
                         onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'">
                         <div style="font-size:1.5rem; margin-bottom:5px;">${this.extractYoutubeId(r.videoUrl) ? '<i class="fab fa-youtube" style="color:red;"></i>' : '<i class="fas fa-utensils" style="color:var(--primary);"></i>'}</div>
@@ -10882,20 +11599,111 @@ Equipa KandalGym`;
         this.showModal(content, '600px');
     }
 
-    addRecipeToMeal(recipeId) {
+    askRecipePortions(recipeId) {
+        const recipe = this.state.recipes.find(r => r.id === recipeId);
+        if (!recipe) return;
+
+        const portionsYield = recipe.portions || 1;
+        const macros = this.calculateRecipeMacros(recipe);
+
+        const content = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h2 style="margin:0;"><i class="fas fa-utensils"></i> Ajustar Porções</h2>
+                <button class="btn btn-ghost" onclick="app.closeModal()" style="padding:8px;"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                <div>
+                    <h3 style="margin:0 0 5px; color:#fff;">${recipe.name}</h3>
+                    <span style="font-size:0.8rem; color:var(--accent); font-weight:700;">
+                        Rendimento Total: ${portionsYield} porç${portionsYield > 1 ? 'ões' : 'ão'}
+                    </span>
+                </div>
+
+                <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); padding:12px; border-radius:10px;">
+                    <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px; text-transform:uppercase; font-weight:700;">Valores Totais da Receita</span>
+                    <strong style="color:#fff; font-size:0.95rem;">
+                        ${Math.round(macros.kcal)} kcal | ${Math.round(macros.prot)}g P | ${Math.round(macros.carb)}g C | ${Math.round(macros.fat)}g G
+                    </strong>
+                </div>
+
+                <div>
+                    <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Quantas porções deseja incluir nesta refeição?</label>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <input type="number" id="add-recipe-portions-input" value="1" min="0.1" step="0.5"
+                            oninput="app.triggerRecipePortionPreviewUpdate(this.value)"
+                            style="width:100px; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1.1rem; font-weight:600; text-align:center;">
+                        <span style="color:var(--text-muted); font-size:0.9rem;">porção(ões)</span>
+                    </div>
+                </div>
+
+                <div id="recipe-portion-preview"></div>
+
+                <button class="btn btn-primary" onclick="app.confirmAddRecipeToMeal('${recipe.id}')"
+                    style="width:100%; height:48px; border-radius:12px; font-weight:800; font-size:1rem; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <i class="fas fa-check"></i> Adicionar ao Plano
+                </button>
+            </div>
+        `;
+
+        this.showModal(content, '480px');
+        
+        this.tempRecipeMacros = macros;
+        this.tempRecipePortionsYield = portionsYield;
+        
+        this.triggerRecipePortionPreviewUpdate(1);
+    }
+
+    triggerRecipePortionPreviewUpdate(val) {
+        const p = Math.max(0.1, parseFloat(val) || 1);
+        const factor = p / this.tempRecipePortionsYield;
+        const pKcal = Math.round(this.tempRecipeMacros.kcal * factor);
+        const pProt = Math.round(this.tempRecipeMacros.prot * factor);
+        const pCarb = Math.round(this.tempRecipeMacros.carb * factor);
+        const pFat = Math.round(this.tempRecipeMacros.fat * factor);
+
+        const previewEl = document.getElementById('recipe-portion-preview');
+        if (previewEl) {
+            previewEl.innerHTML = `
+                <div style="background:rgba(var(--primary-rgb), 0.1); border:1px solid rgba(var(--primary-rgb), 0.2); padding:12px; border-radius:10px; text-align:center;">
+                    <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px; text-transform:uppercase; font-weight:700;">Valores a Adicionar (${p} porção${p !== 1 ? 'ões' : ''} de ${this.tempRecipePortionsYield})</span>
+                    <strong style="color:var(--primary); font-size:1.1rem;">
+                        ${pKcal} kcal | ${pProt}g P | ${pCarb}g C | ${pFat}g G
+                    </strong>
+                </div>
+            `;
+        }
+    }
+
+    confirmAddRecipeToMeal(recipeId) {
+        const input = document.getElementById('add-recipe-portions-input');
+        const selectedPortions = Math.max(0.1, parseFloat(input.value) || 1);
+        this.addRecipeToMealWithPortions(recipeId, selectedPortions);
+    }
+
+    addRecipeToMealWithPortions(recipeId, selectedPortions) {
         const recipe = this.state.recipes.find(r => r.id === recipeId);
         if (!recipe) return;
 
         const mealIdx = this.currentMealIdxForRecipe;
-        const macros = this.calculateRecipeMacros(recipe);
+        const totalMacros = this.calculateRecipeMacros(recipe);
+        const portionsYield = recipe.portions || 1;
+        
+        const factor = selectedPortions / portionsYield;
+        const macros = {
+            kcal: totalMacros.kcal * factor,
+            prot: totalMacros.prot * factor,
+            carb: totalMacros.carb * factor,
+            fat: totalMacros.fat * factor
+        };
 
-        let textToAdd = `\n--- RECEITA: ${recipe.name.toUpperCase()} ---\n`;
+        let textToAdd = `\n--- RECEITA: ${recipe.name.toUpperCase()} (${selectedPortions} Porção${selectedPortions !== 1 ? 'ões' : ''} de ${portionsYield}) ---\n`;
 
         if (macros.kcal > 0) {
             textToAdd += `(Valores: ${Math.round(macros.kcal)}kcal | ${Math.round(macros.prot)}g P | ${Math.round(macros.carb)}g C | ${Math.round(macros.fat)}g G)\n\n`;
         }
 
-        textToAdd += `INGREDIENTES:\n`;
+        textToAdd += `INGREDIENTES DA RECEITA COMPLETA (Rende ${portionsYield} porç${portionsYield > 1 ? 'ões' : 'ão'}):\n`;
         if (recipe.ingredients && recipe.ingredients.length > 0) {
             recipe.ingredients.forEach(ing => {
                 if (ing.name && ing.amount) {
@@ -10921,7 +11729,11 @@ Equipa KandalGym`;
 
         this.closeModal();
         this.renderMealEditor();
-        this.showToast(`Receita "${recipe.name}" adicionada!`);
+        this.showToast(`Receita "${recipe.name}" adicionada (${selectedPortions} porção/ões)!`);
+    }
+
+    addRecipeToMeal(recipeId) {
+        this.askRecipePortions(recipeId);
     }
 
     calculateRecipeMacros(recipe) {
