@@ -2678,8 +2678,12 @@ Equipa KandalGym`;
                 hwInput.addEventListener('keydown', handleKeyDown);
                 
                 // Refocus ao clicar
-                document.addEventListener('click', () => {
+                document.addEventListener('click', (e) => {
                     if (this.activeView === 'monitor') {
+                        // Não roubar focus se o utilizador clicou noutra caixa de texto
+                        if (e && e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+                            return; // Permite escrever noutras caixas
+                        }
                         setTimeout(() => {
                             hwInput.focus({ preventScroll: true });
                             console.log("[Scanner] Re-focado após clique");
@@ -8480,8 +8484,12 @@ Equipa KandalGym`;
                     });
                     
                     // Refocus ao clicar na página
-                    document.addEventListener('click', () => {
+                    document.addEventListener('click', (e) => {
                         if (this.activeView === 'qr_manager') {
+                            // Não roubar focus se o utilizador clicou noutra caixa de texto
+                            if (e && e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+                                return; // Permite escrever noutras caixas
+                            }
                             setTimeout(() => {
                                 hwInput.focus({ preventScroll: true });
                                 console.log("[QRManager] Re-focado após clique");
