@@ -6087,6 +6087,14 @@ Equipa KandalGym`;
                 </div>
                 <div style="display:flex; gap:0.5rem; align-items:center;">
                     ${this.role === 'teacher' ? `<button class="btn btn-ghost btn-sm" style="color:var(--primary); font-size:0.8rem;" onclick="app.showTransferClientModal(${c.id})"><i class="fas fa-exchange-alt"></i> <span class="hide-mobile">Transferir</span></button>` : ''}
+                    ${(() => {
+                        const qrEntry = (this.state.qrClients || []).find(q => q.clientId && Number(q.clientId) === Number(c.id));
+                        const isEmployee = qrEntry && qrEntry.isEmployee;
+                        return qrEntry ? `
+                        <button class="btn btn-ghost btn-sm" onclick="app.toggleEmployeeStatus('${qrEntry.id}')" title="${isEmployee ? 'Remover privilégios de Funcionário' : 'Atribuir entradas ilimitadas (Funcionário)'}" style="font-size:0.8rem; color:${isEmployee ? '#fbbf24' : 'var(--text-muted)'}; border: 1px solid ${isEmployee ? 'rgba(251,191,36,0.4)' : 'rgba(255,255,255,0.1)'}; background:${isEmployee ? 'rgba(251,191,36,0.1)' : 'transparent'}; transition:all 0.2s;">
+                            <i class="fas fa-user-tie"></i> <span class="hide-mobile">${isEmployee ? 'Funcionário' : 'Funcionário'}</span>
+                        </button>` : '';
+                    })()}
                     <button class="btn btn-ghost" style="font-size: 1.4rem; padding: 0.5rem; color: var(--text-muted);" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')" title="Voltar">
                         <i class="fas fa-arrow-left"></i>
                     </button>
@@ -8652,7 +8660,8 @@ Equipa KandalGym`;
     renderQRClientCards(filter = '') {
         const qrList = (this.state.qrClients || []).filter(c => {
             const isStaff = (this.state.teachers || []).some(t => Number(t.id) === Number(c.clientId)) ||
-                (this.state.admins || []).some(a => Number(a.id) === Number(c.clientId));
+                (this.state.admins || []).some(a => Number(a.id) === Number(c.clientId)) ||
+                c.isEmployee === true;
             const isAvulso = Number(c.clientId) === 0;
 
             let matchesRole = false;
@@ -8696,7 +8705,8 @@ Equipa KandalGym`;
             const statusColor = c.ativo ? 'var(--success)' : 'var(--danger)';
 
             const isStaff = (this.state.teachers || []).some(t => Number(t.id) === Number(c.clientId)) ||
-                (this.state.admins || []).some(a => Number(a.id) === Number(c.clientId));
+                (this.state.admins || []).some(a => Number(a.id) === Number(c.clientId)) ||
+                c.isEmployee === true;
 
             // Obter utilizador real para dados mestres (foto, login, atividade)
             const realUser = c.clientId ? [...(this.state.clients || []), ...(this.state.teachers || []), ...(this.state.admins || [])]
@@ -9597,7 +9607,8 @@ Equipa KandalGym`;
         // Determinar se é Staff (Teacher ou Admin) para ignorar limites
         const isStaffMember = (this.state.teachers || []).some(t => Number(t.id) === Number(c.clientId)) ||
             (this.state.admins || []).some(a => Number(a.id) === Number(c.clientId)) ||
-            c.plano === 'Staff';
+            c.plano === 'Staff' ||
+            c.isEmployee === true;
 
 
         // Validar cooldown (20 segundos) - Para operações consecutivas
@@ -9668,7 +9679,7 @@ Equipa KandalGym`;
             }
 
             // Processar sucesso Entrada
-            c.ent--;
+            if (!isStaffMember) c.ent--;
             if (!c.histórico) c.histórico = [];
             c.histórico.unshift({ d: agora.toISOString(), t: 'in' });
 
@@ -9688,6 +9699,20 @@ Equipa KandalGym`;
         if (grid) {
             grid.innerHTML = this.renderQRClientCards();
         }
+    }
+
+    toggleEmployeeStatus(qrId) {
+        const qrClient = (this.state.qrClients || []).find(q => q.id === qrId);
+        if (!qrClient) return;
+
+        qrClient.isEmployee = !qrClient.isEmployee;
+        this.saveState();
+        this.renderContent();
+
+        const msg = qrClient.isEmployee
+            ? `✅ ${qrClient.nome} tem agora entradas ilimitadas (Funcionário).`
+            : `⛔ ${qrClient.nome} voltou ao regime normal.`;
+        this.showToast(msg, qrClient.isEmployee ? 'success' : 'info');
     }
 
 
