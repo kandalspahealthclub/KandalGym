@@ -2865,12 +2865,12 @@ Equipa KandalGym`;
                         
                         <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--accent); cursor:pointer;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Avaliações</small>
-                            <div style="font-size:1.8rem; font-weight:800; color:var(--accent); display:flex; align-items:baseline;">${monthEvals} ${monthEvalsFirst > 0 ? `<span style="font-size:0.85rem; font-weight:normal; color:var(--text-muted); margin-left:8px;">(${monthEvalsFirst} 1ª Vez)</span>` : ''}</div>
+                            <div style="font-size:1.8rem; font-weight:800; color:var(--accent); display:flex; align-items:baseline;">${monthEvals} ${monthEvalsFirst > 0 ? `<span style="margin-left:8px;">(${monthEvalsFirst} 1ª Vez)</span>` : ''}</div>
                         </div>
 
                         <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--success); cursor:pointer;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Planos Treino</small>
-                            <div style="font-size:1.8rem; font-weight:800; color:var(--success); display:flex; align-items:baseline;">${monthTraining} ${monthTrainingFirst > 0 ? `<span style="font-size:0.85rem; font-weight:normal; color:var(--text-muted); margin-left:8px;">(${monthTrainingFirst} 1ª Vez)</span>` : ''}</div>
+                            <div style="font-size:1.8rem; font-weight:800; color:var(--success); display:flex; align-items:baseline;">${monthTraining} ${monthTrainingFirst > 0 ? `<span style="margin-left:8px;">(${monthTrainingFirst} 1ª Vez)</span>` : ''}</div>
                         </div>
 
                         <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid #60a5fa; cursor:pointer;">
