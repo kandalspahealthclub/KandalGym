@@ -2783,6 +2783,7 @@ Equipa KandalGym`;
         const [selYear, selMonth] = this.dashboardMonth.split('-');
 
         let monthEvals = 0;
+        let monthEvalsFirst = 0;
         Object.values(this.state.evaluations || {}).forEach(clientEvals => {
             clientEvals.forEach(ev => {
                 if (ev.author === this.currentUser.name && ev.date) {
@@ -2791,20 +2792,27 @@ Equipa KandalGym`;
                         const d = parts[0].trim();
                         const m = parts[1].trim();
                         const y = parts[2].trim();
-                        if (m === selMonth && y === selYear) monthEvals++;
+                        if (m === selMonth && y === selYear) {
+                            monthEvals++;
+                            if (ev.isFirstTime) monthEvalsFirst++;
+                        }
                     }
                 }
             });
         });
 
         let monthTraining = 0;
+        let monthTrainingFirst = 0;
         Object.values(this.state.trainingPlans || {}).forEach(plan => {
             if (plan && plan.author === this.currentUser.name && plan.updatedAt) {
                 const parts = plan.updatedAt.split('/');
                 if (parts.length === 3) {
                     const m = parts[1].trim();
                     const y = parts[2].trim();
-                    if (m === selMonth && y === selYear) monthTraining++;
+                    if (m === selMonth && y === selYear) {
+                        monthTraining++;
+                        if (plan.isFirstTime) monthTrainingFirst++;
+                    }
                 }
             }
         });
@@ -2857,12 +2865,12 @@ Equipa KandalGym`;
                         
                         <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--accent); cursor:pointer;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Avaliações</small>
-                            <div style="font-size:1.8rem; font-weight:800; color:var(--accent);">${monthEvals}</div>
+                            <div style="font-size:1.8rem; font-weight:800; color:var(--accent);">${monthEvals} ${monthEvalsFirst > 0 ? `<span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted); display:block; margin-top:-5px;">(${monthEvalsFirst} 1ª Vez)</span>` : ''}</div>
                         </div>
 
                         <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--success); cursor:pointer;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Planos Treino</small>
-                            <div style="font-size:1.8rem; font-weight:800; color:var(--success);">${monthTraining}</div>
+                            <div style="font-size:1.8rem; font-weight:800; color:var(--success);">${monthTraining} ${monthTrainingFirst > 0 ? `<span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted); display:block; margin-top:-5px;">(${monthTrainingFirst} 1ª Vez)</span>` : ''}</div>
                         </div>
 
                         <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid #60a5fa; cursor:pointer;">
@@ -4342,6 +4350,7 @@ Equipa KandalGym`;
         }
 
         this.editingPlan = JSON.parse(JSON.stringify(existingDays));
+        this.editingPlanIsFirstTime = rawPlan && rawPlan.isFirstTime ? true : false;
 
         if (!Array.isArray(this.editingPlan) || this.editingPlan.length === 0) {
             this.editingPlan = [{ title: 'Dia 1', exercises: [] }];
@@ -4419,6 +4428,13 @@ Equipa KandalGym`;
                     <input type="text" id="edit-training-goal" value="${c.goal || ''}" placeholder="Ex: Hipertrofia, Redução de Massa Gorda..."
                         onchange="app.state.clients.find(x => x.id === app.editingClientId).goal = this.value; app.saveState();"
                         style="width:300px; height:40px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 12px; font-size:0.95rem;">
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase;">Primeiro Plano</label>
+                    <div style="display:flex; align-items:center; height:40px; gap:8px;">
+                        <input type="checkbox" id="edit-training-first-time" ${this.editingPlanIsFirstTime ? 'checked' : ''} onchange="app.editingPlanIsFirstTime = this.checked;" style="width:20px; height:20px; accent-color:var(--primary);">
+                        <label for="edit-training-first-time" style="color:#fff; cursor:pointer; font-size:0.9rem;">Primeira Vez</label>
+                    </div>
                 </div>
             </div>
 
@@ -4709,6 +4725,7 @@ Equipa KandalGym`;
     startFreshPlan() {
         this.editingPlan = [{ title: 'Plano A', exercises: [], notes: '', rest: '' }];
         this.editingDayIdx = 0;
+        this.editingPlanIsFirstTime = false;
         this.saveTrainingDraft();
         this.closeModal();
         this.renderTrainingEditor();
@@ -4746,7 +4763,8 @@ Equipa KandalGym`;
         const planObject = {
             days: cleanDays,
             author: this.currentUser.name,
-            updatedAt: new Date().toLocaleDateString('pt-PT')
+            updatedAt: new Date().toLocaleDateString('pt-PT'),
+            isFirstTime: this.editingPlanIsFirstTime
         };
 
         this.state.trainingPlans[this.editingClientId] = planObject;
@@ -5777,7 +5795,11 @@ Equipa KandalGym`;
                 <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                     <div>
                         <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Data da Avaliação</label>
-                        <input type="date" id="ev-date" value="${ev.date}" style="color-scheme: dark;">
+                        <input type="date" id="ev-date" value="${ev.date}" style="color-scheme: dark; margin-bottom: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="ev-first-time" ${ev.isFirstTime ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--primary);">
+                            <label for="ev-first-time" style="font-size: 0.85rem; cursor: pointer; color: #fff;">Primeira Avaliação</label>
+                        </div>
                     </div>
 
                     <div>
@@ -5870,9 +5892,11 @@ Equipa KandalGym`;
         const dateRaw = document.getElementById('ev-date').value;
         const [y, m, d] = dateRaw.split('-');
         const dateFormatted = `${d}/${m}/${y}`;
+        const isFirstTimeEl = document.getElementById('ev-first-time');
 
         const entry = {
             date: dateFormatted,
+            isFirstTime: isFirstTimeEl ? isFirstTimeEl.checked : false,
             weight: document.getElementById('ev-weight').value || null,
             height: document.getElementById('ev-height').value || null,
             muscleMass: document.getElementById('ev-muscle').value || null,
