@@ -2782,9 +2782,13 @@ Equipa KandalGym`;
         // Calcular estatisticas baseadas no mês selecionado
         const [selYear, selMonth] = this.dashboardMonth.split('-');
 
+        this.dashboardData = { evaluations: [], trainingPlans: [], mealPlans: [], anamnesis: [], clients: teacherClients.map(c => ({name: c.name})) };
+
         let monthEvals = 0;
         let monthEvalsFirst = 0;
-        Object.values(this.state.evaluations || {}).forEach(clientEvals => {
+        Object.entries(this.state.evaluations || {}).forEach(([clientId, clientEvals]) => {
+            const client = this.state.clients.find(c => String(c.id) === String(clientId));
+            const clientName = client ? client.name : 'Aluno Desconhecido';
             clientEvals.forEach(ev => {
                 if (ev.author === this.currentUser.name && ev.date) {
                     const parts = ev.date.split('/');
@@ -2795,6 +2799,7 @@ Equipa KandalGym`;
                         if (m === selMonth && y === selYear) {
                             monthEvals++;
                             if (ev.isFirstTime) monthEvalsFirst++;
+                            this.dashboardData.evaluations.push({ name: clientName, date: ev.date, isFirstTime: ev.isFirstTime });
                         }
                     }
                 }
@@ -2803,7 +2808,9 @@ Equipa KandalGym`;
 
         let monthTraining = 0;
         let monthTrainingFirst = 0;
-        Object.values(this.state.trainingPlans || {}).forEach(plan => {
+        Object.entries(this.state.trainingPlans || {}).forEach(([clientId, plan]) => {
+            const client = this.state.clients.find(c => String(c.id) === String(clientId));
+            const clientName = client ? client.name : 'Aluno Desconhecido';
             if (plan && plan.author === this.currentUser.name && plan.updatedAt) {
                 const parts = plan.updatedAt.split('/');
                 if (parts.length === 3) {
@@ -2812,32 +2819,43 @@ Equipa KandalGym`;
                     if (m === selMonth && y === selYear) {
                         monthTraining++;
                         if (plan.isFirstTime) monthTrainingFirst++;
+                        this.dashboardData.trainingPlans.push({ name: clientName, date: plan.updatedAt, isFirstTime: plan.isFirstTime });
                     }
                 }
             }
         });
 
         let monthMeals = 0;
-        Object.values(this.state.mealPlans || {}).forEach(plan => {
+        Object.entries(this.state.mealPlans || {}).forEach(([clientId, plan]) => {
+            const client = this.state.clients.find(c => String(c.id) === String(clientId));
+            const clientName = client ? client.name : 'Aluno Desconhecido';
             if (plan && plan.author === this.currentUser.name && plan.updatedAt) {
                 const parts = plan.updatedAt.split('/');
                 if (parts.length === 3) {
                     const m = parts[1].trim();
                     const y = parts[2].trim();
-                    if (m === selMonth && y === selYear) monthMeals++;
+                    if (m === selMonth && y === selYear) {
+                        monthMeals++;
+                        this.dashboardData.mealPlans.push({ name: clientName, date: plan.updatedAt });
+                    }
                 }
             }
         });
 
         let monthAnamnesis = 0;
-        Object.values(this.state.anamnesis || {}).forEach(entries => {
+        Object.entries(this.state.anamnesis || {}).forEach(([clientId, entries]) => {
+            const client = this.state.clients.find(c => String(c.id) === String(clientId));
+            const clientName = client ? client.name : 'Aluno Desconhecido';
             entries.forEach(entry => {
                 if (entry && entry.author === this.currentUser.name && entry.updatedAt) {
                     const parts = entry.updatedAt.split('/');
                     if (parts.length === 3) {
                         const m = parts[1].trim();
                         const y = parts[2].trim();
-                        if (m === selMonth && y === selYear) monthAnamnesis++;
+                        if (m === selMonth && y === selYear) {
+                            monthAnamnesis++;
+                            this.dashboardData.anamnesis.push({ name: clientName, date: entry.updatedAt });
+                        }
                     }
                 }
             });
@@ -2858,27 +2876,27 @@ Equipa KandalGym`;
                     </div>
                     
                     <div class="stats-grid">
-                        <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--primary); cursor:pointer; transition: transform 0.2s ease, background 0.2s ease;">
+                        <div class="glass-card" onclick="app.showDashboardDetails('clients')" style="border-left: 4px solid var(--primary); cursor:pointer; transition: transform 0.2s ease, background 0.2s ease;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Meus Alunos</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--primary);">${teacherClients.length}</div>
                         </div>
                         
-                        <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--accent); cursor:pointer;">
+                        <div class="glass-card" onclick="app.showDashboardDetails('evaluations')" style="border-left: 4px solid var(--accent); cursor:pointer;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Avaliações</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--accent); display:flex; align-items:baseline;">${monthEvals} ${monthEvalsFirst > 0 ? `<span style="margin-left:8px;">+ ${monthEvalsFirst}</span>` : ''}</div>
                         </div>
 
-                        <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--success); cursor:pointer;">
+                        <div class="glass-card" onclick="app.showDashboardDetails('trainingPlans')" style="border-left: 4px solid var(--success); cursor:pointer;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Planos Treino</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--success); display:flex; align-items:baseline;">${monthTraining} ${monthTrainingFirst > 0 ? `<span style="margin-left:8px;">+ ${monthTrainingFirst}</span>` : ''}</div>
                         </div>
 
-                        <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid #60a5fa; cursor:pointer;">
+                        <div class="glass-card" onclick="app.showDashboardDetails('mealPlans')" style="border-left: 4px solid #60a5fa; cursor:pointer;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Planos Dieta</small>
                             <div style="font-size:1.8rem; font-weight:800; color:#60a5fa;">${monthMeals}</div>
                         </div>
 
-                        <div class="glass-card" onclick="app.setView('anamnesis')" style="border-left: 4px solid var(--primary); cursor:pointer;">
+                        <div class="glass-card" onclick="app.showDashboardDetails('anamnesis')" style="border-left: 4px solid var(--primary); cursor:pointer;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Anamneses</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--primary);">${monthAnamnesis}</div>
                         </div>
@@ -7935,6 +7953,53 @@ Equipa KandalGym`;
     updateDashboardMonth(val) {
         this.dashboardMonth = val;
         this.renderContent();
+    }
+
+    showDashboardDetails(type) {
+        if (!this.dashboardData || !this.dashboardData[type]) return;
+
+        let title = '';
+        let icon = '';
+        switch(type) {
+            case 'evaluations': title = 'Avaliações no Período'; icon = 'fa-ruler-combined'; break;
+            case 'trainingPlans': title = 'Planos de Treino no Período'; icon = 'fa-dumbbell'; break;
+            case 'mealPlans': title = 'Planos Alimentares no Período'; icon = 'fa-utensils'; break;
+            case 'anamnesis': title = 'Anamneses no Período'; icon = 'fa-notes-medical'; break;
+            case 'clients': title = 'Meus Alunos'; icon = 'fa-users'; break;
+        }
+
+        const items = this.dashboardData[type];
+        
+        let listHtml = items.map(item => `
+            <div class="glass-card" style="padding:1rem; margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <strong style="color:#fff; font-size:1.1rem;">${item.name}</strong>
+                    ${item.date ? `<div style="color:var(--text-muted); font-size:0.85rem; margin-top:4px;"><i class="far fa-calendar-alt"></i> ${item.date}</div>` : ''}
+                </div>
+                ${item.isFirstTime ? `<span style="background:rgba(255, 166, 0, 0.1); color:#ffa600; padding:4px 10px; border:1px solid rgba(255, 166, 0, 0.3); border-radius:12px; font-size:0.8rem; font-weight:bold;">1ª Vez</span>` : ''}
+            </div>
+        `).join('');
+
+        if (items.length === 0) {
+            listHtml = '<p style="text-align:center; color:var(--text-muted); margin-top:2rem;">Nenhum registo encontrado neste período.</p>';
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay animate-fade-in';
+        modal.innerHTML = `
+            <div class="glass-panel animate-scale-up" style="max-width: 500px; width: 95%; max-height: 85vh; display: flex; flex-direction: column; padding: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--surface-border);">
+                    <h3 style="margin: 0; display:flex; align-items:center; gap:10px;"><i class="fas ${icon}" style="color:var(--primary);"></i> ${title}</h3>
+                    <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div style="overflow-y: auto; padding-right: 5px;">
+                    ${listHtml}
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
     }
 
     renderAdminGlobalClientsList(query = '') {
