@@ -4899,8 +4899,15 @@ Equipa KandalGym`;
                                                                             const amountMatch = displayAmount.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
                                                                             if (amountMatch) {
                                                                                 const scaledNum = parseFloat(amountMatch[1]) * factor;
-                                                                                const formattedNum = Number(scaledNum.toFixed(2));
-                                                                                displayAmount = `${formattedNum} ${amountMatch[2].trim()}`;
+                                                                                const unit = amountMatch[2].trim();
+                                                                                const unitLower = unit.toLowerCase();
+                                                                                let formattedNum;
+                                                                                if (unitLower === 'g' || unitLower === 'ml' || unitLower === 'l' || unitLower === 'gr') {
+                                                                                    formattedNum = Math.round(scaledNum);
+                                                                                } else {
+                                                                                    formattedNum = Number(scaledNum.toFixed(1));
+                                                                                }
+                                                                                displayAmount = `${formattedNum} ${unit}`;
                                                                             }
                                                                         }
                                                                         return `<li style="margin-bottom:3px;"><strong>${ing.name}</strong>${displayAmount ? `: ${displayAmount}` : ''}</li>`;
@@ -8304,8 +8311,15 @@ Equipa KandalGym`;
                                             const amountMatch = displayAmount.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
                                             if (amountMatch) {
                                                 const scaledNum = parseFloat(amountMatch[1]) * factor;
-                                                const formattedNum = Number(scaledNum.toFixed(2));
-                                                displayAmount = `${formattedNum} ${amountMatch[2].trim()}`;
+                                                const unit = amountMatch[2].trim();
+                                                const unitLower = unit.toLowerCase();
+                                                let formattedNum;
+                                                if (unitLower === 'g' || unitLower === 'ml' || unitLower === 'l' || unitLower === 'gr') {
+                                                    formattedNum = Math.round(scaledNum);
+                                                } else {
+                                                    formattedNum = Number(scaledNum.toFixed(1));
+                                                }
+                                                displayAmount = `${formattedNum} ${unit}`;
                                             }
                                         }
                                         return `<li><strong>${ing.name}</strong>${displayAmount ? `: ${displayAmount}` : ''}</li>`;
