@@ -11711,79 +11711,214 @@ Equipa KandalGym`;
 
         const content = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                <h2 style="margin:0;"><i class="fas fa-utensils"></i> Escolher Receita</h2>
+                <h2 style="margin:0;"><i class="fas fa-utensils" style="color:var(--primary); margin-right:8px;"></i> Escolher Receita</h2>
                 <button class="btn btn-ghost" onclick="app.closeModal()" style="padding:8px;"><i class="fas fa-times"></i></button>
             </div>
-            <div style="max-height:60vh; overflow-y:auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(${isMobile ? '140px' : '200px'}, 1fr)); gap:10px;">
-                ${recipes.length === 0 ? `
-                    <p style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--text-muted);">Não existem receitas criadas.</p>
-                ` : recipes.map(r => `
-                    <div class="glass-card" onclick="app.askRecipePortions('${r.id}')" 
-                        style="padding:12px; cursor:pointer; text-align:center; border:1px solid transparent; transition:all 0.2s;"
-                        onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'">
-                        <div style="font-size:1.5rem; margin-bottom:5px;">${this.extractYoutubeId(r.videoUrl) ? '<i class="fab fa-youtube" style="color:red;"></i>' : '<i class="fas fa-utensils" style="color:var(--primary);"></i>'}</div>
-                        <div style="font-size:0.85rem; font-weight:bold; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${r.name}</div>
-                        <div style="font-size:0.7rem; color:var(--text-muted);">${r.ingredients ? r.ingredients.length : 0} Ingredientes</div>
-                    </div>
-                `).join('')}
+            
+            <div class="search-container" style="margin-bottom:1.5rem; position:relative; display:flex; align-items:center;">
+                <i class="fas fa-search" style="position:absolute; left:15px; color:var(--text-muted);"></i>
+                <input type="text" id="recipe-search-input" placeholder="Pesquisar receita pelo nome..." 
+                    oninput="app.filterRecipesInModal(this.value, ${mealIdx})"
+                    style="width:100%; height:45px; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:10px; padding:0 15px 0 45px; color:#fff; font-size:0.95rem; outline:none; transition:border-color 0.3s;"
+                    onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--surface-border)'"
+                    autofocus>
+            </div>
+
+            <div id="recipe-grid-container" style="max-height:50vh; overflow-y:auto; padding-right:5px;">
+                ${this.renderRecipesListHtml('', mealIdx)}
             </div>
         `;
-        this.showModal(content, '600px');
+        this.showModal(content, '650px');
     }
 
-    askRecipePortions(recipeId) {
+    renderRecipesListHtml(searchQuery = '', mealIdx) {
+        let recipes = [...(this.state.recipes || [])].sort((a, b) => a.name.localeCompare(b.name));
+        const isMobile = window.innerWidth <= 768;
+
+        if (searchQuery) {
+            const query = this.normalizeText(searchQuery);
+            recipes = recipes.filter(r => this.normalizeText(r.name).includes(query));
+        }
+
+        if (recipes.length === 0) {
+            return `
+                <div style="text-align:center; padding:3rem; color:var(--text-muted);">
+                    <i class="fas fa-search" style="font-size:3rem; opacity:0.3; margin-bottom:1rem; display:block;"></i>
+                    <p>Nenhuma receita encontrada</p>
+                </div>
+            `;
+        }
+
+        return `
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(${isMobile ? '140px' : '180px'}, 1fr)); gap:12px;">
+                ${recipes.map(r => {
+                    const macros = this.calculateRecipeMacros(r);
+                    const hasVideo = !!this.extractYoutubeId(r.videoUrl);
+                    return `
+                        <div class="glass-card" onclick="app.showRecipeDetailsInModal('${r.id}', ${mealIdx})" 
+                            style="padding:15px; cursor:pointer; display:flex; flex-direction:column; justify-content:space-between; min-height:130px; border:1px solid rgba(255,255,255,0.05); transition:all 0.2s ease-in-out; border-radius:12px;"
+                            onmouseover="this.style.borderColor='var(--primary)'; this.style.transform='translateY(-2px)'" 
+                            onmouseout="this.style.borderColor='rgba(255,255,255,0.05)'; this.style.transform='translateY(0)'">
+                            
+                            <div>
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                                    <div style="font-size:1.4rem;">
+                                        ${hasVideo ? '<i class="fab fa-youtube" style="color:#ff0000;"></i>' : '<i class="fas fa-utensils" style="color:var(--primary);"></i>'}
+                                    </div>
+                                    <span style="font-size:0.7rem; background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:6px; color:var(--text-muted);">
+                                        ${r.portions || 1} dose${(r.portions || 1) !== 1 ? 's' : ''}
+                                    </span>
+                                </div>
+                                <div style="font-size:0.9rem; font-weight:700; color:#fff; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; text-overflow:ellipsis; line-height:1.2; margin-bottom:8px;">
+                                    ${r.name}
+                                </div>
+                            </div>
+
+                            <div style="border-top:1px solid rgba(255,255,255,0.05); padding-top:8px;">
+                                <div style="font-size:0.8rem; font-weight:700; color:var(--primary); margin-bottom:2px;">
+                                    ${Math.round(macros.kcal)} kcal
+                                </div>
+                                <div style="font-size:0.65rem; color:var(--text-muted); display:flex; gap:4px; flex-wrap:wrap;">
+                                    <span>P: <strong>${Math.round(macros.prot)}g</strong></span>
+                                    <span>C: <strong>${Math.round(macros.carb)}g</strong></span>
+                                    <span>G: <strong>${Math.round(macros.fat)}g</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+
+    filterRecipesInModal(query, mealIdx) {
+        const grid = document.getElementById('recipe-grid-container');
+        if (grid) {
+            grid.innerHTML = this.renderRecipesListHtml(query, mealIdx);
+        }
+    }
+
+    showRecipeDetailsInModal(recipeId, mealIdx) {
         const recipe = this.state.recipes.find(r => r.id === recipeId);
         if (!recipe) return;
 
         const portionsYield = recipe.portions || 1;
         const macros = this.calculateRecipeMacros(recipe);
+        const hasVideo = !!this.extractYoutubeId(recipe.videoUrl);
+
+        this.tempRecipeMacros = macros;
+        this.tempRecipePortionsYield = portionsYield;
 
         const content = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                <h2 style="margin:0;"><i class="fas fa-utensils"></i> Ajustar Porções</h2>
-                <button class="btn btn-ghost" onclick="app.closeModal()" style="padding:8px;"><i class="fas fa-times"></i></button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; gap:10px;">
+                <button class="btn btn-ghost" onclick="app.showRecipeSelectionForMeal(${mealIdx})" 
+                    style="padding:8px; display:flex; align-items:center; gap:6px; font-size:0.9rem; color:var(--text-muted);">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+                <h3 style="margin:0; text-align:right; font-size:1.1rem; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;">${recipe.name}</h3>
             </div>
             
-            <div style="display:flex; flex-direction:column; gap:1.5rem;">
-                <div>
-                    <h3 style="margin:0 0 5px; color:#fff;">${recipe.name}</h3>
-                    <span style="font-size:0.8rem; color:var(--accent); font-weight:700;">
-                        Rendimento Total: ${portionsYield} porç${portionsYield > 1 ? 'ões' : 'ão'}
-                    </span>
+            <div style="display:flex; flex-direction:column; gap:1.25rem; max-height:70vh; overflow-y:auto; padding-right:5px;">
+                <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); padding:12px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <span style="font-size:0.75rem; color:var(--text-muted); display:block; text-transform:uppercase; font-weight:700;">Rendimento da Receita</span>
+                        <strong style="color:#fff; font-size:0.95rem;">${portionsYield} porção(ões)</strong>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="font-size:0.75rem; color:var(--text-muted); display:block; text-transform:uppercase; font-weight:700;">Valores Originais</span>
+                        <strong style="color:var(--text-muted); font-size:0.85rem;">
+                            ${Math.round(macros.kcal)} kcal | ${Math.round(macros.prot)}g P | ${Math.round(macros.carb)}g C | ${Math.round(macros.fat)}g G
+                        </strong>
+                    </div>
                 </div>
 
-                <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); padding:12px; border-radius:10px;">
-                    <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px; text-transform:uppercase; font-weight:700;">Valores Totais da Receita</span>
-                    <strong style="color:#fff; font-size:0.95rem;">
-                        ${Math.round(macros.kcal)} kcal | ${Math.round(macros.prot)}g P | ${Math.round(macros.carb)}g C | ${Math.round(macros.fat)}g G
-                    </strong>
-                </div>
-
                 <div>
-                    <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Quantas porções deseja incluir nesta refeição?</label>
+                    <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Doses a incluir na refeição</label>
                     <div style="display:flex; gap:10px; align-items:center;">
+                        <button class="btn btn-secondary" onclick="app.adjustRecipePortionsInput(-0.5)" 
+                            style="width:40px; height:45px; border-radius:10px; font-size:1.2rem; font-weight:bold; display:flex; align-items:center; justify-content:center; padding:0;">-</button>
+                        
                         <input type="number" id="add-recipe-portions-input" value="1" min="0.1" step="0.5"
                             oninput="app.triggerRecipePortionPreviewUpdate(this.value)"
-                            style="width:100px; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1.1rem; font-weight:600; text-align:center;">
-                        <span style="color:var(--text-muted); font-size:0.9rem;">porção(ões)</span>
+                            style="flex:1; max-width:120px; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 10px; font-size:1.1rem; font-weight:600; text-align:center; outline:none;">
+                        
+                        <button class="btn btn-secondary" onclick="app.adjustRecipePortionsInput(0.5)" 
+                            style="width:40px; height:45px; border-radius:10px; font-size:1.2rem; font-weight:bold; display:flex; align-items:center; justify-content:center; padding:0;">+</button>
+                        
+                        <span style="color:var(--text-muted); font-size:0.9rem; font-weight:600;">dose(s)</span>
                     </div>
                 </div>
 
                 <div id="recipe-portion-preview"></div>
 
-                <button class="btn btn-primary" onclick="app.confirmAddRecipeToMeal('${recipe.id}')"
-                    style="width:100%; height:48px; border-radius:12px; font-weight:800; font-size:1rem; display:flex; align-items:center; justify-content:center; gap:8px;">
-                    <i class="fas fa-check"></i> Adicionar ao Plano
+                <div style="border:1px solid rgba(255,255,255,0.05); border-radius:10px; overflow:hidden; background:rgba(0,0,0,0.15);">
+                    <div onclick="app.toggleRecipeDetailsSection('recipe-ing-details')" style="display:flex; justify-content:space-between; align-items:center; padding:12px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05); background:rgba(255,255,255,0.02);">
+                        <span style="font-size:0.85rem; font-weight:700; color:#fff;"><i class="fas fa-list-ul" style="color:var(--primary); margin-right:6px;"></i> Ingredientes (${recipe.ingredients ? recipe.ingredients.length : 0})</span>
+                        <i class="fas fa-chevron-down" id="recipe-ing-details-icon" style="font-size:0.8rem; color:var(--text-muted); transition:transform 0.3s;"></i>
+                    </div>
+                    <div id="recipe-ing-details" style="display:none; padding:12px; max-height:200px; overflow-y:auto; font-size:0.85rem; border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <ul style="margin:0; padding-left:15px; line-height:1.5; color:rgba(255,255,255,0.85);">
+                            ${recipe.ingredients && recipe.ingredients.length > 0 ? recipe.ingredients.map(ing => `
+                                <li style="margin-bottom:4px;">
+                                    <strong>${ing.name}</strong>${ing.amount ? `: ${ing.amount}` : ''}
+                                </li>
+                            `).join('') : '<li style="color:var(--text-muted); list-style:none;">Sem ingredientes.</li>'}
+                        </ul>
+                    </div>
+
+                    <div onclick="app.toggleRecipeDetailsSection('recipe-prep-details')" style="display:flex; justify-content:space-between; align-items:center; padding:12px; cursor:pointer; background:rgba(255,255,255,0.02);">
+                        <span style="font-size:0.85rem; font-weight:700; color:#fff;"><i class="fas fa-book-open" style="color:var(--primary); margin-right:6px;"></i> Modo de Preparação</span>
+                        <i class="fas fa-chevron-down" id="recipe-prep-details-icon" style="font-size:0.8rem; color:var(--text-muted); transition:transform 0.3s;"></i>
+                    </div>
+                    <div id="recipe-prep-details" style="display:none; padding:12px; max-height:200px; overflow-y:auto; font-size:0.85rem; line-height:1.5; color:rgba(255,255,255,0.85); white-space:pre-line;">
+                        ${recipe.description ? recipe.description : '<p style="color:var(--text-muted); margin:0;">Sem instruções de preparação.</p>'}
+                    </div>
+                </div>
+
+                ${hasVideo ? `
+                    <a href="${recipe.videoUrl}" target="_blank" class="btn btn-secondary" 
+                        style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background:rgba(255,0,0,0.1); border:1px solid rgba(255,0,0,0.3); color:#ff4d4d; font-weight:700;">
+                        <i class="fab fa-youtube"></i> Ver Vídeo da Receita
+                    </a>
+                ` : ''}
+
+                <button class="btn btn-primary" onclick="app.confirmAddRecipeToMeal('${recipe.id}', ${mealIdx})"
+                    style="width:100%; height:48px; border-radius:12px; font-weight:800; font-size:1rem; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:0.5rem; background:linear-gradient(135deg, var(--primary), var(--accent)); border:none;">
+                    <i class="fas fa-check"></i> Confirmar e Adicionar
                 </button>
             </div>
         `;
 
-        this.showModal(content, '480px');
-        
-        this.tempRecipeMacros = macros;
-        this.tempRecipePortionsYield = portionsYield;
-        
-        this.triggerRecipePortionPreviewUpdate(1);
+        const modalContent = document.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.innerHTML = content;
+            this.triggerRecipePortionPreviewUpdate(1);
+        } else {
+            this.showModal(content, '500px');
+            this.triggerRecipePortionPreviewUpdate(1);
+        }
+    }
+
+    adjustRecipePortionsInput(change) {
+        const input = document.getElementById('add-recipe-portions-input');
+        if (input) {
+            let val = parseFloat(input.value) || 1;
+            val = Math.max(0.1, val + change);
+            input.value = parseFloat(val.toFixed(2));
+            this.triggerRecipePortionPreviewUpdate(input.value);
+        }
+    }
+
+    toggleRecipeDetailsSection(sectionId) {
+        const el = document.getElementById(sectionId);
+        const icon = document.getElementById(sectionId + '-icon');
+        if (el) {
+            const isHidden = el.style.display === 'none';
+            el.style.display = isHidden ? 'block' : 'none';
+            if (icon) {
+                icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
+        }
     }
 
     triggerRecipePortionPreviewUpdate(val) {
@@ -11807,7 +11942,8 @@ Equipa KandalGym`;
         }
     }
 
-    confirmAddRecipeToMeal(recipeId) {
+    confirmAddRecipeToMeal(recipeId, mealIdx) {
+        if (mealIdx !== undefined) this.currentMealIdxForRecipe = mealIdx;
         const input = document.getElementById('add-recipe-portions-input');
         const selectedPortions = Math.max(0.1, parseFloat(input.value) || 1);
         this.addRecipeToMealWithPortions(recipeId, selectedPortions);
@@ -11865,7 +12001,11 @@ Equipa KandalGym`;
     }
 
     addRecipeToMeal(recipeId) {
-        this.askRecipePortions(recipeId);
+        this.showRecipeDetailsInModal(recipeId, this.currentMealIdxForRecipe);
+    }
+
+    askRecipePortions(recipeId) {
+        this.showRecipeDetailsInModal(recipeId, this.currentMealIdxForRecipe);
     }
 
     calculateRecipeMacros(recipe) {
