@@ -4856,29 +4856,96 @@ Equipa KandalGym`;
                                     <strong style="color:var(--primary); font-size: 1rem;">${m.time} - ${m.name}</strong>
                                     <i class="fas fa-utensils" style="color:var(--text-muted); font-size:0.75rem;"></i>
                                 </div>
-                                <div style="font-size:0.9rem; white-space: pre-wrap; line-height: 1.5; color: #e2e8f0;">${(() => {
-                            let cleanText = m.items;
-                            const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-                            const match = m.items.match(youtubeRegex);
+                                <div style="font-size:0.9rem; line-height: 1.5; color: #e2e8f0; display:flex; flex-direction:column; gap:8px;">
+                                    ${(() => {
+                                        let cleanText = m.items || '';
+                                        const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+                                        const lines = cleanText.split('\n');
+                                        const processedLinesHtml = [];
+                                        let recipeBlocksHtml = '';
 
-                            if (match) {
-                                // Remover a linha que contém o link do YouTube para não repetir com o card
-                                const lines = cleanText.split('\n');
-                                cleanText = lines.filter(line => !line.includes(match[0]) && !line.toLowerCase().includes('vídeo tutorial')).join('\n').trim();
-                            }
+                                        lines.forEach(line => {
+                                            if (line.toLowerCase().includes('(valores:') || line.toLowerCase().includes('youtube.com') || line.toLowerCase().includes('youtu.be')) {
+                                                return;
+                                            }
 
-                            // Remover a linha técnica de macros de receita (Valores: ...) para o aluno não ver
-                            cleanText = cleanText.split('\n').filter(line => !line.includes('(Valores:')).join('\n').trim();
+                                            const recipeMatch = line.match(/^-?\s*Receita:\s*(.*?)\s*\(\s*(\d+(?:\.\d+)?)\s*dose\(s\)\)/i);
+                                            if (recipeMatch) {
+                                                const recipeName = recipeMatch[1].trim();
+                                                const portions = parseFloat(recipeMatch[2]) || 1;
+                                                const recipe = (this.state.recipes || []).find(r => r.name.toLowerCase() === recipeName.toLowerCase());
+                                                
+                                                if (recipe) {
+                                                    const portionsYield = recipe.portions || 1;
+                                                    const factor = portions / portionsYield;
+                                                    const uniqueId = `recipe-details-${recipe.id}-${Math.floor(Math.random() * 100000)}`;
 
-                            return this.linkify(cleanText);
-                        })()}</div>
+                                                    recipeBlocksHtml += `
+                                                        <div class="glass-card" style="margin-top:0.5rem; border:1px solid rgba(255,255,255,0.05); background:rgba(255,255,255,0.02); border-radius:12px; overflow:hidden;">
+                                                            <div onclick="app.toggleRecipeDetailsSection('${uniqueId}')" style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; cursor:pointer; background:rgba(255,255,255,0.03);">
+                                                                <span style="font-size:0.9rem; font-weight:700; color:#fff; display:flex; align-items:center; gap:8px;">
+                                                                    <i class="fas fa-utensils" style="color:var(--primary);"></i>
+                                                                    <span>${recipe.name}</span>
+                                                                    <span style="font-size:0.75rem; background:rgba(var(--primary-rgb), 0.2); color:var(--primary); padding:2px 8px; border-radius:12px; font-weight:700;">${portions} dose${portions !== 1 ? 's' : ''}</span>
+                                                                </span>
+                                                                <i class="fas fa-chevron-down" id="${uniqueId}-icon" style="font-size:0.8rem; color:var(--text-muted); transition:transform 0.3s;"></i>
+                                                            </div>
+                                                            <div id="${uniqueId}" style="display:none; padding:15px; border-top:1px solid rgba(255,255,255,0.05); background:rgba(0,0,0,0.15);">
+                                                                <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; margin-bottom:8px;">Ingredientes:</div>
+                                                                <ul style="margin:0 0 15px 0; padding-left:18px; font-size:0.85rem; line-height:1.5; color:#cbd5e1;">
+                                                                    ${recipe.ingredients && recipe.ingredients.length > 0 ? recipe.ingredients.map(ing => {
+                                                                        let displayAmount = ing.amount || '';
+                                                                        if (displayAmount) {
+                                                                            const amountMatch = displayAmount.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
+                                                                            if (amountMatch) {
+                                                                                const scaledNum = parseFloat(amountMatch[1]) * factor;
+                                                                                const formattedNum = Number(scaledNum.toFixed(2));
+                                                                                displayAmount = `${formattedNum} ${amountMatch[2].trim()}`;
+                                                                            }
+                                                                        }
+                                                                        return `<li style="margin-bottom:3px;"><strong>${ing.name}</strong>${displayAmount ? `: ${displayAmount}` : ''}</li>`;
+                                                                    }).join('') : '<li>Sem ingredientes especificados.</li>'}
+                                                                </ul>
+
+                                                                ${recipe.description ? `
+                                                                    <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; margin-bottom:8px;">Preparação:</div>
+                                                                    <div style="font-size:0.85rem; line-height:1.6; color:#e2e8f0; white-space:pre-line; margin-bottom:15px;">${recipe.description}</div>
+                                                                ` : ''}
+
+                                                                ${recipe.videoUrl ? `
+                                                                    <div class="glass-card" style="padding: 0.5rem; border:1px solid rgba(255,0,0,0.2); background:rgba(255,0,0,0.03); display:flex; align-items:center; cursor:pointer; gap:12px;" onclick="window.open('${recipe.videoUrl}', '_blank')">
+                                                                        <div style="width:60px; height:38px; border-radius:6px; background:url('https://img.youtube.com/vi/${this.extractYoutubeId(recipe.videoUrl)}/mqdefault.jpg') center/cover; position:relative; flex-shrink:0;">
+                                                                            <i class="fab fa-youtube" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#fff; font-size:0.9rem;"></i>
+                                                                        </div>
+                                                                        <div style="flex:1;">
+                                                                            <div style="font-size:0.8rem; font-weight:700; color:#fff;">Vídeo da Receita</div>
+                                                                        </div>
+                                                                        <i class="fas fa-chevron-right" style="margin-right:0.5rem; color:rgba(255,255,255,0.2); font-size:0.75rem;"></i>
+                                                                    </div>
+                                                                ` : ''}
+                                                            </div>
+                                                        </div>
+                                                    `;
+                                                    return;
+                                                }
+                                            }
+                                            processedLinesHtml.push(line);
+                                        });
+
+                                        const normalTextHtml = processedLinesHtml.join('\n').trim();
+                                        return (normalTextHtml ? `<div style="white-space: pre-wrap;">${this.linkify(normalTextHtml)}</div>` : '') + recipeBlocksHtml;
+                                    })()}
+                                </div>
                                 
                                 ${(() => {
-                            const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-                            const match = m.items.match(youtubeRegex);
-                            if (match && match[1]) {
-                                const videoId = match[1];
-                                return `
+                                    const match = m.items ? m.items.match(youtubeRegex) : null;
+                                    if (match && match[1]) {
+                                        // Apenas renderizar se não pertencer a uma linha de receita processada acima
+                                        const isRecipeLink = m.items.split('\n').some(line => line.includes(match[0]) && line.toLowerCase().includes('receita'));
+                                        if (isRecipeLink) return '';
+
+                                        const videoId = match[1];
+                                        return `
                                             <div class="glass-card" style="margin-top:1rem; padding: 0.5rem; border:1px solid rgba(255,0,0,0.3); background:rgba(255,0,0,0.05); display:flex; align-items:center; cursor:pointer; gap:12px;" onclick="window.open('https://www.youtube.com/watch?v=${videoId}', '_blank')">
                                                 <div style="width:70px; height:45px; border-radius:8px; background:url('https://img.youtube.com/vi/${videoId}/mqdefault.jpg') center/cover; position:relative; flex-shrink:0;">
                                                     <i class="fab fa-youtube" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#fff; font-size:1rem; text-shadow: 0 0 5px rgba(0,0,0,0.5);"></i>
@@ -4890,9 +4957,9 @@ Equipa KandalGym`;
                                                 <i class="fas fa-chevron-right" style="margin-right:0.5rem; color:rgba(255,255,255,0.2);"></i>
                                             </div>
                                         `;
-                            }
-                            return '';
-                        })()}
+                                    }
+                                    return '';
+                                })()}
 
                                 ${mTotal.kcal > 0 ? `
                                     <div class="nutrition-summary">
@@ -8207,9 +8274,56 @@ Equipa KandalGym`;
 
             // Limpar o texto para o PDF (remover links e linha tecnica de macros)
             let displayItems = m.items || '';
-            displayItems = displayItems.split('\n')
-                .filter(line => !line.includes('youtube.com') && !line.includes('youtu.be') && !line.includes('(Valores:'))
-                .join('\n').trim();
+            const lines = displayItems.split('\n');
+            const processedLines = [];
+            let recipeDetailsPdf = '';
+
+            lines.forEach(line => {
+                if (line.toLowerCase().includes('(valores:') || line.toLowerCase().includes('youtube.com') || line.toLowerCase().includes('youtu.be')) {
+                    return;
+                }
+
+                const recipeMatch = line.match(/^-?\s*Receita:\s*(.*?)\s*\(\s*(\d+(?:\.\d+)?)\s*dose\(s\)\)/i);
+                if (recipeMatch) {
+                    const recipeName = recipeMatch[1].trim();
+                    const portions = parseFloat(recipeMatch[2]) || 1;
+                    const recipe = (this.state.recipes || []).find(r => r.name.toLowerCase() === recipeName.toLowerCase());
+                    
+                    if (recipe) {
+                        const portionsYield = recipe.portions || 1;
+                        const factor = portions / portionsYield;
+                        
+                        recipeDetailsPdf += `
+                            <div style="margin-top: 10px; border-left: 3px solid #911B2B; padding-left: 10px; background: #fafafa; padding-top: 5px; padding-bottom: 5px; margin-bottom: 10px;">
+                                <strong style="font-size: 13px; color: #911B2B;">Receita: ${recipe.name} (${portions} dose(s))</strong>
+                                <div style="font-size: 11px; margin-top: 5px; font-weight: bold; color: #555;">Ingredientes:</div>
+                                <ul style="margin: 3px 0 8px 0; padding-left: 15px; font-size: 11px; line-height: 1.4; color: #333;">
+                                    ${recipe.ingredients && recipe.ingredients.length > 0 ? recipe.ingredients.map(ing => {
+                                        let displayAmount = ing.amount || '';
+                                        if (displayAmount) {
+                                            const amountMatch = displayAmount.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
+                                            if (amountMatch) {
+                                                const scaledNum = parseFloat(amountMatch[1]) * factor;
+                                                const formattedNum = Number(scaledNum.toFixed(2));
+                                                displayAmount = `${formattedNum} ${amountMatch[2].trim()}`;
+                                            }
+                                        }
+                                        return `<li><strong>${ing.name}</strong>${displayAmount ? `: ${displayAmount}` : ''}</li>`;
+                                    }).join('') : '<li>Sem ingredientes</li>'}
+                                </ul>
+                                ${recipe.description ? `
+                                    <div style="font-size: 11px; font-weight: bold; color: #555;">Preparação:</div>
+                                    <div style="font-size: 11px; line-height: 1.4; color: #333; white-space: pre-wrap; margin-top: 3px;">${recipe.description}</div>
+                                ` : ''}
+                            </div>
+                        `;
+                        return;
+                    }
+                }
+                processedLines.push(line);
+            });
+
+            const normalText = processedLines.join('\n').trim();
 
             htmlContent += `
                 <div style="margin-bottom: 20px; page-break-inside: avoid;">
@@ -8217,7 +8331,10 @@ Equipa KandalGym`;
                         <span>${m.time} - ${m.name}</span>
                         ${mN.kcal > 0 ? `<span style="font-size: 12px;">${Math.round(mN.kcal)} kcal</span>` : ''}
                     </div>
-                    <div style="padding: 12px; border: 1px solid #eee; border-top: none; white-space: pre-wrap; font-size: 14px; line-height: 1.6;">${displayItems || 'Sem alimentos adicionados'}</div>
+                    <div style="padding: 12px; border: 1px solid #eee; border-top: none; font-size: 14px; line-height: 1.6;">
+                        ${normalText ? `<div style="white-space: pre-wrap; margin-bottom: 10px;">${normalText}</div>` : ''}
+                        ${recipeDetailsPdf}
+                    </div>
                     ${mN.kcal > 0 ? `
                     <div style="padding: 5px 12px; background: #fefefe; border: 1px solid #eee; border-top: none; font-size: 11px; color: #666;">
                         <strong>Macros:</strong> Prot: ${Math.round(mN.prot)}g | Carb: ${Math.round(mN.carb)}g | Gord: ${Math.round(mN.fat)}g
@@ -11965,32 +12082,10 @@ Equipa KandalGym`;
             fat: totalMacros.fat * factor
         };
 
-        let textToAdd = `\n--- RECEITA: ${recipe.name.toUpperCase()} (${selectedPortions} Porção${selectedPortions !== 1 ? 'ões' : ''} de ${portionsYield}) ---\n`;
-
+        let textToAdd = `- Receita: ${recipe.name} (${selectedPortions} dose(s))\n`;
         if (macros.kcal > 0) {
-            textToAdd += `(Valores: ${Math.round(macros.kcal)}kcal | ${Math.round(macros.prot)}g P | ${Math.round(macros.carb)}g C | ${Math.round(macros.fat)}g G)\n\n`;
+            textToAdd += `(Valores: ${Math.round(macros.kcal)}kcal | ${Math.round(macros.prot)}g P | ${Math.round(macros.carb)}g C | ${Math.round(macros.fat)}g G)`;
         }
-
-        textToAdd += `INGREDIENTES DA RECEITA COMPLETA (Rende ${portionsYield} porç${portionsYield > 1 ? 'ões' : 'ão'}):\n`;
-        if (recipe.ingredients && recipe.ingredients.length > 0) {
-            recipe.ingredients.forEach(ing => {
-                if (ing.name && ing.amount) {
-                    textToAdd += `• ${ing.name}: ${ing.amount}\n`;
-                } else if (ing.name) {
-                    textToAdd += `• ${ing.name}\n`;
-                }
-            });
-        }
-
-        if (recipe.description) {
-            textToAdd += `\nPREPARAÇÃO:\n${recipe.description}\n`;
-        }
-
-        if (recipe.videoUrl) {
-            textToAdd += `\nVídeo Tutorial: ${recipe.videoUrl}\n`;
-        }
-
-        textToAdd += `----------------------------\n`;
 
         const currentItems = this.editingMeal.meals[mealIdx].items || '';
         this.editingMeal.meals[mealIdx].items = (currentItems.trim() ? currentItems.trim() + '\n' + textToAdd : textToAdd).trim();
