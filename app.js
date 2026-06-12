@@ -4938,9 +4938,9 @@ Equipa KandalGym`;
                                 </div>
                                 
                                 ${(() => {
+                                    const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
                                     const match = m.items ? m.items.match(youtubeRegex) : null;
                                     if (match && match[1]) {
-                                        // Apenas renderizar se não pertencer a uma linha de receita processada acima
                                         const isRecipeLink = m.items.split('\n').some(line => line.includes(match[0]) && line.toLowerCase().includes('receita'));
                                         if (isRecipeLink) return '';
 
