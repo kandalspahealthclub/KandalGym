@@ -4426,7 +4426,7 @@ Equipa KandalGym`;
     renderTrainingEditor() {
         const container = document.getElementById('main-content');
         if (!container) return;
-        const c = this.state.clients.find(x => x.id === this.editingClientId);
+        const c = this.state.clients.find(x => x.id == this.editingClientId);
 
         // Garantir que o index é válido
         if (this.editingDayIdx >= this.editingPlan.length) this.editingDayIdx = 0;
@@ -4448,7 +4448,7 @@ Equipa KandalGym`;
                 <div>
                     <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase;">Objetivo do Plano</label>
                     <input type="text" id="edit-training-goal" value="${c.goal || ''}" placeholder="Ex: Hipertrofia, Redução de Massa Gorda..."
-                        onchange="app.state.clients.find(x => x.id === app.editingClientId).goal = this.value; app.saveState();"
+                        onchange="app.state.clients.find(x => x.id == app.editingClientId).goal = this.value; app.saveState();"
                         style="width:300px; height:40px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 12px; font-size:0.95rem;">
                 </div>
                 <div>
@@ -6144,7 +6144,7 @@ Equipa KandalGym`;
     }
 
     renderSpyView(container) {
-        const c = this.state.clients.find(x => x.id === this.currentClientId);
+        const c = this.state.clients.find(x => x.id == this.currentClientId);
         if (!c) return;
 
         container.innerHTML = `
