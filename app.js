@@ -2786,7 +2786,7 @@ Equipa KandalGym`;
         // Calcular estatisticas baseadas no mês selecionado
         const [selYear, selMonth] = this.dashboardMonth.split('-');
 
-        this.dashboardData = { evaluations: [], trainingPlans: [], mealPlans: [], anamnesis: [], clients: teacherClients.map(c => ({name: c.name})) };
+        this.dashboardData = { evaluations: [], trainingPlans: [], mealPlans: [], anamnesis: [], clients: teacherClients.map(c => ({name: c.name, clientId: c.id})) };
 
         let monthEvals = 0;
         let monthEvalsFirst = 0;
@@ -2803,7 +2803,7 @@ Equipa KandalGym`;
                         if (m === selMonth && y === selYear) {
                             monthEvals++;
                             if (ev.isFirstTime) monthEvalsFirst++;
-                            this.dashboardData.evaluations.push({ name: clientName, date: ev.date, isFirstTime: ev.isFirstTime });
+                            this.dashboardData.evaluations.push({ name: clientName, date: ev.date, isFirstTime: ev.isFirstTime, clientId: clientId });
                         }
                     }
                 }
@@ -2823,7 +2823,7 @@ Equipa KandalGym`;
                     if (m === selMonth && y === selYear) {
                         monthTraining++;
                         if (plan.isFirstTime) monthTrainingFirst++;
-                        this.dashboardData.trainingPlans.push({ name: clientName, date: plan.updatedAt, isFirstTime: plan.isFirstTime });
+                        this.dashboardData.trainingPlans.push({ name: clientName, date: plan.updatedAt, isFirstTime: plan.isFirstTime, clientId: clientId });
                     }
                 }
             }
@@ -2840,7 +2840,7 @@ Equipa KandalGym`;
                     const y = parts[2].trim();
                     if (m === selMonth && y === selYear) {
                         monthMeals++;
-                        this.dashboardData.mealPlans.push({ name: clientName, date: plan.updatedAt });
+                        this.dashboardData.mealPlans.push({ name: clientName, date: plan.updatedAt, clientId: clientId });
                     }
                 }
             }
@@ -2858,7 +2858,7 @@ Equipa KandalGym`;
                         const y = parts[2].trim();
                         if (m === selMonth && y === selYear) {
                             monthAnamnesis++;
-                            this.dashboardData.anamnesis.push({ name: clientName, date: entry.updatedAt });
+                            this.dashboardData.anamnesis.push({ name: clientName, date: entry.updatedAt, clientId: clientId });
                         }
                     }
                 }
@@ -8057,12 +8057,15 @@ Equipa KandalGym`;
         const items = this.dashboardData[type];
         
         let listHtml = items.map(item => `
-            <div class="glass-card" style="padding:1rem; margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center;">
+            <div class="glass-card" style="padding:1rem; margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center; transition: transform 0.2s; ${item.clientId ? 'cursor:pointer;' : ''}" ${item.clientId ? `onclick="app.spyClient('${item.clientId}'); document.querySelector('.modal-overlay').remove();"` : ''}>
                 <div>
                     <strong style="color:#fff; font-size:1.1rem;">${item.name}</strong>
                     ${item.date ? `<div style="color:var(--text-muted); font-size:0.85rem; margin-top:4px;"><i class="far fa-calendar-alt"></i> ${item.date}</div>` : ''}
                 </div>
-                ${item.isFirstTime ? `<span style="background:rgba(255, 166, 0, 0.1); color:#ffa600; padding:4px 10px; border:1px solid rgba(255, 166, 0, 0.3); border-radius:12px; font-size:0.8rem; font-weight:bold;">1ª Vez</span>` : ''}
+                <div style="display:flex; align-items:center; gap:10px;">
+                    ${item.isFirstTime ? `<span style="background:rgba(255, 166, 0, 0.1); color:#ffa600; padding:4px 10px; border:1px solid rgba(255, 166, 0, 0.3); border-radius:12px; font-size:0.8rem; font-weight:bold;">1ª Vez</span>` : ''}
+                    ${item.clientId ? `<i class="fas fa-chevron-right" style="color:var(--text-muted); font-size:0.9rem;"></i>` : ''}
+                </div>
             </div>
         `).join('');
 
