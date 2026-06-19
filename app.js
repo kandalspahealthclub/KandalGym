@@ -4846,20 +4846,19 @@ Equipa KandalGym`;
             </div>
             <div class="glass-panel" style="padding:1.5rem;">
                 ${(() => {
-                const dailyTotal = { kcal: 0, prot: 0, carb: 0, fat: 0 };
                 const mealsHtml = meal?.meals && meal.meals.length ? meal.meals.map(m => {
-                    const mTotal = this.getNutritionFromText(m.items);
-                    dailyTotal.kcal += mTotal.kcal;
-                    dailyTotal.prot += mTotal.prot;
-                    dailyTotal.carb += mTotal.carb;
-                    dailyTotal.fat += mTotal.fat;
+                    const mTotal1 = this.getNutritionFromText(m.items);
+                    const mTotal2 = this.getNutritionFromText(m.items2 || '');
+                    const hasOpt2 = (m.items2 || '').trim().length > 0;
 
                     return `
                             <div class="glass-card" style="margin-bottom:1rem;">
-                                <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem; align-items: center;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; align-items: center;">
                                     <strong style="color:var(--primary); font-size: 1rem;">${m.time} - ${m.name}</strong>
                                     <i class="fas fa-utensils" style="color:var(--text-muted); font-size:0.75rem;"></i>
                                 </div>
+                                <!-- Opcao 1 -->
+                                ${hasOpt2 ? `<div style="font-size:0.7rem; font-weight:700; color:var(--success); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; display:inline-block; background:rgba(34,197,94,0.1); padding:2px 10px; border-radius:20px; border:1px solid rgba(34,197,94,0.3);">Opção 1</div>` : ''}
                                 <div style="font-size:0.9rem; line-height: 1.5; color: #e2e8f0; display:flex; flex-direction:column; gap:8px;">
                                     ${(() => {
                                         let cleanText = m.items || '';
@@ -4962,23 +4961,42 @@ Equipa KandalGym`;
                                                     <i class="fab fa-youtube" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#fff; font-size:1rem; text-shadow: 0 0 5px rgba(0,0,0,0.5);"></i>
                                                 </div>
                                                 <div style="flex:1;">
-                                                    <div style="font-size:0.85rem; font-weight:700; color:#fff;">Vídeo da Receita</div>
-                                                    <div style="font-size:0.7rem; color:var(--text-muted);">Clique para ver o tutorial passo-a-passo</div>
-                                                </div>
-                                                <i class="fas fa-chevron-right" style="margin-right:0.5rem; color:rgba(255,255,255,0.2);"></i>
+                                                     <div style="font-size:0.85rem; font-weight:700; color:#fff;">Vídeo da Receita</div>
+                                                     <div style="font-size:0.7rem; color:var(--text-muted);">Clique para ver o tutorial passo-a-passo</div>
+                                                 </div>
+                                                 <i class="fas fa-chevron-right" style="margin-right:0.5rem; color:rgba(255,255,255,0.2);"></i>
                                             </div>
                                         `;
                                     }
                                     return '';
                                 })()}
 
-                                ${mTotal.kcal > 0 ? `
+                                ${mTotal1.kcal > 0 ? `
                                     <div class="nutrition-summary">
-                                        <span class="nu-tag nu-kcal"><strong>${Math.round(mTotal.kcal)}</strong> kcal</span>
-                                        <span class="nu-tag nu-prot"><strong>${Math.round(mTotal.prot)}g</strong> Prot</span>
-                                        <span class="nu-tag nu-carb"><strong>${Math.round(mTotal.carb)}g</strong> Carb</span>
-                                        <span class="nu-tag nu-fat"><strong>${Math.round(mTotal.fat)}g</strong> Gord</span>
+                                        <span class="nu-tag nu-kcal"><strong>${Math.round(mTotal1.kcal)}</strong> kcal</span>
+                                        <span class="nu-tag nu-prot"><strong>${Math.round(mTotal1.prot)}g</strong> Prot</span>
+                                        <span class="nu-tag nu-carb"><strong>${Math.round(mTotal1.carb)}g</strong> Carb</span>
+                                        <span class="nu-tag nu-fat"><strong>${Math.round(mTotal1.fat)}g</strong> Gord</span>
                                     </div>
+                                ` : ''}
+
+                                <!-- Opcao 2 se existir -->
+                                ${hasOpt2 ? `
+                                    <div style="display:flex; align-items:center; gap:10px; margin:0.75rem 0;">
+                                        <div style="flex:1; height:1px; background:rgba(255,255,255,0.08);"></div>
+                                        <span style="font-size:0.7rem; font-weight:800; color:var(--text-muted); letter-spacing:2px;">OU</span>
+                                        <div style="flex:1; height:1px; background:rgba(255,255,255,0.08);"></div>
+                                    </div>
+                                    <div style="font-size:0.7rem; font-weight:700; color:#60a5fa; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; display:inline-block; background:rgba(96,165,250,0.1); padding:2px 10px; border-radius:20px; border:1px solid rgba(96,165,250,0.3);">Opção 2</div>
+                                    <div style="font-size:0.9rem; line-height:1.5; color:#e2e8f0; white-space:pre-wrap;">${this.linkify(m.items2)}</div>
+                                    ${mTotal2.kcal > 0 ? `
+                                        <div class="nutrition-summary" style="border-color:rgba(96,165,250,0.2);">
+                                            <span class="nu-tag" style="background:rgba(96,165,250,0.1); color:#60a5fa; border-color:rgba(96,165,250,0.3);"><strong>${Math.round(mTotal2.kcal)}</strong> kcal</span>
+                                            <span class="nu-tag" style="background:rgba(96,165,250,0.1); color:#60a5fa; border-color:rgba(96,165,250,0.3);"><strong>${Math.round(mTotal2.prot)}g</strong> Prot</span>
+                                            <span class="nu-tag" style="background:rgba(96,165,250,0.1); color:#60a5fa; border-color:rgba(96,165,250,0.3);"><strong>${Math.round(mTotal2.carb)}g</strong> Carb</span>
+                                            <span class="nu-tag" style="background:rgba(96,165,250,0.1); color:#60a5fa; border-color:rgba(96,165,250,0.3);"><strong>${Math.round(mTotal2.fat)}g</strong> Gord</span>
+                                        </div>
+                                    ` : ''}
                                 ` : ''}
                             </div>
                         `;
@@ -4990,14 +5008,7 @@ Equipa KandalGym`;
                         </div>
                     `;
 
-                return (dailyTotal.kcal > 0 ? `
-                        <div class="daily-macros-bar">
-                            <div class="macro-box"><small>Kcal Total</small><strong>${Math.round(dailyTotal.kcal)}</strong></div>
-                            <div class="macro-box"><small>Proteina</small><strong>${Math.round(dailyTotal.prot)}g</strong></div>
-                            <div class="macro-box"><small>Hidratos</small><strong>${Math.round(dailyTotal.carb)}g</strong></div>
-                            <div class="macro-box"><small>Gordura</small><strong>${Math.round(dailyTotal.fat)}g</strong></div>
-                        </div>
-                    ` : '') + mealsHtml;
+                return mealsHtml;
             })()}
             </div>
         `;
@@ -5024,6 +5035,7 @@ Equipa KandalGym`;
         existing.meals = existing.meals.filter(m => m !== null);
         existing.meals.forEach(m => {
             m.items = m.items || '';
+            m.items2 = m.items2 || '';
             m.time = m.time || '08:00';
             m.name = m.name || 'Refeição';
         });
@@ -5061,8 +5073,6 @@ Equipa KandalGym`;
                     <button class="btn btn-secondary" onclick="app.setView('spy_view')">Cancelar</button>
                     <button class="btn btn-primary" onclick="app.saveMealPlan()"><i class="fas fa-save"></i> Guardar Dieta</button>
                 </div>
-
-
             </div>
 
             <div class="glass-panel" style="padding:2rem;">
@@ -5097,6 +5107,7 @@ Equipa KandalGym`;
                 <div id="meal-items-container">
                     ${this.editingMeal.meals.map((m, idx) => {
                     const mTotal = this.getNutritionFromText(m.items);
+                    const mTotal2 = this.getNutritionFromText(m.items2);
                     return `
                             <div class="glass-card" style="padding:1.25rem; margin-bottom:2rem; border-left:4px solid var(--success); position:relative;">
                                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; gap:10px;">
@@ -5119,7 +5130,7 @@ Equipa KandalGym`;
 
                                 <!-- Selecao de Alimentos da Base de Dados -->
                                 <div style="margin-bottom:1.5rem; background:rgba(0,0,0,0.2); padding:1.25rem; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
-                                    <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">Adicionar Alimento da Base de Dados</label>
+                                    <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">Adicionar Alimento</label>
                                     <div style="display:flex; flex-direction:column; gap:12px;">
                                         <div class="food-row" style="flex-wrap: wrap;">
                                             <button class="btn btn-secondary food-search-btn" onclick="app.showFoodSelectionModal(${idx})" style="flex: 1 1 auto; min-width: 120px; font-size:0.85rem;">
@@ -5142,34 +5153,44 @@ Equipa KandalGym`;
                                                     <option value="c. sopa" style="background:#1e293b; color:#fff;">colher de sopa</option>
                                                     <option value="c. sobremesa" style="background:#1e293b; color:#fff;">colher de sobremesa</option>
                                                     <option value="c. cafe" style="background:#1e293b; color:#fff;">colher de cafe</option>
-                                                   <option value="fatia(s)" style="background:#1e293b; color:#fff;">fatia(s)</option>
+                                                    <option value="fatia(s)" style="background:#1e293b; color:#fff;">fatia(s)</option>
                                                 </select>
                                             </div>
                                         </div>
                                         
+                                        <div style="display:flex; gap:15px; margin-top:5px;">
+                                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.85rem; color:#fff;">
+                                                <input type="radio" name="meal-target-${idx}" value="opt1" id="meal-opt1-${idx}" checked> Opção 1
+                                            </label>
+                                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.85rem; color:#fff;">
+                                                <input type="radio" name="meal-target-${idx}" value="opt2" id="meal-opt2-${idx}"> Opção 2
+                                            </label>
+                                        </div>
+
                                         <div id="selected-food-display-${idx}" style="display:none; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; border:1px solid var(--success);">
                                             <!-- Alimento selecionado aparecera aqui -->
                                         </div>
 
                                         <button class="btn btn-primary btn-sm" onclick="app.addSelectedFoodToMeal(${idx})" style="width:100%; height:40px; background:var(--success); border:none;">
-                                            <i class="fas fa-plus"></i> Adicionar à Refeição
+                                            <i class="fas fa-plus"></i> Adicionar
                                         </button>
                                     </div>
                                 </div>
                                 
-                                <div>
-                                    <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Resumo da Refeição</label>
-                                    <textarea id="meal-items-${idx}" placeholder="Os alimentos inseridos aparecerao aqui..." oninput="app.editingMeal.meals[${idx}].items = this.value" onblur="app.renderMealEditor()"
-                                        style="width:100%; min-height:120px; background:rgba(0,0,0,0.2); color:rgba(255,255,255,0.95); border:1px solid rgba(255,255,255,0.05); border-radius:12px; padding:15px; font-family:inherit; resize:vertical; line-height:1.6; font-size:0.95rem;">${m.items}</textarea>
-                                </div>
-                                ${mTotal.kcal > 0 ? `
-                                    <div class="nutrition-summary">
-                                        <span class="nu-tag nu-kcal"><strong>${Math.round(mTotal.kcal)}</strong> kcal</span>
-                                        <span class="nu-tag nu-prot"><strong>${Math.round(mTotal.prot)}g</strong> Prot</span>
-                                        <span class="nu-tag nu-carb"><strong>${Math.round(mTotal.carb)}g</strong> Carb</span>
-                                        <span class="nu-tag nu-fat"><strong>${Math.round(mTotal.fat)}g</strong> Gord</span>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                                    <div>
+                                        <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Opção 1</label>
+                                        <textarea id="meal-items-${idx}" oninput="app.editingMeal.meals[${idx}].items = this.value" onblur="app.renderMealEditor()"
+                                            style="width:100%; min-height:100px; background:rgba(0,0,0,0.2); color:#fff; border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:10px; font-size:0.85rem;">${m.items}</textarea>
+                                        ${mTotal.kcal > 0 ? `<div style="font-size:0.75rem; color:var(--success); margin-top:5px;">${Math.round(mTotal.kcal)} kcal</div>` : ''}
                                     </div>
-                                ` : ''}
+                                    <div>
+                                        <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Opção 2</label>
+                                        <textarea id="meal-items2-${idx}" oninput="app.editingMeal.meals[${idx}].items2 = this.value" onblur="app.renderMealEditor()"
+                                            style="width:100%; min-height:100px; background:rgba(0,0,0,0.2); color:#fff; border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:10px; font-size:0.85rem;">${m.items2}</textarea>
+                                        ${mTotal2.kcal > 0 ? `<div style="font-size:0.75rem; color:#60a5fa; margin-top:5px;">${Math.round(mTotal2.kcal)} kcal</div>` : ''}
+                                    </div>
+                                </div>
                             </div>
                         `;
                 }).join('')}
@@ -5200,7 +5221,7 @@ Equipa KandalGym`;
     }
 
     addMealToEditor() {
-        this.editingMeal.meals.push({ time: '08:00', name: '', items: '' });
+        this.editingMeal.meals.push({ time: '08:00', name: '', items: '', items2: '' });
         this.renderMealEditor();
     }
 
@@ -5216,12 +5237,21 @@ Equipa KandalGym`;
         const unit = document.getElementById(`food-unit-${mealIdx}`).value;
         const measure = qty ? `${qty} ${unit}` : 'q.b.';
 
-        const textarea = document.getElementById(`meal-items-${mealIdx}`);
+        // Verificar qual opcao esta selecionada
+        const opt2Radio = document.getElementById(`meal-opt2-${mealIdx}`);
+        const isOpt2 = opt2Radio && opt2Radio.checked;
+        const textareaId = isOpt2 ? `meal-items2-${mealIdx}` : `meal-items-${mealIdx}`;
+
+        const textarea = document.getElementById(textareaId);
         const currentVal = textarea.value.trim();
         const newVal = currentVal ? `${currentVal}\n- ${foodName}: ${measure}` : `- ${foodName}: ${measure}`;
 
         textarea.value = newVal;
-        this.editingMeal.meals[mealIdx].items = newVal;
+        if (isOpt2) {
+            this.editingMeal.meals[mealIdx].items2 = newVal;
+        } else {
+            this.editingMeal.meals[mealIdx].items = newVal;
+        }
 
         // Reset campos
         hiddenInput.value = "";
@@ -8283,84 +8313,58 @@ Equipa KandalGym`;
             <h3 style="color: #911B2B; border-bottom: 1px solid #eee; padding-bottom: 5px; margin: 20px 0 15px 0;">${mealPlan.title || 'Plano Alimentar'}</h3>
         `;
 
-        mealPlan.meals.forEach(m => {
-            const mN = this.getNutritionFromText(m.items);
-
-            // Limpar o texto para o PDF (remover links e linha tecnica de macros)
-            let displayItems = m.items || '';
-            const lines = displayItems.split('\n');
+        const buildMealItemsHtml = (items) => {
+            if (!items || !items.trim()) return { normalText: '', recipeDetailsPdf: '' };
+            const lines = items.split('\n');
             const processedLines = [];
             let recipeDetailsPdf = '';
-
             lines.forEach(line => {
-                if (line.toLowerCase().includes('(valores:') || line.toLowerCase().includes('youtube.com') || line.toLowerCase().includes('youtu.be')) {
-                    return;
-                }
-
+                if (line.toLowerCase().includes('(valores:') || line.toLowerCase().includes('youtube.com') || line.toLowerCase().includes('youtu.be')) return;
                 const recipeMatch = line.match(/^-?\s*Receita:\s*(.*?)\s*\(\s*(\d+(?:\.\d+)?)\s*dose\(s\)\)/i);
                 if (recipeMatch) {
                     const recipeName = recipeMatch[1].trim();
                     const portions = parseFloat(recipeMatch[2]) || 1;
                     const recipe = (this.state.recipes || []).find(r => r.name.toLowerCase() === recipeName.toLowerCase());
-                    
                     if (recipe) {
-                        const portionsYield = recipe.portions || 1;
-                        const factor = portions / portionsYield;
-                        
-                        recipeDetailsPdf += `
-                            <div style="margin-top: 10px; border-left: 3px solid #911B2B; padding-left: 10px; background: #fafafa; padding-top: 5px; padding-bottom: 5px; margin-bottom: 10px;">
-                                <strong style="font-size: 13px; color: #911B2B;">Receita: ${recipe.name} (${portions} dose(s))</strong>
-                                <div style="font-size: 11px; margin-top: 5px; font-weight: bold; color: #555;">Ingredientes:</div>
-                                <ul style="margin: 3px 0 8px 0; padding-left: 15px; font-size: 11px; line-height: 1.4; color: #333;">
-                                    ${recipe.ingredients && recipe.ingredients.length > 0 ? recipe.ingredients.map(ing => {
-                                        let displayAmount = ing.amount || '';
-                                        if (displayAmount) {
-                                            const amountMatch = displayAmount.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
-                                            if (amountMatch) {
-                                                const scaledNum = parseFloat(amountMatch[1]) * factor;
-                                                const unit = amountMatch[2].trim();
-                                                const unitLower = unit.toLowerCase();
-                                                let formattedNum;
-                                                if (unitLower === 'g' || unitLower === 'ml' || unitLower === 'l' || unitLower === 'gr') {
-                                                    formattedNum = Math.round(scaledNum);
-                                                } else {
-                                                    formattedNum = Number(scaledNum.toFixed(1));
-                                                }
-                                                displayAmount = `${formattedNum} ${unit}`;
-                                            }
-                                        }
-                                        return `<li><strong>${ing.name}</strong>${displayAmount ? `: ${displayAmount}` : ''}</li>`;
-                                    }).join('') : '<li>Sem ingredientes</li>'}
-                                </ul>
-                                ${recipe.description ? `
-                                    <div style="font-size: 11px; font-weight: bold; color: #555;">Preparação:</div>
-                                    <div style="font-size: 11px; line-height: 1.4; color: #333; white-space: pre-wrap; margin-top: 3px;">${recipe.description}</div>
-                                ` : ''}
-                            </div>
-                        `;
+                        const factor = portions / (recipe.portions || 1);
+                        recipeDetailsPdf += `<div style="margin-top:10px; border-left:3px solid #911B2B; padding-left:10px; background:#fafafa; padding:5px 10px; margin-bottom:10px;"><strong style="font-size:13px; color:#911B2B;">Receita: ${recipe.name} (${portions} dose(s))</strong><div style="font-size:11px; margin-top:5px; font-weight:bold; color:#555;">Ingredientes:</div><ul style="margin:3px 0 8px 0; padding-left:15px; font-size:11px; line-height:1.4; color:#333;">${recipe.ingredients && recipe.ingredients.length > 0 ? recipe.ingredients.map(ing => { let da = ing.amount || ''; if (da) { const am = da.match(/^(\d+(?:\.\d+)?)\s*(.*)$/); if (am) { const sn = parseFloat(am[1]) * factor; const u = am[2].trim(); da = `${(['g','ml','l','gr'].includes(u.toLowerCase()) ? Math.round(sn) : Number(sn.toFixed(1)))} ${u}`; } } return `<li><strong>${ing.name}</strong>${da ? ': ' + da : ''}</li>`; }).join('') : '<li>Sem ingredientes</li>'}</ul>${recipe.description ? `<div style="font-size:11px; font-weight:bold; color:#555;">Preparação:</div><div style="font-size:11px; line-height:1.4; color:#333; white-space:pre-wrap; margin-top:3px;">${recipe.description}</div>` : ''}</div>`;
                         return;
                     }
                 }
                 processedLines.push(line);
             });
+            return { normalText: processedLines.join('\n').trim(), recipeDetailsPdf };
+        };
 
-            const normalText = processedLines.join('\n').trim();
+        mealPlan.meals.forEach(m => {
+            const mN1 = this.getNutritionFromText(m.items);
+            const hasOpt2 = (m.items2 || '').trim().length > 0;
+            const mN2 = hasOpt2 ? this.getNutritionFromText(m.items2) : null;
+            const { normalText: nt1, recipeDetailsPdf: rd1 } = buildMealItemsHtml(m.items);
+            const { normalText: nt2, recipeDetailsPdf: rd2 } = buildMealItemsHtml(m.items2 || '');
 
             htmlContent += `
                 <div style="margin-bottom: 20px; page-break-inside: avoid;">
                     <div style="background: #911B2B; color: white; padding: 8px 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
                         <span>${m.time} - ${m.name}</span>
-                        ${mN.kcal > 0 ? `<span style="font-size: 12px;">${Math.round(mN.kcal)} kcal</span>` : ''}
                     </div>
-                    <div style="padding: 12px; border: 1px solid #eee; border-top: none; font-size: 14px; line-height: 1.6;">
-                        ${normalText ? `<div style="white-space: pre-wrap; margin-bottom: 10px;">${normalText}</div>` : ''}
-                        ${recipeDetailsPdf}
+                    <div style="border: 1px solid #eee; border-top: none;">
+                        ${hasOpt2 ? '<div style="background:#f0fdf4; padding:4px 12px; font-size:11px; font-weight:bold; color:#16a34a; border-bottom:1px solid #eee;">OPÇÃO 1</div>' : ''}
+                        <div style="padding: 12px; font-size: 14px; line-height: 1.6;">
+                            ${nt1 ? `<div style="white-space: pre-wrap; margin-bottom: 10px;">${nt1}</div>` : ''}
+                            ${rd1}
+                        </div>
+                        ${mN1.kcal > 0 ? `<div style="padding:5px 12px; background:#fefefe; border-top:1px solid #eee; font-size:11px; color:#666;"><strong>Macros Opção 1:</strong> Kcal: ${Math.round(mN1.kcal)} | Prot: ${Math.round(mN1.prot)}g | Carb: ${Math.round(mN1.carb)}g | Gord: ${Math.round(mN1.fat)}g</div>` : ''}
+
+                        ${hasOpt2 ? `
+                        <div style="padding:6px 12px; background:#eff6ff; border-top:2px dashed #bfdbfe; font-size:11px; font-weight:bold; color:#2563eb;">OU &nbsp;&nbsp; OPÇÃO 2</div>
+                        <div style="padding: 12px; font-size: 14px; line-height: 1.6;">
+                            ${nt2 ? `<div style="white-space: pre-wrap; margin-bottom: 10px;">${nt2}</div>` : ''}
+                            ${rd2}
+                        </div>
+                        ${mN2 && mN2.kcal > 0 ? `<div style="padding:5px 12px; background:#fefefe; border-top:1px solid #eee; font-size:11px; color:#666;"><strong>Macros Opção 2:</strong> Kcal: ${Math.round(mN2.kcal)} | Prot: ${Math.round(mN2.prot)}g | Carb: ${Math.round(mN2.carb)}g | Gord: ${Math.round(mN2.fat)}g</div>` : ''}
+                        ` : ''}
                     </div>
-                    ${mN.kcal > 0 ? `
-                    <div style="padding: 5px 12px; background: #fefefe; border: 1px solid #eee; border-top: none; font-size: 11px; color: #666;">
-                        <strong>Macros:</strong> Prot: ${Math.round(mN.prot)}g | Carb: ${Math.round(mN.carb)}g | Gord: ${Math.round(mN.fat)}g
-                    </div>
-                    ` : ''}
                 </div>
             `;
         });
