@@ -928,10 +928,14 @@ class FitnessApp {
                         console.log('Utilizador migrado para Firebase Auth:', email);
                     } catch (createError) {
                         if (createError.code === 'auth/email-already-in-use') {
-                            // Esta no Firebase Auth mas password errada
-                            throw { code: 'auth/wrong-password' };
+                            // Esta no Firebase Auth mas a password errada no Firebase.
+                            // Como a password coincide com a base de dados (legacyUser = true),
+                            // permitimos o login em modo legado (bypass do Firebase Auth).
+                            console.warn('Firebase Auth password desync. Permitindo login legado para:', email);
+                            // Continua sem throw
+                        } else {
+                            throw createError;
                         }
-                        throw createError;
                     }
                 } else {
                     throw { code: 'auth/wrong-password' };
