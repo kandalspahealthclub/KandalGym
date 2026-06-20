@@ -11011,7 +11011,7 @@ Equipa KandalGym`;
     }
 
     getDayName(dayIndex) {
-        const days = ['Domingo', 'Segunda-feira', 'terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'sábado'];
+        const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
         return days[dayIndex];
     }
 
