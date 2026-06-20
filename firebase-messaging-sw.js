@@ -1,7 +1,7 @@
 // Service Worker - KandalGym PWA Cache
 // Push notifications removidas (a reimplementar futuramente)
 
-const CACHE_NAME = 'kandalgym-v89';
+const CACHE_NAME = 'kandalgym-v90';
 const ASSETS = [
     './',
     './index.html',
@@ -13,7 +13,7 @@ const ASSETS = [
     'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
     'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
-    'https://unpkg.com/jsqr/dist/jsQR.js'
+    'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js'
 ];
 
 self.addEventListener('install', event => {
