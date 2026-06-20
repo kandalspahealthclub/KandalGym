@@ -1938,3 +1938,19 @@ body.light-theme h2, body.light-theme h3, body.light-theme h4 {
     color: #0f1218;
 }
 
+
+/* --- Correções de Estilos Inline para o Tema Claro --- */
+body.light-theme [style*='color:#fff'],
+body.light-theme [style*='color: #fff'],
+body.light-theme [style*='color:#ffffff'],
+body.light-theme [style*='color: white'] {
+    color: #0f1218 !important;
+}
+
+body.light-theme [style*='background:rgba(0,0,0,0.2)'],
+body.light-theme [style*='background:rgba(0,0,0,0.3)'],
+body.light-theme [style*='background:rgba(0,0,0,0.4)'],
+body.light-theme [style*='background: rgba(0,0,0,0.'] {
+    background: rgba(0,0,0,0.05) !important;
+}
+
