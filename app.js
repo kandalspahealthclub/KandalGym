@@ -38,6 +38,9 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
+        if (localStorage.getItem('kg_theme') === 'light') {
+            document.body.classList.add('light-theme');
+        }
         this.appVersion = '2026.05.06.v90'; // Versão de controlo para Hard Reset v90
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
@@ -6522,6 +6525,14 @@ Equipa KandalGym`;
                     <small style="color:var(--text-muted);">Mantenha ou altere para uma nova.</small>
                 </div>
 
+                <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px dashed var(--surface-border);">
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Tema da Aplicação</label>
+                    <select id="edit-theme" style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
+                        <option value="dark" ${localStorage.getItem('kg_theme') !== 'light' ? 'selected' : ''}>Original (Escuro)</option>
+                        <option value="light" ${localStorage.getItem('kg_theme') === 'light' ? 'selected' : ''}>Claro</option>
+                    </select>
+                </div>
+
                 ${(() => {
                 const qrInfo = (this.state.qrClients || []).find(q => q.clientId === user.id || q.nome === user.name);
                 if (!qrInfo && this.role === 'client') return ''; // Só mostra pros clientes se já tiverem QR
@@ -6715,6 +6726,17 @@ Equipa KandalGym`;
                 const profInput = document.getElementById('edit-profession');
                 if (profInput) user.profession = profInput.value;
                 if (this.currentUser.photoUrl) user.photoUrl = this.currentUser.photoUrl;
+
+                const themeSelect = document.getElementById('edit-theme');
+                if (themeSelect) {
+                    const selectedTheme = themeSelect.value;
+                    localStorage.setItem('kg_theme', selectedTheme);
+                    if (selectedTheme === 'light') {
+                        document.body.classList.add('light-theme');
+                    } else {
+                        document.body.classList.remove('light-theme');
+                    }
+                }
 
                 // Atualizar utilizador atual na sessão
                 this.currentUser = { ...user };
