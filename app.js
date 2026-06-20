@@ -784,9 +784,6 @@ class FitnessApp {
                         <input type="email" id="recovery-email" placeholder="O seu email de registo" required>
                     </div>
 
-                    <button class="btn btn-primary" style="width:100%;" onclick="app.handlePasswordRecovery()">
-                        Solicitar Recuperação
-                    </button>
 
                     <div style="margin-top:1.5rem; text-align:center;">
                         <button onclick="app.contactSupportViaWA()" class="btn btn-ghost" style="color:#25d366; font-size:0.85rem; border: 1px solid rgba(37, 211, 102, 0.2); width: 100%;">
