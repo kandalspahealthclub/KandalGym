@@ -1899,6 +1899,7 @@ option {
     animation: selectBounce 0.3s ease;
 }
 
+
 /* --- Light Theme Overrides --- */
 body.light-theme {
     --background: #f8fafc;
@@ -1909,48 +1910,51 @@ body.light-theme {
     color-scheme: light;
     background-image: linear-gradient(rgba(248, 250, 252, 0.92), rgba(248, 250, 252, 0.92)), url('hero1.png');
 }
-body.light-theme .glass-card {
+body.light-theme #app .glass-card {
     background: rgba(255, 255, 255, 0.6);
     border: 1px solid rgba(0,0,0,0.1);
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
-body.light-theme .glass-panel {
+body.light-theme #app .glass-panel {
     background: rgba(255, 255, 255, 0.85);
     border: 1px solid rgba(0,0,0,0.1);
 }
-body.light-theme input, body.light-theme select, body.light-theme textarea {
+body.light-theme #app input, body.light-theme #app select, body.light-theme #app textarea {
     background: rgba(0, 0, 0, 0.05) !important;
     color: #0f1218 !important;
     border-color: rgba(0,0,0,0.2);
 }
-body.light-theme select option {
+body.light-theme #app select option {
     background-color: #ffffff !important;
     color: #0f1218 !important;
 }
-body.light-theme .search-bar {
+body.light-theme #app .search-bar {
     background: rgba(0,0,0,0.05) !important;
     color: #0f1218;
 }
-body.light-theme header, body.light-theme .mobile-nav {
+body.light-theme #app header, body.light-theme #app .mobile-nav {
     background: rgba(248, 250, 252, 0.9) !important;
 }
-body.light-theme h2, body.light-theme h3, body.light-theme h4 {
+body.light-theme #app h2, body.light-theme #app h3, body.light-theme #app h4 {
     color: #0f1218;
 }
 
-
-/* --- Correções de Estilos Inline para o Tema Claro --- */
-body.light-theme [style*='color:#fff'],
-body.light-theme [style*='color: #fff'],
-body.light-theme [style*='color:#ffffff'],
-body.light-theme [style*='color: white'] {
+/* --- Macros no Tema Claro --- */
+body.light-theme #app .nu-tag strong {
     color: #0f1218 !important;
 }
 
-body.light-theme [style*='background:rgba(0,0,0,0.2)'],
-body.light-theme [style*='background:rgba(0,0,0,0.3)'],
-body.light-theme [style*='background:rgba(0,0,0,0.4)'],
-body.light-theme [style*='background: rgba(0,0,0,0.'] {
-    background: rgba(0,0,0,0.05) !important;
+/* --- Correcoes de Estilos Inline para o Tema Claro --- */
+body.light-theme #app [style*='color:#fff'],
+body.light-theme #app [style*='color: #fff'],
+body.light-theme #app [style*='color:#ffffff'],
+body.light-theme #app [style*='color: white'] {
+    color: #0f1218 !important;
 }
 
+body.light-theme #app [style*='background:rgba(0,0,0,0.2)'],
+body.light-theme #app [style*='background:rgba(0,0,0,0.3)'],
+body.light-theme #app [style*='background:rgba(0,0,0,0.4)'],
+body.light-theme #app [style*='background: rgba(0,0,0,0.'] {
+    background: rgba(0,0,0,0.05) !important;
+}
