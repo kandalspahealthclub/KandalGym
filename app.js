@@ -6533,6 +6533,18 @@ Equipa KandalGym`;
                     </select>
                 </div>
 
+                <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px dashed var(--surface-border);">
+                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Idioma / Language</label>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn btn-secondary" style="flex:1; border: ${(!document.cookie.includes('googtrans=')) ? '1px solid var(--primary)' : '1px solid transparent'}" onclick="document.cookie='googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; document.cookie='googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=.' + document.domain + '; path=/;'; localStorage.removeItem('kandalgym_lang'); location.reload();">
+                            🇵🇹 Português
+                        </button>
+                        <button class="btn btn-secondary" style="flex:1; border: ${document.cookie.includes('googtrans=/pt/en') ? '1px solid var(--primary)' : '1px solid transparent'}" onclick="document.cookie='googtrans=/pt/en; path=/;'; document.cookie='googtrans=/pt/en; domain=.' + document.domain + '; path=/;'; localStorage.setItem('kandalgym_lang', 'en'); location.reload();">
+                            🇬🇧 English
+                        </button>
+                    </div>
+                </div>
+
                 ${(() => {
                 const qrInfo = (this.state.qrClients || []).find(q => q.clientId === user.id || q.nome === user.name);
                 if (!qrInfo && this.role === 'client') return ''; // Só mostra pros clientes se já tiverem QR
