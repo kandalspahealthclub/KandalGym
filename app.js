@@ -7574,7 +7574,23 @@ Equipa KandalGym`;
                 if (id === this.currentUser.id) return alert('Não pode remover a sua própria conta enquanto estiver logado.');
                 this.state.admins = this.state.admins.filter(u => u.id !== id);
             } else if (type === 'teacher') {
-                this.state.teachers = this.state.teachers.filter(u => u.id !== id);
+                const associatedClients = this.state.clients.filter(c => c.teacherId === id);
+                if (associatedClients.length > 0) {
+                    const otherTeachers = this.state.teachers.filter(t => t.id !== id);
+                    if (otherTeachers.length === 0) {
+                        if (confirm(`O professor ${name} tem ${associatedClients.length} aluno(s) associado(s), mas não existem outros professores cadastrados. Se prosseguir, estes alunos ficarão sem professor associado. Deseja continuar?`)) {
+                            associatedClients.forEach(c => { c.teacherId = null; });
+                            this.state.teachers = this.state.teachers.filter(u => u.id !== id);
+                        } else {
+                            return;
+                        }
+                    } else {
+                        this.showDeleteTeacherReassignModal(id, name, associatedClients, otherTeachers);
+                        return;
+                    }
+                } else {
+                    this.state.teachers = this.state.teachers.filter(u => u.id !== id);
+                }
             } else {
                 // Eliminar o cliente
                 this.state.clients = this.state.clients.filter(u => u.id !== id);
@@ -7600,6 +7616,62 @@ Equipa KandalGym`;
             } else {
                 this.renderContent();
             }
+        }
+    }
+
+    showDeleteTeacherReassignModal(teacherId, teacherName, associatedClients, otherTeachers) {
+        const options = otherTeachers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+        const clientNames = associatedClients.map(c => c.name).join(', ');
+
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h2>Eliminar Professor e Reassociar Alunos</h2>
+                <p>O professor <strong>${teacherName}</strong> tem <strong>${associatedClients.length}</strong> aluno(s) associado(s): <br><small style="color:var(--text-muted);">${clientNames}</small></p>
+                <p>Selecione o novo professor para estes alunos:</p>
+                
+                <select id="reassign-teacher-select" style="width:100%; padding:10px; border-radius:8px; margin-bottom:1.5rem; background:#1e293b; color:white; border:1px solid #444;">
+                    ${options}
+                    <option value="none">Deixar alunos sem professor (Nenhum)</option>
+                </select>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px;">
+                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
+                    <button class="btn btn-danger" onclick="app.executeDeleteTeacherWithReassignment(${teacherId}, '${teacherName.replace(/'/g, "\\'")}')">Eliminar e Atualizar Alunos</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    executeDeleteTeacherWithReassignment(teacherId, teacherName) {
+        const select = document.getElementById('reassign-teacher-select');
+        if (!select) return;
+        const newTeacherId = select.value;
+        
+        // Remove the modal
+        const modal = select.closest('.modal-overlay');
+        if (modal) modal.remove();
+
+        const associatedClients = this.state.clients.filter(c => c.teacherId === teacherId);
+        
+        if (newTeacherId === 'none') {
+            associatedClients.forEach(c => { c.teacherId = null; });
+        } else {
+            const newTId = Number(newTeacherId);
+            associatedClients.forEach(c => { c.teacherId = newTId; });
+        }
+
+        // Delete the teacher
+        this.state.teachers = this.state.teachers.filter(u => u.id !== teacherId);
+        this.saveState();
+        alert('Professor eliminado com sucesso e alunos reassociados!');
+        
+        if (this.activeView === 'users') {
+            this.switchAdminTab('teachers');
+        } else {
+            this.renderContent();
         }
     }
 
