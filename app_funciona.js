@@ -38,9 +38,6 @@ window.onerror = function (message, source, lineno, colno, error) {
 
 class FitnessApp {
     constructor() {
-        if (localStorage.getItem('kg_theme') === 'light') {
-            document.body.classList.add('light-theme');
-        }
         this.appVersion = '2026.05.06.v90'; // Versão de controlo para Hard Reset v90
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
@@ -192,6 +189,9 @@ class FitnessApp {
             }
         }, 8000);
 
+        // --- SISTEMA DE SCANNER GLOBAL ROBUSTO ---
+        this.initGlobalScanner();
+
         // --- CANAL DE COMUNICAÇÃO PARA MONITOR ---
         this.accessChannel = new BroadcastChannel("kandal_access");
         this.accessChannel.onmessage = (ev) => {
@@ -204,18 +204,58 @@ class FitnessApp {
             }
         };
 
-        window.addEventListener('message', (ev) => {
-            if (ev.data && ev.data.type === 'kandal_scan') {
-                this.processarLeituraQR(ev.data.code);
-            }
-        });
-
         // --- SERIAL SCANNER CONNECTION ---
         this.serialScannerPort = null;
         this.serialScannerReader = null;
-        this.monitorScannerListenerAttached = false;
     }
 
+    initGlobalScanner() {
+        // Criar um input invisível para capturar o scanner em qualquer menu
+        let input = document.getElementById('global-scanner-input');
+        if (!input) {
+            input = document.createElement('input');
+            input.id = 'global-scanner-input';
+            input.type = 'text';
+            input.setAttribute('inputmode', 'none'); // Previne abertura do teclado virtual em mobile
+            input.style.cssText = 'position:fixed; top:-1000px; left:-1000px; opacity:0; z-index:-1;';
+            document.body.appendChild(input);
+        }
+
+        input.onkeyup = (e) => {
+            if (e.key === 'Enter') {
+                const val = input.value.trim().toUpperCase();
+                if (val.length >= 2) {
+                    console.log("Scanner detetado (Global):", val);
+                    this.processarLeituraQR(val);
+                }
+                input.value = '';
+            }
+        };
+
+        // Gestor de Foco Global (apenas para Desktop/Receção)
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        if (!isMobile) {
+            document.addEventListener('mousedown', (e) => {
+                // Se clicar em algo que precise de foco (inputs, botoes), não interferimos
+                const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'];
+                if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button') || e.target.closest('a')) {
+                    return;
+                }
+
+                // Caso contrário, devolvemos o foco ao scanner após um pequeno delay
+                setTimeout(() => {
+                    const active = document.activeElement;
+                    if (!active || !['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) {
+                        input.focus({ preventScroll: true });
+                    }
+                }, 200);
+            });
+
+            // Foco inicial
+            setTimeout(() => input.focus({ preventScroll: true }), 1000);
+        }
+    }
 
     checkForForceUpdate() {
         try {
@@ -541,12 +581,6 @@ class FitnessApp {
                 this.hasLoadedData = true;
 
                 const data = snapshot.val();
-                console.log("[Firebase] Dados recebidos:", {
-                    has_data: !!data,
-                    qrClients: data?.qrClients ? Object.keys(data.qrClients).length : 0,
-                    clients: data?.clients ? Object.keys(data.clients).length : 0
-                });
-                
                 // Só sobrescreve o estado local se não estivermos no meio de uma gravação nossa
                 // para evitar conflitos de latência (compensation)
                 if (data && !this.isSaving) {
@@ -563,8 +597,9 @@ class FitnessApp {
                         this.state[coll] = Object.values(this.state[coll]);
                     }
                 });
-                
-                console.log("[Firebase] Após processamento - qrClients:", this.state.qrClients ? this.state.qrClients.length : 0);
+
+                const dictCollections = ['trainingPlans', 'archivedTrainingPlans', 'predefinedPlans', 'mealPlans', 'evaluations', 'trainingHistory', 'messages', 'anamnesis', 'enrollments', 'planRestrictions'];
+                dictCollections.forEach(coll => { if (!this.state[coll]) this.state[coll] = {}; });
 
                 // Integridade das restrições
                 if (Object.keys(this.state.planRestrictions || {}).length === 0) {
@@ -740,10 +775,9 @@ class FitnessApp {
                         <i class="fas fa-envelope"></i>
                         <input type="email" id="login-email" placeholder="Email" value="${savedCreds.email || ''}" required>
                     </div>
-                    <div class="input-icon-group" style="position: relative;">
+                    <div class="input-icon-group">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="login-pass" placeholder="Password" required style="padding-right: 40px;">
-                        <i class="fas fa-eye" id="toggle-pass" style="position: absolute; right: 15px; left: auto; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted); opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7" onclick="const pwd = document.getElementById('login-pass'); if(pwd.type === 'password') { pwd.type = 'text'; this.classList.remove('fa-eye'); this.classList.add('fa-eye-slash'); } else { pwd.type = 'password'; this.classList.remove('fa-eye-slash'); this.classList.add('fa-eye'); }"></i>
+                        <input type="password" id="login-pass" placeholder="Password" required>
                     </div>
 
                     <div style="display:flex; align-items:center; gap:8px; margin:0.2rem 0 1.2rem 4px; cursor:pointer;">
@@ -787,6 +821,9 @@ class FitnessApp {
                         <input type="email" id="recovery-email" placeholder="O seu email de registo" required>
                     </div>
 
+                    <button class="btn btn-primary" style="width:100%;" onclick="app.handlePasswordRecovery()">
+                        Solicitar Recuperação
+                    </button>
 
                     <div style="margin-top:1.5rem; text-align:center;">
                         <button onclick="app.contactSupportViaWA()" class="btn btn-ghost" style="color:#25d366; font-size:0.85rem; border: 1px solid rgba(37, 211, 102, 0.2); width: 100%;">
@@ -928,14 +965,10 @@ class FitnessApp {
                         console.log('Utilizador migrado para Firebase Auth:', email);
                     } catch (createError) {
                         if (createError.code === 'auth/email-already-in-use') {
-                            // Esta no Firebase Auth mas a password errada no Firebase.
-                            // Como a password coincide com a base de dados (legacyUser = true),
-                            // permitimos o login em modo legado (bypass do Firebase Auth).
-                            console.warn('Firebase Auth password desync. Permitindo login legado para:', email);
-                            // Continua sem throw
-                        } else {
-                            throw createError;
+                            // Esta no Firebase Auth mas password errada
+                            throw { code: 'auth/wrong-password' };
                         }
+                        throw createError;
                     }
                 } else {
                     throw { code: 'auth/wrong-password' };
@@ -1179,9 +1212,6 @@ class FitnessApp {
 
     syncQRUsers() {
         if (!this.state.qrClients) this.state.qrClients = [];
-        console.log("[syncQRUsers] Iniciado. Clientes atuais:", this.state.qrClients.length);
-        console.log("[syncQRUsers] isLoggedIn:", this.isLoggedIn, "role:", this.role);
-        
         let changed = false;
 
         const hasAccess = (uid) => {
@@ -1192,29 +1222,23 @@ class FitnessApp {
 
         // Staff (Admins e Professores)
         const staff = [...(this.state.admins || []), ...(this.state.teachers || [])];
-        console.log("[syncQRUsers] Staff total:", staff.length);
         staff.forEach(s => {
             if (s && s.id && !hasAccess(s.id)) {
-                console.log(`[syncQRUsers] Ativando QR automático para Staff: ${s.name} (ID: ${s.id})`);
+                console.log(`Ativando QR automático para Staff: ${s.name}`);
                 this.enableQRForClient(s.id, false, true);
                 changed = true;
             }
         });
 
         // Alunos
-        const clients = this.state.clients || [];
-        console.log("[syncQRUsers] Clientes total:", clients.length);
-        clients.forEach(c => {
+        (this.state.clients || []).forEach(c => {
             if (c && c.id && !c.qrDisabled && !hasAccess(c.id)) {
-                console.log(`[syncQRUsers] Ativando QR automático para Cliente: ${c.name} (ID: ${c.id})`);
                 this.enableQRForClient(c.id, false, false);
                 changed = true;
             }
         });
 
-        console.log("[syncQRUsers] Concluído. Mudanças:", changed, "Total QR:", this.state.qrClients.length);
         if (changed && (this.role === 'admin' || this.role === 'teacher')) {
-            console.log("[syncQRUsers] Guardando estado...");
             this.saveState();
         }
     }
@@ -2636,7 +2660,7 @@ Equipa KandalGym`;
                 
                 <!-- Input do Scanner de Hardware Escondido -->
                 <input type="text" id="local-monitor-scanner-input" autocomplete="off" 
-                    style="position: fixed; top: -100px; left: -100px; opacity: 0; width: 1px; height: 1px; border: none; padding: 0;">
+                    style="position: absolute; top: -100px; left: -100px; opacity: 0; width: 1px; height: 1px;">
             </div>
         `;
 
@@ -2644,123 +2668,264 @@ Equipa KandalGym`;
         setTimeout(() => {
             const hwInput = document.getElementById('local-monitor-scanner-input');
             if (hwInput) {
-                console.log("[renderMonitorView] Input encontrado, configurando scanner");
-                
-                // Focar o input
                 hwInput.focus({ preventScroll: true });
                 
-                // Handler global keydown para capturar scanner
-                const handleKeyDown = (e) => {
-                    if (this.activeView !== 'monitor') return;
-                    
-                    // Se é Enter, processa o que está no input
+                // Tratar o keyup para processar a leitura
+                hwInput.onkeyup = (e) => {
                     if (e.key === 'Enter') {
                         const val = hwInput.value.trim().toUpperCase();
-                        console.log("[Scanner] Enter pressionado, valor:", val, "comprimento:", val.length);
                         if (val.length >= 2) {
-                            console.log("[Scanner] Processando QR:", val);
+                            // Feedback visual rápido
+                            const containerEl = document.getElementById('local-display-container');
+                            if (containerEl) {
+                                containerEl.style.border = '2px solid var(--primary)';
+                                setTimeout(() => containerEl.style.border = '1px solid var(--surface-border)', 500);
+                            }
                             this.processarLeituraQR(val);
                         }
                         hwInput.value = '';
-                        hwInput.focus({ preventScroll: true });
-                    } else if (e.key.length === 1 && e.target === hwInput) {
-                        // Deixa o input captar caracteres normalmente
-                        console.log("[Scanner] Char capturado no input:", e.key);
                     }
                 };
-                
-                hwInput.addEventListener('keydown', handleKeyDown);
-                
-                // Refocus ao clicar
-                document.addEventListener('click', (e) => {
-                    if (this.activeView === 'monitor') {
-                        // Não roubar focus se o utilizador clicou noutra caixa de texto
-                        if (e && e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
-                            return; // Permite escrever noutras caixas
-                        }
-                        setTimeout(() => {
-                            hwInput.focus({ preventScroll: true });
-                            console.log("[Scanner] Re-focado após clique");
-                        }, 50);
+
+                // Manter foco persistente apenas se NÃO estivermos a interagir com outros campos
+                document.onmousedown = (e) => {
+                    if (this.activeView !== 'monitor' || !hwInput) return;
+
+                    const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'];
+                    if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button') || e.target.closest('a')) {
+                        return;
                     }
-                });
-                
-                console.log("[renderMonitorView] Scanner configurado com sucesso");
-            } else {
-                console.log("[renderMonitorView] ERRO: Input não encontrado!");
+
+                    setTimeout(() => {
+                        if (this.activeView === 'monitor' && hwInput && document.activeElement.tagName !== 'INPUT') {
+                            hwInput.focus({ preventScroll: true });
+                        }
+                    }, 100);
+                };
             }
-        }, 100);
+        }, 500);
     }
 
     openAccessMonitor() {
         const monitorWindow = window.open('', 'KandalMonitor', 'width=1200,height=800');
         if (!monitorWindow) return alert("Por favor, permita pop-ups para abrir o monitor.");
 
-        const css = 
-            ':root{--primary:#911B2B;--secondary:#10b981;--danger:#ef4444;--bg:#0f1218;--text:#f8fafc}' +
-            '*{margin:0;padding:0;box-sizing:border-box;font-family:"Outfit",sans-serif}' +
-            'body{background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden}' +
-            '.container{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;text-align:center}' +
-            '.logo{width:380px;opacity:0.85;animation:pulse 3s infinite ease-in-out;margin-bottom:2rem}' +
-            '.user-card{display:none;flex-direction:column;align-items:center;animation:slideUp 0.5s ease}' +
-            '.photo-frame{width:300px;height:300px;border-radius:50%;border:12px solid var(--primary);overflow:hidden;background:#1e293b;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:center}' +
-            '.photo-frame img{width:100%;height:100%;object-fit:cover}' +
-            '.photo-frame i{font-size:7rem;color:#334155}' +
-            '.name{font-size:4.5rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin:0}' +
-            '.status-badge{font-size:2rem;font-weight:700;padding:1rem 2.5rem;border-radius:50px;margin-top:1rem}' +
-            '.bg-valid{background:linear-gradient(135deg,#064e3b,#065f46);color:#34d399}' +
-            '.bg-invalid{background:linear-gradient(135deg,#7f1d1d,#991b1b);color:#fca5a5}' +
-            '@keyframes pulse{0%,100%{transform:scale(1);opacity:0.85}50%{transform:scale(1.04);opacity:1}}' +
-            '@keyframes slideUp{from{opacity:0;transform:translateY(80px)}to{opacity:1;transform:translateY(0)}}';
+        // Store reference for postMessage communication
+        this.monitorWindow = monitorWindow;
+
+        const css =
+            ':root { --primary: #911B2B; --secondary: #10b981; --danger: #ef4444; --bg: #0f1218; --text: #f8fafc; --accent: #c4a24d; } ' +
+            '* { margin: 0; padding: 0; box-sizing: border-box; font-family: \'Outfit\', sans-serif; } ' +
+            'body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; } ' +
+            '.container { text-align: center; width: 100%; height: calc(100vh - 48px); display: flex; flex-direction: column; align-items: center; justify-content: center; } ' +
+            '.logo { width: 380px; opacity: 0.85; animation: pulse 3s infinite ease-in-out; } ' +
+            '.user-card { display: none; flex-direction: column; align-items: center; animation: slideUp 0.5s cubic-bezier(0.23, 1, 0.32, 1); } ' +
+            '.photo-frame { width: 300px; height: 300px; border-radius: 50%; border: 12px solid var(--primary); overflow: hidden; background: #1e293b; margin-bottom: 1.5rem; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; } ' +
+            '.photo-frame img { width: 100%; height: 100%; object-fit: cover; } ' +
+            '.photo-frame i { font-size: 7rem; color: #334155; } ' +
+            '.name { font-size: 4.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin: 0; line-height: 1; } ' +
+            '.status-badge { font-size: 2rem; font-weight: 700; padding: 0.8rem 2.5rem; border-radius: 50px; margin-top: 1.2rem; } ' +
+            '.bg-valid { background: linear-gradient(135deg, #064e3b, #065f46); color: #34d399; } ' +
+            '.bg-invalid { background: linear-gradient(135deg, #7f1d1d, #991b1b); color: #fca5a5; } ' +
+            '.border-valid { border-color: #10b981 !important; color: #10b981; } ' +
+            '.border-invalid { border-color: #ef4444 !important; color: #ef4444; } ' +
+            '.debug-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 48px; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 0.8rem; color: rgba(255,255,255,0.5); border-top: 1px solid rgba(255,255,255,0.08); } ' +
+            '.debug-bar .code-lido { font-family: monospace; background: rgba(255,255,255,0.05); padding: 3px 10px; border-radius: 6px; color: #a78bfa; letter-spacing: 1px; } ' +
+            '.debug-bar .status-conn { display: flex; align-items: center; gap: 6px; } ' +
+            '.dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: blink 2s infinite; } ' +
+            '@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.04); opacity: 1; } } ' +
+            '@keyframes slideUp { from { opacity: 0; transform: translateY(80px); } to { opacity: 1; transform: translateY(0); } } ' +
+            '@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } } ' +
+            '@keyframes flash { 0% { background: rgba(145,27,43,0.3); } 100% { background: transparent; } }';
+
+        const script =
+            '(function() {' +
+            '  const bc = new BroadcastChannel("kandal_access");' +
+            '  let scanTimeout;' +
+            '  const hwInput = document.getElementById("monitor-scanner-input");' +
+            '  const debugCode = document.getElementById("debug-code");' +
+            '  const debugStatus = document.getElementById("debug-status");' +
+            '' +
+            '  function enviarCodigo(val) {' +
+            '    if (!val || val.length < 2) return;' +
+            '    if (debugCode) debugCode.textContent = val;' +
+            '    document.body.style.animation = "flash 0.4s ease";' +
+            '    setTimeout(() => { document.body.style.animation = ""; }, 400);' +
+            '    /* Tentar via postMessage (mais fiável que window.opener.app direto) */' +
+            '    try {' +
+            '      if (window.opener && !window.opener.closed) {' +
+            '        window.opener.postMessage({ type: "kandal_scan", code: val }, "*");' +
+            '      }' +
+            '    } catch(e) {}' +
+            '    /* Sempre enviar também via BroadcastChannel como fallback */' +
+            '    bc.postMessage({ type: "access_request", code: val });' +
+            '  }' +
+            '' +
+            '  hwInput.addEventListener("keydown", function(e) {' +
+            '    if (e.key === "Enter") {' +
+            '      const val = hwInput.value.trim().toUpperCase();' +
+            '      hwInput.value = "";' +
+            '      enviarCodigo(val);' +
+            '    }' +
+            '  });' +
+            '' +
+            '  /* Capturar também input rapid (scanner nao usa Enter em alguns modos) */' +
+            '  let scanBuffer = ""; let scanTimer;' +
+            '  document.addEventListener("keydown", function(e) {' +
+            '    if (e.target === hwInput) return;' +
+            '    if (e.key === "Enter" && scanBuffer.length >= 2) {' +
+            '      const code = scanBuffer.trim().toUpperCase();' +
+            '      scanBuffer = "";' +
+            '      clearTimeout(scanTimer);' +
+            '      enviarCodigo(code);' +
+            '    } else if (e.key.length === 1) {' +
+            '      scanBuffer += e.key;' +
+            '      clearTimeout(scanTimer);' +
+            '      scanTimer = setTimeout(() => { scanBuffer = ""; }, 500);' +
+            '    }' +
+            '  });' +
+            '' +
+            '  /* Auto-foco persistente no hwInput */' +
+            '  function keepFocus() { if (document.activeElement !== hwInput) hwInput.focus({ preventScroll: true }); }' +
+            '  setInterval(keepFocus, 1500);' +
+            '  setTimeout(keepFocus, 300);' +
+            '  document.addEventListener("click", () => setTimeout(keepFocus, 100));' +
+            '' +
+            '  /* Receber resultado da aplicação principal */' +
+            '  bc.onmessage = function(ev) {' +
+            '    if (!ev.data || ev.data.type !== "access_event") return;' +
+            '    const data = ev.data.data;' +
+            '    clearTimeout(scanTimeout);' +
+            '    if (debugStatus) debugStatus.textContent = data.valid ? "✓ Válido" : "✗ " + data.msg;' +
+            '    document.getElementById("standby").style.display = "none";' +
+            '    const ud = document.getElementById("user-display");' +
+            '    ud.style.display = "none"; void ud.offsetWidth; ud.style.display = "flex";' +
+            '    document.getElementById("user-name").innerText = data.name;' +
+            '    document.getElementById("user-name").className = "name " + (data.valid ? "border-valid" : "border-invalid");' +
+            '    const sb = document.getElementById("user-status-badge");' +
+            '    sb.innerText = data.msg.toUpperCase();' +
+            '    sb.className = "status-badge " + (data.valid ? "bg-valid" : "bg-invalid");' +
+            '    const frame = document.getElementById("user-photo-frame");' +
+            '    frame.className = "photo-frame " + (data.valid ? "border-valid" : "border-invalid");' +
+            '    const photo = document.getElementById("user-photo");' +
+            '    const icon = document.getElementById("user-icon");' +
+            '    if (data.photo) { photo.src = data.photo; photo.style.display = "block"; icon.style.display = "none"; }' +
+            '    else { photo.style.display = "none"; icon.style.display = "block"; }' +
+            '    scanTimeout = setTimeout(function() {' +
+            '      document.getElementById("standby").style.display = "block";' +
+            '      ud.style.display = "none";' +
+            '      if (debugStatus) debugStatus.textContent = "A aguardar leitura...";' +
+            '    }, 5000);' +
+            '  };' +
+            '' +
+            '  /* Receber via postMessage da janela principal */' +
+            '  window.addEventListener("message", function(ev) {' +
+            '    if (ev.data && ev.data.type === "kandal_access_event") {' +
+            '      bc.dispatchEvent ? null : null;' +
+            '      /* Simular como se fosse do BroadcastChannel */' +
+            '      bc.onmessage({ data: { type: "access_event", data: ev.data.data } });' +
+            '    }' +
+            '  });' +
+            '})();';
 
         const html =
-            '<!DOCTYPE html>' +
-            '<html><head>' +
-            '<meta charset="UTF-8">' +
-            '<title>Monitor Acesso</title>' +
+            '<html><head><title>KandalGym - Monitor de Acesso</title>' +
             '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">' +
             '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">' +
-            '<style>' + css + '</style>' +
-            '</head><body>' +
+            '<style>' + css + '</style></head><body>' +
             '<div class="container">' +
-            '<div id="standby" class="logo"><img src="logo.png" style="width:100%;filter:drop-shadow(0 0 30px rgba(145,27,43,0.3))"></div>' +
+            '<div id="standby" class="logo"><img src="logo.png" style="width:100%; filter: drop-shadow(0 0 30px rgba(145,27,43,0.3));"></div>' +
             '<div id="user-display" class="user-card">' +
-            '<div id="user-photo-frame" class="photo-frame"><img id="user-photo" src="" style="display:none"><i id="user-icon" class="fas fa-user"></i></div>' +
+            '<div id="user-photo-frame" class="photo-frame"><img id="user-photo" src="" style="display:none;"><i id="user-icon" class="fas fa-user"></i></div>' +
             '<h1 id="user-name" class="name">-</h1>' +
-            '<div id="user-status" class="status-badge">-</div>' +
-            '</div></div>' +
-            '<script>' +
-            '(function(){' +
-            'const bc=new BroadcastChannel("kandal_access");' +
-            'let timeout;' +
-            'console.log("[Monitor Remoto] BroadcastChannel criado");' +
-            'bc.onmessage=function(ev){' +
-            'console.log("[Monitor Remoto] Evento recebido:", ev.data);' +
-            'if(!ev.data||ev.data.type!=="access_event"){console.log("Tipo não é access_event");return;}' +
-            'const data=ev.data.data;' +
-            'clearTimeout(timeout);' +
-            'document.getElementById("standby").style.display="none";' +
-            'document.getElementById("user-display").style.display="flex";' +
-            'document.getElementById("user-name").innerText=data.name;' +
-            'document.getElementById("user-name").style.color=data.valid?"#34d399":"#fca5a5";' +
-            'document.getElementById("user-status").innerText=data.msg.toUpperCase();' +
-            'document.getElementById("user-status").className="status-badge "+(data.valid?"bg-valid":"bg-invalid");' +
-            'const frame=document.getElementById("user-photo-frame");' +
-            'frame.style.borderColor=data.valid?"#10b981":"#ef4444";' +
-            'const photo=document.getElementById("user-photo");' +
-            'const icon=document.getElementById("user-icon");' +
-            'if(data.photo){photo.src=data.photo;photo.style.display="block";icon.style.display="none"}' +
-            'else{photo.style.display="none";icon.style.display="block"}' +
-            'timeout=setTimeout(()=>{' +
-            'document.getElementById("standby").style.display="block";' +
-            'document.getElementById("user-display").style.display="none"' +
-            '},5000);' +
-            '};' +
-            '})();' +
-            '<\/script>' +
+            '<div id="user-status-badge" class="status-badge">-</div>' +
+            '</div>' +
+            '</div>' +
+            '<input type="text" id="monitor-scanner-input" autocomplete="off" style="position:fixed; top:-200px; left:-200px; opacity:0; width:1px; height:1px;">' +
+            '<div class="debug-bar">' +
+            '<div class="status-conn"><div class="dot"></div><span>Monitor Ativo</span></div>' +
+            '<div>Último código: <span id="debug-code" class="code-lido">---</span></div>' +
+            '<div id="debug-status" style="color:rgba(255,255,255,0.4);">A aguardar leitura...</div>' +
+            '</div>' +
+            '<script>' + script + '<\/script>' +
             '</body></html>';
 
         monitorWindow.document.open();
+        monitorWindow.document.write(html);
+        monitorWindow.document.close();
+    }
+
+        const css = ':root { --primary: #6366f1; --secondary: #10b981; --danger: #ef4444; --bg: #0f172a; --text: #f8fafc; } ' +
+            'body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: \'Outfit\', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; } ' +
+            '.container { text-align: center; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.5s ease; } ' +
+            '.logo { width: 400px; opacity: 0.8; animation: pulse 3s infinite ease-in-out; } ' +
+            '.user-card { display: none; flex-direction: column; align-items: center; animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1); } ' +
+            '.photo-frame { width: 350px; height: 350px; border-radius: 50%; border: 15px solid var(--primary); overflow: hidden; background: #1e293b; margin-bottom: 2rem; box-shadow: 0 20px 50px rgba(0,0,0,0.5); } ' +
+            '.photo-frame img { width: 100%; height: 100%; object-fit: cover; } ' +
+            '.photo-frame i { font-size: 8rem; margin-top: 5rem; color: #334155; } ' +
+            '.name { font-size: 5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin: 0; } ' +
+            '.status { font-size: 2.5rem; font-weight: 600; padding: 1rem 3rem; border-radius: 50px; margin-top: 1.5rem; } ' +
+            '.bg-valid { background: linear-gradient(135deg, #064e3b, #065f46); } ' +
+            '.bg-invalid { background: linear-gradient(135deg, #7f1d1d, #991b1b); } ' +
+            '.border-valid { border-color: var(--secondary) !important; color: var(--secondary); } ' +
+            '.border-invalid { border-color: var(--danger) !important; color: var(--danger); } ' +
+            '@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } } ' +
+            '@keyframes slideUp { from { opacity: 0; transform: translateY(100px); } to { opacity: 1; transform: translateY(0); } }';
+
+        let html = '<html><head><title>KandalGym - Monitor de Acesso</title>' +
+            '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">' +
+            '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">' +
+            '<style>' + css + '</style></head><body>' +
+            '<div id="display-container" class="container">' +
+            '<div id="standby" class="logo"><img src="logo.png" style="width:100%; filter: drop-shadow(0 0 30px rgba(99,102,241,0.3));"></div>' +
+            '<div id="user-display" class="user-card">' +
+            '<div id="user-photo-frame" class="photo-frame"><img id="user-photo" src="" style="display:none;"><i id="user-icon" class="fas fa-user"></i></div>' +
+            '<h1 id="user-name" class="name">NOME DO CLIENTE</h1>' +
+            '<div id="user-status" class="status">ENTRADA VÁLIDA</div></div></div>' +
+
+            '<!-- Scanner Invisivel (Replica da logica da Gestao de Entradas) -->' +
+            '<input type="text" id="monitor-scanner-input" autocomplete="off" style="position:fixed; top:-100px; left:-100px; opacity:0;">' +
+
+            '<script>' +
+            'const bc = new BroadcastChannel("kandal_access"); let timeout; ' +
+            'const hwInput = document.getElementById("monitor-scanner-input"); ' +
+
+            'hwInput.onkeyup = (e) => { ' +
+            '  if (e.key === "Enter") { ' +
+            '    const val = hwInput.value.trim().toUpperCase(); ' +
+            '    if (val.length >= 2) { ' +
+            '/* Feedback visual de leitura no monitor */ ' +
+            'document.body.style.border = "10px solid var(--primary)"; ' +
+            'setTimeout(() => document.body.style.border = "none", 500); ' +
+            '      if (window.opener && window.opener.app) { window.opener.app.processarLeituraQR(val); } ' +
+            '      else { bc.postMessage({ type: "access_request", code: val }); } ' +
+            '    } ' +
+            '    hwInput.value = ""; ' +
+            '  } ' +
+            '}; ' +
+
+            '/* Auto-foco persistente */ ' +
+            'document.addEventListener("mousedown", () => { ' +
+            '  setTimeout(() => hwInput.focus({ preventScroll: true }), 100); ' +
+            '}); ' +
+            'setTimeout(() => hwInput.focus({ preventScroll: true }), 500); ' +
+            'setInterval(() => { if(document.activeElement !== hwInput) hwInput.focus({ preventScroll: true }); }, 2000); ' +
+
+            'bc.onmessage = (ev) => { const { type, data } = ev.data; if (type === "access_event") { ' +
+            'clearTimeout(timeout); document.getElementById("standby").style.display = "none"; ' +
+            'document.getElementById("user-display").style.display = "flex"; ' +
+            'const nameEl = document.getElementById("user-name"); const statusEl = document.getElementById("user-status"); ' +
+            'const frameEl = document.getElementById("user-photo-frame"); const photoEl = document.getElementById("user-photo"); ' +
+            'const iconEl = document.getElementById("user-icon"); nameEl.innerText = data.name; ' +
+            'nameEl.className = "name " + (data.valid ? "border-valid" : "border-invalid"); ' +
+            'statusEl.innerText = data.msg.toUpperCase(); statusEl.className = "status " + (data.valid ? "bg-valid" : "bg-invalid"); ' +
+            'frameEl.className = "photo-frame " + (data.valid ? "border-valid" : "border-invalid"); ' +
+            'if (data.photo) { photoEl.src = data.photo; photoEl.style.display = "block"; iconEl.style.display = "none"; } ' +
+            'else { photoEl.style.display = "none"; iconEl.style.display = "block"; } ' +
+            'timeout = setTimeout(() => { document.getElementById("standby").style.display = "block"; ' +
+            'document.getElementById("user-display").style.display = "none"; }, 5000); } };' +
+            '</script></body></html>';
+
         monitorWindow.document.write(html);
         monitorWindow.document.close();
     }
@@ -2775,13 +2940,8 @@ Equipa KandalGym`;
         // Calcular estatisticas baseadas no mês selecionado
         const [selYear, selMonth] = this.dashboardMonth.split('-');
 
-        this.dashboardData = { evaluations: [], trainingPlans: [], mealPlans: [], anamnesis: [], clients: teacherClients.map(c => ({name: c.name, clientId: c.id})) };
-
         let monthEvals = 0;
-        let monthEvalsFirst = 0;
-        Object.entries(this.state.evaluations || {}).forEach(([clientId, clientEvals]) => {
-            const client = this.state.clients.find(c => String(c.id) === String(clientId));
-            const clientName = client ? client.name : 'Aluno Desconhecido';
+        Object.values(this.state.evaluations || {}).forEach(clientEvals => {
             clientEvals.forEach(ev => {
                 if (ev.author === this.currentUser.name && ev.date) {
                     const parts = ev.date.split('/');
@@ -2789,66 +2949,45 @@ Equipa KandalGym`;
                         const d = parts[0].trim();
                         const m = parts[1].trim();
                         const y = parts[2].trim();
-                        if (m === selMonth && y === selYear) {
-                            monthEvals++;
-                            if (ev.isFirstTime) monthEvalsFirst++;
-                            this.dashboardData.evaluations.push({ name: clientName, date: ev.date, isFirstTime: ev.isFirstTime, clientId: clientId });
-                        }
+                        if (m === selMonth && y === selYear) monthEvals++;
                     }
                 }
             });
         });
 
         let monthTraining = 0;
-        let monthTrainingFirst = 0;
-        Object.entries(this.state.trainingPlans || {}).forEach(([clientId, plan]) => {
-            const client = this.state.clients.find(c => String(c.id) === String(clientId));
-            const clientName = client ? client.name : 'Aluno Desconhecido';
+        Object.values(this.state.trainingPlans || {}).forEach(plan => {
             if (plan && plan.author === this.currentUser.name && plan.updatedAt) {
                 const parts = plan.updatedAt.split('/');
                 if (parts.length === 3) {
                     const m = parts[1].trim();
                     const y = parts[2].trim();
-                    if (m === selMonth && y === selYear) {
-                        monthTraining++;
-                        if (plan.isFirstTime) monthTrainingFirst++;
-                        this.dashboardData.trainingPlans.push({ name: clientName, date: plan.updatedAt, isFirstTime: plan.isFirstTime, clientId: clientId });
-                    }
+                    if (m === selMonth && y === selYear) monthTraining++;
                 }
             }
         });
 
         let monthMeals = 0;
-        Object.entries(this.state.mealPlans || {}).forEach(([clientId, plan]) => {
-            const client = this.state.clients.find(c => String(c.id) === String(clientId));
-            const clientName = client ? client.name : 'Aluno Desconhecido';
+        Object.values(this.state.mealPlans || {}).forEach(plan => {
             if (plan && plan.author === this.currentUser.name && plan.updatedAt) {
                 const parts = plan.updatedAt.split('/');
                 if (parts.length === 3) {
                     const m = parts[1].trim();
                     const y = parts[2].trim();
-                    if (m === selMonth && y === selYear) {
-                        monthMeals++;
-                        this.dashboardData.mealPlans.push({ name: clientName, date: plan.updatedAt, clientId: clientId });
-                    }
+                    if (m === selMonth && y === selYear) monthMeals++;
                 }
             }
         });
 
         let monthAnamnesis = 0;
-        Object.entries(this.state.anamnesis || {}).forEach(([clientId, entries]) => {
-            const client = this.state.clients.find(c => String(c.id) === String(clientId));
-            const clientName = client ? client.name : 'Aluno Desconhecido';
+        Object.values(this.state.anamnesis || {}).forEach(entries => {
             entries.forEach(entry => {
                 if (entry && entry.author === this.currentUser.name && entry.updatedAt) {
                     const parts = entry.updatedAt.split('/');
                     if (parts.length === 3) {
                         const m = parts[1].trim();
                         const y = parts[2].trim();
-                        if (m === selMonth && y === selYear) {
-                            monthAnamnesis++;
-                            this.dashboardData.anamnesis.push({ name: clientName, date: entry.updatedAt, clientId: clientId });
-                        }
+                        if (m === selMonth && y === selYear) monthAnamnesis++;
                     }
                 }
             });
@@ -2869,27 +3008,27 @@ Equipa KandalGym`;
                     </div>
                     
                     <div class="stats-grid">
-                        <div class="glass-card" onclick="app.showDashboardDetails('clients')" style="border-left: 4px solid var(--primary); cursor:pointer; transition: transform 0.2s ease, background 0.2s ease;">
+                        <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--primary); cursor:pointer; transition: transform 0.2s ease, background 0.2s ease;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Meus Alunos</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--primary);">${teacherClients.length}</div>
                         </div>
                         
-                        <div class="glass-card" onclick="app.showDashboardDetails('evaluations')" style="border-left: 4px solid var(--accent); cursor:pointer;">
+                        <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--accent); cursor:pointer;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Avaliações</small>
-                            <div style="font-size:1.8rem; font-weight:800; color:var(--accent); display:flex; align-items:baseline;">${monthEvals} ${monthEvalsFirst > 0 ? `<span style="margin-left:8px;">+ ${monthEvalsFirst}</span>` : ''}</div>
+                            <div style="font-size:1.8rem; font-weight:800; color:var(--accent);">${monthEvals}</div>
                         </div>
 
-                        <div class="glass-card" onclick="app.showDashboardDetails('trainingPlans')" style="border-left: 4px solid var(--success); cursor:pointer;">
+                        <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid var(--success); cursor:pointer;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Planos Treino</small>
-                            <div style="font-size:1.8rem; font-weight:800; color:var(--success); display:flex; align-items:baseline;">${monthTraining} ${monthTrainingFirst > 0 ? `<span style="margin-left:8px;">+ ${monthTrainingFirst}</span>` : ''}</div>
+                            <div style="font-size:1.8rem; font-weight:800; color:var(--success);">${monthTraining}</div>
                         </div>
 
-                        <div class="glass-card" onclick="app.showDashboardDetails('mealPlans')" style="border-left: 4px solid #60a5fa; cursor:pointer;">
+                        <div class="glass-card" onclick="app.setView('clients')" style="border-left: 4px solid #60a5fa; cursor:pointer;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Planos Dieta</small>
                             <div style="font-size:1.8rem; font-weight:800; color:#60a5fa;">${monthMeals}</div>
                         </div>
 
-                        <div class="glass-card" onclick="app.showDashboardDetails('anamnesis')" style="border-left: 4px solid var(--primary); cursor:pointer;">
+                        <div class="glass-card" onclick="app.setView('anamnesis')" style="border-left: 4px solid var(--primary); cursor:pointer;">
                             <small style="color:var(--text-muted); text-transform:uppercase; font-size:0.7rem; letter-spacing:1px; display:block; margin-bottom:5px;">Anamneses</small>
                             <div style="font-size:1.8rem; font-weight:800; color:var(--primary);">${monthAnamnesis}</div>
                         </div>
@@ -4057,11 +4196,9 @@ Equipa KandalGym`;
                                         <div style="flex:1; min-width:0;">
                                             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                                                 <span style="font-weight:700; font-size:0.92rem; color:#fff; display:block; margin-bottom:2px; line-height:1.2; ${isCurrent ? 'color:var(--primary);' : ''}">${ex.name}</span>
-                                                <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
                                                 ${libEx && libEx.videoUrl ? `
-                                                    <i class="fas fa-play-circle" onclick="event.stopPropagation(); app.viewExerciseVideo('${libEx.videoUrl}', '${ex.name}')" style="color:var(--primary); font-size:1.2rem; cursor:pointer; z-index:10; position:relative; pointer-events:all;" title="Ver vídeo do exercício"></i>
+                                                    <i class="fas fa-play-circle" onclick="app.viewExerciseVideo('${libEx.videoUrl}', '${ex.name}')" style="color:var(--primary); font-size:1rem; opacity:0.8; padding:2px;"></i>
                                                 ` : ''}
-                                                </div>
                                         </div>
                                         <div style="display:flex; align-items:center; gap:8px;">
                                             <span style="background:${muscleColor}22; color:${muscleColor}; font-size:0.55rem; font-weight:800; padding:2px 6px; border-radius:4px; text-transform:uppercase;">${libEx?.category || libEx?.muscle || ''}</span>
@@ -4361,7 +4498,6 @@ Equipa KandalGym`;
         }
 
         this.editingPlan = JSON.parse(JSON.stringify(existingDays));
-        this.editingPlanIsFirstTime = rawPlan && rawPlan.isFirstTime ? true : false;
 
         if (!Array.isArray(this.editingPlan) || this.editingPlan.length === 0) {
             this.editingPlan = [{ title: 'Dia 1', exercises: [] }];
@@ -4415,7 +4551,7 @@ Equipa KandalGym`;
     renderTrainingEditor() {
         const container = document.getElementById('main-content');
         if (!container) return;
-        const c = this.state.clients.find(x => x.id == this.editingClientId);
+        const c = this.state.clients.find(x => x.id === this.editingClientId);
 
         // Garantir que o index é válido
         if (this.editingDayIdx >= this.editingPlan.length) this.editingDayIdx = 0;
@@ -4437,15 +4573,8 @@ Equipa KandalGym`;
                 <div>
                     <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase;">Objetivo do Plano</label>
                     <input type="text" id="edit-training-goal" value="${c.goal || ''}" placeholder="Ex: Hipertrofia, Redução de Massa Gorda..."
-                        onchange="app.state.clients.find(x => x.id == app.editingClientId).goal = this.value; app.saveState();"
+                        onchange="app.state.clients.find(x => x.id === app.editingClientId).goal = this.value; app.saveState();"
                         style="width:300px; height:40px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:0 12px; font-size:0.95rem;">
-                </div>
-                <div>
-                    <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase;">Primeiro Plano</label>
-                    <div style="display:flex; align-items:center; height:40px; gap:8px;">
-                        <input type="checkbox" id="edit-training-first-time" ${this.editingPlanIsFirstTime ? 'checked' : ''} onchange="app.editingPlanIsFirstTime = this.checked;" style="width:20px; height:20px; accent-color:var(--primary);">
-                        <label for="edit-training-first-time" style="color:#fff; cursor:pointer; font-size:0.9rem;">Primeira Vez</label>
-                    </div>
                 </div>
             </div>
 
@@ -4736,7 +4865,6 @@ Equipa KandalGym`;
     startFreshPlan() {
         this.editingPlan = [{ title: 'Plano A', exercises: [], notes: '', rest: '' }];
         this.editingDayIdx = 0;
-        this.editingPlanIsFirstTime = false;
         this.saveTrainingDraft();
         this.closeModal();
         this.renderTrainingEditor();
@@ -4774,8 +4902,7 @@ Equipa KandalGym`;
         const planObject = {
             days: cleanDays,
             author: this.currentUser.name,
-            updatedAt: new Date().toLocaleDateString('pt-PT'),
-            isFirstTime: this.editingPlanIsFirstTime
+            updatedAt: new Date().toLocaleDateString('pt-PT')
         };
 
         this.state.trainingPlans[this.editingClientId] = planObject;
@@ -4835,157 +4962,65 @@ Equipa KandalGym`;
             </div>
             <div class="glass-panel" style="padding:1.5rem;">
                 ${(() => {
+                const dailyTotal = { kcal: 0, prot: 0, carb: 0, fat: 0 };
                 const mealsHtml = meal?.meals && meal.meals.length ? meal.meals.map(m => {
-                    const mTotal1 = this.getNutritionFromText(m.items);
-                    const mTotal2 = this.getNutritionFromText(m.items2 || '');
-                    const hasOpt2 = (m.items2 || '').trim().length > 0;
+                    const mTotal = this.getNutritionFromText(m.items);
+                    dailyTotal.kcal += mTotal.kcal;
+                    dailyTotal.prot += mTotal.prot;
+                    dailyTotal.carb += mTotal.carb;
+                    dailyTotal.fat += mTotal.fat;
 
                     return `
                             <div class="glass-card" style="margin-bottom:1rem;">
-                                <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; align-items: center;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem; align-items: center;">
                                     <strong style="color:var(--primary); font-size: 1rem;">${m.time} - ${m.name}</strong>
                                     <i class="fas fa-utensils" style="color:var(--text-muted); font-size:0.75rem;"></i>
                                 </div>
-                                <!-- Opcao 1 -->
-                                ${hasOpt2 ? `<div style="font-size:0.7rem; font-weight:700; color:var(--success); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; display:inline-block; background:rgba(34,197,94,0.1); padding:2px 10px; border-radius:20px; border:1px solid rgba(34,197,94,0.3);">Opção 1</div>` : ''}
-                                <div style="font-size:0.9rem; line-height: 1.5; color: #e2e8f0; display:flex; flex-direction:column; gap:8px;">
-                                    ${(() => {
-                                        let cleanText = m.items || '';
-                                        const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-                                        const lines = cleanText.split('\n');
-                                        const processedLinesHtml = [];
-                                        let recipeBlocksHtml = '';
+                                <div style="font-size:0.9rem; white-space: pre-wrap; line-height: 1.5; color: #e2e8f0;">${(() => {
+                            let cleanText = m.items;
+                            const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+                            const match = m.items.match(youtubeRegex);
 
-                                        lines.forEach(line => {
-                                            if (line.toLowerCase().includes('(valores:') || line.toLowerCase().includes('youtube.com') || line.toLowerCase().includes('youtu.be')) {
-                                                return;
-                                            }
+                            if (match) {
+                                // Remover a linha que contém o link do YouTube para não repetir com o card
+                                const lines = cleanText.split('\n');
+                                cleanText = lines.filter(line => !line.includes(match[0]) && !line.toLowerCase().includes('vídeo tutorial')).join('\n').trim();
+                            }
 
-                                            const recipeMatch = line.match(/^-?\s*Receita:\s*(.*?)\s*\(\s*(\d+(?:\.\d+)?)\s*dose\(s\)\)/i);
-                                            if (recipeMatch) {
-                                                const recipeName = recipeMatch[1].trim();
-                                                const portions = parseFloat(recipeMatch[2]) || 1;
-                                                const recipe = (this.state.recipes || []).find(r => r.name.toLowerCase() === recipeName.toLowerCase());
-                                                
-                                                if (recipe) {
-                                                    const portionsYield = recipe.portions || 1;
-                                                    const factor = portions / portionsYield;
-                                                    const uniqueId = `recipe-details-${recipe.id}-${Math.floor(Math.random() * 100000)}`;
+                            // Remover a linha técnica de macros de receita (Valores: ...) para o aluno não ver
+                            cleanText = cleanText.split('\n').filter(line => !line.includes('(Valores:')).join('\n').trim();
 
-                                                    recipeBlocksHtml += `
-                                                        <div class="glass-card" style="margin-top:0.5rem; border:1px solid rgba(255,255,255,0.05); background:rgba(255,255,255,0.02); border-radius:12px; overflow:hidden;">
-                                                            <div onclick="app.toggleRecipeDetailsSection('${uniqueId}')" style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; cursor:pointer; background:rgba(255,255,255,0.03);">
-                                                                <span style="font-size:0.9rem; font-weight:700; color:#fff; display:flex; align-items:center; gap:8px;">
-                                                                    <i class="fas fa-utensils" style="color:var(--primary);"></i>
-                                                                    <span>${recipe.name}</span>
-                                                                    <span style="font-size:0.75rem; background:rgba(var(--primary-rgb), 0.2); color:var(--primary); padding:2px 8px; border-radius:12px; font-weight:700;">${portions} dose${portions !== 1 ? 's' : ''}</span>
-                                                                </span>
-                                                                <i class="fas fa-chevron-down" id="${uniqueId}-icon" style="font-size:0.8rem; color:var(--text-muted); transition:transform 0.3s;"></i>
-                                                            </div>
-                                                            <div id="${uniqueId}" style="display:none; padding:15px; border-top:1px solid rgba(255,255,255,0.05); background:rgba(0,0,0,0.15);">
-                                                                <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; margin-bottom:8px;">Ingredientes:</div>
-                                                                <ul style="margin:0 0 15px 0; padding-left:18px; font-size:0.85rem; line-height:1.5; color:#cbd5e1;">
-                                                                    ${recipe.ingredients && recipe.ingredients.length > 0 ? recipe.ingredients.map(ing => {
-                                                                        let displayAmount = ing.amount || '';
-                                                                        if (displayAmount) {
-                                                                            const amountMatch = displayAmount.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
-                                                                            if (amountMatch) {
-                                                                                const scaledNum = parseFloat(amountMatch[1]) * factor;
-                                                                                const unit = amountMatch[2].trim();
-                                                                                const unitLower = unit.toLowerCase();
-                                                                                let formattedNum;
-                                                                                if (unitLower === 'g' || unitLower === 'ml' || unitLower === 'l' || unitLower === 'gr') {
-                                                                                    formattedNum = Math.round(scaledNum);
-                                                                                } else {
-                                                                                    formattedNum = Number(scaledNum.toFixed(1));
-                                                                                }
-                                                                                displayAmount = `${formattedNum} ${unit}`;
-                                                                            }
-                                                                        }
-                                                                        return `<li style="margin-bottom:3px;"><strong>${ing.name}</strong>${displayAmount ? `: ${displayAmount}` : ''}</li>`;
-                                                                    }).join('') : '<li>Sem ingredientes especificados.</li>'}
-                                                                </ul>
-
-                                                                ${recipe.description ? `
-                                                                    <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; margin-bottom:8px;">Preparação:</div>
-                                                                    <div style="font-size:0.85rem; line-height:1.6; color:#e2e8f0; white-space:pre-line; margin-bottom:15px;">${recipe.description}</div>
-                                                                ` : ''}
-
-                                                                ${recipe.videoUrl ? `
-                                                                    <div class="glass-card" style="padding: 0.5rem; border:1px solid rgba(255,0,0,0.2); background:rgba(255,0,0,0.03); display:flex; align-items:center; cursor:pointer; gap:12px;" onclick="window.open('${recipe.videoUrl}', '_blank')">
-                                                                        <div style="width:60px; height:38px; border-radius:6px; background:url('https://img.youtube.com/vi/${this.extractYoutubeId(recipe.videoUrl)}/mqdefault.jpg') center/cover; position:relative; flex-shrink:0;">
-                                                                            <i class="fab fa-youtube" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#fff; font-size:0.9rem;"></i>
-                                                                        </div>
-                                                                        <div style="flex:1;">
-                                                                            <div style="font-size:0.8rem; font-weight:700; color:#fff;">Vídeo da Receita</div>
-                                                                        </div>
-                                                                        <i class="fas fa-chevron-right" style="margin-right:0.5rem; color:rgba(255,255,255,0.2); font-size:0.75rem;"></i>
-                                                                    </div>
-                                                                ` : ''}
-                                                            </div>
-                                                        </div>
-                                                    `;
-                                                    return;
-                                                }
-                                            }
-                                            processedLinesHtml.push(line);
-                                        });
-
-                                        const normalTextHtml = processedLinesHtml.join('\n').trim();
-                                        return (normalTextHtml ? `<div style="white-space: pre-wrap;">${this.linkify(normalTextHtml)}</div>` : '') + recipeBlocksHtml;
-                                    })()}
-                                </div>
+                            return this.linkify(cleanText);
+                        })()}</div>
                                 
                                 ${(() => {
-                                    const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-                                    const match = m.items ? m.items.match(youtubeRegex) : null;
-                                    if (match && match[1]) {
-                                        const isRecipeLink = m.items.split('\n').some(line => line.includes(match[0]) && line.toLowerCase().includes('receita'));
-                                        if (isRecipeLink) return '';
-
-                                        const videoId = match[1];
-                                        return `
+                            const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+                            const match = m.items.match(youtubeRegex);
+                            if (match && match[1]) {
+                                const videoId = match[1];
+                                return `
                                             <div class="glass-card" style="margin-top:1rem; padding: 0.5rem; border:1px solid rgba(255,0,0,0.3); background:rgba(255,0,0,0.05); display:flex; align-items:center; cursor:pointer; gap:12px;" onclick="window.open('https://www.youtube.com/watch?v=${videoId}', '_blank')">
                                                 <div style="width:70px; height:45px; border-radius:8px; background:url('https://img.youtube.com/vi/${videoId}/mqdefault.jpg') center/cover; position:relative; flex-shrink:0;">
                                                     <i class="fab fa-youtube" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:#fff; font-size:1rem; text-shadow: 0 0 5px rgba(0,0,0,0.5);"></i>
                                                 </div>
                                                 <div style="flex:1;">
-                                                     <div style="font-size:0.85rem; font-weight:700; color:#fff;">Vídeo da Receita</div>
-                                                     <div style="font-size:0.7rem; color:var(--text-muted);">Clique para ver o tutorial passo-a-passo</div>
-                                                 </div>
-                                                 <i class="fas fa-chevron-right" style="margin-right:0.5rem; color:rgba(255,255,255,0.2);"></i>
+                                                    <div style="font-size:0.85rem; font-weight:700; color:#fff;">Vídeo da Receita</div>
+                                                    <div style="font-size:0.7rem; color:var(--text-muted);">Clique para ver o tutorial passo-a-passo</div>
+                                                </div>
+                                                <i class="fas fa-chevron-right" style="margin-right:0.5rem; color:rgba(255,255,255,0.2);"></i>
                                             </div>
                                         `;
-                                    }
-                                    return '';
-                                })()}
+                            }
+                            return '';
+                        })()}
 
-                                ${mTotal1.kcal > 0 ? `
+                                ${mTotal.kcal > 0 ? `
                                     <div class="nutrition-summary">
-                                        <span class="nu-tag nu-kcal"><strong>${Math.round(mTotal1.kcal)}</strong> kcal</span>
-                                        <span class="nu-tag nu-prot"><strong>${Math.round(mTotal1.prot)}g</strong> Prot</span>
-                                        <span class="nu-tag nu-carb"><strong>${Math.round(mTotal1.carb)}g</strong> Carb</span>
-                                        <span class="nu-tag nu-fat"><strong>${Math.round(mTotal1.fat)}g</strong> Gord</span>
+                                        <span class="nu-tag nu-kcal"><strong>${Math.round(mTotal.kcal)}</strong> kcal</span>
+                                        <span class="nu-tag nu-prot"><strong>${Math.round(mTotal.prot)}g</strong> Prot</span>
+                                        <span class="nu-tag nu-carb"><strong>${Math.round(mTotal.carb)}g</strong> Carb</span>
+                                        <span class="nu-tag nu-fat"><strong>${Math.round(mTotal.fat)}g</strong> Gord</span>
                                     </div>
-                                ` : ''}
-
-                                <!-- Opcao 2 se existir -->
-                                ${hasOpt2 ? `
-                                    <div style="display:flex; align-items:center; gap:10px; margin:0.75rem 0;">
-                                        <div style="flex:1; height:1px; background:rgba(255,255,255,0.08);"></div>
-                                        <span style="font-size:0.7rem; font-weight:800; color:var(--text-muted); letter-spacing:2px;">OU</span>
-                                        <div style="flex:1; height:1px; background:rgba(255,255,255,0.08);"></div>
-                                    </div>
-                                    <div style="font-size:0.7rem; font-weight:700; color:#60a5fa; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; display:inline-block; background:rgba(96,165,250,0.1); padding:2px 10px; border-radius:20px; border:1px solid rgba(96,165,250,0.3);">Opção 2</div>
-                                    <div style="font-size:0.9rem; line-height:1.5; color:#e2e8f0; white-space:pre-wrap;">${this.linkify(m.items2)}</div>
-                                    ${mTotal2.kcal > 0 ? `
-                                        <div class="nutrition-summary" style="border-color:rgba(96,165,250,0.2);">
-                                            <span class="nu-tag" style="background:rgba(96,165,250,0.1); color:#60a5fa; border-color:rgba(96,165,250,0.3);"><strong>${Math.round(mTotal2.kcal)}</strong> kcal</span>
-                                            <span class="nu-tag" style="background:rgba(96,165,250,0.1); color:#60a5fa; border-color:rgba(96,165,250,0.3);"><strong>${Math.round(mTotal2.prot)}g</strong> Prot</span>
-                                            <span class="nu-tag" style="background:rgba(96,165,250,0.1); color:#60a5fa; border-color:rgba(96,165,250,0.3);"><strong>${Math.round(mTotal2.carb)}g</strong> Carb</span>
-                                            <span class="nu-tag" style="background:rgba(96,165,250,0.1); color:#60a5fa; border-color:rgba(96,165,250,0.3);"><strong>${Math.round(mTotal2.fat)}g</strong> Gord</span>
-                                        </div>
-                                    ` : ''}
                                 ` : ''}
                             </div>
                         `;
@@ -4997,7 +5032,14 @@ Equipa KandalGym`;
                         </div>
                     `;
 
-                return mealsHtml;
+                return (dailyTotal.kcal > 0 ? `
+                        <div class="daily-macros-bar">
+                            <div class="macro-box"><small>Kcal Total</small><strong>${Math.round(dailyTotal.kcal)}</strong></div>
+                            <div class="macro-box"><small>Proteina</small><strong>${Math.round(dailyTotal.prot)}g</strong></div>
+                            <div class="macro-box"><small>Hidratos</small><strong>${Math.round(dailyTotal.carb)}g</strong></div>
+                            <div class="macro-box"><small>Gordura</small><strong>${Math.round(dailyTotal.fat)}g</strong></div>
+                        </div>
+                    ` : '') + mealsHtml;
             })()}
             </div>
         `;
@@ -5024,7 +5066,6 @@ Equipa KandalGym`;
         existing.meals = existing.meals.filter(m => m !== null);
         existing.meals.forEach(m => {
             m.items = m.items || '';
-            m.items2 = m.items2 || '';
             m.time = m.time || '08:00';
             m.name = m.name || 'Refeição';
         });
@@ -5062,6 +5103,8 @@ Equipa KandalGym`;
                     <button class="btn btn-secondary" onclick="app.setView('spy_view')">Cancelar</button>
                     <button class="btn btn-primary" onclick="app.saveMealPlan()"><i class="fas fa-save"></i> Guardar Dieta</button>
                 </div>
+
+
             </div>
 
             <div class="glass-panel" style="padding:2rem;">
@@ -5096,7 +5139,6 @@ Equipa KandalGym`;
                 <div id="meal-items-container">
                     ${this.editingMeal.meals.map((m, idx) => {
                     const mTotal = this.getNutritionFromText(m.items);
-                    const mTotal2 = this.getNutritionFromText(m.items2);
                     return `
                             <div class="glass-card" style="padding:1.25rem; margin-bottom:2rem; border-left:4px solid var(--success); position:relative;">
                                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; gap:10px;">
@@ -5119,7 +5161,7 @@ Equipa KandalGym`;
 
                                 <!-- Selecao de Alimentos da Base de Dados -->
                                 <div style="margin-bottom:1.5rem; background:rgba(0,0,0,0.2); padding:1.25rem; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
-                                    <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">Adicionar Alimento</label>
+                                    <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">Adicionar Alimento da Base de Dados</label>
                                     <div style="display:flex; flex-direction:column; gap:12px;">
                                         <div class="food-row" style="flex-wrap: wrap;">
                                             <button class="btn btn-secondary food-search-btn" onclick="app.showFoodSelectionModal(${idx})" style="flex: 1 1 auto; min-width: 120px; font-size:0.85rem;">
@@ -5142,44 +5184,34 @@ Equipa KandalGym`;
                                                     <option value="c. sopa" style="background:#1e293b; color:#fff;">colher de sopa</option>
                                                     <option value="c. sobremesa" style="background:#1e293b; color:#fff;">colher de sobremesa</option>
                                                     <option value="c. cafe" style="background:#1e293b; color:#fff;">colher de cafe</option>
-                                                    <option value="fatia(s)" style="background:#1e293b; color:#fff;">fatia(s)</option>
+                                                   <option value="fatia(s)" style="background:#1e293b; color:#fff;">fatia(s)</option>
                                                 </select>
                                             </div>
                                         </div>
                                         
-                                        <div style="display:flex; gap:15px; margin-top:5px;">
-                                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.85rem; color:#fff;">
-                                                <input type="radio" name="meal-target-${idx}" value="opt1" id="meal-opt1-${idx}" checked> Opção 1
-                                            </label>
-                                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.85rem; color:#fff;">
-                                                <input type="radio" name="meal-target-${idx}" value="opt2" id="meal-opt2-${idx}"> Opção 2
-                                            </label>
-                                        </div>
-
                                         <div id="selected-food-display-${idx}" style="display:none; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; border:1px solid var(--success);">
                                             <!-- Alimento selecionado aparecera aqui -->
                                         </div>
 
                                         <button class="btn btn-primary btn-sm" onclick="app.addSelectedFoodToMeal(${idx})" style="width:100%; height:40px; background:var(--success); border:none;">
-                                            <i class="fas fa-plus"></i> Adicionar
+                                            <i class="fas fa-plus"></i> Adicionar à Refeição
                                         </button>
                                     </div>
                                 </div>
                                 
-                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                                    <div>
-                                        <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Opção 1</label>
-                                        <textarea id="meal-items-${idx}" oninput="app.editingMeal.meals[${idx}].items = this.value" onblur="app.renderMealEditor()"
-                                            style="width:100%; min-height:100px; background:rgba(0,0,0,0.2); color:#fff; border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:10px; font-size:0.85rem;">${m.items}</textarea>
-                                        ${mTotal.kcal > 0 ? `<div style="font-size:0.75rem; color:var(--success); margin-top:5px;">${Math.round(mTotal.kcal)} kcal</div>` : ''}
-                                    </div>
-                                    <div>
-                                        <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Opção 2</label>
-                                        <textarea id="meal-items2-${idx}" oninput="app.editingMeal.meals[${idx}].items2 = this.value" onblur="app.renderMealEditor()"
-                                            style="width:100%; min-height:100px; background:rgba(0,0,0,0.2); color:#fff; border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:10px; font-size:0.85rem;">${m.items2}</textarea>
-                                        ${mTotal2.kcal > 0 ? `<div style="font-size:0.75rem; color:#60a5fa; margin-top:5px;">${Math.round(mTotal2.kcal)} kcal</div>` : ''}
-                                    </div>
+                                <div>
+                                    <label style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Resumo da Refeição</label>
+                                    <textarea id="meal-items-${idx}" placeholder="Os alimentos inseridos aparecerao aqui..." oninput="app.editingMeal.meals[${idx}].items = this.value" onblur="app.renderMealEditor()"
+                                        style="width:100%; min-height:120px; background:rgba(0,0,0,0.2); color:rgba(255,255,255,0.95); border:1px solid rgba(255,255,255,0.05); border-radius:12px; padding:15px; font-family:inherit; resize:vertical; line-height:1.6; font-size:0.95rem;">${m.items}</textarea>
                                 </div>
+                                ${mTotal.kcal > 0 ? `
+                                    <div class="nutrition-summary">
+                                        <span class="nu-tag nu-kcal"><strong>${Math.round(mTotal.kcal)}</strong> kcal</span>
+                                        <span class="nu-tag nu-prot"><strong>${Math.round(mTotal.prot)}g</strong> Prot</span>
+                                        <span class="nu-tag nu-carb"><strong>${Math.round(mTotal.carb)}g</strong> Carb</span>
+                                        <span class="nu-tag nu-fat"><strong>${Math.round(mTotal.fat)}g</strong> Gord</span>
+                                    </div>
+                                ` : ''}
                             </div>
                         `;
                 }).join('')}
@@ -5210,7 +5242,7 @@ Equipa KandalGym`;
     }
 
     addMealToEditor() {
-        this.editingMeal.meals.push({ time: '08:00', name: '', items: '', items2: '' });
+        this.editingMeal.meals.push({ time: '08:00', name: '', items: '' });
         this.renderMealEditor();
     }
 
@@ -5226,21 +5258,12 @@ Equipa KandalGym`;
         const unit = document.getElementById(`food-unit-${mealIdx}`).value;
         const measure = qty ? `${qty} ${unit}` : 'q.b.';
 
-        // Verificar qual opcao esta selecionada
-        const opt2Radio = document.getElementById(`meal-opt2-${mealIdx}`);
-        const isOpt2 = opt2Radio && opt2Radio.checked;
-        const textareaId = isOpt2 ? `meal-items2-${mealIdx}` : `meal-items-${mealIdx}`;
-
-        const textarea = document.getElementById(textareaId);
+        const textarea = document.getElementById(`meal-items-${mealIdx}`);
         const currentVal = textarea.value.trim();
         const newVal = currentVal ? `${currentVal}\n- ${foodName}: ${measure}` : `- ${foodName}: ${measure}`;
 
         textarea.value = newVal;
-        if (isOpt2) {
-            this.editingMeal.meals[mealIdx].items2 = newVal;
-        } else {
-            this.editingMeal.meals[mealIdx].items = newVal;
-        }
+        this.editingMeal.meals[mealIdx].items = newVal;
 
         // Reset campos
         hiddenInput.value = "";
@@ -5910,11 +5933,7 @@ Equipa KandalGym`;
                 <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                     <div>
                         <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Data da Avaliação</label>
-                        <input type="date" id="ev-date" value="${ev.date}" style="color-scheme: dark; margin-bottom: 1rem;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <input type="checkbox" id="ev-first-time" ${ev.isFirstTime ? 'checked' : ''} style="width: 18px; height: 18px; accent-color: var(--primary);">
-                            <label for="ev-first-time" style="font-size: 0.85rem; cursor: pointer; color: #fff;">Primeira Avaliação</label>
-                        </div>
+                        <input type="date" id="ev-date" value="${ev.date}" style="color-scheme: dark;">
                     </div>
 
                     <div>
@@ -6007,11 +6026,9 @@ Equipa KandalGym`;
         const dateRaw = document.getElementById('ev-date').value;
         const [y, m, d] = dateRaw.split('-');
         const dateFormatted = `${d}/${m}/${y}`;
-        const isFirstTimeEl = document.getElementById('ev-first-time');
 
         const entry = {
             date: dateFormatted,
-            isFirstTime: isFirstTimeEl ? isFirstTimeEl.checked : false,
             weight: document.getElementById('ev-weight').value || null,
             height: document.getElementById('ev-height').value || null,
             muscleMass: document.getElementById('ev-muscle').value || null,
@@ -6163,7 +6180,7 @@ Equipa KandalGym`;
     }
 
     renderSpyView(container) {
-        const c = this.state.clients.find(x => x.id == this.currentClientId);
+        const c = this.state.clients.find(x => x.id === this.currentClientId);
         if (!c) return;
 
         container.innerHTML = `
@@ -6184,14 +6201,6 @@ Equipa KandalGym`;
                 </div>
                 <div style="display:flex; gap:0.5rem; align-items:center;">
                     ${this.role === 'teacher' ? `<button class="btn btn-ghost btn-sm" style="color:var(--primary); font-size:0.8rem;" onclick="app.showTransferClientModal(${c.id})"><i class="fas fa-exchange-alt"></i> <span class="hide-mobile">Transferir</span></button>` : ''}
-                    ${(() => {
-                        const qrEntry = (this.state.qrClients || []).find(q => q.clientId && Number(q.clientId) === Number(c.id));
-                        const isEmployee = qrEntry && qrEntry.isEmployee;
-                        return qrEntry ? `
-                        <button class="btn btn-ghost btn-sm" onclick="app.toggleEmployeeStatus('${qrEntry.id}')" title="${isEmployee ? 'Remover privilégios de Funcionário' : 'Atribuir entradas ilimitadas (Funcionário)'}" style="font-size:0.8rem; color:${isEmployee ? '#fbbf24' : 'var(--text-muted)'}; border: 1px solid ${isEmployee ? 'rgba(251,191,36,0.4)' : 'rgba(255,255,255,0.1)'}; background:${isEmployee ? 'rgba(251,191,36,0.1)' : 'transparent'}; transition:all 0.2s;">
-                            <i class="fas fa-user-tie"></i> <span class="hide-mobile">${isEmployee ? 'Funcionário' : 'Funcionário'}</span>
-                        </button>` : '';
-                    })()}
                     <button class="btn btn-ghost" style="font-size: 1.4rem; padding: 0.5rem; color: var(--text-muted);" onclick="app.setView(app.role === 'admin' ? 'all-clients' : 'clients')" title="Voltar">
                         <i class="fas fa-arrow-left"></i>
                     </button>
@@ -6514,26 +6523,6 @@ Equipa KandalGym`;
                     <small style="color:var(--text-muted);">Mantenha ou altere para uma nova.</small>
                 </div>
 
-                <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px dashed var(--surface-border);">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Tema da Aplicação</label>
-                    <select id="edit-theme" style="width:100%; height:45px; background:rgba(0,0,0,0.2); border:1px solid var(--surface-border); border-radius:8px; color:#fff; padding:0 15px;">
-                        <option value="dark" ${localStorage.getItem('kg_theme') !== 'light' ? 'selected' : ''}>Original (Escuro)</option>
-                        <option value="light" ${localStorage.getItem('kg_theme') === 'light' ? 'selected' : ''}>Claro</option>
-                    </select>
-                </div>
-
-                <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px dashed var(--surface-border);">
-                    <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Idioma / Language</label>
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn btn-secondary" style="flex:1; border: ${(!document.cookie.includes('googtrans=')) ? '1px solid var(--primary)' : '1px solid transparent'}" onclick="document.cookie='googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'; document.cookie='googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=.' + document.domain + '; path=/;'; localStorage.removeItem('kandalgym_lang'); location.reload();">
-                            🇵🇹 Português
-                        </button>
-                        <button class="btn btn-secondary" style="flex:1; border: ${document.cookie.includes('googtrans=/pt/en') ? '1px solid var(--primary)' : '1px solid transparent'}" onclick="document.cookie='googtrans=/pt/en; path=/;'; document.cookie='googtrans=/pt/en; domain=.' + document.domain + '; path=/;'; localStorage.setItem('kandalgym_lang', 'en'); location.reload();">
-                            🇬🇧 English
-                        </button>
-                    </div>
-                </div>
-
                 ${(() => {
                 const qrInfo = (this.state.qrClients || []).find(q => q.clientId === user.id || q.nome === user.name);
                 if (!qrInfo && this.role === 'client') return ''; // Só mostra pros clientes se já tiverem QR
@@ -6727,17 +6716,6 @@ Equipa KandalGym`;
                 const profInput = document.getElementById('edit-profession');
                 if (profInput) user.profession = profInput.value;
                 if (this.currentUser.photoUrl) user.photoUrl = this.currentUser.photoUrl;
-
-                const themeSelect = document.getElementById('edit-theme');
-                if (themeSelect) {
-                    const selectedTheme = themeSelect.value;
-                    localStorage.setItem('kg_theme', selectedTheme);
-                    if (selectedTheme === 'light') {
-                        document.body.classList.add('light-theme');
-                    } else {
-                        document.body.classList.remove('light-theme');
-                    }
-                }
 
                 // Atualizar utilizador atual na sessão
                 this.currentUser = { ...user };
@@ -7563,23 +7541,7 @@ Equipa KandalGym`;
                 if (id === this.currentUser.id) return alert('Não pode remover a sua própria conta enquanto estiver logado.');
                 this.state.admins = this.state.admins.filter(u => u.id !== id);
             } else if (type === 'teacher') {
-                const associatedClients = this.state.clients.filter(c => c.teacherId === id);
-                if (associatedClients.length > 0) {
-                    const otherTeachers = this.state.teachers.filter(t => t.id !== id);
-                    if (otherTeachers.length === 0) {
-                        if (confirm(`O professor ${name} tem ${associatedClients.length} aluno(s) associado(s), mas não existem outros professores cadastrados. Se prosseguir, estes alunos ficarão sem professor associado. Deseja continuar?`)) {
-                            associatedClients.forEach(c => { c.teacherId = null; });
-                            this.state.teachers = this.state.teachers.filter(u => u.id !== id);
-                        } else {
-                            return;
-                        }
-                    } else {
-                        this.showDeleteTeacherReassignModal(id, name, associatedClients, otherTeachers);
-                        return;
-                    }
-                } else {
-                    this.state.teachers = this.state.teachers.filter(u => u.id !== id);
-                }
+                this.state.teachers = this.state.teachers.filter(u => u.id !== id);
             } else {
                 // Eliminar o cliente
                 this.state.clients = this.state.clients.filter(u => u.id !== id);
@@ -7605,62 +7567,6 @@ Equipa KandalGym`;
             } else {
                 this.renderContent();
             }
-        }
-    }
-
-    showDeleteTeacherReassignModal(teacherId, teacherName, associatedClients, otherTeachers) {
-        const options = otherTeachers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-        const clientNames = associatedClients.map(c => c.name).join(', ');
-
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <h2>Eliminar Professor e Reassociar Alunos</h2>
-                <p>O professor <strong>${teacherName}</strong> tem <strong>${associatedClients.length}</strong> aluno(s) associado(s): <br><small style="color:var(--text-muted);">${clientNames}</small></p>
-                <p>Selecione o novo professor para estes alunos:</p>
-                
-                <select id="reassign-teacher-select" style="width:100%; padding:10px; border-radius:8px; margin-bottom:1.5rem; background:#1e293b; color:white; border:1px solid #444;">
-                    ${options}
-                    <option value="none">Deixar alunos sem professor (Nenhum)</option>
-                </select>
-
-                <div style="display:flex; justify-content:flex-end; gap:10px;">
-                    <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-                    <button class="btn btn-danger" onclick="app.executeDeleteTeacherWithReassignment(${teacherId}, '${teacherName.replace(/'/g, "\\'")}')">Eliminar e Atualizar Alunos</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-    }
-
-    executeDeleteTeacherWithReassignment(teacherId, teacherName) {
-        const select = document.getElementById('reassign-teacher-select');
-        if (!select) return;
-        const newTeacherId = select.value;
-        
-        // Remove the modal
-        const modal = select.closest('.modal-overlay');
-        if (modal) modal.remove();
-
-        const associatedClients = this.state.clients.filter(c => c.teacherId === teacherId);
-        
-        if (newTeacherId === 'none') {
-            associatedClients.forEach(c => { c.teacherId = null; });
-        } else {
-            const newTId = Number(newTeacherId);
-            associatedClients.forEach(c => { c.teacherId = newTId; });
-        }
-
-        // Delete the teacher
-        this.state.teachers = this.state.teachers.filter(u => u.id !== teacherId);
-        this.saveState();
-        alert('Professor eliminado com sucesso e alunos reassociados!');
-        
-        if (this.activeView === 'users') {
-            this.switchAdminTab('teachers');
-        } else {
-            this.renderContent();
         }
     }
 
@@ -8163,56 +8069,6 @@ Equipa KandalGym`;
         this.renderContent();
     }
 
-    showDashboardDetails(type) {
-        if (!this.dashboardData || !this.dashboardData[type]) return;
-
-        let title = '';
-        let icon = '';
-        switch(type) {
-            case 'evaluations': title = 'Avaliações no Período'; icon = 'fa-ruler-combined'; break;
-            case 'trainingPlans': title = 'Planos de Treino no Período'; icon = 'fa-dumbbell'; break;
-            case 'mealPlans': title = 'Planos Alimentares no Período'; icon = 'fa-utensils'; break;
-            case 'anamnesis': title = 'Anamneses no Período'; icon = 'fa-notes-medical'; break;
-            case 'clients': title = 'Meus Alunos'; icon = 'fa-users'; break;
-        }
-
-        const items = this.dashboardData[type];
-        
-        let listHtml = items.map(item => `
-            <div class="glass-card" style="padding:1rem; margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center; transition: transform 0.2s; ${item.clientId ? 'cursor:pointer;' : ''}" ${item.clientId ? `onclick="app.spyClient('${item.clientId}'); document.querySelector('.modal-overlay').remove();"` : ''}>
-                <div>
-                    <strong style="color:#fff; font-size:1.1rem;">${item.name}</strong>
-                    ${item.date ? `<div style="color:var(--text-muted); font-size:0.85rem; margin-top:4px;"><i class="far fa-calendar-alt"></i> ${item.date}</div>` : ''}
-                </div>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    ${item.isFirstTime ? `<span style="background:rgba(255, 166, 0, 0.1); color:#ffa600; padding:4px 10px; border:1px solid rgba(255, 166, 0, 0.3); border-radius:12px; font-size:0.8rem; font-weight:bold;">1ª Vez</span>` : ''}
-                    ${item.clientId ? `<i class="fas fa-chevron-right" style="color:var(--text-muted); font-size:0.9rem;"></i>` : ''}
-                </div>
-            </div>
-        `).join('');
-
-        if (items.length === 0) {
-            listHtml = '<p style="text-align:center; color:var(--text-muted); margin-top:2rem;">Nenhum registo encontrado neste período.</p>';
-        }
-
-        const modal = document.createElement('div');
-        modal.className = 'modal-overlay animate-fade-in';
-        modal.innerHTML = `
-            <div class="glass-panel animate-scale-up" style="max-width: 500px; width: 95%; max-height: 85vh; display: flex; flex-direction: column; padding: 1.5rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--surface-border);">
-                    <h3 style="margin: 0; display:flex; align-items:center; gap:10px;"><i class="fas ${icon}" style="color:var(--primary);"></i> ${title}</h3>
-                    <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div style="overflow-y: auto; padding-right: 5px;">
-                    ${listHtml}
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-    }
-
     renderAdminGlobalClientsList(query = '') {
         const container = document.getElementById('admin-global-clients-list');
         if (!container) return;
@@ -8405,58 +8261,27 @@ Equipa KandalGym`;
             <h3 style="color: #911B2B; border-bottom: 1px solid #eee; padding-bottom: 5px; margin: 20px 0 15px 0;">${mealPlan.title || 'Plano Alimentar'}</h3>
         `;
 
-        const buildMealItemsHtml = (items) => {
-            if (!items || !items.trim()) return { normalText: '', recipeDetailsPdf: '' };
-            const lines = items.split('\n');
-            const processedLines = [];
-            let recipeDetailsPdf = '';
-            lines.forEach(line => {
-                if (line.toLowerCase().includes('(valores:') || line.toLowerCase().includes('youtube.com') || line.toLowerCase().includes('youtu.be')) return;
-                const recipeMatch = line.match(/^-?\s*Receita:\s*(.*?)\s*\(\s*(\d+(?:\.\d+)?)\s*dose\(s\)\)/i);
-                if (recipeMatch) {
-                    const recipeName = recipeMatch[1].trim();
-                    const portions = parseFloat(recipeMatch[2]) || 1;
-                    const recipe = (this.state.recipes || []).find(r => r.name.toLowerCase() === recipeName.toLowerCase());
-                    if (recipe) {
-                        const factor = portions / (recipe.portions || 1);
-                        recipeDetailsPdf += `<div style="margin-top:10px; border-left:3px solid #911B2B; padding-left:10px; background:#fafafa; padding:5px 10px; margin-bottom:10px;"><strong style="font-size:13px; color:#911B2B;">Receita: ${recipe.name} (${portions} dose(s))</strong><div style="font-size:11px; margin-top:5px; font-weight:bold; color:#555;">Ingredientes:</div><ul style="margin:3px 0 8px 0; padding-left:15px; font-size:11px; line-height:1.4; color:#333;">${recipe.ingredients && recipe.ingredients.length > 0 ? recipe.ingredients.map(ing => { let da = ing.amount || ''; if (da) { const am = da.match(/^(\d+(?:\.\d+)?)\s*(.*)$/); if (am) { const sn = parseFloat(am[1]) * factor; const u = am[2].trim(); da = `${(['g','ml','l','gr'].includes(u.toLowerCase()) ? Math.round(sn) : Number(sn.toFixed(1)))} ${u}`; } } return `<li><strong>${ing.name}</strong>${da ? ': ' + da : ''}</li>`; }).join('') : '<li>Sem ingredientes</li>'}</ul>${recipe.description ? `<div style="font-size:11px; font-weight:bold; color:#555;">Preparação:</div><div style="font-size:11px; line-height:1.4; color:#333; white-space:pre-wrap; margin-top:3px;">${recipe.description}</div>` : ''}</div>`;
-                        return;
-                    }
-                }
-                processedLines.push(line);
-            });
-            return { normalText: processedLines.join('\n').trim(), recipeDetailsPdf };
-        };
-
         mealPlan.meals.forEach(m => {
-            const mN1 = this.getNutritionFromText(m.items);
-            const hasOpt2 = (m.items2 || '').trim().length > 0;
-            const mN2 = hasOpt2 ? this.getNutritionFromText(m.items2) : null;
-            const { normalText: nt1, recipeDetailsPdf: rd1 } = buildMealItemsHtml(m.items);
-            const { normalText: nt2, recipeDetailsPdf: rd2 } = buildMealItemsHtml(m.items2 || '');
+            const mN = this.getNutritionFromText(m.items);
+
+            // Limpar o texto para o PDF (remover links e linha tecnica de macros)
+            let displayItems = m.items || '';
+            displayItems = displayItems.split('\n')
+                .filter(line => !line.includes('youtube.com') && !line.includes('youtu.be') && !line.includes('(Valores:'))
+                .join('\n').trim();
 
             htmlContent += `
                 <div style="margin-bottom: 20px; page-break-inside: avoid;">
                     <div style="background: #911B2B; color: white; padding: 8px 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
                         <span>${m.time} - ${m.name}</span>
+                        ${mN.kcal > 0 ? `<span style="font-size: 12px;">${Math.round(mN.kcal)} kcal</span>` : ''}
                     </div>
-                    <div style="border: 1px solid #eee; border-top: none;">
-                        ${hasOpt2 ? '<div style="background:#f0fdf4; padding:4px 12px; font-size:11px; font-weight:bold; color:#16a34a; border-bottom:1px solid #eee;">OPÇÃO 1</div>' : ''}
-                        <div style="padding: 12px; font-size: 14px; line-height: 1.6;">
-                            ${nt1 ? `<div style="white-space: pre-wrap; margin-bottom: 10px;">${nt1}</div>` : ''}
-                            ${rd1}
-                        </div>
-                        ${mN1.kcal > 0 ? `<div style="padding:5px 12px; background:#fefefe; border-top:1px solid #eee; font-size:11px; color:#666;"><strong>Macros Opção 1:</strong> Kcal: ${Math.round(mN1.kcal)} | Prot: ${Math.round(mN1.prot)}g | Carb: ${Math.round(mN1.carb)}g | Gord: ${Math.round(mN1.fat)}g</div>` : ''}
-
-                        ${hasOpt2 ? `
-                        <div style="padding:6px 12px; background:#eff6ff; border-top:2px dashed #bfdbfe; font-size:11px; font-weight:bold; color:#2563eb;">OU &nbsp;&nbsp; OPÇÃO 2</div>
-                        <div style="padding: 12px; font-size: 14px; line-height: 1.6;">
-                            ${nt2 ? `<div style="white-space: pre-wrap; margin-bottom: 10px;">${nt2}</div>` : ''}
-                            ${rd2}
-                        </div>
-                        ${mN2 && mN2.kcal > 0 ? `<div style="padding:5px 12px; background:#fefefe; border-top:1px solid #eee; font-size:11px; color:#666;"><strong>Macros Opção 2:</strong> Kcal: ${Math.round(mN2.kcal)} | Prot: ${Math.round(mN2.prot)}g | Carb: ${Math.round(mN2.carb)}g | Gord: ${Math.round(mN2.fat)}g</div>` : ''}
-                        ` : ''}
+                    <div style="padding: 12px; border: 1px solid #eee; border-top: none; white-space: pre-wrap; font-size: 14px; line-height: 1.6;">${displayItems || 'Sem alimentos adicionados'}</div>
+                    ${mN.kcal > 0 ? `
+                    <div style="padding: 5px 12px; background: #fefefe; border: 1px solid #eee; border-top: none; font-size: 11px; color: #666;">
+                        <strong>Macros:</strong> Prot: ${Math.round(mN.prot)}g | Carb: ${Math.round(mN.carb)}g | Gord: ${Math.round(mN.fat)}g
                     </div>
+                    ` : ''}
                 </div>
             `;
         });
@@ -8669,8 +8494,9 @@ Equipa KandalGym`;
 
                         <div style="background: rgba(0,0,0,0.2); border: 1px dashed var(--surface-border); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px;">
                             <i class="fas fa-qrcode" style="font-size: 3rem; color: rgba(255,255,255,0.05); margin-bottom: 10px; display: block;"></i>
-                            <input type="text" id="qr-manager-scanner-input" 
+                            <input type="text" id="hardware-scanner-input" 
                                 placeholder="Aguardando QR..." 
+                                onkeyup="if(event.key === 'Enter') { app.processarLeituraQR(this.value); this.value=''; }"
                                 autocomplete="off"
                                 style="width: 100%; height: 50px; background: rgba(0,0,0,0.4); border: 2px solid var(--primary); border-radius: 10px; color: #fff; text-align: center; font-size: 1.2rem; font-weight: 700; letter-spacing: 2px; outline: none; box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.1);">
                         </div>
@@ -8793,48 +8619,29 @@ Equipa KandalGym`;
                 });
             });
 
-            // --- AUTO FOCUS NO HARDWARE SCANNER - GESTÃO DE ENTRADAS ---
+            // --- AUTO FOCUS NO HARDWARE SCANNER ---
             setTimeout(() => {
-                const hwInput = document.getElementById('qr-manager-scanner-input');
+                const hwInput = document.getElementById('hardware-scanner-input');
                 if (hwInput) {
-                    console.log("[renderQRManager] Input encontrado, configurando scanner");
-                    
                     hwInput.focus({ preventScroll: true });
-                    
-                    // Handler direto no input
-                    hwInput.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') {
-                            const val = hwInput.value.trim().toUpperCase();
-                            console.log("[QRManager] Enter pressionado, valor:", val, "comprimento:", val.length);
-                            if (val.length >= 2) {
-                                console.log("[QRManager] Processando QR:", val);
-                                this.processarLeituraQR(val);
-                            }
-                            hwInput.value = '';
-                            hwInput.focus({ preventScroll: true });
-                            e.preventDefault();
+                    // Manter foco apenas se NÃO estivermos a interagir com outros campos
+                    document.onmousedown = (e) => {
+                        if (this.activeView !== 'qr_manager' || !hwInput) return;
+
+                        // Lista de elementos que NÃO devem ser interrompidos
+                        const tagsNaoInterromper = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'];
+                        if (tagsNaoInterromper.includes(e.target.tagName) || e.target.closest('button')) {
+                            return; // Deixa o utilizador interagir com o campo
                         }
-                    });
-                    
-                    // Refocus ao clicar na página
-                    document.addEventListener('click', (e) => {
-                        if (this.activeView === 'qr_manager') {
-                            // Não roubar focus se o utilizador clicou noutra caixa de texto
-                            if (e && e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
-                                return; // Permite escrever noutras caixas
-                            }
-                            setTimeout(() => {
+
+                        setTimeout(() => {
+                            if (this.activeView === 'qr_manager' && hwInput && document.activeElement.tagName !== 'INPUT') {
                                 hwInput.focus({ preventScroll: true });
-                                console.log("[QRManager] Re-focado após clique");
-                            }, 50);
-                        }
-                    });
-                    
-                    console.log("[renderQRManager] Scanner configurado com sucesso");
-                } else {
-                    console.log("[renderQRManager] ERRO: Input não encontrado!");
+                            }
+                        }, 100);
+                    };
                 }
-            }, 100);
+            }, 500);
 
         } catch (error) {
             console.error("Erro ao renderizar QR Manager:", error);
@@ -8894,8 +8701,7 @@ Equipa KandalGym`;
     renderQRClientCards(filter = '') {
         const qrList = (this.state.qrClients || []).filter(c => {
             const isStaff = (this.state.teachers || []).some(t => Number(t.id) === Number(c.clientId)) ||
-                (this.state.admins || []).some(a => Number(a.id) === Number(c.clientId)) ||
-                c.isEmployee === true;
+                (this.state.admins || []).some(a => Number(a.id) === Number(c.clientId));
             const isAvulso = Number(c.clientId) === 0;
 
             let matchesRole = false;
@@ -8939,8 +8745,7 @@ Equipa KandalGym`;
             const statusColor = c.ativo ? 'var(--success)' : 'var(--danger)';
 
             const isStaff = (this.state.teachers || []).some(t => Number(t.id) === Number(c.clientId)) ||
-                (this.state.admins || []).some(a => Number(a.id) === Number(c.clientId)) ||
-                c.isEmployee === true;
+                (this.state.admins || []).some(a => Number(a.id) === Number(c.clientId));
 
             // Obter utilizador real para dados mestres (foto, login, atividade)
             const realUser = c.clientId ? [...(this.state.clients || []), ...(this.state.teachers || []), ...(this.state.admins || [])]
@@ -9172,19 +8977,15 @@ Equipa KandalGym`;
     }
 
     enableQRForClient(clientId, autoRedirect = true, isStaff = false) {
-        console.log("[enableQRForClient] Iniciado para clientId:", clientId, "isStaff:", isStaff);
         if (!this.state.qrClients) this.state.qrClients = [];
 
         const client = isStaff
             ? [...(this.state.teachers || []), ...(this.state.admins || [])].find(t => Number(t.id) === Number(clientId))
             : (this.state.clients || []).find(c => Number(c.id) === Number(clientId));
-        
-        console.log("[enableQRForClient] Cliente encontrado:", client ? client.name : "NÃO");
         if (!client) return;
 
         const exists = this.state.qrClients.find(qc => Number(qc.clientId) === Number(clientId));
         if (exists) {
-            console.log("[enableQRForClient] QR já existe:", exists.id);
             if (autoRedirect) {
                 this.setView('qr_manager');
                 this.showToast('Este utilizador já tem acesso QR ativo.');
@@ -9206,7 +9007,7 @@ Equipa KandalGym`;
             validDate.setDate(validDate.getDate() + 30);
         }
 
-        const newQR = {
+        this.state.qrClients.push({
             id: qrId,
             clientId: Number(clientId),
             nome: client.name,
@@ -9216,10 +9017,7 @@ Equipa KandalGym`;
             plano: isStaff ? 'Staff' : 'Novo QR',
             validade: validDate.toISOString().split('T')[0],
             histórico: []
-        };
-        
-        console.log("[enableQRForClient] Criando novo QR:", newQR);
-        this.state.qrClients.push(newQR);
+        });
 
         if (autoRedirect) {
             this.saveState();
@@ -9703,16 +9501,10 @@ Equipa KandalGym`;
     }
 
     broadcastAccessEvent(data) {
-        console.log("[Broadcast] Enviando evento:", data);
-        if (this.accessChannel) {
-            console.log("[Broadcast] Canal disponível, postando mensagem");
-            this.accessChannel.postMessage({
-                type: 'access_event',
-                data: data
-            });
-        } else {
-            console.log("[Broadcast] ERRO: Canal não disponível");
-        }
+        new BroadcastChannel('kandal_access').postMessage({
+            type: 'access_event',
+            data: data
+        });
         this.handleLocalMonitorAccessEvent(data);
     }
 
@@ -9770,28 +9562,12 @@ Equipa KandalGym`;
 
     processarLeituraQR(id) {
         const st = document.getElementById("scan-status");
-        let formattedId = String(id).trim().toUpperCase();
-        
-        // Remove possível AIM ID de leitores hardware (]Q1, ]Q2)
-        // O layout de teclado PT pode transformar o ']' num '+' ou '´'
-        if (formattedId.match(/^[\]+´]Q\d/)) {
-            formattedId = formattedId.substring(3);
-        }
-        // Limpar possíveis aspas ou apóstrofes geradas por erro de layout
-        formattedId = formattedId.replace(/^['"]+|['"]+$/g, '');
-        
-        console.log("[processarLeituraQR] ID recebido:", id);
-        console.log("[processarLeituraQR] ID formatado:", formattedId);
-        console.log("[processarLeituraQR] Total de QR Clients:", this.state.qrClients ? this.state.qrClients.length : 0);
-        if (this.state.qrClients && this.state.qrClients.length > 0) {
-            console.log("[processarLeituraQR] Primeiros 5 IDs disponíveis:", this.state.qrClients.slice(0, 5).map(c => c.id));
-        }
+        const formattedId = String(id).trim().toUpperCase();
 
         // Prevent multiple processing of the same scan within 3 seconds
         if (this.lastProcessedQR === formattedId && (Date.now() - this.lastProcessedTime < 3000)) return;
 
         const c = this.state.qrClients.find(cli => String(cli.id).toUpperCase() === formattedId);
-        console.log("[processarLeituraQR] Cliente encontrado:", c ? c.nome : "NÃO ENCONTRADO");
 
         if (c) {
             // Sincronizar foto mais recente antes de enviar para o ecrã
@@ -9803,8 +9579,8 @@ Equipa KandalGym`;
         }
 
         if (!c) {
-            this.showQRMsg(` Inválido: fmt="${formattedId}" / raw="${id}"`, "bg-qr-danger");
-            this.broadcastAccessEvent({ name: 'INVÁLIDO', msg: `ID: ${formattedId}`, valid: false, photo: null });
+            this.showQRMsg(" Codigo não reconhecido", "bg-qr-danger");
+            this.broadcastAccessEvent({ name: 'INVÁLIDO LIDO', msg: 'CÓDIGO DESCONHECIDO', valid: false, photo: null });
             this.sendToArduino('B');
             this.lastProcessedQR = formattedId;
             this.lastProcessedTime = Date.now();
@@ -9841,8 +9617,7 @@ Equipa KandalGym`;
         // Determinar se é Staff (Teacher ou Admin) para ignorar limites
         const isStaffMember = (this.state.teachers || []).some(t => Number(t.id) === Number(c.clientId)) ||
             (this.state.admins || []).some(a => Number(a.id) === Number(c.clientId)) ||
-            c.plano === 'Staff' ||
-            c.isEmployee === true;
+            c.plano === 'Staff';
 
 
         // Validar cooldown (20 segundos) - Para operações consecutivas
@@ -9913,7 +9688,7 @@ Equipa KandalGym`;
             }
 
             // Processar sucesso Entrada
-            if (!isStaffMember) c.ent--;
+            c.ent--;
             if (!c.histórico) c.histórico = [];
             c.histórico.unshift({ d: agora.toISOString(), t: 'in' });
 
@@ -9933,20 +9708,6 @@ Equipa KandalGym`;
         if (grid) {
             grid.innerHTML = this.renderQRClientCards();
         }
-    }
-
-    toggleEmployeeStatus(qrId) {
-        const qrClient = (this.state.qrClients || []).find(q => q.id === qrId);
-        if (!qrClient) return;
-
-        qrClient.isEmployee = !qrClient.isEmployee;
-        this.saveState();
-        this.renderContent();
-
-        const msg = qrClient.isEmployee
-            ? `✅ ${qrClient.nome} tem agora entradas ilimitadas (Funcionário).`
-            : `⛔ ${qrClient.nome} voltou ao regime normal.`;
-        this.showToast(msg, qrClient.isEmployee ? 'success' : 'info');
     }
 
 
@@ -11084,7 +10845,7 @@ Equipa KandalGym`;
     }
 
     getDayName(dayIndex) {
-        const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+        const days = ['Domingo', 'Segunda-feira', 'terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'sábado'];
         return days[dayIndex];
     }
 
@@ -11945,214 +11706,79 @@ Equipa KandalGym`;
 
         const content = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                <h2 style="margin:0;"><i class="fas fa-utensils" style="color:var(--primary); margin-right:8px;"></i> Escolher Receita</h2>
+                <h2 style="margin:0;"><i class="fas fa-utensils"></i> Escolher Receita</h2>
                 <button class="btn btn-ghost" onclick="app.closeModal()" style="padding:8px;"><i class="fas fa-times"></i></button>
             </div>
-            
-            <div class="search-container" style="margin-bottom:1.5rem; position:relative; display:flex; align-items:center;">
-                <i class="fas fa-search" style="position:absolute; left:15px; color:var(--text-muted);"></i>
-                <input type="text" id="recipe-search-input" placeholder="Pesquisar receita pelo nome..." 
-                    oninput="app.filterRecipesInModal(this.value, ${mealIdx})"
-                    style="width:100%; height:45px; background:rgba(0,0,0,0.3); border:1px solid var(--surface-border); border-radius:10px; padding:0 15px 0 45px; color:#fff; font-size:0.95rem; outline:none; transition:border-color 0.3s;"
-                    onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--surface-border)'"
-                    autofocus>
-            </div>
-
-            <div id="recipe-grid-container" style="max-height:50vh; overflow-y:auto; padding-right:5px;">
-                ${this.renderRecipesListHtml('', mealIdx)}
-            </div>
-        `;
-        this.showModal(content, '650px');
-    }
-
-    renderRecipesListHtml(searchQuery = '', mealIdx) {
-        let recipes = [...(this.state.recipes || [])].sort((a, b) => a.name.localeCompare(b.name));
-        const isMobile = window.innerWidth <= 768;
-
-        if (searchQuery) {
-            const query = this.normalizeText(searchQuery);
-            recipes = recipes.filter(r => this.normalizeText(r.name).includes(query));
-        }
-
-        if (recipes.length === 0) {
-            return `
-                <div style="text-align:center; padding:3rem; color:var(--text-muted);">
-                    <i class="fas fa-search" style="font-size:3rem; opacity:0.3; margin-bottom:1rem; display:block;"></i>
-                    <p>Nenhuma receita encontrada</p>
-                </div>
-            `;
-        }
-
-        return `
-            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(${isMobile ? '140px' : '180px'}, 1fr)); gap:12px;">
-                ${recipes.map(r => {
-                    const macros = this.calculateRecipeMacros(r);
-                    const hasVideo = !!this.extractYoutubeId(r.videoUrl);
-                    return `
-                        <div class="glass-card" onclick="app.showRecipeDetailsInModal('${r.id}', ${mealIdx})" 
-                            style="padding:15px; cursor:pointer; display:flex; flex-direction:column; justify-content:space-between; min-height:130px; border:1px solid rgba(255,255,255,0.05); transition:all 0.2s ease-in-out; border-radius:12px;"
-                            onmouseover="this.style.borderColor='var(--primary)'; this.style.transform='translateY(-2px)'" 
-                            onmouseout="this.style.borderColor='rgba(255,255,255,0.05)'; this.style.transform='translateY(0)'">
-                            
-                            <div>
-                                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-                                    <div style="font-size:1.4rem;">
-                                        ${hasVideo ? '<i class="fab fa-youtube" style="color:#ff0000;"></i>' : '<i class="fas fa-utensils" style="color:var(--primary);"></i>'}
-                                    </div>
-                                    <span style="font-size:0.7rem; background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:6px; color:var(--text-muted);">
-                                        ${r.portions || 1} dose${(r.portions || 1) !== 1 ? 's' : ''}
-                                    </span>
-                                </div>
-                                <div style="font-size:0.9rem; font-weight:700; color:#fff; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; text-overflow:ellipsis; line-height:1.2; margin-bottom:8px;">
-                                    ${r.name}
-                                </div>
-                            </div>
-
-                            <div style="border-top:1px solid rgba(255,255,255,0.05); padding-top:8px;">
-                                <div style="font-size:0.8rem; font-weight:700; color:var(--primary); margin-bottom:2px;">
-                                    ${Math.round(macros.kcal)} kcal
-                                </div>
-                                <div style="font-size:0.65rem; color:var(--text-muted); display:flex; gap:4px; flex-wrap:wrap;">
-                                    <span>P: <strong>${Math.round(macros.prot)}g</strong></span>
-                                    <span>C: <strong>${Math.round(macros.carb)}g</strong></span>
-                                    <span>G: <strong>${Math.round(macros.fat)}g</strong></span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('')}
+            <div style="max-height:60vh; overflow-y:auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(${isMobile ? '140px' : '200px'}, 1fr)); gap:10px;">
+                ${recipes.length === 0 ? `
+                    <p style="grid-column:1/-1; text-align:center; padding:2rem; color:var(--text-muted);">Não existem receitas criadas.</p>
+                ` : recipes.map(r => `
+                    <div class="glass-card" onclick="app.askRecipePortions('${r.id}')" 
+                        style="padding:12px; cursor:pointer; text-align:center; border:1px solid transparent; transition:all 0.2s;"
+                        onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'">
+                        <div style="font-size:1.5rem; margin-bottom:5px;">${this.extractYoutubeId(r.videoUrl) ? '<i class="fab fa-youtube" style="color:red;"></i>' : '<i class="fas fa-utensils" style="color:var(--primary);"></i>'}</div>
+                        <div style="font-size:0.85rem; font-weight:bold; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${r.name}</div>
+                        <div style="font-size:0.7rem; color:var(--text-muted);">${r.ingredients ? r.ingredients.length : 0} Ingredientes</div>
+                    </div>
+                `).join('')}
             </div>
         `;
+        this.showModal(content, '600px');
     }
 
-    filterRecipesInModal(query, mealIdx) {
-        const grid = document.getElementById('recipe-grid-container');
-        if (grid) {
-            grid.innerHTML = this.renderRecipesListHtml(query, mealIdx);
-        }
-    }
-
-    showRecipeDetailsInModal(recipeId, mealIdx) {
+    askRecipePortions(recipeId) {
         const recipe = this.state.recipes.find(r => r.id === recipeId);
         if (!recipe) return;
 
         const portionsYield = recipe.portions || 1;
         const macros = this.calculateRecipeMacros(recipe);
-        const hasVideo = !!this.extractYoutubeId(recipe.videoUrl);
-
-        this.tempRecipeMacros = macros;
-        this.tempRecipePortionsYield = portionsYield;
 
         const content = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; gap:10px;">
-                <button class="btn btn-ghost" onclick="app.showRecipeSelectionForMeal(${mealIdx})" 
-                    style="padding:8px; display:flex; align-items:center; gap:6px; font-size:0.9rem; color:var(--text-muted);">
-                    <i class="fas fa-arrow-left"></i> Voltar
-                </button>
-                <h3 style="margin:0; text-align:right; font-size:1.1rem; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;">${recipe.name}</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h2 style="margin:0;"><i class="fas fa-utensils"></i> Ajustar Porções</h2>
+                <button class="btn btn-ghost" onclick="app.closeModal()" style="padding:8px;"><i class="fas fa-times"></i></button>
             </div>
             
-            <div style="display:flex; flex-direction:column; gap:1.25rem; max-height:70vh; overflow-y:auto; padding-right:5px;">
-                <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); padding:12px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <span style="font-size:0.75rem; color:var(--text-muted); display:block; text-transform:uppercase; font-weight:700;">Rendimento da Receita</span>
-                        <strong style="color:#fff; font-size:0.95rem;">${portionsYield} porção(ões)</strong>
-                    </div>
-                    <div style="text-align:right;">
-                        <span style="font-size:0.75rem; color:var(--text-muted); display:block; text-transform:uppercase; font-weight:700;">Valores Originais</span>
-                        <strong style="color:var(--text-muted); font-size:0.85rem;">
-                            ${Math.round(macros.kcal)} kcal | ${Math.round(macros.prot)}g P | ${Math.round(macros.carb)}g C | ${Math.round(macros.fat)}g G
-                        </strong>
-                    </div>
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                <div>
+                    <h3 style="margin:0 0 5px; color:#fff;">${recipe.name}</h3>
+                    <span style="font-size:0.8rem; color:var(--accent); font-weight:700;">
+                        Rendimento Total: ${portionsYield} porç${portionsYield > 1 ? 'ões' : 'ão'}
+                    </span>
+                </div>
+
+                <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); padding:12px; border-radius:10px;">
+                    <span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px; text-transform:uppercase; font-weight:700;">Valores Totais da Receita</span>
+                    <strong style="color:#fff; font-size:0.95rem;">
+                        ${Math.round(macros.kcal)} kcal | ${Math.round(macros.prot)}g P | ${Math.round(macros.carb)}g C | ${Math.round(macros.fat)}g G
+                    </strong>
                 </div>
 
                 <div>
-                    <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Doses a incluir na refeição</label>
+                    <label style="display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Quantas porções deseja incluir nesta refeição?</label>
                     <div style="display:flex; gap:10px; align-items:center;">
-                        <button class="btn btn-secondary" onclick="app.adjustRecipePortionsInput(-0.5)" 
-                            style="width:40px; height:45px; border-radius:10px; font-size:1.2rem; font-weight:bold; display:flex; align-items:center; justify-content:center; padding:0;">-</button>
-                        
                         <input type="number" id="add-recipe-portions-input" value="1" min="0.1" step="0.5"
                             oninput="app.triggerRecipePortionPreviewUpdate(this.value)"
-                            style="flex:1; max-width:120px; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 10px; font-size:1.1rem; font-weight:600; text-align:center; outline:none;">
-                        
-                        <button class="btn btn-secondary" onclick="app.adjustRecipePortionsInput(0.5)" 
-                            style="width:40px; height:45px; border-radius:10px; font-size:1.2rem; font-weight:bold; display:flex; align-items:center; justify-content:center; padding:0;">+</button>
-                        
-                        <span style="color:var(--text-muted); font-size:0.9rem; font-weight:600;">dose(s)</span>
+                            style="width:100px; height:45px; background:rgba(0,0,0,0.4); color:#fff; border:1px solid var(--surface-border); border-radius:10px; padding:0 15px; font-size:1.1rem; font-weight:600; text-align:center;">
+                        <span style="color:var(--text-muted); font-size:0.9rem;">porção(ões)</span>
                     </div>
                 </div>
 
                 <div id="recipe-portion-preview"></div>
 
-                <div style="border:1px solid rgba(255,255,255,0.05); border-radius:10px; overflow:hidden; background:rgba(0,0,0,0.15);">
-                    <div onclick="app.toggleRecipeDetailsSection('recipe-ing-details')" style="display:flex; justify-content:space-between; align-items:center; padding:12px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05); background:rgba(255,255,255,0.02);">
-                        <span style="font-size:0.85rem; font-weight:700; color:#fff;"><i class="fas fa-list-ul" style="color:var(--primary); margin-right:6px;"></i> Ingredientes (${recipe.ingredients ? recipe.ingredients.length : 0})</span>
-                        <i class="fas fa-chevron-down" id="recipe-ing-details-icon" style="font-size:0.8rem; color:var(--text-muted); transition:transform 0.3s;"></i>
-                    </div>
-                    <div id="recipe-ing-details" style="display:none; padding:12px; max-height:200px; overflow-y:auto; font-size:0.85rem; border-bottom:1px solid rgba(255,255,255,0.05);">
-                        <ul style="margin:0; padding-left:15px; line-height:1.5; color:rgba(255,255,255,0.85);">
-                            ${recipe.ingredients && recipe.ingredients.length > 0 ? recipe.ingredients.map(ing => `
-                                <li style="margin-bottom:4px;">
-                                    <strong>${ing.name}</strong>${ing.amount ? `: ${ing.amount}` : ''}
-                                </li>
-                            `).join('') : '<li style="color:var(--text-muted); list-style:none;">Sem ingredientes.</li>'}
-                        </ul>
-                    </div>
-
-                    <div onclick="app.toggleRecipeDetailsSection('recipe-prep-details')" style="display:flex; justify-content:space-between; align-items:center; padding:12px; cursor:pointer; background:rgba(255,255,255,0.02);">
-                        <span style="font-size:0.85rem; font-weight:700; color:#fff;"><i class="fas fa-book-open" style="color:var(--primary); margin-right:6px;"></i> Modo de Preparação</span>
-                        <i class="fas fa-chevron-down" id="recipe-prep-details-icon" style="font-size:0.8rem; color:var(--text-muted); transition:transform 0.3s;"></i>
-                    </div>
-                    <div id="recipe-prep-details" style="display:none; padding:12px; max-height:200px; overflow-y:auto; font-size:0.85rem; line-height:1.5; color:rgba(255,255,255,0.85); white-space:pre-line;">
-                        ${recipe.description ? recipe.description : '<p style="color:var(--text-muted); margin:0;">Sem instruções de preparação.</p>'}
-                    </div>
-                </div>
-
-                ${hasVideo ? `
-                    <a href="${recipe.videoUrl}" target="_blank" class="btn btn-secondary" 
-                        style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background:rgba(255,0,0,0.1); border:1px solid rgba(255,0,0,0.3); color:#ff4d4d; font-weight:700;">
-                        <i class="fab fa-youtube"></i> Ver Vídeo da Receita
-                    </a>
-                ` : ''}
-
-                <button class="btn btn-primary" onclick="app.confirmAddRecipeToMeal('${recipe.id}', ${mealIdx})"
-                    style="width:100%; height:48px; border-radius:12px; font-weight:800; font-size:1rem; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:0.5rem; background:linear-gradient(135deg, var(--primary), var(--accent)); border:none;">
-                    <i class="fas fa-check"></i> Confirmar e Adicionar
+                <button class="btn btn-primary" onclick="app.confirmAddRecipeToMeal('${recipe.id}')"
+                    style="width:100%; height:48px; border-radius:12px; font-weight:800; font-size:1rem; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <i class="fas fa-check"></i> Adicionar ao Plano
                 </button>
             </div>
         `;
 
-        const modalContent = document.querySelector('.modal-content');
-        if (modalContent) {
-            modalContent.innerHTML = content;
-            this.triggerRecipePortionPreviewUpdate(1);
-        } else {
-            this.showModal(content, '500px');
-            this.triggerRecipePortionPreviewUpdate(1);
-        }
-    }
-
-    adjustRecipePortionsInput(change) {
-        const input = document.getElementById('add-recipe-portions-input');
-        if (input) {
-            let val = parseFloat(input.value) || 1;
-            val = Math.max(0.1, val + change);
-            input.value = parseFloat(val.toFixed(2));
-            this.triggerRecipePortionPreviewUpdate(input.value);
-        }
-    }
-
-    toggleRecipeDetailsSection(sectionId) {
-        const el = document.getElementById(sectionId);
-        const icon = document.getElementById(sectionId + '-icon');
-        if (el) {
-            const isHidden = el.style.display === 'none';
-            el.style.display = isHidden ? 'block' : 'none';
-            if (icon) {
-                icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
-            }
-        }
+        this.showModal(content, '480px');
+        
+        this.tempRecipeMacros = macros;
+        this.tempRecipePortionsYield = portionsYield;
+        
+        this.triggerRecipePortionPreviewUpdate(1);
     }
 
     triggerRecipePortionPreviewUpdate(val) {
@@ -12176,8 +11802,7 @@ Equipa KandalGym`;
         }
     }
 
-    confirmAddRecipeToMeal(recipeId, mealIdx) {
-        if (mealIdx !== undefined) this.currentMealIdxForRecipe = mealIdx;
+    confirmAddRecipeToMeal(recipeId) {
         const input = document.getElementById('add-recipe-portions-input');
         const selectedPortions = Math.max(0.1, parseFloat(input.value) || 1);
         this.addRecipeToMealWithPortions(recipeId, selectedPortions);
@@ -12199,10 +11824,32 @@ Equipa KandalGym`;
             fat: totalMacros.fat * factor
         };
 
-        let textToAdd = `- Receita: ${recipe.name} (${selectedPortions} dose(s))\n`;
+        let textToAdd = `\n--- RECEITA: ${recipe.name.toUpperCase()} (${selectedPortions} Porção${selectedPortions !== 1 ? 'ões' : ''} de ${portionsYield}) ---\n`;
+
         if (macros.kcal > 0) {
-            textToAdd += `(Valores: ${Math.round(macros.kcal)}kcal | ${Math.round(macros.prot)}g P | ${Math.round(macros.carb)}g C | ${Math.round(macros.fat)}g G)`;
+            textToAdd += `(Valores: ${Math.round(macros.kcal)}kcal | ${Math.round(macros.prot)}g P | ${Math.round(macros.carb)}g C | ${Math.round(macros.fat)}g G)\n\n`;
         }
+
+        textToAdd += `INGREDIENTES DA RECEITA COMPLETA (Rende ${portionsYield} porç${portionsYield > 1 ? 'ões' : 'ão'}):\n`;
+        if (recipe.ingredients && recipe.ingredients.length > 0) {
+            recipe.ingredients.forEach(ing => {
+                if (ing.name && ing.amount) {
+                    textToAdd += `• ${ing.name}: ${ing.amount}\n`;
+                } else if (ing.name) {
+                    textToAdd += `• ${ing.name}\n`;
+                }
+            });
+        }
+
+        if (recipe.description) {
+            textToAdd += `\nPREPARAÇÃO:\n${recipe.description}\n`;
+        }
+
+        if (recipe.videoUrl) {
+            textToAdd += `\nVídeo Tutorial: ${recipe.videoUrl}\n`;
+        }
+
+        textToAdd += `----------------------------\n`;
 
         const currentItems = this.editingMeal.meals[mealIdx].items || '';
         this.editingMeal.meals[mealIdx].items = (currentItems.trim() ? currentItems.trim() + '\n' + textToAdd : textToAdd).trim();
@@ -12213,11 +11860,7 @@ Equipa KandalGym`;
     }
 
     addRecipeToMeal(recipeId) {
-        this.showRecipeDetailsInModal(recipeId, this.currentMealIdxForRecipe);
-    }
-
-    askRecipePortions(recipeId) {
-        this.showRecipeDetailsInModal(recipeId, this.currentMealIdxForRecipe);
+        this.askRecipePortions(recipeId);
     }
 
     calculateRecipeMacros(recipe) {
