@@ -9071,11 +9071,9 @@ Equipa KandalGym`;
                             <button class="btn-icon" onclick="app.showUserQRLogs('${c.id}')" title="Ver Histórico de Acessos" style="background:rgba(255,255,255,0.05); color:var(--text-muted); width: 38px; height: 38px;">
                                 <i class="fas fa-history"></i>
                             </button>
-                            ${c.clientId ? `
-                            <button class="btn-icon" onclick="app.resendInviteFromQR('${c.id}')" title="Reenviar Convite (WhatsApp/Email)" style="background:rgba(var(--primary-rgb), 0.1); color:var(--primary); width: 38px; height: 38px;">
+                            <button class="btn-icon" onclick="app.resendInviteFromQR('${c.id}')" title="Enviar Mensagem / Convite" style="background:rgba(var(--primary-rgb), 0.1); color:var(--primary); width: 38px; height: 38px;">
                                 <i class="fas fa-paper-plane"></i>
                             </button>
-                            ` : '<div style="width:38px; height:38px;"></div>'}
                             
                             <!-- Linha 2 -->
                             <button class="btn-icon" onclick="app.toggleQRCodeDisplay('qr-row-area-${idx}', '${c.id}')" title="Gerar QR" style="width: 38px; height: 38px;">
@@ -9106,19 +9104,28 @@ Equipa KandalGym`;
 
     resendInviteFromQR(qrId) {
         const qrClient = (this.state.qrClients || []).find(q => q.id === qrId);
-        if (!qrClient || !qrClient.clientId) return alert("Não foi possível encontrar o ID original deste cliente.");
+        if (!qrClient) return alert("Não foi possível encontrar este registo.");
 
-        // Procurar o utilizador real em todas as coleções
-        const allUsers = [...(this.state.clients || []), ...(this.state.teachers || []), ...(this.state.admins || [])];
-        const user = allUsers.find(u => Number(u.id) === Number(qrClient.clientId));
+        let name = qrClient.nome || '';
+        let email = '';
+        let pass = 'Avulso';
+        let type = 'client';
+        let phone = qrClient.tel || '';
 
-        if (!user) return alert("Os dados da conta original não foram encontrados.");
+        if (qrClient.clientId) {
+            const allUsers = [...(this.state.clients || []), ...(this.state.teachers || []), ...(this.state.admins || [])];
+            const user = allUsers.find(u => Number(u.id) === Number(qrClient.clientId));
+            if (user) {
+                name = user.name || name;
+                email = user.email || email;
+                pass = user.password || 'Kandal123';
+                phone = user.phone || phone;
+                const isStaff = (this.state.teachers || []).some(t => Number(t.id) === Number(user.id));
+                type = isStaff ? 'teacher' : 'client';
+            }
+        }
 
-        // Determinar o tipo para o modal
-        const isStaff = (this.state.teachers || []).some(t => Number(t.id) === Number(user.id));
-        const type = isStaff ? 'teacher' : 'client';
-
-        this.showInviteModal(user.name, user.email, user.password || 'Kandal123', type, user.phone, qrId);
+        this.showInviteModal(name, email, pass, type, phone, qrId);
     }
 
     filterQRList(val) {
