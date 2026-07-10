@@ -1351,12 +1351,20 @@ class FitnessApp {
     }
 
     showInviteModal(name, email, pass, type, phone, qrId = null) {
+        const isCasual = pass === 'Avulso' && !email;
         const label = type === 'teacher' ? 'Professor' : 'Aluno';
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
 
-        const subject = `Bem-vindo a KandalGym - ${name}`;
-        const body = `Olá ${name},
+        let subject, body, whatsappText;
+
+        if (isCasual) {
+            subject = `Kandal Gym - Visit`;
+            body = `Thank you so much for visiting Kandal Gym, it was a pleasure having you here at our gym, we hope you enjoyed it.\n\nWe look forward to seeing you on a future visit.\n\nBest regards,\nKandal Gym`;
+            whatsappText = body;
+        } else {
+            subject = `Bem-vindo a KandalGym - ${name}`;
+            body = `Olá ${name},
 A sua conta de ${label} na KandalGym foi criada com sucesso!
 Esta App ainda encontra-se em fase de teste, mas poderá já usufruir de várias funcionalidades como: a marcação de aulas, consulta dos seus planos de treino, avaliações físicas e planos alimentares.
 Poderá aceder a plataforma através do seguinte endereço: https://kandalspahealthclub.github.io/KandalGym/
@@ -1371,16 +1379,17 @@ Recomendamos que guarde este link nos seus favoritos ou instale a App no seu tel
 Bons treinos!
 Equipa KandalGym`;
 
-        const whatsappText = `*Bem-vindo a KandalGym*\n` +
-            `---------------------------------------------\n` +
-            `Olá *${name}*, a sua conta de *${label}* foi criada!\n` +
-            `*CREDENCIAIS DE ACESSO:*\n` +
-            `*Email:* ${email}\n` +
-            `*Password:* ${pass}\n` +
-            `*AVISO:* Altere a sua password no menu "Perfil" após o primeiro acesso.\n\n` +
-            `_A App está em fase de teste, mas já pode usar a marcação de aulas, os planos de treino e muito mais._\n` +
-            `*Acesso:* https://kandalspahealthclub.github.io/KandalGym/\n` +
-            `Bons treinos!`;
+            whatsappText = `*Bem-vindo a KandalGym*\n` +
+                `---------------------------------------------\n` +
+                `Olá *${name}*, a sua conta de *${label}* foi criada!\n` +
+                `*CREDENCIAIS DE ACESSO:*\n` +
+                `*Email:* ${email}\n` +
+                `*Password:* ${pass}\n` +
+                `*AVISO:* Altere a sua password no menu "Perfil" após o primeiro acesso.\n\n` +
+                `_A App está em fase de teste, mas já pode usar a marcação de aulas, os planos de treino e muito mais._\n` +
+                `*Acesso:* https://kandalspahealthclub.github.io/KandalGym/\n` +
+                `Bons treinos!`;
+        }
 
         const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
@@ -1393,30 +1402,36 @@ Equipa KandalGym`;
                 <div style="background: var(--success); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: white; font-size: 1.5rem;">
                     <i class="fas fa-check"></i>
                 </div>
-                <h2 style="margin-top: 0;">Conta Criada!</h2>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">O utilizador <strong>${name}</strong> foi adicionado com sucesso ao sistema.</p>
+                <h2 style="margin-top: 0;">${isCasual ? 'Mensagem Pronta!' : 'Conta Criada!'}</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">${isCasual ? `Enviar mensagem de agradecimento para <strong>${name}</strong>.` : `O utilizador <strong>${name}</strong> foi adicionado com sucesso ao sistema.`}</p>
                 
+                ${isCasual ? '' : `
                 <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; margin: 1.5rem 0; text-align: left; font-size: 0.85rem;">
                     <div style="margin-bottom: 0.5rem;"><i class="fas fa-envelope" style="width: 20px;"></i> ${email}</div>
                     <div style="margin-bottom: 0.5rem;"><i class="fas fa-phone" style="width: 20px;"></i> ${phone}</div>
                     <div><i class="fas fa-lock" style="width: 20px;"></i> ${pass}</div>
                 </div>
+                `}
 
-                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; ${isCasual ? 'margin-top: 1.5rem;' : ''}">
                     <a href="${whatsappLink}" target="_blank" class="btn" onclick="app.markInviteSent('${qrId}')" style="text-decoration: none; background: #25D366; color: white;">
                         <i class="fab fa-whatsapp"></i> Enviar por WhatsApp
                     </a>
+                    ${isCasual ? '' : `
                     <a href="${mailtoLink}" class="btn btn-secondary" onclick="app.markInviteSent('${qrId}')" style="text-decoration: none;">
                         <i class="fas fa-envelope"></i> Enviar por Email
                     </a>
+                    `}
                     <button class="btn btn-ghost" onclick="app.closeModal();">
                         Concluir <i class="fas fa-times"></i>
                     </button>
                 </div>
                 
+                ${isCasual ? '' : `
                 <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 1.5rem;">
                     * Escolha o metodo de envio acima para partilhar as credenciais com o utilizador.
                 </p>
+                `}
             </div>
         `;
         document.body.appendChild(modal);
