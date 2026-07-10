@@ -8179,7 +8179,7 @@ Equipa KandalGym`;
         const items = this.dashboardData[type];
         
         let listHtml = items.map(item => `
-            <div class="glass-card" style="padding:1rem; margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center; transition: transform 0.2s; ${item.clientId ? 'cursor:pointer;' : ''}" ${item.clientId ? `onclick="app.spyClient('${item.clientId}'); document.querySelector('.modal-overlay').remove();"` : ''}>
+            <div class="glass-card dashboard-detail-item" data-name="${(item.name || '').replace(/"/g, '&quot;')}" style="padding:1rem; margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center; transition: transform 0.2s; ${item.clientId ? 'cursor:pointer;' : ''}" ${item.clientId ? `onclick="app.spyClient('${item.clientId}'); document.querySelector('.modal-overlay').remove();"` : ''}>
                 <div>
                     <strong style="color:#fff; font-size:1.1rem;">${item.name}</strong>
                     ${item.date ? `<div style="color:var(--text-muted); font-size:0.85rem; margin-top:4px;"><i class="far fa-calendar-alt"></i> ${item.date}</div>` : ''}
@@ -8199,12 +8199,26 @@ Equipa KandalGym`;
         modal.className = 'modal-overlay animate-fade-in';
         modal.innerHTML = `
             <div class="glass-panel animate-scale-up" style="max-width: 500px; width: 95%; max-height: 85vh; display: flex; flex-direction: column; padding: 1.5rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--surface-border);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--surface-border);">
                     <h3 style="margin: 0; display:flex; align-items:center; gap:10px;"><i class="fas ${icon}" style="color:var(--primary);"></i> ${title}</h3>
                     <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
+                ${type === 'clients' ? `
+                <div class="search-container" style="margin-bottom: 1rem;">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Pesquisar aluno..." class="search-bar"
+                        oninput="
+                            const q = this.value.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');
+                            const items = this.closest('.glass-panel').querySelectorAll('.dashboard-detail-item');
+                            items.forEach(item => {
+                                const name = item.getAttribute('data-name').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');
+                                item.style.display = name.includes(q) ? 'flex' : 'none';
+                            });
+                        ">
+                </div>
+                ` : ''}
                 <div style="overflow-y: auto; padding-right: 5px;">
                     ${listHtml}
                 </div>
