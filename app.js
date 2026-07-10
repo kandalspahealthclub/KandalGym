@@ -7991,8 +7991,7 @@ Equipa KandalGym`;
         const client = this.state.clients.find(c => c.id == clientId);
 
         this.showModal(`
-            <div class="modal-sidebar-layout">
-                <!-- Sidebar/Nav áÂrea -->
+            <div class="modal-sidebar-layout" style="position: relative;">
                 <div class="modal-sidebar-nav">
                     <div>
                         <div style="width: 50px; height: 50px; border-radius: 12px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #fff; margin-bottom: 1rem; box-shadow: 0 8px 16px rgba(145, 27, 43, 0.3);">
@@ -8008,18 +8007,15 @@ Equipa KandalGym`;
                     <button class="btn btn-ghost btn-sm" style="justify-content: flex-start;" onclick="document.getElementById('anam-section-2').scrollIntoView({behavior:'smooth'})">
                         <i class="fas fa-heartbeat" style="width: 20px;"></i> <span>Histórico Saúde</span>
                     </button>
-                    <div style="margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--surface-border);">
+                    <div class="desktop-only-save" style="margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--surface-border);">
                          <button class="btn btn-primary" style="width:100%; height: 50px; font-size: 1rem;" onclick="app.saveAnamnesis(${clientId}, ${index})">
                             <i class="fas fa-save"></i> GRAVAR
                         </button>
                         <button class="btn btn-ghost" style="width:100%; margin-top: 0.5rem;" onclick="app.closeModal()">Cancelar</button>
                     </div>
-
-
                 </div>
 
-                <!-- Content áÂrea -->
-                <div class="modal-sidebar-content">
+                <div class="modal-sidebar-content" style="padding-bottom: 80px;">
                     <div id="anam-section-1" style="margin-bottom: 4rem;">
                         <h3 style="color: var(--primary); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
                             <span style="width: 30px; height: 30px; border-radius: 50%; background: rgba(145, 27, 43, 0.1); display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">1</span>

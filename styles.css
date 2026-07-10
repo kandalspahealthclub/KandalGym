@@ -1062,8 +1062,9 @@ option {
     .modal-sidebar-nav h2,
     .modal-sidebar-nav p,
     .modal-sidebar-nav .btn-primary,
-    .modal-sidebar-nav>div:first-child {
-        display: none;
+    .modal-sidebar-nav>div:first-child,
+    .desktop-only-save {
+        display: none !important;
     }
 
     .modal-sidebar-nav .btn-ghost {
