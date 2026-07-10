@@ -1094,6 +1094,18 @@ option {
     }
 }
 
+.anamnesis-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .anamnesis-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Anamnesis History Mobile Adjustments */
 .anamnesis-item {
     display: flex;
