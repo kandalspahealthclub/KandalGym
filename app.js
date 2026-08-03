@@ -10391,6 +10391,82 @@ Equipa KandalGym`;
         return `${dayName}, ${formattedDate}`;
     }
 
+    getClassesArray() {
+        if (!this.state || !this.state.classes) return [];
+        let list = [];
+        if (Array.isArray(this.state.classes)) {
+            list = this.state.classes;
+        } else if (typeof this.state.classes === 'object') {
+            list = Object.values(this.state.classes);
+        }
+        return list.filter(c => c && typeof c === 'object');
+    }
+
+    getTeachersArray() {
+        if (!this.state || !this.state.teachers) return [];
+        if (Array.isArray(this.state.teachers)) return this.state.teachers;
+        if (typeof this.state.teachers === 'object') return Object.values(this.state.teachers);
+        return [];
+    }
+
+    getEnrollmentsArray(classId) {
+        if (!this.state || !this.state.enrollments) return [];
+        const classIdStr = String(classId);
+        const raw = this.state.enrollments[classIdStr] || this.state.enrollments[Number(classId)] || [];
+        if (Array.isArray(raw)) return raw;
+        if (typeof raw === 'object' && raw !== null) return Object.values(raw);
+        return [];
+    }
+
+    getTrialParticipantsArray(classId) {
+        if (!this.state || !this.state.trialParticipants) return [];
+        const classIdStr = String(classId);
+        const raw = this.state.trialParticipants[classIdStr] || this.state.trialParticipants[Number(classId)] || [];
+        if (Array.isArray(raw)) return raw;
+        if (typeof raw === 'object' && raw !== null) return Object.values(raw);
+        return [];
+    }
+
+    getClassDay(c) {
+        if (!c) return 1;
+        if (c.day !== undefined && c.day !== null && !isNaN(Number(c.day))) {
+            return Number(c.day);
+        }
+        if (c.date) {
+            return new Date(c.date + 'T12:00:00').getDay();
+        }
+        return 1;
+    }
+
+    getClassEffectiveDate(c) {
+        if (!c || !c.date) return { date: c ? c.date : '', isFinished: false, day: this.getClassDay(c) };
+        const classTime = c.time || '00:00';
+        let classDateTime = new Date(`${c.date}T${classTime}`);
+        const now = new Date();
+        
+        if (isNaN(classDateTime.getTime())) return { date: c.date, isFinished: false, day: this.getClassDay(c) };
+        
+        let dateStr = c.date;
+        let dayVal = this.getClassDay(c);
+
+        if (c.isRecurring) {
+            const gracePeriod = 180 * 60 * 1000;
+            let safety = 0;
+            while (classDateTime.getTime() + gracePeriod < now.getTime() && safety < 100) {
+                classDateTime.setDate(classDateTime.getDate() + 7);
+                safety++;
+            }
+            const y = classDateTime.getFullYear();
+            const m = String(classDateTime.getMonth() + 1).padStart(2, '0');
+            const d = String(classDateTime.getDate()).padStart(2, '0');
+            dateStr = `${y}-${m}-${d}`;
+            dayVal = classDateTime.getDay();
+        }
+        
+        const isFinished = now.getTime() > (classDateTime.getTime() + 60000);
+        return { date: dateStr, isFinished, day: dayVal };
+    }
+
     renderClassesView(container) {
         container.innerHTML = `
             <div class="page-header">
@@ -10417,7 +10493,7 @@ Equipa KandalGym`;
     }
 
     renderAdminClasses(container) {
-        const classes = this.state.classes || [];
+        const classes = this.getClassesArray();
         if (classes.length === 0) {
             container.innerHTML = `
                 <div class="glass-card" style="text-align:center; padding:3rem;">
@@ -10430,8 +10506,10 @@ Equipa KandalGym`;
         }
 
         const sortedClasses = [...classes].sort((a, b) => {
-            if (a.day !== b.day) return a.day - b.day;
-            return a.time.localeCompare(b.time);
+            const dayA = this.getClassDay(a);
+            const dayB = this.getClassDay(b);
+            if (dayA !== dayB) return dayA - dayB;
+            return (a.time || '').localeCompare(b.time || '');
         });
 
         container.innerHTML = `
@@ -10450,35 +10528,35 @@ Equipa KandalGym`;
                         </thead>
                         <tbody>
                             ${sortedClasses.map(c => {
-            const teacher = (this.state.teachers || []).find(t => Number(t.id) === Number(c.teacherId));
-            const classIdStr = String(c.id);
-            const participants = this.state.enrollments[classIdStr] || this.state.enrollments[c.id] || [];
-            const trials = (this.state.trialParticipants || {})[classIdStr] || [];
-            const totalCount = participants.length + trials.length;
-            return `
-                                <tr style="border-bottom:1px solid var(--surface-border);">
-                                    <td style="padding:1rem; font-weight:600;">
-                                        ${this.formatFullDate(c.day, c.date)}
-                                    </td>
-                                    <td style="padding:1rem;">${c.time}</td>
-                                    <td style="padding:1rem; color:var(--primary); font-weight:bold;">${c.name}</td>
-                                    <td style="padding:1rem; font-size:0.9rem;">${teacher ? teacher.name : 'N/A'}</td>
-                                    <td style="padding:1rem;">
-                                        ${this.isClassFinished(c) ?
-                    `<span class="badge badge-error">Finalizada</span>` :
-                    `<span class="badge ${totalCount >= (c.capacity || 20) ? 'badge-purple' : 'badge-green'}">
-                                                ${participants.length > 0 || trials.length === 0 ? participants.length : ''}${trials.length > 0 ? (participants.length > 0 ? `<span style="color:#ffaa00;">+${trials.length}</span>` : `<span style="color:#ffaa00;">${trials.length}exp</span>`) : ''} / ${c.capacity || 20}
-                                            </span>`
-                }
-                                    </td>
-                                    <td style="padding:1rem; text-align:right;">
-                                        <button class="btn btn-ghost btn-sm" onclick="app.showParticipantsList('${c.id}')" title="Ver Lista / Inscritos"><i class="fas fa-users"></i></button>
-                                        <button class="btn btn-ghost btn-sm" onclick="app.showClassModal(${c.id})" title="Editar"><i class="fas fa-edit"></i></button>
-                                        <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.deleteClass(${c.id})" title="Apagar"><i class="fas fa-trash"></i></button>
-                                    </td>
-                                </tr>
+                                const teacher = this.getTeachersArray().find(t => Number(t.id) === Number(c.teacherId));
+                                const classIdStr = String(c.id);
+                                const participants = this.getEnrollmentsArray(c.id);
+                                const trials = this.getTrialParticipantsArray(c.id);
+                                const totalCount = participants.length + trials.length;
+                                return `
+                                    <tr style="border-bottom:1px solid var(--surface-border);">
+                                        <td style="padding:1rem; font-weight:600;">
+                                            ${this.formatFullDate(this.getClassDay(c), c.date)}
+                                        </td>
+                                        <td style="padding:1rem;">${c.time || ''}</td>
+                                        <td style="padding:1rem; color:var(--primary); font-weight:bold;">${c.name || ''}</td>
+                                        <td style="padding:1rem; font-size:0.9rem;">${teacher ? teacher.name : 'N/A'}</td>
+                                        <td style="padding:1rem;">
+                                            ${this.isClassFinished(c) ?
+                                                `<span class="badge badge-error">Finalizada</span>` :
+                                                `<span class="badge ${totalCount >= (c.capacity || 20) ? 'badge-purple' : 'badge-green'}">
+                                                    ${participants.length > 0 || trials.length === 0 ? participants.length : ''}${trials.length > 0 ? (participants.length > 0 ? `<span style="color:#ffaa00;">+${trials.length}</span>` : `<span style="color:#ffaa00;">${trials.length}exp</span>`) : ''} / ${c.capacity || 20}
+                                                </span>`
+                                            }
+                                        </td>
+                                        <td style="padding:1rem; text-align:right;">
+                                            <button class="btn btn-ghost btn-sm" onclick="app.showParticipantsList('${c.id}')" title="Ver Lista / Inscritos"><i class="fas fa-users"></i></button>
+                                            <button class="btn btn-ghost btn-sm" onclick="app.showClassModal(${c.id})" title="Editar"><i class="fas fa-edit"></i></button>
+                                            <button class="btn btn-ghost btn-sm" style="color:var(--danger);" onclick="app.deleteClass(${c.id})" title="Apagar"><i class="fas fa-trash"></i></button>
+                                        </td>
+                                    </tr>
                                 `;
-        }).join('')}
+                            }).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -10493,17 +10571,20 @@ Equipa KandalGym`;
         }
 
         const currentUserid = Number(this.currentUser.id);
-        const myClasses = (this.state.classes || []).filter(c => Number(c.teacherId) === currentUserid).sort((a, b) => {
-            if (a.date && b.date) return a.date.localeCompare(b.date) || a.time.localeCompare(b.time);
-            if (a.day !== b.day) return a.day - b.day;
-            return a.time.localeCompare(b.time);
+        const classes = this.getClassesArray();
+        const myClasses = classes.filter(c => Number(c.teacherId) === currentUserid).sort((a, b) => {
+            if (a.date && b.date) return a.date.localeCompare(b.date) || (a.time || '').localeCompare(b.time || '');
+            const dayA = this.getClassDay(a);
+            const dayB = this.getClassDay(b);
+            if (dayA !== dayB) return dayA - dayB;
+            return (a.time || '').localeCompare(b.time || '');
         });
 
         if (myClasses.length === 0) {
             container.innerHTML = `
                 <div class="glass-card" style="text-align:center; padding:3rem;">
                     <i class="fas fa-calendar-day" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
-                    <p>Não tem aulas atribuidas ao seu nome (ID: ${currentUserid}).</p>
+                    <p>Não tem aulas atribuídas ao seu nome (ID: ${currentUserid}).</p>
                 </div>
             `;
             return;
@@ -10512,28 +10593,27 @@ Equipa KandalGym`;
         container.innerHTML = `
             <div class="video-grid">
                 ${myClasses.map(c => {
-            const classIdStr = String(c.id);
-            const participantsIds = this.state.enrollments[classIdStr] || [];
-            const participants = participantsIds.map(pid => {
-                const clientId = Number(pid);
-                return (this.state.clients || []).find(cl => Number(cl.id) === clientId);
-            }).filter(x => x);
-            const trials = (this.state.trialParticipants || {})[classIdStr] || [];
-            const totalCount = participants.length + trials.length;
+                    const classIdStr = String(c.id);
+                    const clients = Array.isArray(this.state.clients) ? this.state.clients : Object.values(this.state.clients || {});
+                    const participants = this.getEnrollmentsArray(c.id).map(pid => {
+                        const clientId = Number(pid);
+                        return clients.find(cl => Number(cl.id) === clientId);
+                    }).filter(x => x);
+                    const trials = this.getTrialParticipantsArray(c.id);
 
-            return `
+                    return `
                         <div class="glass-card" style="display:flex; flex-direction:column; padding:0.8rem;">
                             <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:0.4rem;">
-                                <span style="font-size:1rem; font-weight:800; color:var(--primary);">${c.time}</span>
+                                <span style="font-size:1rem; font-weight:800; color:var(--primary);">${c.time || ''}</span>
                                 <div style="display:flex; gap:4px; align-items:center;">
                                     ${trials.length > 0 ? `<div class="badge" style="background:rgba(255,165,0,0.15); color:#ffaa00; border:1px solid rgba(255,165,0,0.4); font-size:0.6rem; padding:0.1rem 0.4rem;">${trials.length} exp</div>` : ''}
                                     ${participants.length > 0 || trials.length === 0 ? `<div class="badge badge-blue" style="font-size:0.6rem; padding:0.1rem 0.4rem;">${participants.length} alunos</div>` : ''}
                                 </div>
                             </div>
                             <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:0.2rem;">
-                                <i class="fas fa-calendar-alt"></i> ${this.formatFullDate(c.day, c.date)}
+                                <i class="fas fa-calendar-alt"></i> ${this.formatFullDate(this.getClassDay(c), c.date)}
                             </div>
-                            <h4 style="margin-bottom:0.5rem; font-size:0.95rem; line-height:1.2; min-height:2.4em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${c.name}</h4>
+                            <h4 style="margin-bottom:0.5rem; font-size:0.95rem; line-height:1.2; min-height:2.4em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${c.name || ''}</h4>
                             
                             <div style="margin-top:auto; padding-top:0.5rem; border-top:1px solid var(--surface-border);">
                                 <button class="btn btn-primary btn-sm" style="width:100%; font-size:0.75rem; padding:0.5rem;" onclick='app.showParticipantsList("${classIdStr}")'>
@@ -10542,24 +10622,23 @@ Equipa KandalGym`;
                             </div>
                         </div>
                     `;
-        }).join('')}
+                }).join('')}
             </div>
         `;
     }
 
     showParticipantsList(classId) {
         const classIdStr = String(classId);
-        const cls = this.state.classes.find(c => String(c.id) === classIdStr);
-        const participantsIds = this.state.enrollments[classIdStr] || [];
+        const classes = this.getClassesArray();
+        const cls = classes.find(c => String(c.id) === classIdStr || Number(c.id) === Number(classId));
+        const participantsIds = this.getEnrollmentsArray(classId);
+        const clients = Array.isArray(this.state.clients) ? this.state.clients : Object.values(this.state.clients || {});
         const participants = participantsIds.map(pid => {
             const clientId = Number(pid);
-            return (this.state.clients || []).find(cl => Number(cl.id) === clientId);
+            return clients.find(cl => Number(cl.id) === clientId);
         }).filter(x => x);
 
-        // Trial / experimental participants
-        if (!this.state.trialParticipants) this.state.trialParticipants = {};
-        const trials = this.state.trialParticipants[classIdStr] || [];
-
+        const trials = this.getTrialParticipantsArray(classId);
         const totalCount = participants.length + trials.length;
 
         const content = `
@@ -10576,7 +10655,7 @@ Equipa KandalGym`;
                         <input type="text" id="manualEnrollSearch" placeholder="Pesquisar..." onkeyup="app.filterManualEnrollSearch()" style="width: 100px; background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); border-radius: 6px; padding: 6px 10px; color: #fff; font-size: 0.85rem;">
                         <select id="manualEnrollSelect" style="flex: 1; min-width: 0; background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); border-radius: 6px; padding: 6px 10px; color: #fff; font-size: 0.85rem;">
                             <option value="">Selecione um aluno...</option>
-                            ${(this.state.clients || []).filter(c => !participantsIds.includes(String(c.id)) && !participantsIds.includes(c.id)).sort((a, b) => a.name.localeCompare(b.name)).map(c => `<option value="${c.id}">${c.name} (Ref: ${c.id})</option>`).join('')}
+                            ${clients.filter(c => !participantsIds.includes(String(c.id)) && !participantsIds.includes(c.id)).sort((a, b) => (a.name || '').localeCompare(b.name || '')).map(c => `<option value="${c.id}">${c.name} (Ref: ${c.id})</option>`).join('')}
                         </select>
                         <button class="btn btn-primary btn-sm" onclick="app.enrollManualStudent('${classIdStr}')" style="white-space: nowrap;"><i class="fas fa-plus"></i> Ingresso</button>
                     </div>
@@ -10594,10 +10673,10 @@ Equipa KandalGym`;
                 ${participants.map(p => `
                     <div style="display:flex; align-items:center; gap:0.75rem; padding:0.8rem; background:rgba(255,255,255,0.03); border-radius:12px;">
                         <div style="width:36px; height:36px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:bold;">
-                            ${p.name.substring(0, 2).toUpperCase()}
+                            ${(p.name || 'AN').substring(0, 2).toUpperCase()}
                         </div>
                         <div style="flex:1;">
-                            <div style="font-size:0.95rem; font-weight:600;">${p.name}</div>
+                            <div style="font-size:0.95rem; font-weight:600;">${p.name || ''}</div>
                             <div style="font-size:0.8rem; color:var(--text-muted);">${p.phone || 'Sem telefone'}</div>
                         </div>
                         <button class="btn btn-ghost btn-sm" onclick="app.closeModal(); app.openChat(${p.id})" title="Enviar Mensagem"><i class="fas fa-comment-alt" style="color:var(--primary);"></i></button>
@@ -10610,10 +10689,10 @@ Equipa KandalGym`;
                 ${trials.map(t => `
                     <div style="display:flex; align-items:center; gap:0.75rem; padding:0.8rem; background:rgba(255,165,0,0.07); border-radius:12px; border:1px solid rgba(255,165,0,0.2);">
                         <div style="width:36px; height:36px; border-radius:50%; background:#ffaa00; display:flex; align-items:center; justify-content:center; font-size:0.85rem; font-weight:bold; color:#000;">
-                            ${t.name.substring(0, 2).toUpperCase()}
+                            ${(t.name || 'VS').substring(0, 2).toUpperCase()}
                         </div>
                         <div style="flex:1;">
-                            <div style="font-size:0.95rem; font-weight:600;">${t.name} <span style="font-size:0.65rem; background:rgba(255,165,0,0.25); color:#ffaa00; padding:2px 6px; border-radius:4px; font-weight:700; vertical-align:middle;">EXPERIMENTAL</span></div>
+                            <div style="font-size:0.95rem; font-weight:600;">${t.name || ''} <span style="font-size:0.65rem; background:rgba(255,165,0,0.25); color:#ffaa00; padding:2px 6px; border-radius:4px; font-weight:700; vertical-align:middle;">EXPERIMENTAL</span></div>
                             <div style="font-size:0.8rem; color:var(--text-muted);">${t.phone || 'Sem contacto'} ${t.notes ? '· ' + t.notes : ''}</div>
                         </div>
                         ${this.role !== 'client' ? `
@@ -10627,7 +10706,6 @@ Equipa KandalGym`;
         this.showModal(content);
     }
 
-
     async enrollManualStudent(classId) {
         const select = document.getElementById('manualEnrollSelect');
         if (!select || !select.value) return alert('Por favor, selecione um aluno da lista.');
@@ -10635,34 +10713,35 @@ Equipa KandalGym`;
         const clientId = Number(select.value);
         const classIdStr = String(classId);
 
-        if (!this.state.enrollments[classIdStr]) this.state.enrollments[classIdStr] = [];
-        const participants = this.state.enrollments[classIdStr];
+        if (!this.state.enrollments) this.state.enrollments = {};
+        const participants = this.getEnrollmentsArray(classId);
 
-        if (participants.includes(String(clientId)) || participants.includes(clientId)) {
+        if (participants.map(id => Number(id)).includes(clientId)) {
             return alert('O aluno já está inscrito nesta aula.');
         }
 
-        const cls = this.state.classes.find(x => String(x.id) === classIdStr);
+        const classes = this.getClassesArray();
+        const cls = classes.find(x => String(x.id) === classIdStr || Number(x.id) === Number(classId));
 
-        // Validate plan restrictions
-        const qrInfo = (this.state.qrClients || []).find(q => Number(q.clientId) === clientId);
+        const qrClients = Array.isArray(this.state.qrClients) ? this.state.qrClients : Object.values(this.state.qrClients || {});
+        const qrInfo = qrClients.find(q => Number(q.clientId) === clientId);
         const plano = qrInfo ? qrInfo.plano : null;
         const restrictions = plano ? (this.state.planRestrictions || {})[plano] : null;
 
         if (restrictions) {
             if (!restrictions.allowClasses) {
-                const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno não permite a marcação de aulas.\n\nDeseja inscrever mesmo assim?`);
+                const force = confirm(`⚠️  AVISO: O plano "${plano}" deste aluno não permite a marcação de aulas.\n\nDeseja inscrever mesmo assim?`);
                 if (!force) return;
             } else if (restrictions.filter && restrictions.filter.length > 0) {
                 const isAllowed = restrictions.filter.some(f => cls && this.normalizeText(cls.name).includes(this.normalizeText(f)));
                 if (!isAllowed) {
-                    const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno apenas permite: ${restrictions.filter.join(', ')}.\n\nDeseja inscrever mesmo assim?`);
+                    const force = confirm(`⚠️  AVISO: O plano "${plano}" deste aluno apenas permite: ${restrictions.filter.join(', ')}.\n\nDeseja inscrever mesmo assim?`);
                     if (!force) return;
                 }
             } else if (restrictions.exclude && restrictions.exclude.length > 0) {
                 const isExcluded = restrictions.exclude.some(ex => cls && this.normalizeText(cls.name).includes(this.normalizeText(ex)));
                 if (isExcluded) {
-                    const force = confirm(`⚠️ AVISO: O plano "${plano}" deste aluno não permite reservar aulas desta categoria.\n\nDeseja inscrever mesmo assim?`);
+                    const force = confirm(`⚠️  AVISO: O plano "${plano}" deste aluno não permite reservar aulas desta categoria.\n\nDeseja inscrever mesmo assim?`);
                     if (!force) return;
                 }
             }
@@ -10673,6 +10752,7 @@ Equipa KandalGym`;
         }
 
         participants.push(clientId);
+        this.state.enrollments[classIdStr] = participants;
         this.saveState();
         this.showToast('Aluno inscrito manualmente com sucesso!', 'success');
         this.showParticipantsList(classId);
@@ -10698,19 +10778,21 @@ Equipa KandalGym`;
     async removeManualStudent(classId, clientId) {
         if (!confirm('Deseja realmente remover o aluno desta aula?')) return;
         const classIdStr = String(classId);
-        if (this.state.enrollments[classIdStr]) {
-            this.state.enrollments[classIdStr] = this.state.enrollments[classIdStr].filter(id => Number(id) !== Number(clientId));
-            this.saveState();
-            this.showToast('Aluno removido com sucesso!', 'success');
-            this.showParticipantsList(classId);
-            if (this.role === 'admin') this.renderAdminClasses(document.getElementById('main-content'));
-            else if (this.role === 'teacher') this.renderTeacherClasses(document.getElementById('main-content'));
-        }
+        let participants = this.getEnrollmentsArray(classId);
+        participants = participants.filter(id => Number(id) !== Number(clientId));
+        if (!this.state.enrollments) this.state.enrollments = {};
+        this.state.enrollments[classIdStr] = participants;
+        this.saveState();
+        this.showToast('Aluno removido com sucesso!', 'success');
+        this.showParticipantsList(classId);
+        if (this.role === 'admin') this.renderAdminClasses(document.getElementById('main-content'));
+        else if (this.role === 'teacher') this.renderTeacherClasses(document.getElementById('main-content'));
     }
 
     showAddTrialModal(classId) {
         const classIdStr = String(classId);
-        const cls = (this.state.classes || []).find(c => String(c.id) === classIdStr);
+        const classes = this.getClassesArray();
+        const cls = classes.find(c => String(c.id) === classIdStr || Number(c.id) === Number(classId));
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
         modal.innerHTML = `
@@ -10755,7 +10837,7 @@ Equipa KandalGym`;
         }
 
         if (!this.state.trialParticipants) this.state.trialParticipants = {};
-        if (!this.state.trialParticipants[classIdStr]) this.state.trialParticipants[classIdStr] = [];
+        const trials = this.getTrialParticipantsArray(classIdStr);
 
         const trial = {
             id: String(Date.now()),
@@ -10765,10 +10847,10 @@ Equipa KandalGym`;
             addedAt: new Date().toLocaleString('pt-PT')
         };
 
-        this.state.trialParticipants[classIdStr].push(trial);
+        trials.push(trial);
+        this.state.trialParticipants[classIdStr] = trials;
         this.saveState();
 
-        // Close the trial modal
         const trialModal = document.querySelector('.modal-overlay:last-of-type');
         if (trialModal) trialModal.remove();
 
@@ -10779,24 +10861,24 @@ Equipa KandalGym`;
     removeTrialParticipant(classId, trialId) {
         if (!confirm('Deseja remover este visitante da aula?')) return;
         const classIdStr = String(classId);
-        if (this.state.trialParticipants && this.state.trialParticipants[classIdStr]) {
-            this.state.trialParticipants[classIdStr] = this.state.trialParticipants[classIdStr].filter(t => t.id !== String(trialId));
-            this.saveState();
-            this.showToast('Visitante removido.', 'success');
-            this.showParticipantsList(classId);
-        }
+        let trials = this.getTrialParticipantsArray(classIdStr);
+        trials = trials.filter(t => t.id !== String(trialId));
+        if (!this.state.trialParticipants) this.state.trialParticipants = {};
+        this.state.trialParticipants[classIdStr] = trials;
+        this.saveState();
+        this.showToast('Visitante removido.', 'success');
+        this.showParticipantsList(classId);
     }
 
     convertTrialToClient(classId, trialId) {
         const classIdStr = String(classId);
-        const trial = (this.state.trialParticipants?.[classIdStr] || []).find(t => t.id === String(trialId));
+        const trials = this.getTrialParticipantsArray(classIdStr);
+        const trial = trials.find(t => t.id === String(trialId));
         if (!trial) return;
 
-        // Close participant modal and open add user modal with pre-filled name/phone
         this.closeModal();
         this.showAddUserModal();
 
-        // Pre-fill after a short delay (DOM needs to render)
         setTimeout(() => {
             const nameEl = document.getElementById('new-user-name');
             const phoneEl = document.getElementById('new-user-phone');
@@ -10807,8 +10889,11 @@ Equipa KandalGym`;
     }
 
     renderClientClasses(container) {
-        const classes = this.state.classes || [];
-        if (classes.length === 0) {
+        if (!this.currentClientId && this.currentUser) {
+            this.currentClientId = Number(this.currentUser.id);
+        }
+        const rawClasses = this.getClassesArray();
+        if (rawClasses.length === 0) {
             container.innerHTML = `
                 <div class="glass-card" style="text-align:center; padding:3rem;">
                     <i class="fas fa-calendar-day" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
@@ -10818,84 +10903,109 @@ Equipa KandalGym`;
             return;
         }
 
+        const classes = rawClasses.map(c => {
+            const eff = this.getClassEffectiveDate(c);
+            return {
+                ...c,
+                effectiveDate: eff.date,
+                effectiveDay: eff.day,
+                isFinished: eff.isFinished
+            };
+        });
+
         const DAYS = [1, 2, 3, 4, 5, 6, 0]; // Seg a Dom
 
-        container.innerHTML = `
-            <div style="display:flex; flex-direction:column; gap:1.5rem;">
-                ${DAYS.map(dayIdx => {
-            const dayClasses = (classes || [])
-                .filter(c => Number(c.day) === dayIdx)
+        let hasAnyClassDisplayed = false;
+
+        const daysHTML = DAYS.map(dayIdx => {
+            const dayClasses = classes
+                .filter(c => c.effectiveDay === dayIdx)
                 .sort((a, b) => {
-                    if (a.date && b.date) return a.date.localeCompare(b.date) || a.time.localeCompare(b.time);
-                    return a.time.localeCompare(b.time);
+                    if (a.effectiveDate && b.effectiveDate) {
+                        return a.effectiveDate.localeCompare(b.effectiveDate) || (a.time || '').localeCompare(b.time || '');
+                    }
+                    return (a.time || '').localeCompare(b.time || '');
                 });
+
             if (dayClasses.length === 0) return '';
+            hasAnyClassDisplayed = true;
 
             return `
-                        <div style="margin-bottom:1rem;">
-                            <h3 style="border-left:4px solid var(--primary); padding-left:1rem; margin-bottom:1rem; font-size:1.1rem; color:#fff;">${this.getDayName(dayIdx)}</h3>
-                            <div class="classes-grid">
-                                ${dayClasses.map(c => {
-                const classIdStr = String(c.id);
-                const participants = this.state.enrollments[classIdStr] || [];
-                const isEnrolled = participants.map(id => Number(id)).includes(Number(this.currentClientId));
-                const isFull = participants.length >= (c.capacity || 20);
-                const teacher = (this.state.teachers || []).find(t => Number(t.id) === Number(c.teacherId));
+                <div style="margin-bottom:1rem;">
+                    <h3 style="border-left:4px solid var(--primary); padding-left:1rem; margin-bottom:1rem; font-size:1.1rem; color:#fff;">${this.getDayName(dayIdx)}</h3>
+                    <div class="classes-grid">
+                        ${dayClasses.map(c => {
+                            const classIdStr = String(c.id);
+                            const participants = this.getEnrollmentsArray(c.id);
+                            const isEnrolled = participants.map(id => Number(id)).includes(Number(this.currentClientId));
+                            const isFull = participants.length >= (c.capacity || 20);
+                            const teacher = this.getTeachersArray().find(t => Number(t.id) === Number(c.teacherId));
 
-                return `
-                                        <div class="glass-card" style="display:flex; flex-direction:column; padding:0.8rem; border-top:3px solid ${isEnrolled ? 'var(--success)' : 'var(--surface-border)'};">
-                                            <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:0.3rem;">
-                                                <span style="font-size:1rem; font-weight:800; color:var(--primary);">${c.time}</span>
-                                                ${isEnrolled ? '<span class="badge badge-green" style="font-size:0.55rem; padding:0.1rem 0.4rem;">Inscrito</span>' : ''}
-                                            </div>
-                                            <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:0.2rem;">
-                                                <i class="fas fa-calendar-alt"></i> ${this.formatFullDate(c.day, c.date)}
-                                                ${(() => {
-                        const hn = this.isHoliday(c.date);
-                        if (!hn) return '';
-                        let msg = "Horário 08h30-13h00, sem aulas";
-                        if (hn === "Ano Novo" || hn === "Natal" || hn === "São João") msg = "Encerrado";
-                        else if (hn === "Véspera de São João" || hn === "Véspera de Natal" || hn === "Passagem de Ano") msg = "Abertos até às 16h30";
-                        return `<span style="color:var(--warning); font-weight:bold; margin-left:5px; display:block; margin-top:2px;">(${hn}: ${msg})</span>`;
-                    })()}
-                                            </div>
-                                            <h4 style="margin-bottom:0.3rem; font-size:0.9rem; line-height:1.2; min-height:2.4em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${c.name}</h4>
-                                            <p style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.8rem;">
-                                                <i class="fas fa-user-tie"></i> ${teacher ? teacher.name : 'N/A'}<br>
-                                                <i class="fas fa-users"></i> ${participants.length} / ${c.capacity || 20}
-                                            </p>
-                                            
-                                            <div style="margin-top:auto;">
-                                                ${this.isClassFinished(c) ? `
-                                                    <div style="text-align:center; padding:0.5rem; background:rgba(255,255,255,0.05); border-radius:4px; font-size:0.7rem; color:var(--text-muted); border:1px solid var(--surface-border);">Finalizada</div>
-                                                ` : (isEnrolled ? `
-                                                    <button class="btn btn-secondary btn-sm" style="width:100%; color:var(--danger); font-size:0.7rem; padding:0.5rem;" onclick="app.leaveClass(${c.id})">
-                                                        Sair
-                                                     </button>
-                                                ` : (isFull ? `
-                                                    <button class="btn btn-ghost btn-sm" style="width:100%; font-size:0.75rem; padding:0.5rem;" disabled>Cheio</button>
-                                                ` : `
-                                                    <button class="btn btn-primary btn-sm" style="width:100%; font-size:0.75rem; padding:0.5rem;" onclick="app.enrollInClass(${c.id})">
-                                                        Reservar
-                                                    </button>
-                                                `))}
-                                            </div>
-                                        </div>
-                                    `;
-            }).join('')}
-                            </div>
-                        </div>
-                    `;
-        }).join('')}
-            </div>
-        `;
+                            return `
+                                <div class="glass-card" style="display:flex; flex-direction:column; padding:0.8rem; border-top:3px solid ${isEnrolled ? 'var(--success)' : 'var(--surface-border)'};">
+                                    <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:0.3rem;">
+                                        <span style="font-size:1rem; font-weight:800; color:var(--primary);">${c.time || ''}</span>
+                                        ${isEnrolled ? '<span class="badge badge-green" style="font-size:0.55rem; padding:0.1rem 0.4rem;">Inscrito</span>' : ''}
+                                    </div>
+                                    <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:0.2rem;">
+                                        <i class="fas fa-calendar-alt"></i> ${this.formatFullDate(c.effectiveDay, c.effectiveDate)}
+                                        ${(() => {
+                                            const hn = this.isHoliday(c.effectiveDate);
+                                            if (!hn) return '';
+                                            let msg = "Horário 08h30-13h00, sem aulas";
+                                            if (hn === "Ano Novo" || hn === "Natal" || hn === "São João") msg = "Encerrado";
+                                            else if (hn === "Véspera de São João" || hn === "Véspera de Natal" || hn === "Passagem de Ano") msg = "Abertos até às 16h30";
+                                            return `<span style="color:var(--warning); font-weight:bold; margin-left:5px; display:block; margin-top:2px;">(${hn}: ${msg})</span>`;
+                                        })()}
+                                    </div>
+                                    <h4 style="margin-bottom:0.3rem; font-size:0.9rem; line-height:1.2; min-height:2.4em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${c.name || ''}</h4>
+                                    <p style="font-size:0.7rem; color:var(--text-muted); margin-bottom:0.8rem;">
+                                        <i class="fas fa-user-tie"></i> ${teacher ? teacher.name : 'N/A'}<br>
+                                        <i class="fas fa-users"></i> ${participants.length} / ${c.capacity || 20}
+                                    </p>
+                                    
+                                    <div style="margin-top:auto;">
+                                        ${c.isFinished ? `
+                                            <div style="text-align:center; padding:0.5rem; background:rgba(255,255,255,0.05); border-radius:4px; font-size:0.7rem; color:var(--text-muted); border:1px solid var(--surface-border);">Finalizada</div>
+                                        ` : (isEnrolled ? `
+                                            <button class="btn btn-secondary btn-sm" style="width:100%; color:var(--danger); font-size:0.7rem; padding:0.5rem;" onclick="app.leaveClass(${c.id})">
+                                                Sair
+                                            </button>
+                                        ` : (isFull ? `
+                                            <button class="btn btn-ghost btn-sm" style="width:100%; font-size:0.75rem; padding:0.5rem;" disabled>Cheio</button>
+                                        ` : `
+                                            <button class="btn btn-primary btn-sm" style="width:100%; font-size:0.75rem; padding:0.5rem;" onclick="app.enrollInClass(${c.id})">
+                                                Reservar
+                                            </button>
+                                        `))}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        if (!hasAnyClassDisplayed) {
+            container.innerHTML = `
+                <div class="glass-card" style="text-align:center; padding:3rem;">
+                    <i class="fas fa-calendar-day" style="font-size:3rem; color:var(--text-muted); margin-bottom:1rem;"></i>
+                    <p>Não existem aulas de grupo agendadas de momento.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `<div style="display:flex; flex-direction:column; gap:1.5rem;">${daysHTML}</div>`;
     }
 
     showClassModal(classId = null) {
         // Garantir que classId e tratado corretamente (se vier do HTML pode vir como string "null")
         const actualClassId = (classId === null || classId === 'null') ? null : Number(classId);
-        const c = actualClassId ? this.state.classes.find(x => Number(x.id) === actualClassId) : null;
-        const teachers = this.state.teachers || [];
+        const classes = this.getClassesArray();
+        const c = actualClassId ? classes.find(x => Number(x.id) === actualClassId) : null;
+        const teachers = this.getTeachersArray();
 
         const content = `
             <h2 style="margin-top:0;">${c ? 'Editar Aula' : 'Nova Aula'}</h2>
