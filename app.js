@@ -10521,6 +10521,7 @@ Equipa KandalGym`;
                         </thead>
                         <tbody>
                             ${sortedClasses.map(c => {
+                                const eff = this.getClassEffectiveDate(c);
                                 const teacher = this.getTeachersArray().find(t => Number(t.id) === Number(c.teacherId));
                                 const classIdStr = String(c.id);
                                 const participants = this.getEnrollmentsArray(c.id);
@@ -10529,13 +10530,13 @@ Equipa KandalGym`;
                                 return `
                                     <tr style="border-bottom:1px solid var(--surface-border);">
                                         <td style="padding:1rem; font-weight:600;">
-                                            ${this.formatFullDate(this.getClassDay(c), c.date)}
+                                            ${this.formatFullDate(eff.day, eff.date)}
                                         </td>
                                         <td style="padding:1rem;">${c.time || ''}</td>
                                         <td style="padding:1rem; color:var(--primary); font-weight:bold;">${c.name || ''}</td>
                                         <td style="padding:1rem; font-size:0.9rem;">${teacher ? teacher.name : 'N/A'}</td>
                                         <td style="padding:1rem;">
-                                            ${this.isClassFinished(c) ?
+                                            ${eff.isFinished ?
                                                 `<span class="badge badge-error">Finalizada</span>` :
                                                 `<span class="badge ${totalCount >= (c.capacity || 20) ? 'badge-purple' : 'badge-green'}">
                                                     ${participants.length > 0 || trials.length === 0 ? participants.length : ''}${trials.length > 0 ? (participants.length > 0 ? `<span style="color:#ffaa00;">+${trials.length}</span>` : `<span style="color:#ffaa00;">${trials.length}exp</span>`) : ''} / ${c.capacity || 20}
@@ -10564,12 +10565,13 @@ Equipa KandalGym`;
         }
 
         const currentUserid = Number(this.currentUser.id);
-        const classes = this.getClassesArray();
+        const classes = this.getClassesArray().map(c => {
+            const eff = this.getClassEffectiveDate(c);
+            return { ...c, effectiveDate: eff.date, effectiveDay: eff.day, effIsFinished: eff.isFinished };
+        });
         const myClasses = classes.filter(c => Number(c.teacherId) === currentUserid).sort((a, b) => {
-            if (a.date && b.date) return a.date.localeCompare(b.date) || (a.time || '').localeCompare(b.time || '');
-            const dayA = this.getClassDay(a);
-            const dayB = this.getClassDay(b);
-            if (dayA !== dayB) return dayA - dayB;
+            if (a.effectiveDate && b.effectiveDate) return a.effectiveDate.localeCompare(b.effectiveDate) || (a.time || '').localeCompare(b.time || '');
+            if (a.effectiveDay !== b.effectiveDay) return a.effectiveDay - b.effectiveDay;
             return (a.time || '').localeCompare(b.time || '');
         });
 
@@ -10604,7 +10606,7 @@ Equipa KandalGym`;
                                 </div>
                             </div>
                             <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:0.2rem;">
-                                <i class="fas fa-calendar-alt"></i> ${this.formatFullDate(this.getClassDay(c), c.date)}
+                                <i class="fas fa-calendar-alt"></i> ${this.formatFullDate(c.effectiveDay, c.effectiveDate)}
                             </div>
                             <h4 style="margin-bottom:0.5rem; font-size:0.95rem; line-height:1.2; min-height:2.4em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${c.name || ''}</h4>
                             
