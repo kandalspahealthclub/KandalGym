@@ -10312,18 +10312,8 @@ Equipa KandalGym`;
     }
 
     isClassFinished(c) {
-        if (!c.date || !c.time) return false;
-        try {
-            const now = new Date();
-            // Formato ISO seguro para todos os browsers
-            const start = new Date(`${c.date}T${c.time}:00`);
-            if (isNaN(start.getTime())) return false; // Falha no parsing
-
-            // Bloquear inscrições mal a hora passa (com 1 min de tolerancia apenas)
-            return now.getTime() > (start.getTime() + 60000);
-        } catch (e) {
-            return false;
-        }
+        if (!c) return false;
+        return this.getClassEffectiveDate(c).isFinished;
     }
 
     getPortugalHolidays(year) {
@@ -10449,7 +10439,10 @@ Equipa KandalGym`;
         let dateStr = c.date;
         let dayVal = this.getClassDay(c);
 
-        if (c.isRecurring) {
+        // Considerar recorrente a não ser que o admin tenha desativado explicitamente
+        const isRecurring = c.isRecurring !== false;
+
+        if (isRecurring) {
             const gracePeriod = 180 * 60 * 1000;
             let safety = 0;
             while (classDateTime.getTime() + gracePeriod < now.getTime() && safety < 100) {
@@ -11120,8 +11113,9 @@ Equipa KandalGym`;
 
         const cls = this.state.classes.find(x => Number(x.id) === actualClassId);
 
-        if (cls && cls.date) {
-            const holidayName = this.isHoliday(cls.date);
+        const eff = cls ? this.getClassEffectiveDate(cls) : null;
+        if (cls && eff && eff.date) {
+            const holidayName = this.isHoliday(eff.date);
             if (holidayName) {
                 let shouldBlock = false;
                 let blockMessage = '';
@@ -11154,7 +11148,13 @@ Equipa KandalGym`;
 
         if (cls && this.isClassFinished(cls)) {
             console.warn("Inscrição recusada: Aula já terminou.");
-            return alert('Está aula já terminou e não aceita mais inscrições.');
+            return alert('Esta aula já terminou e não aceita mais inscrições.');
+        }
+
+        // Se for uma aula recorrente cuja data no estado local ainda estava no passado, atualizar para a data efetiva
+        if (cls && eff && eff.date && cls.date !== eff.date && cls.isRecurring !== false) {
+            cls.date = eff.date;
+            cls.day = eff.day;
         }
 
         if (!this.state.enrollments[classIdStr]) this.state.enrollments[classIdStr] = [];
