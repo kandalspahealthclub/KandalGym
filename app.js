@@ -81,6 +81,28 @@ class FitnessApp {
             this.state = (typeof mockState !== 'undefined') ? mockState : {};
         }
 
+        // Normalizar arrays no cache do localStorage (Firebase pode ter guardado objetos com chaves numéricas)
+        const _arrColls = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes', 'news', 'recipes'];
+        _arrColls.forEach(coll => {
+            if (!this.state[coll]) {
+                this.state[coll] = [];
+            } else if (typeof this.state[coll] === 'object' && !Array.isArray(this.state[coll])) {
+                this.state[coll] = Object.values(this.state[coll]);
+            }
+        });
+
+        // Normalizar sub-arrays de enrollments e trialParticipants
+        ['enrollments', 'trialParticipants'].forEach(dictKey => {
+            if (this.state[dictKey] && typeof this.state[dictKey] === 'object') {
+                Object.keys(this.state[dictKey]).forEach(key => {
+                    const val = this.state[dictKey][key];
+                    if (val && typeof val === 'object' && !Array.isArray(val)) {
+                        this.state[dictKey][key] = Object.values(val);
+                    }
+                });
+            }
+        });
+
         const vitalCollections = ['admins', 'teachers', 'clients', 'qrClients', 'foodCategories', 'exerciseCategories', 'foods', 'exercises', 'notifications', 'classes', 'news', 'recipes'];
         vitalCollections.forEach(c => { if (!this.state[c]) this.state[c] = []; });
 
