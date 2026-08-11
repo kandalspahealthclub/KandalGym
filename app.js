@@ -41,7 +41,7 @@ class FitnessApp {
         if (localStorage.getItem('kg_theme') === 'light') {
             document.body.classList.add('light-theme');
         }
-        this.appVersion = '2026.05.06.v90'; // Versão de controlo para Hard Reset v90
+        this.appVersion = '2026.05.06.v91'; // Versão de controlo para Hard Reset v91
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
