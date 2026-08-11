@@ -6222,6 +6222,7 @@ Equipa KandalGym`;
                 <div style="display:flex; gap:0.5rem; align-items:center;">
                     ${this.role === 'teacher' ? `<button class="btn btn-ghost btn-sm" style="color:var(--primary); font-size:0.8rem;" onclick="app.showTransferClientModal(${c.id})"><i class="fas fa-exchange-alt"></i> <span class="hide-mobile">Transferir</span></button>` : ''}
                     ${(() => {
+                        if (this.role !== 'admin') return '';
                         const qrEntry = (this.state.qrClients || []).find(q => q.clientId && Number(q.clientId) === Number(c.id));
                         const isEmployee = qrEntry && qrEntry.isEmployee;
                         return qrEntry ? `
@@ -9990,6 +9991,10 @@ Equipa KandalGym`;
     }
 
     toggleEmployeeStatus(qrId) {
+        if (this.role !== 'admin') {
+            this.showToast('Apenas administradores podem usar esta função.', 'error');
+            return;
+        }
         const qrClient = (this.state.qrClients || []).find(q => q.id === qrId);
         if (!qrClient) return;
 
