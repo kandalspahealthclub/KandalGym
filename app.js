@@ -41,7 +41,7 @@ class FitnessApp {
         if (localStorage.getItem('kg_theme') === 'light') {
             document.body.classList.add('light-theme');
         }
-        this.appVersion = '2026.05.06.v91'; // Versão de controlo para Hard Reset v91
+        this.appVersion = '2026.05.06.v92'; // Versão de controlo para Hard Reset v92
         this.viewingDayIdx = Number(localStorage.getItem('kandalgym_vIdx') || 0); // Recuperar plano ativo
         this.checkForForceUpdate();
 
@@ -11137,13 +11137,21 @@ Equipa KandalGym`;
 
     async enrollInClass(classId) {
         console.log("Iniciando inscrição na aula:", classId);
+        // Usar getClassesArray() para suportar tanto array como objeto (Firebase)
+        const allClasses = this.getClassesArray();
         const actualClassId = Number(classId);
         const classIdStr = String(actualClassId);
 
-        const cls = this.state.classes.find(x => Number(x.id) === actualClassId);
+        const cls = allClasses.find(x => Number(x.id) === actualClassId || String(x.id) === String(classId));
+        console.log("Aula encontrada:", cls ? cls.name : 'NÃO ENCONTRADA', '| Total aulas:', allClasses.length);
 
-        const eff = cls ? this.getClassEffectiveDate(cls) : null;
-        if (cls && eff && eff.date) {
+        if (!cls) {
+            console.error("Erro: aula não encontrada com ID", classId);
+            return this.showToast('Erro: aula não encontrada. Recarregue a página.', 'error');
+        }
+
+        const eff = this.getClassEffectiveDate(cls);
+        if (eff && eff.date) {
             const holidayName = this.isHoliday(eff.date);
             if (holidayName) {
                 let shouldBlock = false;
@@ -11175,18 +11183,26 @@ Equipa KandalGym`;
             }
         }
 
-        if (cls && this.isClassFinished(cls)) {
+        if (this.isClassFinished(cls)) {
             console.warn("Inscrição recusada: Aula já terminou.");
             return alert('Esta aula já terminou e não aceita mais inscrições.');
         }
 
         // Se for uma aula recorrente cuja data no estado local ainda estava no passado, atualizar para a data efetiva
-        if (cls && eff && eff.date && cls.date !== eff.date && cls.isRecurring !== false) {
+        if (eff && eff.date && cls.date !== eff.date && cls.isRecurring !== false) {
             cls.date = eff.date;
             cls.day = eff.day;
         }
 
+        // Garantir que enrollments existe e é um objeto válido
+        if (!this.state.enrollments || typeof this.state.enrollments !== 'object') {
+            this.state.enrollments = {};
+        }
         if (!this.state.enrollments[classIdStr]) this.state.enrollments[classIdStr] = [];
+        // Garantir que é mesmo um array (pode vir do Firebase como objeto)
+        if (!Array.isArray(this.state.enrollments[classIdStr])) {
+            this.state.enrollments[classIdStr] = Object.values(this.state.enrollments[classIdStr]);
+        }
 
         const participants = this.state.enrollments[classIdStr];
         const clientId = Number(this.currentClientId);
@@ -11197,7 +11213,10 @@ Equipa KandalGym`;
             return alert("Sessão inválida. Por favor saia e entre novamente na conta.");
         }
 
-        if (participants.map(id => Number(id)).includes(clientId)) return;
+        if (participants.map(id => Number(id)).includes(clientId)) {
+            console.log("Utilizador já inscrito nesta aula.");
+            return;
+        }
 
         if (cls && participants.length >= (cls.capacity || 20)) {
             return alert('Está aula já atingiu a lotação máxima.');
