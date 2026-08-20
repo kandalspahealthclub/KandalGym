@@ -11431,9 +11431,18 @@ Equipa KandalGym`;
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${isMobile ? '1rem' : '2rem'}; flex-wrap:wrap; gap:1rem;">
                 <h2 style="margin:0; font-size:${isMobile ? '1.2rem' : '1.5rem'};"><i class="fas fa-copy" style="color:var(--primary); margin-right:10px;"></i> Modelos</h2>
-                <button class="btn btn-primary" onclick="app.startNewPredefinedPlan()" style="${isMobile ? 'padding: 8px 12px; font-size: 0.85rem;' : ''}">
-                    <i class="fas fa-plus"></i> Novo Modelo
-                </button>
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                    <button class="btn btn-secondary" onclick="app.exportPredefinedPlans()" style="${isMobile ? 'padding: 8px 12px; font-size: 0.85rem;' : ''}" title="Exportar (Backup) Planos">
+                        <i class="fas fa-download"></i> <span class="hide-mobile">Backup</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('importPredefinedPlansInput').click()" style="${isMobile ? 'padding: 8px 12px; font-size: 0.85rem;' : ''}" title="Importar Planos">
+                        <i class="fas fa-upload"></i> <span class="hide-mobile">Upload</span>
+                    </button>
+                    <input type="file" id="importPredefinedPlansInput" accept=".json" style="display:none;" onchange="app.importPredefinedPlans(event)">
+                    <button class="btn btn-primary" onclick="app.startNewPredefinedPlan()" style="${isMobile ? 'padding: 8px 12px; font-size: 0.85rem;' : ''}">
+                        <i class="fas fa-plus"></i> Novo Modelo
+                    </button>
+                </div>
             </div>
 
             <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(${isMobile ? '150px' : '300px'}, 1fr)); gap:${isMobile ? '0.75rem' : '1.5rem'};">
@@ -11468,6 +11477,51 @@ Equipa KandalGym`;
                 `).join('')}
             </div>
         `;
+    }
+
+    exportPredefinedPlans() {
+        const plans = this.state.predefinedPlans || {};
+        if (Object.keys(plans).length === 0) {
+            return alert('Não existem planos para exportar.');
+        }
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(plans, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "planos_predefinidos_backup.json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    }
+
+    importPredefinedPlans(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const plans = JSON.parse(e.target.result);
+                if (typeof plans !== 'object' || plans === null) throw new Error('Formato inválido');
+                
+                if (confirm('Tem a certeza que deseja importar estes planos? Os planos importados serão adicionados/substituídos aos existentes.')) {
+                    const currentPlans = this.state.predefinedPlans || {};
+                    const newPlans = { ...currentPlans, ...plans };
+                    
+                    this.state.predefinedPlans = newPlans;
+                    this.saveState();
+                    this.showToast('Planos importados com sucesso!', 'success');
+                    
+                    if (this.currentView === 'predefined_plans') {
+                        this.renderPredefinedPlans(document.getElementById('predefined_plans'));
+                    }
+                }
+            } catch (err) {
+                alert('Erro ao ler o ficheiro. Certifique-se de que é um JSON válido.');
+                console.error(err);
+            }
+            event.target.value = '';
+        };
+        reader.readAsText(file);
     }
 
     startNewPredefinedPlan() {
