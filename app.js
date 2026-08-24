@@ -11884,9 +11884,18 @@ Equipa KandalGym`;
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
                 <h2 style="margin:0; font-size:${isMobile ? '1.2rem' : '1.5rem'};"><i class="fas fa-utensils" style="color:var(--primary); margin-right:10px;"></i> Receitas</h2>
-                <button class="btn btn-primary btn-sm" onclick="app.startNewRecipe()" style="${isMobile ? 'padding:6px 12px; font-size:0.8rem;' : ''}">
-                    <i class="fas fa-plus"></i> Nova Receita
-                </button>
+                <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                    <button class="btn btn-secondary btn-sm" onclick="app.backupRecipes()" title="Exportar receitas para ficheiro JSON" style="${isMobile ? 'padding:6px 10px; font-size:0.8rem;' : ''}">
+                        <i class="fas fa-download"></i>${isMobile ? '' : ' Backup'}
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('recipe-upload-input').click()" title="Importar receitas de ficheiro JSON" style="${isMobile ? 'padding:6px 10px; font-size:0.8rem;' : ''}">
+                        <i class="fas fa-upload"></i>${isMobile ? '' : ' Importar'}
+                    </button>
+                    <input type="file" id="recipe-upload-input" accept=".json" style="display:none;" onchange="app.uploadRecipes(this)">
+                    <button class="btn btn-primary btn-sm" onclick="app.startNewRecipe()" style="${isMobile ? 'padding:6px 12px; font-size:0.8rem;' : ''}">
+                        <i class="fas fa-plus"></i>${isMobile ? '' : ' Nova Receita'}
+                    </button>
+                </div>
             </div>
 
             <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(${isMobile ? '160px' : '260px'}, 1fr)); gap:${isMobile ? '0.75rem' : '1.5rem'};">
@@ -11973,6 +11982,122 @@ Equipa KandalGym`;
         this.saveState();
         this.renderRecipes(document.getElementById('main-content'));
         this.showToast('Receita eliminada.', 'success');
+    }
+
+    backupRecipes() {
+        const recipes = this.state.recipes || [];
+        if (recipes.length === 0) {
+            this.showToast('Não há receitas para fazer backup.', 'warning');
+            return;
+        }
+        const payload = {
+            exportedAt: new Date().toISOString(),
+            version: this.appVersion,
+            count: recipes.length,
+            recipes
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const dateStr = new Date().toISOString().slice(0, 10);
+        a.href = url;
+        a.download = `kandalgym_receitas_${dateStr}.json`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+        this.showToast(`Backup de ${recipes.length} receita(s) exportado com sucesso!`, 'success');
+    }
+
+    uploadRecipes(inputEl) {
+        const file = inputEl.files[0];
+        if (!file) return;
+        inputEl.value = ''; // reset para permitir re-upload do mesmo ficheiro
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                const imported = Array.isArray(data) ? data : (data.recipes || []);
+
+                if (!Array.isArray(imported) || imported.length === 0) {
+                    this.showToast('Ficheiro inválido ou sem receitas.', 'danger');
+                    return;
+                }
+
+                // Validar estrutura mínima de cada receita
+                const valid = imported.every(r => r && typeof r.name === 'string');
+                if (!valid) {
+                    this.showToast('Algumas receitas têm formato inválido.', 'danger');
+                    return;
+                }
+
+                // Guardar temporariamente para evitar problemas com caracteres especiais no onclick
+                this._pendingImport = imported;
+
+                // Mostrar modal de escolha: merge ou substituir
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal-content" style="max-width:480px; text-align:center;">
+                        <div style="margin-bottom:1.5rem;">
+                            <i class="fas fa-file-import" style="font-size:2.5rem; color:var(--primary); margin-bottom:1rem; display:block;"></i>
+                            <h2 style="margin:0 0 0.5rem;">Importar Receitas</h2>
+                            <p style="color:var(--text-muted); font-size:0.9rem; margin:0;">
+                                Foram encontradas <strong style="color:#fff;">${imported.length} receita(s)</strong> no ficheiro.<br>
+                                Como deseja proceder?
+                            </p>
+                        </div>
+                        <div style="display:grid; gap:0.75rem;">
+                            <button class="btn btn-primary" onclick="app._doImportRecipes(app._pendingImport, 'merge'); this.closest('.modal-overlay').remove();" style="padding:14px;">
+                                <i class="fas fa-code-merge"></i> Juntar às existentes
+                                <div style="font-size:0.75rem; color:rgba(255,255,255,0.6); font-weight:400; margin-top:3px;">Receitas com mesmo nome serão atualizadas</div>
+                            </button>
+                            <button class="btn btn-secondary" onclick="app._doImportRecipes(app._pendingImport, 'replace'); this.closest('.modal-overlay').remove();" style="padding:14px;">
+                                <i class="fas fa-sync-alt"></i> Substituir todas
+                                <div style="font-size:0.75rem; color:rgba(255,255,255,0.6); font-weight:400; margin-top:3px;">Remove receitas existentes e importa as novas</div>
+                            </button>
+                            <button class="btn btn-ghost" onclick="app._pendingImport = null; this.closest('.modal-overlay').remove();">Cancelar</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+            } catch (err) {
+                this.showToast('Erro ao ler o ficheiro JSON.', 'danger');
+                console.error('[uploadRecipes]', err);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    _doImportRecipes(imported, mode) {
+        if (!this.state.recipes) this.state.recipes = [];
+
+        if (mode === 'replace') {
+            // Garantir IDs únicos nos importados
+            this.state.recipes = imported.map(r => ({
+                ...r,
+                id: r.id || Date.now().toString() + Math.random().toString(36).slice(2)
+            }));
+        } else {
+            // Merge: atualizar por nome ou adicionar novos
+            imported.forEach(imp => {
+                const newId = imp.id || Date.now().toString() + Math.random().toString(36).slice(2);
+                const existingIdx = this.state.recipes.findIndex(
+                    r => r.name.toLowerCase().trim() === imp.name.toLowerCase().trim()
+                );
+                if (existingIdx !== -1) {
+                    this.state.recipes[existingIdx] = { ...imp, id: this.state.recipes[existingIdx].id };
+                } else {
+                    this.state.recipes.push({ ...imp, id: newId });
+                }
+            });
+        }
+
+        this.saveState();
+        const container = document.getElementById('main-content');
+        if (container) this.renderRecipes(container);
+        this.showToast(`${imported.length} receita(s) importada(s) com sucesso!`, 'success');
     }
 
     renderRecipeEditor() {
