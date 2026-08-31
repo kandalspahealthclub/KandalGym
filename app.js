@@ -11456,6 +11456,9 @@ Equipa KandalGym`;
                         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                             <h3 style="margin:0; font-size:${isMobile ? '1rem' : '1.2rem'}; color:#fff; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${plan.name}</h3>
                             <div style="display:flex; gap:0.25rem;">
+                                <button class="btn btn-ghost" style="color:#38bdf8; padding:4px;" onclick="app.previewPredefinedPlan('${plan.id}')" title="Preview de Exercícios">
+                                    <i class="fas fa-eye" style="font-size:${isMobile ? '0.85rem' : '1rem'};"></i>
+                                </button>
                                 <button class="btn btn-ghost" style="color:var(--primary); padding:4px;" onclick="app.editPredefinedPlan('${plan.id}')" title="Editar">
                                     <i class="fas fa-edit" style="font-size:${isMobile ? '0.85rem' : '1rem'};"></i>
                                 </button>
@@ -11477,6 +11480,59 @@ Equipa KandalGym`;
                 `).join('')}
             </div>
         `;
+    }
+
+    previewPredefinedPlan(planId) {
+        const plan = this.state.predefinedPlans[planId];
+        if (!plan) return;
+
+        let content = `
+            <div style="padding: 1rem;">
+                <h2 style="margin-top: 0; margin-bottom: 1rem; color: var(--primary); display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-eye"></i> Preview: ${plan.name}
+                </h2>
+                <div style="max-height: 60vh; overflow-y: auto; padding-right: 10px; display: flex; flex-direction: column; gap: 1rem;">
+        `;
+
+        if (!plan.days || plan.days.length === 0) {
+            content += `<p style="color: var(--text-muted);">Este plano não tem dias configurados.</p>`;
+        } else {
+            plan.days.forEach((day, index) => {
+                content += `
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">Dia ${index + 1}: ${day.dayName || day.name || 'Treino'}</h4>
+                `;
+
+                if (!day.exercises || day.exercises.length === 0) {
+                    content += `<p style="color: var(--text-muted); margin: 0; font-size: 0.85rem;">Sem exercícios.</p>`;
+                } else {
+                    content += `<ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">`;
+                    day.exercises.forEach(ex => {
+                        const exData = this.state.exercises ? this.state.exercises[ex.exerciseId] : null;
+                        const exName = exData ? exData.name : 'Exercício Removido';
+                        content += `
+                            <li style="font-size: 0.9rem; color: #ccc; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 0.25rem;">
+                                <span style="flex:1;"><strong>${exName}</strong></span>
+                                <span style="color: var(--text-muted); font-size: 0.8rem; text-align: right; min-width: 60px;">${ex.sets}x${ex.reps} ${ex.rest ? `(${ex.rest})` : ''}</span>
+                            </li>
+                        `;
+                    });
+                    content += `</ul>`;
+                }
+
+                content += `</div>`;
+            });
+        }
+
+        content += `
+                </div>
+                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+                    <button class="btn btn-secondary" onclick="app.closeModal()">Fechar</button>
+                </div>
+            </div>
+        `;
+
+        this.showModal(content, '500px');
     }
 
     exportPredefinedPlans() {
