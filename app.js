@@ -2299,10 +2299,10 @@ Equipa KandalGym`;
                         </div>
                         <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                             <button class="btn btn-secondary btn-sm" onclick="app.exportClientDatabase()" title="Exportar Backup de Clientes">
-                                <i class="fas fa-file-export"></i> Backup (Download)
+                                <i class="fas fa-file-export"></i> <span class="hide-mobile">Exportar</span>
                             </button>
                             <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-client-backup-input').click()" title="Importar Backup de Clientes">
-                                <i class="fas fa-file-import"></i> Backup (Upload)
+                                <i class="fas fa-file-import"></i> <span class="hide-mobile">Importar</span>
                             </button>
                             <input type="file" id="import-client-backup-input" style="display:none;" accept=".json" onchange="app.importClientDatabase(this)">
                             <button class="btn btn-primary btn-sm" onclick="app.showBulkImportModal()">
@@ -11432,11 +11432,11 @@ Equipa KandalGym`;
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:${isMobile ? '1rem' : '2rem'}; flex-wrap:wrap; gap:1rem;">
                 <h2 style="margin:0; font-size:${isMobile ? '1.2rem' : '1.5rem'};"><i class="fas fa-copy" style="color:var(--primary); margin-right:10px;"></i> Modelos</h2>
                 <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-                    <button class="btn btn-secondary" onclick="app.exportPredefinedPlans()" style="${isMobile ? 'padding: 8px 12px; font-size: 0.85rem;' : ''}" title="Exportar (Backup) Planos">
-                        <i class="fas fa-download"></i> <span class="hide-mobile">Backup</span>
+                    <button class="btn btn-secondary btn-sm" onclick="app.exportPredefinedPlans()" title="Exportar Backup">
+                        <i class="fas fa-file-export"></i> <span class="hide-mobile">Exportar</span>
                     </button>
-                    <button class="btn btn-secondary" onclick="document.getElementById('importPredefinedPlansInput').click()" style="${isMobile ? 'padding: 8px 12px; font-size: 0.85rem;' : ''}" title="Importar Planos">
-                        <i class="fas fa-upload"></i> <span class="hide-mobile">Upload</span>
+                    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('importPredefinedPlansInput').click()" title="Importar Backup">
+                        <i class="fas fa-file-import"></i> <span class="hide-mobile">Importar</span>
                     </button>
                     <input type="file" id="importPredefinedPlansInput" accept=".json" style="display:none;" onchange="app.importPredefinedPlans(event)">
                     <button class="btn btn-primary" onclick="app.startNewPredefinedPlan()" style="${isMobile ? 'padding: 8px 12px; font-size: 0.85rem;' : ''}">
@@ -11885,11 +11885,11 @@ Equipa KandalGym`;
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
                 <h2 style="margin:0; font-size:${isMobile ? '1.2rem' : '1.5rem'};"><i class="fas fa-utensils" style="color:var(--primary); margin-right:10px;"></i> Receitas</h2>
                 <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
-                    <button class="btn btn-secondary btn-sm" onclick="app.backupRecipes()" title="Exportar receitas para ficheiro JSON" style="${isMobile ? 'padding:6px 10px; font-size:0.8rem;' : ''}">
-                        <i class="fas fa-download"></i>${isMobile ? '' : ' Backup'}
+                    <button class="btn btn-secondary btn-sm" onclick="app.backupRecipes()" title="Exportar Backup">
+                        <i class="fas fa-file-export"></i> <span class="hide-mobile">Exportar</span>
                     </button>
-                    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('recipe-upload-input').click()" title="Importar receitas de ficheiro JSON" style="${isMobile ? 'padding:6px 10px; font-size:0.8rem;' : ''}">
-                        <i class="fas fa-upload"></i>${isMobile ? '' : ' Importar'}
+                    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('recipe-upload-input').click()" title="Importar Backup">
+                        <i class="fas fa-file-import"></i> <span class="hide-mobile">Importar</span>
                     </button>
                     <input type="file" id="recipe-upload-input" accept=".json" style="display:none;" onchange="app.uploadRecipes(this)">
                     <button class="btn btn-primary btn-sm" onclick="app.startNewRecipe()" style="${isMobile ? 'padding:6px 12px; font-size:0.8rem;' : ''}">
