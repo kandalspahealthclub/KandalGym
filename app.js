@@ -11508,8 +11508,8 @@ Equipa KandalGym`;
                 } else {
                     content += `<ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">`;
                     day.exercises.forEach(ex => {
-                        const exData = this.state.exercises ? this.state.exercises.find(e => e.id == ex.exerciseId) : null;
-                        const exName = exData ? exData.name : 'Exercício Removido';
+                        const exData = this.state.exercises ? this.state.exercises.find(e => e.id == ex.id) : null;
+                        const exName = ex.name || (exData ? exData.name : 'Exercício Removido');
                         content += `
                             <li style="font-size: 0.9rem; color: #ccc; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 0.25rem;">
                                 <span style="flex:1;"><strong>${exName}</strong></span>
