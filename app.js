@@ -11981,6 +11981,9 @@ Equipa KandalGym`;
                             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                                 <h3 style="margin:0; font-size:${isMobile ? '0.9rem' : '1.1rem'}; color:#fff; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${recipe.name}</h3>
                                 <div style="display:flex; gap:2px;">
+                                    <button class="btn btn-ghost btn-sm" style="color:#38bdf8; padding:3px;" onclick="app.previewRecipe('${recipe.id}')" title="Preview da Receita">
+                                        <i class="fas fa-eye" style="font-size:0.8rem;"></i>
+                                    </button>
                                     <button class="btn btn-ghost btn-sm" onclick="app.editRecipe('${recipe.id}')" style="color:var(--primary); padding:3px;"><i class="fas fa-edit" style="font-size:0.8rem;"></i></button>
                                     <button class="btn btn-ghost btn-sm" onclick="app.deleteRecipe('${recipe.id}')" style="color:var(--danger); padding:3px;"><i class="fas fa-trash-alt" style="font-size:0.8rem;"></i></button>
                                 </div>
@@ -12010,6 +12013,86 @@ Equipa KandalGym`;
                 `}).join('')}
             </div>
         `;
+    }
+
+    previewRecipe(id) {
+        const recipe = this.state.recipes.find(r => r.id === id);
+        if (!recipe) return;
+
+        let content = `
+            <div style="padding: 1rem;">
+                <h2 style="margin-top: 0; margin-bottom: 1rem; color: var(--primary); display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-utensils"></i> Preview: ${recipe.name}
+                </h2>
+                <div style="max-height: 60vh; overflow-y: auto; padding-right: 10px; display: flex; flex-direction: column; gap: 1rem;">
+        `;
+
+        if (recipe.description) {
+            content += `
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">Descrição</h4>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0; white-space: pre-wrap;">${recipe.description}</p>
+                </div>
+            `;
+        }
+
+        content += `
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">Ingredientes</h4>
+        `;
+
+        if (!recipe.ingredients || recipe.ingredients.length === 0) {
+            content += `<p style="color: var(--text-muted); margin: 0; font-size: 0.85rem;">Sem ingredientes configurados.</p>`;
+        } else {
+            content += `<ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">`;
+            recipe.ingredients.forEach(ing => {
+                content += `
+                    <li style="font-size: 0.9rem; color: #ccc; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 0.25rem;">
+                        <span style="flex:1;"><strong>${ing.name}</strong></span>
+                        <span style="color: var(--text-muted); font-size: 0.8rem; text-align: right; min-width: 60px;">${ing.amount || ''}</span>
+                    </li>
+                `;
+            });
+            content += `</ul>`;
+            
+            if (recipe.totalWeight) {
+                content += `
+                    <div style="margin-top: 1rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1); text-align: right; color: var(--primary); font-size: 0.85rem; font-weight: bold;">
+                        Peso Total: ${recipe.totalWeight}g
+                    </div>
+                `;
+            }
+        }
+
+        content += `</div>`;
+
+        if (recipe.videoUrl) {
+            const videoId = this.extractYoutubeId(recipe.videoUrl);
+            const iframeSrc = videoId ? `https://www.youtube.com/embed/${videoId}` : recipe.videoUrl;
+            
+            content += `
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+                    <h4 style="margin: 0 0 0.5rem 0; color: #fff; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">Vídeo</h4>
+                    ${videoId ? `
+                        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px;">
+                            <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="${iframeSrc}" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                    ` : `
+                        <a href="${recipe.videoUrl}" target="_blank" style="color: var(--accent); font-size: 0.9rem; text-decoration: underline;"><i class="fab fa-youtube"></i> Abrir vídeo</a>
+                    `}
+                </div>
+            `;
+        }
+
+        content += `
+                </div>
+                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+                    <button class="btn btn-secondary" onclick="app.closeModal()">Fechar</button>
+                </div>
+            </div>
+        `;
+
+        this.showModal(content, '500px');
     }
 
     startNewRecipe() {
