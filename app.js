@@ -4516,11 +4516,22 @@ Equipa KandalGym`;
             <!-- MENU DE SELECÇÃO DE PLANO (TABS) -->
             <div id="editor-tabs-container" style="display:flex; gap:0.75rem; margin-bottom:2rem; flex-wrap:wrap; background:rgba(255,255,255,0.03); padding:12px; border-radius:15px; border:1px solid rgba(255,255,255,0.05);">
                 ${this.editingPlan.map((day, dIdx) => `
-                    <div style="display:flex; align-items:center; gap:4px;">
+                    <div class="day-drag-tab" 
+                        data-day-idx="${dIdx}"
+                        draggable="true"
+                        ondragstart="app.handleDayDragStart(event, ${dIdx})"
+                        ondragover="app.handleDayDragOver(event)"
+                        ondragleave="app.handleDayDragLeave(event)"
+                        ondrop="app.handleDayDrop(event, ${dIdx})"
+                        ondragend="app.handleDayDragEnd(event)"
+                        ontouchstart="app.initDayTouchDrag(this, ${dIdx})"
+                        style="display:flex; align-items:center; gap:4px; position:relative;"
+                        title="Pressione e arraste para reordenar este plano">
                         <button class="btn ${this.editingDayIdx === dIdx ? 'btn-primary' : 'btn-ghost'}" 
                             onclick="app.editingDayIdx = ${dIdx}; app.renderTrainingEditor();"
-                            style="padding:10px 18px; font-size:0.95rem; border-radius:10px; display:flex; align-items:center; gap:10px; min-width:140px; justify-content:center; box-shadow:${this.editingDayIdx === dIdx ? '0 4px 12px rgba(var(--primary-rgb), 0.3)' : 'none'};">
-                            <i class="fas ${this.editingDayIdx === dIdx ? 'fa-check-square' : 'fa-square'}" style="font-size:1.1rem; opacity:${this.editingDayIdx === dIdx ? '1' : '0.4'};"></i>
+                            style="padding:10px 18px; font-size:0.95rem; border-radius:10px; display:flex; align-items:center; gap:8px; min-width:140px; justify-content:center; box-shadow:${this.editingDayIdx === dIdx ? '0 4px 12px rgba(var(--primary-rgb), 0.3)' : 'none'}; pointer-events:auto;">
+                            <i class="fas fa-grip-vertical" style="opacity:0.4; font-size:0.85rem; margin-right:2px;" title="Arrastar"></i>
+                            <i class="fas ${this.editingDayIdx === dIdx ? 'fa-check-square' : 'fa-square'}" style="font-size:1rem; opacity:${this.editingDayIdx === dIdx ? '1' : '0.4'};"></i>
                             <span style="font-weight:700;">${day.title || `Plano ${String.fromCharCode(65 + dIdx)}`}</span>
                             <span style="opacity:0.6; font-size:0.85rem;">(${day.exercises.length})</span>
                         </button>
@@ -4680,6 +4691,165 @@ Equipa KandalGym`;
         this.saveTrainingDraft();
         this.renderTrainingEditor();
         this.showToast('Ordem do exercício alterada.');
+    }
+
+    reorderTrainingDay(fromIdx, toIdx) {
+        fromIdx = parseInt(fromIdx);
+        toIdx = parseInt(toIdx);
+        if (isNaN(fromIdx) || isNaN(toIdx) || fromIdx === toIdx) return;
+        if (!this.editingPlan || fromIdx < 0 || fromIdx >= this.editingPlan.length || toIdx < 0 || toIdx >= this.editingPlan.length) return;
+
+        const currentActive = this.editingPlan[this.editingDayIdx];
+        const [movedDay] = this.editingPlan.splice(fromIdx, 1);
+        this.editingPlan.splice(toIdx, 0, movedDay);
+
+        // Manter o dia ativo selecionado
+        const newActiveIdx = this.editingPlan.indexOf(currentActive);
+        this.editingDayIdx = newActiveIdx !== -1 ? newActiveIdx : 0;
+
+        this.saveTrainingDraft();
+        this.renderTrainingEditor();
+        this.showToast('Plano reposicionado!');
+    }
+
+    handleDayDragStart(e, dayIdx) {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'day', dayIdx }));
+        const card = e.currentTarget;
+        card.classList.add('dragging');
+    }
+
+    handleDayDragEnd(e) {
+        const card = e.currentTarget;
+        card.classList.remove('dragging');
+        document.querySelectorAll('.day-drag-tab').forEach(el => el.classList.remove('drag-over'));
+    }
+
+    handleDayDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const card = e.currentTarget.closest('.day-drag-tab');
+        if (card && !card.classList.contains('dragging')) {
+            card.classList.add('drag-over');
+        }
+    }
+
+    handleDayDragLeave(e) {
+        const card = e.currentTarget.closest('.day-drag-tab');
+        if (card) {
+            card.classList.remove('drag-over');
+        }
+    }
+
+    handleDayDrop(e, targetDayIdx) {
+        e.preventDefault();
+        e.stopPropagation();
+        const card = e.currentTarget.closest('.day-drag-tab');
+        if (card) card.classList.remove('drag-over');
+
+        try {
+            const raw = e.dataTransfer.getData('text/plain');
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            if (data.type === 'day' && typeof data.dayIdx === 'number') {
+                this.reorderTrainingDay(data.dayIdx, targetDayIdx);
+            }
+        } catch (err) {
+            console.error('Erro no drag-and-drop de dias:', err);
+        }
+    }
+
+    reorderPredefinedTrainingDay(fromIdx, toIdx) {
+        fromIdx = parseInt(fromIdx);
+        toIdx = parseInt(toIdx);
+        if (isNaN(fromIdx) || isNaN(toIdx) || fromIdx === toIdx) return;
+        if (!this.editingPlan || fromIdx < 0 || fromIdx >= this.editingPlan.length || toIdx < 0 || toIdx >= this.editingPlan.length) return;
+
+        const currentActive = this.editingPlan[this.editingDayIdx];
+        const [movedDay] = this.editingPlan.splice(fromIdx, 1);
+        this.editingPlan.splice(toIdx, 0, movedDay);
+
+        const newActiveIdx = this.editingPlan.indexOf(currentActive);
+        this.editingDayIdx = newActiveIdx !== -1 ? newActiveIdx : 0;
+
+        this.savePredefinedDraft();
+        this.renderPredefinedPlanEditor();
+        this.showToast('Plano reposicionado!');
+    }
+
+    handlePredefinedDayDragStart(e, dayIdx) {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'predefined-day', dayIdx }));
+        const card = e.currentTarget;
+        card.classList.add('dragging');
+    }
+
+    handlePredefinedDayDrop(e, targetDayIdx) {
+        e.preventDefault();
+        e.stopPropagation();
+        const card = e.currentTarget.closest('.day-drag-tab');
+        if (card) card.classList.remove('drag-over');
+
+        try {
+            const raw = e.dataTransfer.getData('text/plain');
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            if (data.type === 'predefined-day' && typeof data.dayIdx === 'number') {
+                this.reorderPredefinedTrainingDay(data.dayIdx, targetDayIdx);
+            }
+        } catch (err) {
+            console.error('Erro no drag-and-drop de modelo de dias:', err);
+        }
+    }
+
+    initDayTouchDrag(handleElem, dayIdx, isPredefined = false) {
+        const card = handleElem.closest('.day-drag-tab');
+        if (!card) return;
+
+        let currentTargetIdx = dayIdx;
+        let originalParent = card.parentElement;
+        let allCards = [];
+        let hasMoved = false;
+
+        const onTouchStart = (e) => {
+            allCards = Array.from(originalParent.querySelectorAll('.day-drag-tab'));
+        };
+
+        const onTouchMove = (e) => {
+            const touch = e.touches[0];
+            const elemUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+            const targetCard = elemUnderTouch ? elemUnderTouch.closest('.day-drag-tab') : null;
+
+            if (!hasMoved) {
+                card.classList.add('dragging');
+                hasMoved = true;
+            }
+
+            allCards.forEach(c => c.classList.remove('drag-over'));
+            if (targetCard && targetCard !== card) {
+                targetCard.classList.add('drag-over');
+                const tIdx = parseInt(targetCard.getAttribute('data-day-idx'));
+                if (!isNaN(tIdx)) currentTargetIdx = tIdx;
+            }
+        };
+
+        const onTouchEnd = () => {
+            card.classList.remove('dragging');
+            allCards.forEach(c => c.classList.remove('drag-over'));
+            handleElem.removeEventListener('touchmove', onTouchMove);
+            handleElem.removeEventListener('touchend', onTouchEnd);
+
+            if (hasMoved && currentTargetIdx !== dayIdx) {
+                if (isPredefined) {
+                    this.reorderPredefinedTrainingDay(dayIdx, currentTargetIdx);
+                } else {
+                    this.reorderTrainingDay(dayIdx, currentTargetIdx);
+                }
+            }
+        };
+
+        handleElem.addEventListener('touchmove', onTouchMove, { passive: true });
+        handleElem.addEventListener('touchend', onTouchEnd, { once: true });
     }
 
     updateEditorDayRest(dayIdx, value) {
@@ -11698,10 +11868,21 @@ Equipa KandalGym`;
 
             <div id="editor-tabs-container" style="display:flex; gap:0.5rem; margin-bottom:${isMobile ? '1rem' : '2rem'}; flex-wrap:wrap; background:rgba(255,255,255,0.03); padding:${isMobile ? '8px' : '12px'}; border-radius:15px; border:1px solid rgba(255,255,255,0.05);">
                 ${this.editingPlan.map((day, dIdx) => `
-                    <div style="display:flex; align-items:center; gap:4px;">
+                    <div class="day-drag-tab" 
+                        data-day-idx="${dIdx}"
+                        draggable="true"
+                        ondragstart="app.handlePredefinedDayDragStart(event, ${dIdx})"
+                        ondragover="app.handleDayDragOver(event)"
+                        ondragleave="app.handleDayDragLeave(event)"
+                        ondrop="app.handlePredefinedDayDrop(event, ${dIdx})"
+                        ondragend="app.handleDayDragEnd(event)"
+                        ontouchstart="app.initDayTouchDrag(this, ${dIdx}, true)"
+                        style="display:flex; align-items:center; gap:4px; position:relative;"
+                        title="Pressione e arraste para reordenar este plano">
                         <button class="btn ${this.editingDayIdx === dIdx ? 'btn-primary' : 'btn-ghost'}" 
                             onclick="app.editingDayIdx = ${dIdx}; app.renderPredefinedPlanEditor();"
-                            style="padding:${isMobile ? '6px 10px' : '10px 18px'}; font-size:${isMobile ? '0.8rem' : '0.95rem'}; border-radius:10px; display:flex; align-items:center; gap:${isMobile ? '4px' : '10px'}; min-width:${isMobile ? '80px' : '140px'}; justify-content:center;">
+                            style="padding:${isMobile ? '6px 10px' : '10px 18px'}; font-size:${isMobile ? '0.8rem' : '0.95rem'}; border-radius:10px; display:flex; align-items:center; gap:${isMobile ? '4px' : '8px'}; min-width:${isMobile ? '80px' : '140px'}; justify-content:center; pointer-events:auto;">
+                            <i class="fas fa-grip-vertical" style="opacity:0.4; font-size:0.8rem; margin-right:2px;" title="Arrastar"></i>
                             <span style="font-weight:700;">${day.title || 'Plano ' + String.fromCharCode(65 + dIdx)}</span>
                             <span style="opacity:0.6; font-size:0.75rem;">(${day.exercises.length})</span>
                         </button>

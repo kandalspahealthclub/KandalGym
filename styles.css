@@ -1976,3 +1976,25 @@ body.light-theme #app [style*='background:rgba(0,0,0,0.4)'],
 body.light-theme #app [style*='background: rgba(0,0,0,0.'] {
     background: rgba(0,0,0,0.05) !important;
 }
+
+/* Day Tabs Drag & Drop */
+.day-drag-tab {
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: pan-y;
+    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+}
+.day-drag-tab:active {
+    cursor: grabbing;
+}
+.day-drag-tab.dragging {
+    opacity: 0.45;
+    transform: scale(0.95);
+    border-style: dashed !important;
+}
+.day-drag-tab.drag-over {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 2px var(--primary), 0 8px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
