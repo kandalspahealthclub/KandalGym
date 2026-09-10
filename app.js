@@ -3077,7 +3077,7 @@ Equipa KandalGym`;
                                                 <i class="fas fa-play-circle"></i>
                                             </div>
                                         </div>` : `
-                                        <div style="width:100%; height:150px; background:rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; flex-direction: column; gap: 10px;">
+                                        <div style="width:100%; height:150px; background:rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; flex-direction: column; gap: 10px; ${ex.photoUrl ? 'cursor:pointer;' : ''}" ${ex.photoUrl ? `onclick="app.viewExercisePhoto('${ex.photoUrl}', '${(ex.name || '').replace(/'/g, "\\'")}')" title="Clique para ampliar a foto"` : ''}>
                                             ${ex.photoUrl ? `<img src="${ex.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` : `
                                                 <i class="fas fa-video-slash" style="font-size:1.5rem; opacity: 0.3;"></i>
                                                 <small style="color:var(--text-muted); font-size: 0.7rem;">Sem vídeo disponível</small>
@@ -4083,9 +4083,10 @@ Equipa KandalGym`;
                                     ${isCurrent ? `<div style="position:absolute; top:-8px; right:12px; background:var(--primary); color:#fff; font-size:0.6rem; font-weight:800; padding:2px 8px; border-radius:10px; text-transform:uppercase; letter-spacing:1px; box-shadow:0 2px 5px rgba(0,0,0,0.5);"><i class="fas fa-play" style="font-size:0.5rem; margin-right:3px;"></i> A Realizar</div>` : ''}
                                     <div style="display:flex; align-items:center; gap:12px;">
                                         <!-- Mini Image/Icon -->
-                                        <div style="width:44px; height:44px; border-radius:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.05); flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                                        <div style="width:44px; height:44px; border-radius:10px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.05); flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; ${libEx && libEx.photoUrl ? 'cursor:pointer; transition:transform 0.2s;' : ''}" 
+                                             ${libEx && libEx.photoUrl ? `onclick="event.stopPropagation(); app.viewExercisePhoto('${libEx.photoUrl}', '${(ex.name || '').replace(/'/g, "\\'")}')" title="Clique para ampliar a foto"` : ''}>
                                             ${libEx && libEx.photoUrl ?
-                                    `<img src="${libEx.photoUrl}" style="width:100%; height:100%; object-fit:cover;">` :
+                                    `<img src="${libEx.photoUrl}" style="width:100%; height:100%; object-fit:cover; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">` :
                                     `<div style="font-size:1.2rem; opacity:0.6;">${this.getExerciseIcon(libEx ? (libEx.category || libEx.muscle) : '')}</div>`
                                 }
                                         </div>
@@ -4356,6 +4357,32 @@ Equipa KandalGym`;
                 </div>
             </div>
             `;
+        document.body.appendChild(modal);
+    }
+
+    viewExercisePhoto(photoUrl, name) {
+        if (!photoUrl) return;
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay animate-fade-in';
+        modal.onclick = (e) => {
+            if (e.target === modal || e.target.closest('.close-modal-btn')) {
+                modal.remove();
+            }
+        };
+        const safeName = (name || 'Exercício').replace(/"/g, '&quot;');
+        modal.innerHTML = `
+            <div class="glass-panel animate-scale-up" style="max-width:600px; width:92%; padding:1rem; position:relative; background:rgba(18, 18, 20, 0.95); border:1px solid rgba(255,255,255,0.15); box-shadow:0 20px 40px rgba(0,0,0,0.8); border-radius:18px; margin:auto;" onclick="event.stopPropagation()">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; padding:0 0.25rem;">
+                    <h3 style="margin:0; font-size:1.1rem; color:#fff; font-weight:700;">${safeName}</h3>
+                    <button class="btn btn-ghost close-modal-btn" style="color:var(--text-muted); padding:6px 10px;" onclick="this.closest('.modal-overlay').remove()">
+                        <i class="fas fa-times" style="font-size:1.1rem;"></i>
+                    </button>
+                </div>
+                <div style="width:100%; max-height:75vh; overflow:hidden; border-radius:14px; background:#000; display:flex; align-items:center; justify-content:center;">
+                    <img src="${photoUrl}" alt="${safeName}" style="max-width:100%; max-height:75vh; object-fit:contain; border-radius:12px; display:block;">
+                </div>
+            </div>
+        `;
         document.body.appendChild(modal);
     }
 
